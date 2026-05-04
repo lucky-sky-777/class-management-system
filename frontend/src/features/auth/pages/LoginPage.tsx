@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthInternal } from '@features/auth/hooks/useAuthInternal';
-import { User, Lock, Home } from 'lucide-react';
+import { User, Lock } from 'lucide-react';
 import { GoogleIcon, MezonIcon } from '@shared/components/icons';
 import { BASE_URL } from '@services/api-client';
 

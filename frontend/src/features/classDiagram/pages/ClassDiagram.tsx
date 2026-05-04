@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useClassDiagram } from "@features/classDiagram/hooks/useClassDiagram";
 import { Seat } from "@features/classDiagram/pages/Seat";
