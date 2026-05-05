@@ -1,6 +1,8 @@
-package com.mezon.classmanagement.backend.domain.clazz.dto.join;
+package com.mezon.classmanagement.backend.domain.absencerequest.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,6 +12,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+@JsonPropertyOrder(value = {
+		"absence_request_id"
+})
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
 @Getter
@@ -17,12 +23,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class JoinClassRequestDto {
+public final class AbsenceRequestIdResponseDto {
 
-	@JsonProperty(value = "class_code")
-	String classCode;
-
-	@JsonProperty(value = "message")
-	String message;
+	@JsonProperty(value = "absence_request_id")
+	Long absenceRequestId;
 
 }

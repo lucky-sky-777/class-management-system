@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 
-@JsonPropertyOrder({
+@JsonPropertyOrder(value = {
         "id",
         "class_id",
         "user_id",
@@ -20,7 +20,7 @@ import java.time.Instant;
         "status",
         "created_at"
 })
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
 @Getter
@@ -30,32 +30,32 @@ import java.time.Instant;
 @DTO
 public final class AbsenceRequestResponseDto {
 
-    @JsonProperty("id")
+    @JsonProperty(value = "id")
     Long id;
 
-    @JsonProperty("class_id")
+    @JsonProperty(value = "class_id")
     Long classId;
 
-    @JsonProperty("user_id")
+    @JsonProperty(value = "user_id")
     Long userId;
 
-    @JsonProperty("reason")
+    @JsonProperty(value = "reason")
     String reason;
 
-    @JsonProperty("from")
+    @JsonProperty(value = "from")
     Instant from;
 
-    @JsonProperty("to")
+    @JsonProperty(value = "to")
     Instant to;
 
-    @JsonProperty("proof_url")
+    @JsonProperty(value = "proof_url")
     String proofUrl;
 
-    @JsonProperty("status")
+    @JsonProperty(value = "status")
     AbsenceRequest.Status status;
 
     @JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
-    @JsonProperty("created_at")
+    @JsonProperty(value = "created_at")
     Instant createdAt;
 
 }

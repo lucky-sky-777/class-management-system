@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.domain.clazz.dto.join;
+package com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
@@ -17,10 +17,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class JoinClassRequestDto {
-
-	@JsonProperty(value = "class_code")
-	String classCode;
+public final class CreateClassUserRequestRequestDto {
 
 	@JsonProperty(value = "message")
 	String message;

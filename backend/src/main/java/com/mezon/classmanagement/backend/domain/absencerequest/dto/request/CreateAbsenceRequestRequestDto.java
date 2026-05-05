@@ -4,11 +4,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.FutureOrPresent;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
-
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
@@ -18,20 +22,19 @@ import java.time.Instant;
 @AllArgsConstructor
 @DTO
 public final class CreateAbsenceRequestRequestDto {
-    @JsonProperty("class_id")
-    Long classId;
 
-    @JsonProperty("reason")
+    @JsonProperty(value = "reason")
     String reason;
 
     @FutureOrPresent
-    @JsonProperty("from")
+    @JsonProperty(value = "from")
     Instant from;
 
     @Future
-    @JsonProperty("to")
+    @JsonProperty(value = "to")
     Instant to;
 
-    @JsonProperty("proof_url")
+    @JsonProperty(value = "proof_url")
     String proofUrl;
+
 }
