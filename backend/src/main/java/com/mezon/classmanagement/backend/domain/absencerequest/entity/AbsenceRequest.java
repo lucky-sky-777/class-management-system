@@ -72,9 +72,10 @@ public class AbsenceRequest {
 	Instant createdAt;
 
 	public enum Status {
+		PENDING,
 		APPROVED,
 		REJECTED,
-		PENDING
+		CANCELLED
 	}
 
 	@PrePersist

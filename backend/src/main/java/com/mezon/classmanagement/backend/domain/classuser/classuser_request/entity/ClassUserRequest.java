@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.classuser.classuser_request.entity;
 
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
+import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,6 +46,9 @@ public class ClassUserRequest {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	User user;
+
+	@Column(name = "message", nullable = true)
+	String message;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)

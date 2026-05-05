@@ -8,6 +8,7 @@ import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserReq
 import com.mezon.classmanagement.backend.domain.classuser.dto.response.CreateClassUserResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.clazz.dto.ClassResponseDto;
+import com.mezon.classmanagement.backend.domain.clazz.dto.class_privacy.ClassPrivacyResponseDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.classid.ClassIdResponseDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.createandupdate.CreateAndUpdateClassRequestDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.join.JoinClassRequestDto;
@@ -141,6 +142,19 @@ public class ClassController {
 		return ResponseDTO.<List<ClassResponseDto>>builder()
 				.success(true)
 				.message("Get joined classes successful")
+				.data(response)
+				.build();
+	}
+
+	@GetMapping("/{classId}/privacy")
+	public ResponseDTO<ClassPrivacyResponseDto> getClassPrivacy(
+			@PathVariable Long classId
+	) {
+		ClassPrivacyResponseDto response = classService.getPrivacy(classId);
+
+		return ResponseDTO.<ClassPrivacyResponseDto>builder()
+				.success(true)
+				.message("Get class privacy successful")
 				.data(response)
 				.build();
 	}

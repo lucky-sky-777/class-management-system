@@ -59,6 +59,10 @@ public class ClassPermission {
 		return hasClassAccess(classId, Permission.MANAGE_FUND);
 	}
 
+	public boolean manageAbsenceRequest(Long classId) {
+		return hasClassAccess(classId, Permission.MANAGE_ABSENCE_REQUEST);
+	}
+
 	public boolean managePoint(Long classId) {
 		return hasClassAccess(classId, Permission.MANAGE_POINT);
 	}

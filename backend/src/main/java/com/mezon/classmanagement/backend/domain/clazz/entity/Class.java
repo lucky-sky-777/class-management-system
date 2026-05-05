@@ -48,7 +48,7 @@ public class Class {
 	@JoinColumn(name = "owner_user_id", nullable = false)
 	User owner;
 
-	@Column(name = "name", nullable = true)
+	@Column(name = "name", nullable = false)
 	String name;
 
 	@Column(name = "description", nullable = true)
@@ -74,11 +74,14 @@ public class Class {
 
 	@PrePersist
 	public void prePersist() {
-		if (privacy == null) {
-			privacy = Privacy.PRIVATE;
+		if (name == null) {
+			name = "User_" + System.currentTimeMillis();
 		}
 		if (code == null) {
 			code = CodeGenerator.generate(6);
+		}
+		if (privacy == null) {
+			privacy = Privacy.PRIVATE;
 		}
 	}
 }

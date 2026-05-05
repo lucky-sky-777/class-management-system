@@ -5,6 +5,7 @@ import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
+import com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto.CreateClassUserRequestRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.service.ClassUserRequestService;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
@@ -12,6 +13,7 @@ import com.mezon.classmanagement.backend.domain.classuser.dto.response.CreateCla
 import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import com.mezon.classmanagement.backend.domain.clazz.dto.ClassResponseDto;
+import com.mezon.classmanagement.backend.domain.clazz.dto.class_privacy.ClassPrivacyResponseDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.classid.ClassIdResponseDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.createandupdate.CreateAndUpdateClassRequestDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.join.JoinClassRequestDto;
@@ -145,10 +147,11 @@ public class ClassService {
         classUserService.throwIfExistsByClassIdAndUserId(currentClass.getId(), clientUserId);
 
         if (isPrivate(currentClass.getPrivacy())) {
-            classUserRequestService.createClassUserRequest(
+            classUserRequestService.create(
                     currentClass.getId(),
-                    CreateClassUserRequestDto.builder()
-                            .userId(clientUserId)
+                    clientUserId,
+                    CreateClassUserRequestRequestDto.builder()
+                            .message(request.getMessage())
                             .build()
             );
 
@@ -191,6 +194,16 @@ public class ClassService {
         userService.throwIfNotExistsById(clientUserId);
 
         return classRepository.getJoinedClasses(clientUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public ClassPrivacyResponseDto getPrivacy(Long classId) {
+        Class currentClass = findByIdOrThrow(classId);
+
+        return ClassPrivacyResponseDto.builder()
+                .classId(currentClass.getId())
+                .classPrivacy(currentClass.getPrivacy())
+                .build();
     }
 
     /**
