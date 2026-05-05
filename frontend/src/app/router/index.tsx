@@ -10,6 +10,7 @@ import { NotFoundPage } from "@features/error";
 import { ClassLayout } from "@shared/components/layout/ClassLayout";
 import { Emulation } from "@features/emulation/pages/Emulation"
 import { FundPage } from "@features/fund"
+import { ProtectedRoute } from "./ProtectedRoute";
 
 /**
  * Global application router configuration using React Router
@@ -29,7 +30,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <App />,
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
