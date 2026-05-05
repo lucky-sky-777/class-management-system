@@ -11,6 +11,7 @@ import { ClassLayout } from "@shared/components/layout/ClassLayout";
 import { Emulation } from "@features/emulation/pages/Emulation"
 import { FundPage } from "@features/fund"
 import { ProtectedRoute } from "./ProtectedRoute";
+import { ActivityPage } from "@features/activity";
 
 /**
  * Global application router configuration using React Router
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
           { path: "nghiphep", element: <LeavePage /> },
           { path: "thidua", element: <Emulation /> },
           { path: "quy", element: <FundPage /> },
+          { path: "activity", element: <ActivityPage /> },
         ],
       },
     ],
