@@ -26,6 +26,16 @@ export const useHome = () => {
 
   useEffect(() => {
     loadData();
+
+    // Lắng nghe sự kiện để đồng bộ state giữa các component dùng chung hook này (ví dụ Header và HomePage)
+    const handleRefresh = () => {
+      loadData();
+    };
+    window.addEventListener("refreshHomeClasses", handleRefresh);
+
+    return () => {
+      window.removeEventListener("refreshHomeClasses", handleRefresh);
+    };
   }, []);
 
   const createClassMutation = async (formData: {
@@ -47,7 +57,7 @@ export const useHome = () => {
 
       if (res.success) {
         console.log("Tạo lớp thành công!");
-        await loadData();
+        window.dispatchEvent(new Event("refreshHomeClasses"));
       } else {
         throw new Error(res.message || "Tạo lớp thất bại");
       }
@@ -69,7 +79,7 @@ export const useHome = () => {
 
       if (res.success) {
         console.log("Tham gia lớp thành công!");
-        await loadData(); // Tự động load lại danh sách lớp mới
+        window.dispatchEvent(new Event("refreshHomeClasses")); // Đồng bộ danh sách lớp mới
         return res.data;  // Trả về data (JoinClassDto) để Component dùng nếu cần
       } else {
         throw new Error(res.message || "Không thể tham gia lớp học");
@@ -89,7 +99,7 @@ export const useHome = () => {
       const res = await homeAPI.deleteClass(classId);
       if (res.success) {
         console.log("Xóa lớp thành công!");
-        await loadData(); // Load lại danh sách sau khi xóa
+        window.dispatchEvent(new Event("refreshHomeClasses")); // Đồng bộ danh sách sau khi xóa
       } else {
         throw new Error(res.message || "Không thể xóa lớp");
       }
@@ -105,7 +115,7 @@ export const useHome = () => {
       const res = await homeAPI.leaveClass(classId);
       if (res.success) {
         console.log("Rời lớp thành công!");
-        await loadData(); // Load lại danh sách, lớp đó sẽ tự biến mất
+        window.dispatchEvent(new Event("refreshHomeClasses")); // Đồng bộ danh sách, lớp đó sẽ tự biến mất
       } else {
         throw new Error(res.message || "Không thể rời lớp");
       }
@@ -121,7 +131,7 @@ export const useHome = () => {
       const res = await homeAPI.updateClass(classId, updateData);
       if (res.success) {
         console.log("Cập nhật lớp thành công!");
-        await loadData(); 
+        window.dispatchEvent(new Event("refreshHomeClasses")); 
       } else {
         throw new Error(res.message || "Cập nhật thất bại");
       }
