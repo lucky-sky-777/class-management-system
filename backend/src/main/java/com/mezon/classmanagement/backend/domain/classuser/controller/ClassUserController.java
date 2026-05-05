@@ -108,10 +108,9 @@ public class ClassUserController {
 	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<ClassUserResponseDto>> getClassUsers(
-			@PathVariable Long classId,
-			@RequestParam String status
+			@PathVariable Long classId
 	) {
-		List<ClassUserResponseDto> response = classUserService.getClassUsers(classId, status);
+		List<ClassUserResponseDto> response = classUserService.getClassUsers(classId);
 
 		return ResponseDTO.<List<ClassUserResponseDto>>builder()
 				.success(true)

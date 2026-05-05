@@ -114,7 +114,7 @@ public class ClassUserService {
 
 	@RequireClassPermission
 	@Transactional(readOnly = true)
-	public List<ClassUserResponseDto> getClassUsers(Long classId, String status) {
+	public List<ClassUserResponseDto> getClassUsers(Long classId) {
 
 		return classUserRepository.getClassUsers(classId);
 	}
