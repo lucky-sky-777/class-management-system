@@ -71,9 +71,21 @@ public class UserService {
 		return userRepository.existsByUsername(username);
 	}
 
+	@Transactional(readOnly = true)
+	public boolean existsByProviderId(String providerId) {
+		return userRepository.existsByProviderId(providerId);
+	}
+
 	@Transactional
 	public void throwIfExistsByUsername(String username) {
 		if (existsByUsername(username)) {
+			throw new GlobalException(GlobalException.Type.ALREADY_EXISTS, "User exists");
+		}
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfExistsByProviderId(String providerId) {
+		if (existsByProviderId(providerId)) {
 			throw new GlobalException(GlobalException.Type.ALREADY_EXISTS, "User exists");
 		}
 	}

@@ -53,7 +53,7 @@ public class User implements UserDetails {
     @Column(name = "provider", nullable = false)
 	Provider provider;
 
-	@Column(name = "provider_id", nullable = true)
+	@Column(name = "provider_id", nullable = true, unique = true)
 	String providerId;
 
     @Column(name = "username", nullable = false, unique = true)

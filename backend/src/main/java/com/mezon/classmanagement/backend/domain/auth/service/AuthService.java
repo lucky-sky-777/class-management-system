@@ -72,7 +72,7 @@ public class AuthService {
 				.avatarUrl(mezonUser.getAvatar())
 				.email(mezonUser.getEmail())
 				.build();
-		SignUpResponseDto signUpResponse = signUp(signUpRequest);
+		SignUpResponseDto signUpResponse = signUpExternal(signUpRequest);
 
 		String accessToken = jwtService.generateAccessToken(signUpResponse.getUserId(), signUpResponse.getUsername());
 		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUsername());
@@ -94,7 +94,7 @@ public class AuthService {
 				.avatarUrl(googleUser.getAvatarUrl())
 				.email(googleUser.getEmail())
 				.build();
-		SignUpResponseDto signUpResponse = signUp(signUpRequest);
+		SignUpResponseDto signUpResponse = signUpExternal(signUpRequest);
 
 		String accessToken = jwtService.generateAccessToken(signUpResponse.getUserId(), signUpResponse.getUsername());
 		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUsername());
@@ -105,9 +105,17 @@ public class AuthService {
 				.build();
 	}
 
-	public SignUpResponseDto signUp(SignUpRequestDto request) {
-		userService.throwIfExistsByUsername(request.getUsername());
+	public SignUpResponseDto signUpExternal(SignUpRequestDto request) {
+		userService.throwIfExistsByProviderId(request.getProviderId());
+		return signUp(request);
+	}
 
+	public SignUpResponseDto signUpInternal(SignUpRequestDto request) {
+		userService.throwIfExistsByUsername(request.getUsername());
+		return signUp(request);
+	}
+
+	private SignUpResponseDto signUp(SignUpRequestDto request) {
 		User newUser = userService.createUser(request);
 
 		return SignUpResponseDto.builder()

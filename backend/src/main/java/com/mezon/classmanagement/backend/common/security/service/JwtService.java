@@ -84,4 +84,9 @@ public class JwtService {
 		return jwt.getSubject();
 	}
 
+	public String extractJti(Authentication authentication) {
+		Jwt jwt = getJwt(authentication);
+		return jwt.getId();
+	}
+
 }
