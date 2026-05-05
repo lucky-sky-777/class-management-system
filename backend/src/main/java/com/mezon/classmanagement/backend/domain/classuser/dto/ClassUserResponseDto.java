@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
+import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -54,8 +55,8 @@ public final class ClassUserResponseDto {
 	@JsonProperty(value = "user_avatar_url")
 	String userAvatarUrl;
 
-	//@JsonProperty(value = "role")
-	//ClassUser.Role role;
+	@JsonProperty(value = "role")
+	ClassUser.Role role;
 
 	//@JsonProperty(value = "permission_codes")
 	//List<String> permissionCodes;
