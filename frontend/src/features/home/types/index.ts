@@ -27,12 +27,14 @@ export interface ClassIdResponse {
 
 // Interface cho thành viên trong lớp
 export interface ClassMember {
+  id: number;
   class_id: number;
   class_name: string;
-  member_id: number;
-  member_display_name: string;
+  user_id: number;
+  user_display_name: string;
   member_avatar_url: string | null;
-  member_role: ClassRole;
+  role: ClassRole;
+  joined_at?: string;
 }
 
 export interface ClassMemberResponse {
