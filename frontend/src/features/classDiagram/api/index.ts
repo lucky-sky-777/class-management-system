@@ -140,10 +140,9 @@ export const classDiagramAPI = {
       const res = await homeAPI.getClassMembers(Number(classId));
       
       if (res.success) {
-        // 🚀 ĐÃ SỬA LẠI KHỚP 100% VỚI LOG CỦA BACKEND
         return res.data.map((m) => ({
-          id: String(m.member_id),                   // Lấy ID học sinh
-          name: m.member_display_name || "Vô danh", // Lấy tên học sinh
+          id: String(m.user_id),                   // Lấy ID học sinh
+          name: m.user_display_name || "Vô danh", // Lấy tên học sinh
         }));
       }
       return [];
