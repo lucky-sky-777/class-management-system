@@ -117,22 +117,4 @@ public class AbsenceRequestController {
                 .build();
     }
 
-//    @DeleteMapping("/{id}")
-//    public ResponseDTO<Void> delete(@PathVariable Long id) {
-//        absenceRequestService.delete(id);
-//        return ResponseDTO.<Void>builder()
-//                .success(true)
-//                .message("Deleted")
-//                .build();
-//    }
-
-//    @GetMapping("/{id}")
-//    public ResponseDTO<AbsenceRequestResponseDto> get(@PathVariable Long id) {
-//        return ResponseDTO.<AbsenceRequestResponseDto>builder()
-//                .success(true)
-//                .message("Get absence request successful")
-//                .data(absenceRequestService.get(id))
-//                .build();
-//    }
-
 }
