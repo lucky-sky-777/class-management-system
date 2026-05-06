@@ -84,20 +84,20 @@ public class ClassController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
-	@PostMapping("/{classId}/members")
-	public ResponseDTO<ClassUserResponseDto> addClassMember(
-			@PathVariable Long classId,
-			@RequestBody CreateClassUserRequestDto request
-	) {
-		ClassUserResponseDto response = classService.createClassUser(classId, request, ClassUser.Role.CLASS_MEMBER);
-
-		return ResponseDTO.<ClassUserResponseDto>builder()
-				.success(true)
-				.message("Create class user successful")
-				.data(response)
-				.build();
-	}
+//	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+//	@PostMapping("/{classId}/members")
+//	public ResponseDTO<ClassUserResponseDto> addClassMember(
+//			@PathVariable Long classId,
+//			@RequestBody CreateClassUserRequestDto request
+//	) {
+//		ClassUserResponseDto response = classService.createClassUser(classId, request, ClassUser.Role.CLASS_MEMBER);
+//
+//		return ResponseDTO.<ClassUserResponseDto>builder()
+//				.success(true)
+//				.message("Create class user successful")
+//				.data(response)
+//				.build();
+//	}
 
 	@PostMapping("/join")
 	public ResponseDTO<CreateClassUserResponseDto> joinClass(

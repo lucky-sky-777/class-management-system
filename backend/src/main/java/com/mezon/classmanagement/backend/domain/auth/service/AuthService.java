@@ -1,25 +1,18 @@
 package com.mezon.classmanagement.backend.domain.auth.service;
 
-import com.mezon.classmanagement.backend.common.constant.JwtConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
-import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
-import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutRequestDto;
-import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
-import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
-import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
-import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDto;
-import com.mezon.classmanagement.backend.domain.auth.entity.InvalidatedToken;
-import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.MezonUser;
-import com.mezon.classmanagement.backend.domain.auth.entity.User;
-import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.GoogleUser;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.domain.auth.repository.InvalidatedTokenRepository;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.common.util.EmailProcessor;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSVerifier;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jwt.SignedJWT;
+import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.entity.InvalidatedToken;
+import com.mezon.classmanagement.backend.domain.auth.entity.User;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.GoogleUser;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.MezonUser;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -31,9 +24,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
-import java.util.Date;
-
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -43,9 +33,9 @@ public class AuthService {
 	AuthenticationManager authenticationManager;
 	UserService userService;
 	JwtService jwtService;
-	InvalidatedTokenRepository invalidatedTokenRepository;
+	InvalidatedTokenService invalidatedTokenService;
 
-	public SignInResponseDto signIn(SignInRequestDto request) {
+	public SignInResponseDto signInInternal(SignInRequestDto request) {
 		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
 				= new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
 		authenticationManager.authenticate(usernamePasswordAuthenticationToken);
@@ -62,7 +52,7 @@ public class AuthService {
 	}
 
 	public SignInResponseDto signInMezon(MezonUser mezonUser) {
-		String username = EmailProcessor.extractAndClean(mezonUser.getEmail()) + "-mezon-" + System.currentTimeMillis();
+		String username = EmailProcessor.extractAndClean(mezonUser.getEmail()) + "-" + User.Provider.MEZON + "-" + System.currentTimeMillis();
 
 		SignUpRequestDto signUpRequest = SignUpRequestDto.builder()
 				.provider(User.Provider.MEZON)
@@ -84,7 +74,7 @@ public class AuthService {
 	}
 
 	public SignInResponseDto signInGoogle(GoogleUser googleUser) {
-		String username = EmailProcessor.extractAndClean(googleUser.getEmail()) + "-google-" + System.currentTimeMillis();
+		String username = EmailProcessor.extractAndClean(googleUser.getEmail()) + "-" + User.Provider.GOOGLE + "-" + System.currentTimeMillis();
 
 		SignUpRequestDto signUpRequest = SignUpRequestDto.builder()
 				.provider(User.Provider.GOOGLE)
@@ -124,47 +114,21 @@ public class AuthService {
 				.build();
 	}
 
-	@Deprecated
-	public SignOutResponseDto signOut(SignOutRequestDto request) {
-		try {
-			SignedJWT signedJWT = verifyToken(request.getAccessToken());
-
-			String jti = signedJWT.getJWTClaimsSet().getJWTID();
-			Date expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
-
-			InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-					.jti(jti)
-					.expiryDate(expiryDate.toInstant())
-					.build();
-			invalidatedTokenRepository.save(invalidatedToken);
-
-			return SignOutResponseDto.builder()
-					.success(true)
-					.build();
-		} catch (Exception e) {
-			return SignOutResponseDto.builder()
-					.success(false)
-					.build();
-		}
-	}
-
 	public SignOutResponseDto signOut(Authentication authentication) {
 		try {
-			Jwt jwt = ((JwtAuthenticationToken) authentication).getToken();
+			Jwt jwt = jwtService.getJwt(authentication);
 
-			InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+			InvalidatedToken newInvalidatedToken = InvalidatedToken.builder()
 					.jti(jwt.getId())
 					.expiryDate(jwt.getExpiresAt())
 					.build();
-			invalidatedTokenRepository.save(invalidatedToken);
+			invalidatedTokenService.save(newInvalidatedToken);
 
 			return SignOutResponseDto.builder()
-					.success(true)
+					.signedOutAccessToken(jwt.getTokenValue())
 					.build();
 		} catch (Exception e) {
-			return SignOutResponseDto.builder()
-					.success(false)
-					.build();
+			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error");
 		}
 	}
 
@@ -178,6 +142,33 @@ public class AuthService {
 		return authentication;
 	}
 
+	/*
+	no
+	@Deprecated
+	public SignOutResponseDto signOut(SignOutRequestDto request) {
+		try {
+			SignedJWT signedJWT = verifyToken(request.getAccessToken());
+
+			String jti = signedJWT.getJWTClaimsSet().getJWTID();
+			Date expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+			InvalidatedToken newInvalidatedToken = InvalidatedToken.builder()
+					.jti(jti)
+					.expiryDate(expiryDate.toInstant())
+					.build();
+			InvalidatedToken responseInvalidatedToken = invalidatedTokenService.save(newInvalidatedToken);
+
+			return SignOutResponseDto.builder()
+					.invalidatedToken(request.getAccessToken())
+					.build();
+		} catch (Exception e) {
+			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error");
+		}
+	}
+	*/
+
+	/*
+	no
 	@Deprecated
 	private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
 		JWSVerifier verifier = new MACVerifier(JwtConstant.SIGNER_KEY.getBytes());
@@ -195,5 +186,6 @@ public class AuthService {
 
 		return signedJWT;
 	}
+	*/
 
 }

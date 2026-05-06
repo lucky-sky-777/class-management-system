@@ -70,7 +70,7 @@ public class JwtService {
 		}
 	}
 
-	private Jwt getJwt(Authentication authentication) {
+	public Jwt getJwt(Authentication authentication) {
 		return ((JwtAuthenticationToken) authentication).getToken();
 	}
 

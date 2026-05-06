@@ -25,7 +25,7 @@ import lombok.experimental.FieldDefaults;
 @DTO
 public final class SignOutResponseDto {
 
-    @JsonProperty(value = "success")
-    Boolean success;
+    @JsonProperty(value = "signed_out_access_token")
+    String signedOutAccessToken;
 
 }

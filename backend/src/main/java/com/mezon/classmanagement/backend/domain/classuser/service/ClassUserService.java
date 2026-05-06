@@ -32,7 +32,6 @@ public class ClassUserService {
 	 * Repository
 	 */
 
-	ClassRepository classRepository;
 	ClassUserRepository classUserRepository;
 
 	/**
