@@ -35,8 +35,6 @@ public class AuthController {
 	public ResponseDTO<SignInResponseDto> signIn(@RequestBody SignInRequestDto request){
 		SignInResponseDto signInResponseDto = authService.signInInternal(request);
 
-		System.out.println(signInResponseDto.getAccessToken());
-
 		return ResponseDTO.<SignInResponseDto>builder()
 				.success(true)
 				.message("Sign in successful")

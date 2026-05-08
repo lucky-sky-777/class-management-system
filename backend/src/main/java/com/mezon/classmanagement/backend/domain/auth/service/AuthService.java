@@ -43,7 +43,7 @@ public class AuthService {
 		User user = userService.findByUsernameOrThrow(request.getUsername());
 
 		String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername());
-		String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+		String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getUsername());
 
 		return SignInResponseDto.builder()
 				.accessToken(accessToken)
@@ -65,7 +65,7 @@ public class AuthService {
 		SignUpResponseDto signUpResponse = signUpExternal(signUpRequest);
 
 		String accessToken = jwtService.generateAccessToken(signUpResponse.getUserId(), signUpResponse.getUsername());
-		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUsername());
+		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUserId(), signUpResponse.getUsername());
 
 		return SignInResponseDto.builder()
 				.accessToken(accessToken)
@@ -87,7 +87,7 @@ public class AuthService {
 		SignUpResponseDto signUpResponse = signUpExternal(signUpRequest);
 
 		String accessToken = jwtService.generateAccessToken(signUpResponse.getUserId(), signUpResponse.getUsername());
-		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUsername());
+		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUserId(), signUpResponse.getUsername());
 
 		return SignInResponseDto.builder()
 				.accessToken(accessToken)
@@ -96,7 +96,15 @@ public class AuthService {
 	}
 
 	public SignUpResponseDto signUpExternal(SignUpRequestDto request) {
-		userService.throwIfExistsByProviderId(request.getProviderId());
+		if (userService.existsByProviderId(request.getProviderId())) {
+			User currentUser = userService.findByProviderIdOrThrow(request.getProviderId());
+
+			return SignUpResponseDto.builder()
+					.userId(currentUser.getId())
+					.username(currentUser.getUsername())
+					.build();
+		}
+
 		return signUp(request);
 	}
 

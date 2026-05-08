@@ -62,6 +62,15 @@ public class UserService {
 				);
 	}
 
+	@Transactional(readOnly = true)
+	public User findByProviderIdOrThrow(String providerId) {
+		return userRepository
+				.findByProviderId(providerId)
+				.orElseThrow(() ->
+						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+				);
+	}
+
 	public boolean existsById(Long id) {
 		return userRepository.existsById(id);
 	}

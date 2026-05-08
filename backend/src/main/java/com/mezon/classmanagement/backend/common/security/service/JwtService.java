@@ -27,7 +27,7 @@ public class JwtService {
 		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
 		JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-				.subject(username)
+				.subject(String.valueOf(userId))
 				.issuer("tuan.com")
 				.issueTime(new Date())
 				.expirationTime(new Date(
@@ -35,17 +35,17 @@ public class JwtService {
 				))
 				.jwtID(UUID.randomUUID().toString())
 				.claim("type", "access")
-				.claim("user_id", userId)
+				.claim("username", username)
 				.build();
 
 		return signToken(jwsHeader, jwtClaimsSet);
 	}
 
-	public String generateRefreshToken(String username) {
+	public String generateRefreshToken(Long userId, String username) {
 		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
 		JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-				.subject(username)
+				.subject(String.valueOf(userId))
 				.issuer("tuan.com")
 				.issueTime(new Date())
 				.expirationTime(new Date(
@@ -53,6 +53,7 @@ public class JwtService {
 				))
 				.jwtID(UUID.randomUUID().toString())
 				.claim("type", "refresh")
+				.claim("username", username)
 				.build();
 
 		return signToken(jwsHeader, jwtClaimsSet);
@@ -74,14 +75,24 @@ public class JwtService {
 		return ((JwtAuthenticationToken) authentication).getToken();
 	}
 
+//	public Long extractUserId(Authentication authentication) {
+//		Jwt jwt = getJwt(authentication);
+//		return Long.valueOf(jwt.getClaim("user_id").toString());
+//	}
+
 	public Long extractUserId(Authentication authentication) {
 		Jwt jwt = getJwt(authentication);
-		return Long.valueOf(jwt.getClaim("user_id").toString());
+		return Long.valueOf(jwt.getSubject());
 	}
+
+//	public String extractUsername(Authentication authentication) {
+//		Jwt jwt = getJwt(authentication);
+//		return jwt.getSubject();
+//	}
 
 	public String extractUsername(Authentication authentication) {
 		Jwt jwt = getJwt(authentication);
-		return jwt.getSubject();
+		return jwt.getClaim("username").toString();
 	}
 
 	public String extractJti(Authentication authentication) {
