@@ -63,6 +63,7 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.POST, "/api/auth/state").authenticated()
 						.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/auth/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/seats/**").permitAll()
 						.anyRequest().authenticated()
 				)
 				.oauth2ResourceServer(oauth2 -> oauth2

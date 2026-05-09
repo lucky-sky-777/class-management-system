@@ -113,6 +113,12 @@ public class GroupUserService {
 	 */
 
 	@Transactional(readOnly = true)
+	public List<GroupUserResponseDto> findByClassId(Long classId) {
+		return groupUserRepository
+				.findByClazz_IdOrderByGroupIdAscDeskAscDeskPositionAsc(classId);
+	}
+
+	@Transactional(readOnly = true)
 	public List<GroupUser> findByClassIdAndGroupId(Long classId, Long groupId) {
 		return groupUserRepository
 				.findByClazz_IdAndGroup_Id(classId, groupId);

@@ -1,7 +1,9 @@
 package com.mezon.classmanagement.backend.domain.groupuser.repository;
 
+import com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto;
 import com.mezon.classmanagement.backend.domain.groupuser.entity.GroupUser;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,5 +13,26 @@ import java.util.Optional;
 public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
 	boolean existsByClazz_IdAndGroup_IdAndUser_Id(Long classId, Long groupId, Long userId);
 	Optional<GroupUser> findByClazz_IdAndGroup_IdAndUser_Id(Long classId, Long groupId, Long userId);
+	//List<GroupUser> findByClazz_IdOrderByGroupIdAscDeskAscDeskPositionAsc(Long classId);
 	List<GroupUser> findByClazz_IdAndGroup_Id(Long classId, Long groupId);
+
+	@Query(value = """
+	select new com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto(
+		groupUser.id,
+		clazz.id,
+		group.id,
+		user.id,
+		user.displayName,
+		groupUser.role,
+		groupUser.desk,
+		groupUser.deskPosition,
+		groupUser.joinedAt
+	)
+	from GroupUser groupUser
+	join groupUser.clazz clazz
+	join groupUser.group group
+	join groupUser.user user
+	where clazz.id = :classId
+	""")
+	List<GroupUserResponseDto> findByClazz_IdOrderByGroupIdAscDeskAscDeskPositionAsc(Long classId);
 }
