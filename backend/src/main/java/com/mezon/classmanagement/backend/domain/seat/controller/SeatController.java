@@ -22,7 +22,7 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RequestMapping("/api/seats/{classId}")
+@RequestMapping("/api/seats/classes/{classId}")
 @RestController
 public class SeatController {
 
