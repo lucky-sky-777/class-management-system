@@ -107,7 +107,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                 </div>
 
                 {/* Thời gian */}
-                <div className="grid grid-cols-2 gap-4">
+                
                     <div className="space-y-1.5">
                         <label className="input-label">Bắt đầu</label>
                         <div className="input-field">
@@ -118,6 +118,8 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                             />
                         </div>
                     </div>
+                
+                
                     <div className="space-y-1.5">
                         <label className="input-label">Kết thúc</label>
                         <div className="input-field">
@@ -128,8 +130,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                             />
                         </div>
                     </div>
-                </div>
-
+                
                 {/* Địa điểm & Điểm */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
