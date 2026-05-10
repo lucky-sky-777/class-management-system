@@ -99,8 +99,17 @@ export const ClassDiagram = () => {
     }
 
     if (mode === "setup" && selectedStudentId) {
-      await classDiagramAPI.assignSeat(selectedStudentId, row, col, side);
-      refresh();
+      try {
+        // TRUYỀN THÊM classId! VÀO ĐÂY:
+        await classDiagramAPI.assignSeat(selectedStudentId, row, col, side, classId!); 
+        
+        // Reset lại khay chọn và load lại sơ đồ
+        setSelectedStudentId(null); 
+        refresh(); 
+      } catch (error) {
+        console.error("Lỗi khi gọi API xếp chỗ:", error)
+        alert("Xếp chỗ thất bại, vui lòng thử lại!");
+      }
     }
   };
 
@@ -110,22 +119,23 @@ export const ClassDiagram = () => {
 
   return (
     <div className="space-y-6 select-none max-w-7xl mx-auto p-2 md:p-4 bg-white min-h-screen">
-      {/* 1. THANH CÔNG CỤ */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
-        <div className="flex justify-between items-center w-full gap-2">
+      
+      {/* 1. THANH CÔNG CỤ (Đã cấu trúc lại để không bị chồng lấp) */}
+      <div className="flex flex-col gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
+          {/* Nhóm chọn Chế độ */}
           {canEdit && (
-            <div className="flex bg-slate-200/50 p-1 rounded-lg shrink-0 justify-start flex-1 sm:flex-none max-w-[70%] sm:max-w-none">
+            <div className="flex bg-slate-200/50 p-1 rounded-lg w-full sm:w-auto">
               {(["view", "attendance", "setup"] as const).map((m) => (
                 <button
                   key={m}
                   onClick={() => setMode(m)}
-                  className={`flex-1 sm:flex-none px-2 md:px-4 py-1.5 rounded-md text-[10px] md:text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  className={`flex-1 sm:flex-none px-3 py-2 rounded-md text-[11px] md:text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                     mode === m
                       ? "bg-white text-indigo-600 shadow-sm"
                       : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  {/* Desktop/Tablet text */}
                   <span className="hidden xs:inline">
                     {m === "view"
                       ? "Xem"
@@ -133,8 +143,6 @@ export const ClassDiagram = () => {
                         ? "Điểm danh"
                         : "Xếp chỗ"}
                   </span>
-
-                  {/* Mobile text (ngắn gọn) */}
                   <span className="xs:hidden">
                     {m === "view"
                       ? "Xem"
@@ -147,52 +155,81 @@ export const ClassDiagram = () => {
             </div>
           )}
 
-          {/* NÚT CHUYỂN GÓC NHÌN - Luôn bị đẩy về bên phải */}
-          <button
-            onClick={() =>
-              setPerspective(isTeacherView ? "student" : "teacher")
-            }
-            className="shrink-0 px-3 py-1.5 rounded-md text-[10px] md:text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-all shadow-sm flex items-center gap-1"
-          >
-            <span>{isTeacherView ? "👨‍🏫" : "🎓"}</span>
-            <span className="hidden sm:inline">
-              Góc nhìn {isTeacherView ? "GV" : "HS"}
-            </span>
-            <span className="sm:hidden">{isTeacherView ? "GV" : "HS"}</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0 -mx-1 px-1 justify-start sm:justify-end flex-nowrap">
-          <Badge
-            color="bg-slate-100 text-slate-600 border-slate-200"
-            label="Sĩ số"
-            val={data.totalStudents}
-          />
-          <Badge
-            color="bg-green-50 text-green-700 border-green-200"
-            label="Có mặt"
-            val={data.presentCount}
-          />
-          <Badge
-            color="bg-yellow-50 text-yellow-700 border-yellow-200"
-            label="Vắng phép"
-            val={data.excusedCount}
-          />
-          <Badge
-            color="bg-red-50 text-red-600 border-red-200"
-            label="Không phép"
-            val={data.unexcusedCount}
-          />
+          {/* Dải Thống kê */}
+          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar justify-start sm:justify-end">
+            <Badge
+              color="bg-slate-100 text-slate-600 border-slate-200"
+              label="Sĩ số"
+              val={data.totalStudents}
+            />
+            <Badge
+              color="bg-green-50 text-green-700 border-green-200"
+              label="Có mặt"
+              val={data.presentCount}
+            />
+            <Badge
+              color="bg-yellow-50 text-yellow-700 border-yellow-200"
+              label="Vắng phép"
+              val={data.excusedCount}
+            />
+            <Badge
+              color="bg-red-50 text-red-600 border-red-200"
+              label="Không phép"
+              val={data.unexcusedCount}
+            />
+          </div>
         </div>
       </div>
 
-      {/* CONTAINER TỔNG: Đảo thứ tự Giảng đường / Ghế ngồi dựa trên góc nhìn */}
+      {/* 2. KHU VỰC ĐIỀU KHIỂN RIÊNG (Khay chọn học sinh & Góc nhìn) */}
+      <div className="flex flex-col-reverse md:flex-row justify-between items-end gap-4 w-full">
+        {/* Khay chọn học sinh (Cố định, không bị lộn ngược) */}
+        <div className="w-full md:w-2/3">
+          {mode === "setup" && (
+            <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 animate-in fade-in zoom-in-95 duration-300">
+              <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto pr-2 custom-scrollbar">
+                {members.map((m) => {
+                  const isAssigned = data.seats.some((s) => s.id === m.id);
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setSelectedStudentId(m.id)}
+                      className={`px-3 py-1.5 rounded-md text-[10px] md:text-xs font-bold border transition-all ${
+                        selectedStudentId === m.id
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : isAssigned
+                            ? "bg-slate-100 text-slate-400 border-slate-200"
+                            : "bg-white text-slate-600 border-slate-300"
+                      }`}
+                    >
+                      {m.name} {isAssigned && "✓"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Nút Góc nhìn (Dời xuống đây để không chèn ép thanh công cụ trên) */}
+        <div className="flex justify-end w-full md:w-auto">
+          <button
+            onClick={() => setPerspective(isTeacherView ? "student" : "teacher")}
+            className="group flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[11px] md:text-xs font-bold bg-white text-indigo-700 border-2 border-indigo-100 hover:bg-indigo-50 transition-all shadow-sm w-full sm:w-auto"
+          >
+            <span className="text-sm">{isTeacherView ? "👨‍🏫" : "🎓"}</span>
+            <span>Góc nhìn: {isTeacherView ? "Giáo viên" : "Học sinh"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC (Tự động đảo ngược theo góc nhìn) */}
       <div
-        className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-8 transition-all duration-500`}
+        className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-8 transition-all duration-500 bg-slate-50/30 p-2 md:p-6 rounded-2xl`}
       >
-        {/* 2. KHU VỰC GIẢNG ĐƯỜNG */}
+        {/* KHU VỰC GIẢNG ĐƯỜNG / BẢNG ĐEN */}
         <div
-          className={`flex items-end justify-between w-full pt-8 pb-4 px-4 md:px-10 ${isTeacherView ? "flex-row-reverse" : ""}`}
+          className={`flex items-end justify-between w-full pt-4 md:pt-8 pb-4 px-2 md:px-10 ${isTeacherView ? "flex-row-reverse" : ""}`}
         >
           <div className="flex flex-col items-start w-1/4">
             <div className="bg-yellow-400 px-4 md:px-8 py-3 rounded-xl font-bold text-slate-800 shadow-md border-b-4 border-yellow-600 text-[9px] md:text-xs whitespace-nowrap">
@@ -211,33 +248,7 @@ export const ClassDiagram = () => {
           <div className="hidden md:block w-1/4"></div>
         </div>
 
-        {/* 3. KHAY CHỌN HỌC SINH */}
-        {mode === "setup" && (
-          <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 animate-in fade-in zoom-in-95 duration-300">
-            <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto pr-2 custom-scrollbar">
-              {members.map((m) => {
-                const isAssigned = data.seats.some((s) => s.id === m.id);
-                return (
-                  <button
-                    key={m.id}
-                    onClick={() => setSelectedStudentId(m.id)}
-                    className={`px-3 py-1 rounded-md text-[10px] font-bold border transition-all ${
-                      selectedStudentId === m.id
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : isAssigned
-                          ? "bg-slate-100 text-slate-400 border-slate-200"
-                          : "bg-white text-slate-600 border-slate-300"
-                    }`}
-                  >
-                    {m.name} {isAssigned && "✓"}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 4. SƠ ĐỒ CHỖ NGỒI (Xoay 180 độ) */}
+        {/* LƯỚI CHỖ NGỒI (Xoay 180 độ) */}
         <div
           style={{ transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }}
           className={`grid grid-cols-[1fr_auto_1fr] gap-4 md:gap-10 pt-4 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
@@ -316,7 +327,7 @@ const Badge = ({
   val: number;
 }) => (
   <div
-    className={`px-2 py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold shadow-sm border flex items-center gap-1.5 whitespace-nowrap ${color}`}
+    className={`px-2 py-1.5 rounded-lg text-[10px] md:text-[11px] font-bold shadow-sm border flex items-center gap-1.5 whitespace-nowrap ${color}`}
   >
     <span className="opacity-60">{label}:</span>
     <span className="font-black">{val}</span>

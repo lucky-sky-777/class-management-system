@@ -12,6 +12,7 @@ import { Emulation } from "@features/emulation/pages/Emulation"
 import { FundPage } from "@features/fund"
 import { ProtectedRoute } from "./ProtectedRoute";
 import { ActivityPage } from "@features/activity";
+import { MemberPage } from "@features/member/pages/MemberPage";
 
 /**
  * Global application router configuration using React Router
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
           { path: "thidua", element: <Emulation /> },
           { path: "quy", element: <FundPage /> },
           { path: "activity", element: <ActivityPage /> },
+          { path: "members", element: <MemberPage /> },
         ],
       },
     ],

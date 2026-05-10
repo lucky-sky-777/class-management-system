@@ -9,6 +9,7 @@ export const ClassLayout = () => {
     { path: "thidua", label: "Thi đua" },
     { path: "nghiphep", label: "Nghỉ phép" },
     { path: "activity", label: "Hoạt động" },
+    {path: "members", label: "Thành viên"},
   ];
 
   return (

@@ -14,6 +14,33 @@ const axiosInstance = axios.create({
   },
 });
 
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // 1. Kiểm tra xem bạn lưu token dưới key nào trong LocalStorage
+    // Thông thường trong dự án của bạn là 'access_token' hoặc từ auth-storage của Zustand
+    let token = localStorage.getItem("access_token");
+
+    // 2. Nếu bạn dùng Zustand persist (auth-storage), hãy thử đoạn này:
+    if (!token) {
+      const authStorage = localStorage.getItem("auth-storage");
+      if (authStorage) {
+        const parsed = JSON.parse(authStorage);
+        token = parsed.state?.user?.token || parsed.state?.token;
+      }
+    }
+
+    // 3. Nếu có token thì gắn vào Header
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 export const apiClient = {
   async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     try {
