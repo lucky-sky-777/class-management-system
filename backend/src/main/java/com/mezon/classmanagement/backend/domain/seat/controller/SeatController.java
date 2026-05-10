@@ -38,20 +38,19 @@ public class SeatController {
 				.build();
 	}
 
-//	@PreAuthorize("@ClassPermission.manageGroup(#classId)")
-//	@PatchMapping("/{userId}")
-//	public ResponseDTO<ClassUserResponseDto> update(
-//			@PathVariable Long classId,
-//			@PathVariable Long userId,
-//			@RequestBody UpdateGroupUserSeatRequestDto request
-//	) {
-//		ClassUserResponseDto response = classUserService.updateClassUserSeat(classId, userId, request);
-//
-//		return ResponseDTO.<ClassUserResponseDto>builder()
-//				.success(true)
-//				.message("Update group user seat successful")
-//				.data(response)
-//				.build();
-//	}
+	//@PreAuthorize("@ClassPermission.manageGroup(#classId)")
+	@PatchMapping
+	public ResponseDTO<ClassSeatResponseDto> update(
+			@PathVariable Long classId,
+			@RequestBody UpdateGroupUserSeatRequestDto request
+	) {
+		ClassSeatResponseDto response = seatService.updateClassSeats(classId, request);
+
+		return ResponseDTO.<ClassSeatResponseDto>builder()
+				.success(true)
+				.message("Update group user seat successful")
+				.data(response)
+				.build();
+	}
 
 }

@@ -52,7 +52,12 @@ public class SeatService {
 						request.getSourceDeskPosition()
 				);
 
-		try {
+		if (groupUserService.existsByClassIdAndGroupIdAndDeskAndDeskPosition(
+				classId,
+				request.getTargetGroupId(),
+				request.getTargetDesk(),
+				request.getTargetDeskPosition()
+		)) {
 			GroupUser targetGroupUser = groupUserService
 					.findByClassIdAndGroupIdAndDeskAndDeskPositionOrThrow(
 							classId,
@@ -60,12 +65,11 @@ public class SeatService {
 							request.getTargetDesk(),
 							request.getTargetDeskPosition()
 					);
-
 			swap(sourceGroupUser, targetGroupUser);
 
 			groupUserService.save(sourceGroupUser);
 			groupUserService.save(targetGroupUser);
-		} catch (GlobalException e) {
+		} else {
 			set(
 					sourceGroupUser,
 					targetGroup,
@@ -166,7 +170,16 @@ public class SeatService {
 		List<GroupUserResponseDto> groupUserList = groupUserService.findByClassId(classId);
 
 		// Group theo groupId -> desk -> deskPosition
-		Map<Long, Map<Short, Map<Short, GroupUserResponseDto>>> seatMap = new HashMap<>();
+		Map<
+			Long,
+			Map<
+				Short,
+				Map<
+					Short,
+					GroupUserResponseDto
+				>
+			>
+		> seatMap = new HashMap<>();
 
 		for (GroupUserResponseDto groupUser : groupUserList) {
 
