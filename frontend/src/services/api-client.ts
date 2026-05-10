@@ -14,11 +14,29 @@ const axiosInstance = axios.create({
   },
 });
 
+let tempHeaders: Record<string, string> = {};
+
 export const apiClient = {
+  /**
+   * Set a header for API requests
+   * @param key Header name
+   * @param value Header value
+   * @param permanent If true (default), the header will be set for all subsequent requests. If false, it will only be set for the next immediate request.
+   */
+  setHeader(key: string, value: string, permanent: boolean = true) {
+    if (permanent) {
+      axiosInstance.defaults.headers.common[key] = value;
+    } else {
+      tempHeaders[key] = value;
+    }
+  },
+
   async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
+    tempHeaders = {};
     try {
       const response = await axiosInstance.get<T>(endpoint, {
-        headers: options.headers as any,
+        headers: currentHeaders,
         signal: options.signal as any,
       });
       return response.data;
@@ -37,9 +55,11 @@ export const apiClient = {
     body: any,
     options: RequestInit = {},
   ): Promise<T> {
+    const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
+    tempHeaders = {};
     try {
       const response = await axiosInstance.post<T>(endpoint, body, {
-        headers: options.headers as any,
+        headers: currentHeaders,
         signal: options.signal as any,
       });
       return response.data;
@@ -58,9 +78,11 @@ export const apiClient = {
     body: any,
     options: RequestInit = {},
   ): Promise<T> {
+    const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
+    tempHeaders = {};
     try {
       const response = await axiosInstance.patch<T>(endpoint, body, {
-        headers: options.headers as any,
+        headers: currentHeaders,
         signal: options.signal as any,
       });
       return response.data;
@@ -75,9 +97,11 @@ export const apiClient = {
   },
 
   async delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
+    tempHeaders = {};
     try {
       const response = await axiosInstance.delete<T>(endpoint, {
-        headers: options.headers as any,
+        headers: currentHeaders,
         signal: options.signal as any,
       });
       return response.data;
