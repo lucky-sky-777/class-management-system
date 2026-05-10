@@ -3,7 +3,7 @@ import type { ClassPrivacy, ClassRole } from "@shared/domain/enums";
 export interface ClassItems {
   id: number;
   name: string;
-  owner_user_id: string;
+  owner_user_id: number;
   description: string;
   code: string;
   owner_display_name: string;
