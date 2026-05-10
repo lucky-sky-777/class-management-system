@@ -105,7 +105,7 @@ export const ActivityPage: React.FC = () => {
                     Thống kê rèn luyện
                 </button>
             </div>
-2
+
             {/* Error alerts */}
             {((actError && activeTab == Tab.ACTIVITIES ) || (sumError && activeTab == Tab.SUMMARY)) && (
                 <div className="p-4 bg-ink-red-fill border border-ink-red-border text-ink-red-text rounded-lg text-sm font-medium">
