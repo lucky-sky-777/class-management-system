@@ -153,6 +153,12 @@ public class GroupUserService {
 	}
 
 	@Transactional(readOnly = true)
+	public boolean existsByClassIdAndGroupIdAndDeskAndDeskPosition(Long classId, Long groupId, Short desk, Short deskPosition) {
+		return groupUserRepository
+				.existsByClazz_IdAndGroup_IdAndDeskAndDeskPosition(classId, groupId, desk, deskPosition);
+	}
+
+	@Transactional(readOnly = true)
 	public void throwIfExistsByClassIdAndGroupIdAndUserId(Long classId, Long groupId, Long userId) {
 		if (existsByClassIdAndGroupIdAndUserid(classId, groupId, userId)) {
 			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Group user exists");
