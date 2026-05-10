@@ -12,8 +12,10 @@ import java.util.Optional;
 @Repository
 public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
 	boolean existsByClazz_IdAndGroup_IdAndUser_Id(Long classId, Long groupId, Long userId);
+
 	Optional<GroupUser> findByClazz_IdAndGroup_IdAndUser_Id(Long classId, Long groupId, Long userId);
-	//List<GroupUser> findByClazz_IdOrderByGroupIdAscDeskAscDeskPositionAsc(Long classId);
+	Optional<GroupUser> findByClazz_IdAndGroup_IdAndDeskAndDeskPosition(Long classId, Long groupId, Short desk, Short deskPosition);
+
 	List<GroupUser> findByClazz_IdAndGroup_Id(Long classId, Long groupId);
 
 	@Query(value = """

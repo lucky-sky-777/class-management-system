@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain.groupuser.service;
 
+import aQute.bnd.annotation.licenses.LGPL_2_1_only;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
@@ -128,6 +129,15 @@ public class GroupUserService {
 	public GroupUser findByClassIdAndGroupIdAndUserIdOrThrow(Long classId, Long groupId, Long userId) {
 		return groupUserRepository
 				.findByClazz_IdAndGroup_IdAndUser_Id(classId, groupId, userId)
+				.orElseThrow(() ->
+						new GlobalException(GlobalException.Type.NOT_FOUND, "Group user not found")
+				);
+	}
+
+	@Transactional(readOnly = true)
+	public GroupUser findByClassIdAndGroupIdAndDeskAndDeskPositionOrThrow(Long classId, Long groupId, Short desk, Short deskPosition) {
+		return groupUserRepository
+				.findByClazz_IdAndGroup_IdAndDeskAndDeskPosition(classId ,groupId, desk, deskPosition)
 				.orElseThrow(() ->
 						new GlobalException(GlobalException.Type.NOT_FOUND, "Group user not found")
 				);

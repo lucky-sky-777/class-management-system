@@ -9,12 +9,10 @@ import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseD
 import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserPermissionsRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserRoleRequestDto;
-import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.classuser.mapper.ClassUserMapper;
 import com.mezon.classmanagement.backend.domain.classuser.repository.ClassUserRepository;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
-import com.mezon.classmanagement.backend.domain.clazz.repository.ClassRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -59,18 +57,6 @@ public class ClassUserService {
 				.build();
 
 		ClassUser responseClassUser = save(newClassUser);
-
-		return classUserMapper.toClassUserResponseDto(responseClassUser);
-	}
-
-	@RequireClassPermission
-	@Transactional
-	public ClassUserResponseDto updateClassUserSeat(Long classId, Long userId, UpdateClassUserSeatRequestDto request) {
-		ClassUser currentClassUser = findByClassIdAndUserIdOrThrow(classId, userId);
-
-		classUserMapper.updateClassUserFromSeatRequestDto(request, currentClassUser);
-
-		ClassUser responseClassUser = save(currentClassUser);
 
 		return classUserMapper.toClassUserResponseDto(responseClassUser);
 	}

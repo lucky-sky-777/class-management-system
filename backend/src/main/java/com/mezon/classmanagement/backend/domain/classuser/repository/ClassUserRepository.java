@@ -28,6 +28,8 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 		WHERE class.id = :classId
 	""")
 	List<ClassUserResponseDto> getClassUsers(Long classId);
+
 	Optional<ClassUser> findByClazz_IdAndUser_Id(Long classId, Long userId);
+
 	boolean existsByClazz_IdAndUser_Id(Long classId, Long userId);
 }

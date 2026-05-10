@@ -6,7 +6,6 @@ import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseD
 import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserPermissionsRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserRoleRequestDto;
-import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import lombok.AccessLevel;
@@ -46,22 +45,6 @@ public class ClassUserController {
 				.data(response)
 				.build();
 	}
-
-//	@PreAuthorize("@ClassPermission.manageGroup(#classId)")
-//	@PatchMapping("/{userId}/seat")
-//	public ResponseDTO<ClassUserResponseDto> updateClassUserSeat(
-//			@PathVariable Long classId,
-//			@PathVariable Long userId,
-//			@RequestBody UpdateClassUserSeatRequestDto request
-//	) {
-//		ClassUserResponseDto response = classUserService.updateClassUserSeat(classId, userId, request);
-//
-//		return ResponseDTO.<ClassUserResponseDto>builder()
-//				.success(true)
-//				.message("Update group user seat successful")
-//				.data(response)
-//				.build();
-//	}
 
 	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
 	@PatchMapping("/{userId}/role")

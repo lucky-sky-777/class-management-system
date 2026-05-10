@@ -2,9 +2,8 @@ package com.mezon.classmanagement.backend.domain.seat.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
-import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserSeatRequestDto;
-import com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto;
-import com.mezon.classmanagement.backend.domain.groupuser.entity.GroupUser;
+import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
+import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import com.mezon.classmanagement.backend.domain.seat.dto.ClassSeatResponseDto;
 import com.mezon.classmanagement.backend.domain.seat.service.SeatService;
 import lombok.AccessLevel;
@@ -18,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @RequestMapping("/api/seats/classes/{classId}")
@@ -29,7 +26,7 @@ public class SeatController {
 	SeatService seatService;
 
 	@GetMapping
-	public ResponseDTO<ClassSeatResponseDto> getByClass(
+	public ResponseDTO<ClassSeatResponseDto> get(
 			@PathVariable Long classId
 	) {
 		ClassSeatResponseDto response = seatService.getClassSeats(classId);
@@ -41,23 +38,20 @@ public class SeatController {
 				.build();
 	}
 
-	/*
-	//@PreAuthorize("@ClassPermission.manageGroup(#classId)")
-	@PatchMapping("/{userId}")
-	public ResponseDTO<ClassUserResponseDto> updateSeat(
-			@PathVariable Long classId,
-			@PathVariable Long userId,
-			@RequestBody UpdateClassUserSeatRequestDto request
-	) {
-		ClassUserResponseDto response = classUserService.updateClassUserSeat(classId, userId, request);
-
-		return ResponseDTO.<ClassUserResponseDto>builder()
-				.success(true)
-				.message("Update group user seat successful")
-				.data(response)
-				.build();
-	}
-
-	 */
+//	@PreAuthorize("@ClassPermission.manageGroup(#classId)")
+//	@PatchMapping("/{userId}")
+//	public ResponseDTO<ClassUserResponseDto> update(
+//			@PathVariable Long classId,
+//			@PathVariable Long userId,
+//			@RequestBody UpdateGroupUserSeatRequestDto request
+//	) {
+//		ClassUserResponseDto response = classUserService.updateClassUserSeat(classId, userId, request);
+//
+//		return ResponseDTO.<ClassUserResponseDto>builder()
+//				.success(true)
+//				.message("Update group user seat successful")
+//				.data(response)
+//				.build();
+//	}
 
 }

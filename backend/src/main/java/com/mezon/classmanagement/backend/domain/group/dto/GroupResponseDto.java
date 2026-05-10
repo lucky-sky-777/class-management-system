@@ -19,8 +19,8 @@ import java.time.Instant;
 @JsonPropertyOrder(value = {
         "id",
         "class_id",
-        "leader_user_id",
-        "leader_display_name",
+        //"leader_user_id",
+        //"leader_display_name",
         "name",
         "created_at"
 })
@@ -34,23 +34,23 @@ import java.time.Instant;
 @DTO
 public final class GroupResponseDto {
 
-    @JsonProperty("id")
+    @JsonProperty(value = "id")
     Long id;
 
-    @JsonProperty("class_id")
+    @JsonProperty(value = "class_id")
     Long classId;
 
-    @JsonProperty("leader_user_id")
-    Long leaderUserId;
+    //@JsonProperty("leader_user_id")
+    //Long leaderUserId;
 
-    @JsonProperty("leader_display_name")
-    String leaderDisplayName;
+    //@JsonProperty("leader_display_name")
+    //String leaderDisplayName;
 
-    @JsonProperty("name")
+    @JsonProperty(value = "name")
     String name;
 
     @JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
-    @JsonProperty("created_at")
+    @JsonProperty(value = "created_at")
     Instant createdAt;
 
 }

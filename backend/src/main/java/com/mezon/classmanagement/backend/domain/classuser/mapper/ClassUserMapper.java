@@ -3,7 +3,7 @@ package com.mezon.classmanagement.backend.domain.classuser.mapper;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserPermissionsRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserRoleRequestDto;
-import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserSeatRequestDto;
+import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
@@ -20,7 +20,7 @@ public interface ClassUserMapper {
 	void updateClassUserFromPermissionsRequestDto(UpdateClassUserPermissionsRequestDto updateClassUserPermissionsRequestDto, @MappingTarget ClassUser classUser);
 
 	@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-	void updateClassUserFromSeatRequestDto(UpdateClassUserSeatRequestDto updateClassUserSeatRequestDto, @MappingTarget ClassUser classUser);
+	void updateClassUserFromSeatRequestDto(UpdateGroupUserSeatRequestDto updateGroupUserSeatRequestDto, @MappingTarget ClassUser classUser);
 
 	@Mapping(source = "clazz.id", target = "classId")
 	@Mapping(source = "user.id", target = "userId")
