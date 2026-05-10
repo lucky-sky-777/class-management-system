@@ -40,7 +40,7 @@ export const useActivity = (classId: ID) => {
 
     const updateActivity = async (id: ID, dto: UpdateActivityDTO): Promise<boolean> => {
         try {
-            const updated = await activityAPI.updateActivity(id, dto);
+            const updated = await activityAPI.updateActivity(classId, id, dto);
             setActivities((prev) => prev.map((a) => (a.id === id ? updated : a)));
             return true;
         } catch (err) {
@@ -51,7 +51,7 @@ export const useActivity = (classId: ID) => {
 
     const deleteActivity = async (id: ID): Promise<boolean> => {
         try {
-            await activityAPI.deleteActivity(id);
+            await activityAPI.deleteActivity(classId, id);
             setActivities((prev) => prev.filter((a) => a.id !== id));
             return true;
         } catch (err) {

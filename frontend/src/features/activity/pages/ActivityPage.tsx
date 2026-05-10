@@ -12,6 +12,10 @@ import { classDiagramAPI } from "@features/classDiagram/api";
 
 
 type Tab = "ACTIVITIES" | "SUMMARY";
+const Tab = {
+    ACTIVITIES: "ACTIVITIES",
+    SUMMARY: "SUMMARY",
+} as const;
 
 export const ActivityPage: React.FC = () => {
     const { classId } = useParams<{ classId: string }>();
@@ -101,9 +105,9 @@ export const ActivityPage: React.FC = () => {
                     Thống kê rèn luyện
                 </button>
             </div>
-
+2
             {/* Error alerts */}
-            {(actError || sumError) && (
+            {((actError && activeTab == Tab.ACTIVITIES ) || (sumError && activeTab == Tab.SUMMARY)) && (
                 <div className="p-4 bg-ink-red-fill border border-ink-red-border text-ink-red-text rounded-lg text-sm font-medium">
                     {actError || sumError}
                 </div>

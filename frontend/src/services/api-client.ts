@@ -1,4 +1,8 @@
 import axios from "axios";
+import { storage } from "@shared/storages";
+import { AUTH_STORAGE_KEY } from "@features/auth/types/keyStorage";
+import { jwtDecode } from "jwt-decode";
+import { useAuthStore } from "@features/auth/hooks/useAuthStore";
 
 /**
  * Base API Client using axios
@@ -13,6 +17,45 @@ const axiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = storage.get<string>(AUTH_STORAGE_KEY.TOKEN);
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp && decoded.exp < currentTime) {
+          storage.remove(AUTH_STORAGE_KEY.TOKEN);
+          storage.remove(AUTH_STORAGE_KEY.REFRESH);
+          useAuthStore.getState().logout();
+        } else {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        storage.remove(AUTH_STORAGE_KEY.TOKEN);
+        storage.remove(AUTH_STORAGE_KEY.REFRESH);
+        useAuthStore.getState().logout();
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      storage.remove(AUTH_STORAGE_KEY.TOKEN);
+      storage.remove(AUTH_STORAGE_KEY.REFRESH);
+      useAuthStore.getState().logout();
+    }
+    return Promise.reject(error);
+  }
+);
 
 let tempHeaders: Record<string, string> = {};
 
