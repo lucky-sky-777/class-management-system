@@ -6,7 +6,6 @@ import type {
   DeskData,
   PositionData,
 } from "@features/classDiagram/types";
-import { homeAPI } from "@features/home/api";
 import { apiClient } from "@services/api-client";
 
 export const classDiagramAPI = {
@@ -177,17 +176,24 @@ export const classDiagramAPI = {
     classId: string,
   ): Promise<{ id: string; name: string }[]> => {
     try {
-      const res = await homeAPI.getClassMembers(Number(classId));
+      const response: any = await apiClient.get(
+        `/seats/classes/${classId}/members/ungrouped`
+      );
 
-      if (res.success) {
-        return res.data.map((m) => ({
+      // Bóc tách dữ liệu (tùy thuộc backend bọc data ở lớp nào)
+      const responseData = response.data?.data || response.data;
+
+      // Nếu có dữ liệu trả về và là một mảng
+      if (Array.isArray(responseData)) {
+        return responseData.map((m: any) => ({
           id: String(m.user_id), // Lấy ID học sinh
           name: m.user_display_name || "Vô danh", // Lấy tên học sinh
         }));
       }
+      
       return [];
     } catch (error) {
-      console.error("Lỗi lấy thành viên:", error);
+      console.error("Lỗi lấy danh sách học sinh chưa có chỗ:", error);
       return [];
     }
   },

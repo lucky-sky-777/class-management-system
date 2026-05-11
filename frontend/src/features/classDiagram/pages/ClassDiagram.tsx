@@ -11,7 +11,7 @@ import { Group } from "@features/classDiagram/pages/Group";
 
 export const ClassDiagram = () => {
   const { classId } = useParams();
-  const { data, isLoading, refresh, shuffle } = useClassDiagram(classId!);
+  const { data, refresh, shuffle } = useClassDiagram(classId!);
   const [mode, setMode] = useState<"view" | "attendance" | "setup">("view");
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
