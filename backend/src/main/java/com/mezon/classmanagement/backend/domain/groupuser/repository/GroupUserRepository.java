@@ -27,6 +27,7 @@ public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
 		groupUser.id,
 		clazz.id,
 		group.id,
+		group.name,
 		user.id,
 		user.displayName,
 		groupUser.role,

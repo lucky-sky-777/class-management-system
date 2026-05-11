@@ -71,8 +71,9 @@ public class SeatService {
 					);
 			swap(sourceGroupUser, targetGroupUser);
 
-			groupUserService.save(sourceGroupUser);
-			groupUserService.save(targetGroupUser);
+			//groupUserService.save(sourceGroupUser);
+			//groupUserService.save(targetGroupUser);
+			groupUserService.saveAll(List.of(sourceGroupUser, targetGroupUser));
 		} else {
 			set(
 					sourceGroupUser,
@@ -219,6 +220,7 @@ public class SeatService {
 	public ClassSeatResponseDto getClassSeats(Long classId) {
 		List<GroupUserResponseDto> groupUserList = groupUserService.getByClassId(classId);
 		Map<Long, Map<Short, Map<Short, GroupUserResponseDto>>> seatMap = new HashMap<>();
+		Map<Long, String> groupNameMap = new HashMap<>();
 		for (GroupUserResponseDto groupUser : groupUserList) {
 			seatMap
 					.computeIfAbsent(
@@ -230,6 +232,10 @@ public class SeatService {
 							k -> new HashMap<>()
 					)
 					.put(groupUser.getDeskPosition(), groupUser);
+			groupNameMap.putIfAbsent(
+					groupUser.getGroupId(),
+					groupUser.getGroupName()
+			);
 		}
 		List<LinkedHashMap<Long, GroupSeatResponseDto>> groups = new ArrayList<>();
 		for (long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++) {
@@ -259,6 +265,7 @@ public class SeatService {
 				desks.add(deskMap);
 			}
 			GroupSeatResponseDto groupDto = GroupSeatResponseDto.builder()
+					.name(groupNameMap.get(groupId))
 					.desks(desks)
 					.build();
 			LinkedHashMap<Long, GroupSeatResponseDto> groupMap = new LinkedHashMap<>();

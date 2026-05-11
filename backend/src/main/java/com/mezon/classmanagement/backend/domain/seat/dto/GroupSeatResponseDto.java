@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 @JsonPropertyOrder(value = {
+		"name",
 		"desks"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
@@ -27,6 +28,9 @@ import java.util.List;
 @AllArgsConstructor
 @DTO
 public final class GroupSeatResponseDto {
+
+	@JsonProperty(value = "name")
+	String name;
 
 	@JsonProperty(value = "desks")
 	List<LinkedHashMap<Short /* desk */, DeskSeatResponseDto>> desks;
