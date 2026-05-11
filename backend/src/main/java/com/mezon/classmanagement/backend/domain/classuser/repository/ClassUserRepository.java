@@ -29,7 +29,11 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 	""")
 	List<ClassUserResponseDto> getClassUsers(Long classId);
 
+	List<ClassUser> findByClazz_Id(Long classId);
+
 	Optional<ClassUser> findByClazz_IdAndUser_Id(Long classId, Long userId);
 
 	boolean existsByClazz_IdAndUser_Id(Long classId, Long userId);
+
+	long countByClazz_Id(Long classId);
 }

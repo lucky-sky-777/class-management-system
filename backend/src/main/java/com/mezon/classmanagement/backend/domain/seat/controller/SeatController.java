@@ -53,4 +53,17 @@ public class SeatController {
 				.build();
 	}
 
+	@GetMapping("/shuffle")
+	public ResponseDTO<ClassSeatResponseDto> shuffle(
+			@PathVariable Long classId
+	) {
+		ClassSeatResponseDto response = seatService.shuffle(classId);
+
+		return ResponseDTO.<ClassSeatResponseDto>builder()
+				.success(true)
+				.message("Shuffle class seats successful")
+				.data(response)
+				.build();
+	}
+
 }

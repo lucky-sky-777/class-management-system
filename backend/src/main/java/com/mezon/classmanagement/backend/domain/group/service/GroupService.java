@@ -101,6 +101,11 @@ public class GroupService {
      * Find
      */
 
+    @Transactional
+    public List<Group> findAllById(Iterable<Long> ids) {
+        return groupRepository.findAllById(ids);
+    }
+
     @Transactional(readOnly = true)
     public List<Group> findByClassId(Long classId) {
         return groupRepository

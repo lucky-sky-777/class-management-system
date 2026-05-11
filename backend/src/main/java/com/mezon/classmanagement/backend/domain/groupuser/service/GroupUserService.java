@@ -1,6 +1,5 @@
 package com.mezon.classmanagement.backend.domain.groupuser.service;
 
-import aQute.bnd.annotation.licenses.LGPL_2_1_only;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
@@ -105,6 +104,11 @@ public class GroupUserService {
 	}
 
 	@Transactional
+	public List<GroupUser> saveAll(Iterable<GroupUser> groupUsers) {
+		return groupUserRepository.saveAll(groupUsers);
+	}
+
+	@Transactional
 	public void delete(GroupUser groupUser) {
 		groupUserRepository.delete(groupUser);
 	}
@@ -114,9 +118,15 @@ public class GroupUserService {
 	 */
 
 	@Transactional(readOnly = true)
-	public List<GroupUserResponseDto> findByClassId(Long classId) {
+	public List<GroupUser> findByClassId(Long classId) {
 		return groupUserRepository
-				.findByClazz_IdOrderByGroupIdAscDeskAscDeskPositionAsc(classId);
+				.findByClazz_IdOrderByGroup_IdAscDeskAscDeskPositionAsc(classId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GroupUserResponseDto> getByClassId(Long classId) {
+		return groupUserRepository
+				.getByClazz_IdOrderByGroup_IdAscDeskAscDeskPositionAsc(classId);
 	}
 
 	@Transactional(readOnly = true)
