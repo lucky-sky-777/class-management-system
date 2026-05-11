@@ -1,28 +1,39 @@
-// Thêm 'late' (Đi trễ) và 'unmarked' (Chưa điểm danh)
+// @features/classDiagram/types.ts
+
 export type AttendanceStatus = 
   | 'present' 
   | 'absent_excused' 
   | 'absent_unexcused' 
-  | 'late'        // Mới: Đi trễ
-  | 'unmarked'    // Mới: Chưa điểm danh (Trạng thái mặc định khi vừa vào lớp)
-  | 'empty';      // (Vẫn giữ nếu UI của bạn đang dùng để render ô xám)
+  | 'late'        
+  | 'unmarked'    
+  | 'empty';      
 
 export interface StudentSeat {
   id: string;
   name: string;
-  avatarUrl?: string | null; // Mới: Hỗ trợ hiển thị ảnh đại diện sau này
-  
-  // Tọa độ dành cho UI hiển thị
-  row: number;    // Hàng 1, 2, 3...
-  column: number; // Cột 1, 2, 3, 4
-  side: 'left' | 'right';
-  
-  // Tọa độ gốc của Backend (Mới: Giúp gọi API Xếp chỗ cực dễ, không cần dịch ngược)
-  groupId?: number; 
-  deskId?: number;
-  positionId?: number;
-
+  avatarUrl?: string | null; 
   status: AttendanceStatus;
+  
+  // Lưu tọa độ thực tế từ Backend để dễ gọi API xếp chỗ
+  groupId: number; 
+  deskId: number;
+  positionId: number;
+}
+
+// Định nghĩa cấu trúc Group -> Desk -> Position
+export interface PositionData {
+  positionId: number;
+  student: StudentSeat | null; // null nếu ghế trống
+}
+
+export interface DeskData {
+  deskId: number;
+  positions: PositionData[];
+}
+
+export interface GroupData {
+  groupId: number;
+  desks: DeskData[];
 }
 
 export interface ClassDiagramData {
@@ -30,6 +41,6 @@ export interface ClassDiagramData {
   presentCount: number;
   excusedCount: number;
   unexcusedCount: number;
-  lateCount?: number; // Mới: Thống kê số người đi trễ
-  seats: StudentSeat[];
+  lateCount?: number;
+  groups: GroupData[]; // THAY ĐỔI LỚN NHẤT: Dùng mảng Group thay vì mảng seats
 }
