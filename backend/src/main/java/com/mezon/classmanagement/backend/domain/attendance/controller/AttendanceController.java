@@ -28,8 +28,7 @@ public class AttendanceController {
 			@PathVariable Long classId,
 			@PathVariable Long groupId,
 			@RequestBody AttendanceRequestDto request
-
-			) {
+	) {
 		ClassSeatResponseDto response = attendanceService.attend(classId, groupId, request);
 
 		return ResponseDTO.<ClassSeatResponseDto>builder()

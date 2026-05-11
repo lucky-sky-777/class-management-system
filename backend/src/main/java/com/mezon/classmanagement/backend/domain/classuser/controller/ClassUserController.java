@@ -107,4 +107,18 @@ public class ClassUserController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping("/ungrouped")
+	public ResponseDTO<List<ClassUserResponseDto>> getUngroupedClassUsers(
+			@PathVariable Long classId
+	) {
+		List<ClassUserResponseDto> response = classUserService.getUngroupedClassUsers(classId);
+
+		return ResponseDTO.<List<ClassUserResponseDto>>builder()
+				.success(true)
+				.message("Get ungrouped class users successful")
+				.data(response)
+				.build();
+	}
+
 }

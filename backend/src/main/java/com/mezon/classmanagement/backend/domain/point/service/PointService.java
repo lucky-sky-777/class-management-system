@@ -79,6 +79,7 @@ public class PointService {
 				.build();
 	}
 
+	@RequireClassPermission
 	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByGroup(Long classId, Long groupId) {
 		return getByClassIdAndGroupId(classId, groupId);
