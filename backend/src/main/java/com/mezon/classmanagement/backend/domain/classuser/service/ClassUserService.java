@@ -104,6 +104,13 @@ public class ClassUserService {
 		return classUserRepository.getClassUsers(classId);
 	}
 
+	@RequireClassPermission
+	@Transactional(readOnly = true)
+	public List<ClassUserResponseDto> getUngroupedClassUsers(Long classId) {
+
+		return classUserRepository.getUngroupedClassUsers(classId);
+	}
+
 	/**
 	 * Action
 	 */

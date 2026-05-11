@@ -28,6 +28,26 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 		WHERE class.id = :classId
 	""")
 	List<ClassUserResponseDto> getClassUsers(Long classId);
+	@Query("""
+	select new com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto(
+		classUser.id,
+		class.id,
+		class.name,
+		user.id,
+		user.displayName,
+		user.avatarUrl,
+		classUser.role,
+		classUser.joinedAt
+	)
+	from ClassUser classUser
+	join classUser.clazz class
+	join classUser.user user
+	left join GroupUser groupUser on groupUser.clazz.id = class.id and groupUser.user.id = user.id
+	where class.id = :classId
+	and groupUser.id is null
+	order by user.displayName asc
+	""")
+	List<ClassUserResponseDto> getUngroupedClassUsers(Long classId);
 
 	List<ClassUser> findByClazz_Id(Long classId);
 
