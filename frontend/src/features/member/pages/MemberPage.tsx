@@ -5,6 +5,7 @@ import { useAuth } from "@features/auth";
 import { memberAPI } from "@features/member/api";
 import { apiClient } from "@services/api-client";
 import type { MemberRole, Member } from "@features/member/types";
+import { ShieldPlus, ShieldMinus, CircleX } from "lucide-react";
 
 // --- COMPONENT CON: HIỂN THỊ TỪNG THÀNH VIÊN ---
 const MemberItem = ({ member, myRole, onUpdateRole, onKick }: any) => {
@@ -33,14 +34,14 @@ const MemberItem = ({ member, myRole, onUpdateRole, onKick }: any) => {
               className="p-2 hover:bg-indigo-100 rounded-full text-indigo-600 transition-colors"
               title={member.role === "CLASS_ADMIN" ? "Hạ cấp" : "Thăng cấp"}
             >
-              {member.role === "CLASS_ADMIN" ? "🛡️" : "🔼"}
+              {member.role === "CLASS_ADMIN" ? <ShieldMinus/> : <ShieldPlus/>}
             </button>
             <button
               onClick={() => onKick(member.userId)}
               className="p-2 hover:bg-red-100 rounded-full text-red-500 transition-colors"
               title="Xóa khỏi nhóm"
             >
-              🚫
+              <CircleX color="#ff0000" />
             </button>
           </>
         )}
