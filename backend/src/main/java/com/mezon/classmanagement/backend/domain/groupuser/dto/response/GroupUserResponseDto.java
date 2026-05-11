@@ -26,7 +26,9 @@ import java.time.Instant;
 		"user_display_name",
 		"role",
 		"desk",
-		"desk_position"
+		"desk_position",
+		"attendance_status",
+		"joined_at"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -64,6 +66,9 @@ public final class GroupUserResponseDto {
 
 	@JsonProperty(value = "desk_position")
 	Short deskPosition;
+
+	@JsonProperty(value = "attendance_status")
+	GroupUser.AttendanceStatus attendanceStatus;
 
 	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "joined_at")

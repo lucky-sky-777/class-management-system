@@ -1,10 +1,9 @@
-package com.mezon.classmanagement.backend.domain.seat.dto;
+package com.mezon.classmanagement.backend.domain.attendance.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
-import com.mezon.classmanagement.backend.domain.groupuser.entity.GroupUser;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,9 +13,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @JsonPropertyOrder(value = {
-		"user_id",
-		"user_display_name",
-		"attendance_status"
+		"attendance_user_id"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -26,15 +23,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class DeskPositionSeatResponseDto {
+public final class AttendanceUserIdResponseDto {
 
-	@JsonProperty(value = "user_id")
-	Long userId;
-
-	@JsonProperty(value = "user_display_name")
-	String userDisplayName;
-
-	@JsonProperty(value = "attendance_status")
-	GroupUser.AttendanceStatus attendanceStatus;
+	@JsonProperty(value = "attendance_user_id")
+	Long attendanceUserId;
 
 }

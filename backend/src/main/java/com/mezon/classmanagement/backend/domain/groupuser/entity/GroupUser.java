@@ -62,6 +62,10 @@ public class GroupUser {
 	@Column(name = "desk_position", nullable = true)
 	Short deskPosition;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "attendance_status", nullable = false)
+	AttendanceStatus attendanceStatus;
+
 	@Column(name = "joined_at", nullable = false, insertable = false, updatable = false)
 	Instant joinedAt;
 
@@ -70,10 +74,19 @@ public class GroupUser {
 		GROUP_MEMBER
 	}
 
+	public enum AttendanceStatus {
+		PRESENT,
+		ABSENT_EXCUSED,
+		ABSENT_UNEXCUSED
+	}
+
 	@PrePersist
 	public void prePersist() {
 		if (role == null) {
 			role = Role.GROUP_MEMBER;
+		}
+		if (attendanceStatus == null) {
+			attendanceStatus = AttendanceStatus.ABSENT_UNEXCUSED;
 		}
 	}
 }

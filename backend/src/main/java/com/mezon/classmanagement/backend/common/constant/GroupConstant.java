@@ -4,8 +4,8 @@ public final class GroupConstant {
 
 	public static final int GROUP_COUNT = 4;
 
-	public static final int DESK_COUNT = 10;
+	public static final int DESK_COUNT = 3;
 
-	public static final int DESK_POSITION_COUNT = 2;
+	public static final int DESK_POSITION_COUNT = 4;
 
 }

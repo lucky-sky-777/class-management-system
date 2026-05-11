@@ -33,6 +33,7 @@ public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
 		groupUser.role,
 		groupUser.desk,
 		groupUser.deskPosition,
+		groupUser.attendanceStatus,
 		groupUser.joinedAt
 	)
 	from GroupUser groupUser

@@ -180,8 +180,6 @@ public class SeatService {
 
 		int totalGroups = groups.size();
 
-		final int POSITIONS_PER_DESK = 2;
-
 		Map<Long, Integer> groupSeatCounter = new HashMap<>();
 
 		for (Group group : groups) {
@@ -195,9 +193,9 @@ public class SeatService {
 
 			int seatIndex = groupSeatCounter.get(group.getId());
 
-			short desk = (short) ((seatIndex / POSITIONS_PER_DESK) + 1);
+			short desk = (short) ((seatIndex / GroupConstant.DESK_POSITION_COUNT) + 1);
 
-			short deskPosition = (short) ((seatIndex % POSITIONS_PER_DESK) + 1);
+			short deskPosition = (short) ((seatIndex % GroupConstant.DESK_POSITION_COUNT) + 1);
 
 			groupUser.setGroup(group);
 
@@ -251,6 +249,7 @@ public class SeatService {
 						seatDto = DeskPositionSeatResponseDto.builder()
 								.userId(user.getUserId())
 								.userDisplayName(user.getUserDisplayName())
+								.attendanceStatus(user.getAttendanceStatus())
 								.build();
 					}
 					LinkedHashMap<Short, DeskPositionSeatResponseDto> positionMap = new LinkedHashMap<>();

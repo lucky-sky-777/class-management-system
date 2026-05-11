@@ -88,7 +88,7 @@ public class AuthController {
 		String jti = jwtService.extractJti(authentication);
 
 		if (invalidatedTokenService.isInvalidated(jti)) {
-			throw new AuthenticationCredentialsNotFoundException("No authentication kkk");
+			throw new AuthenticationCredentialsNotFoundException("No authentication");
 		}
 
 		return ResponseDTO.<Void>builder()
