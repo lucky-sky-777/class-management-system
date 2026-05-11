@@ -118,6 +118,16 @@ public class ClassUserService {
 		classUserRepository.delete(classUser);
 	}
 
+	/**
+	 * Find
+	 */
+
+	@Transactional(readOnly = true)
+	public List<ClassUser> findByClassId(Long classId) {
+		return classUserRepository
+				.findByClazz_Id(classId);
+	}
+
 	@Transactional(readOnly = true)
 	public ClassUser findByClassIdAndUserIdOrThrow(Long classId, Long userId) {
 		return classUserRepository
@@ -139,6 +149,16 @@ public class ClassUserService {
 		if (existsByClassIdAndUserId(classId, userId)) {
 			throw new GlobalException(GlobalException.Type.ALREADY_EXISTS, "Class user exists");
 		}
+	}
+
+	/**
+	 * Count
+	 */
+
+	@Transactional(readOnly = true)
+	public long countByClassId(Long classId) {
+		return classUserRepository
+				.countByClazz_Id(classId);
 	}
 
 	/**

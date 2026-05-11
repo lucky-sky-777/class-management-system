@@ -1,7 +1,10 @@
 package com.mezon.classmanagement.backend.domain.seat.controller;
 
+import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,20 +37,32 @@ public class SeatController {
 				.build();
 	}
 
-	// @PreAuthorize("@ClassPermission.manageGroup(#classId)")
-	// @PatchMapping("/{userId}")
-	// public ResponseDTO<ClassUserResponseDto> update(
-	// 		@PathVariable Long classId,
-	// 		@PathVariable Long userId,
-	// 		@RequestBody UpdateGroupUserSeatRequestDto request
-	// ) {
-	// 	ClassUserResponseDto response = classUserService.updateClassUserSeat(classId, userId, request);
+	//@PreAuthorize("@ClassPermission.manageGroup(#classId)")
+	@PatchMapping
+	public ResponseDTO<ClassSeatResponseDto> update(
+			@PathVariable Long classId,
+			@RequestBody UpdateGroupUserSeatRequestDto request
+	) {
+		ClassSeatResponseDto response = seatService.updateClassSeats(classId, request);
 
-	// 	return ResponseDTO.<ClassUserResponseDto>builder()
-	// 			.success(true)
-	// 			.message("Update group user seat successful")
-	// 			.data(response)
-	// 			.build();
-	// }
+		return ResponseDTO.<ClassSeatResponseDto>builder()
+				.success(true)
+				.message("Update group user seat successful")
+				.data(response)
+				.build();
+	}
+
+	@GetMapping("/shuffle")
+	public ResponseDTO<ClassSeatResponseDto> shuffle(
+			@PathVariable Long classId
+	) {
+		ClassSeatResponseDto response = seatService.shuffle(classId);
+
+		return ResponseDTO.<ClassSeatResponseDto>builder()
+				.success(true)
+				.message("Shuffle class seats successful")
+				.data(response)
+				.build();
+	}
 
 }
