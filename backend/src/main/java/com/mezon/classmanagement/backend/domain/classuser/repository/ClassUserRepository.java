@@ -20,6 +20,7 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 			user.displayName,
 			user.avatarUrl,
 			classUser.role,
+			(class.owner.id = user.id),
 			classUser.joinedAt
 		)
 		FROM ClassUser classUser
@@ -37,6 +38,7 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 		user.displayName,
 		user.avatarUrl,
 		classUser.role,
+		(class.owner.id = user.id),
 		classUser.joinedAt
 	)
 	from ClassUser classUser

@@ -58,6 +58,9 @@ public final class ClassUserResponseDto {
 	@JsonProperty(value = "role")
 	ClassUser.Role role;
 
+	@JsonProperty(value = "is_owner")
+	Boolean isOwner;
+
 	//@JsonProperty(value = "permission_codes")
 	//List<String> permissionCodes;
 
