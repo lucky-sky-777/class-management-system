@@ -53,6 +53,15 @@ public class UserService {
 		userRepository.delete(user);
 	}
 
+	@Transactional(readOnly = true)
+	public User findByUserIdOrThrow(Long userId) {
+		return userRepository
+				.findById(userId)
+				.orElseThrow(() ->
+						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+				);
+	}
+
 	@Transactional
 	public User findByUsernameOrThrow(String username) {
 		return userRepository

@@ -9,8 +9,10 @@ import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDt
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.InvalidatedToken;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
+import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.GoogleUser;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.MezonUser;
 import lombok.AccessLevel;
@@ -23,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -32,6 +35,7 @@ public class AuthService {
 
 	AuthenticationManager authenticationManager;
 	UserService userService;
+	UserMapper userMapper;
 	JwtService jwtService;
 	InvalidatedTokenService invalidatedTokenService;
 
@@ -148,6 +152,13 @@ public class AuthService {
 		}
 
 		return authentication;
+	}
+
+	@Transactional
+	public UserResponseDto getCurrentUser(Authentication authentication) {
+		Long userId = jwtService.extractUserId(authentication);
+		User user = userService.findByUserIdOrThrow(userId);
+		return userMapper.toUserResponseDto(user);
 	}
 
 	/*

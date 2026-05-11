@@ -8,6 +8,7 @@ import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutRequestD
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.auth.service.InvalidatedTokenService;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,6 +67,18 @@ public class AuthController {
 				.success(true)
 				.message("Sign out successful")
 				.data(signOutResponseDto)
+				.build();
+	}
+
+	@GetMapping("/user")
+	public ResponseDTO<UserResponseDto> current() {
+		Authentication authentication = authService.getAuthentication();
+		UserResponseDto response = authService.getCurrentUser(authentication);
+
+		return ResponseDTO.<UserResponseDto>builder()
+				.success(true)
+				.message("Get current user successful")
+				.data(response)
 				.build();
 	}
 
