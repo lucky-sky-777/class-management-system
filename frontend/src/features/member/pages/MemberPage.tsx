@@ -6,18 +6,16 @@ import { memberAPI } from "@features/member/api";
 import { apiClient } from "@services/api-client";
 import type { MemberRole, Member } from "@features/member/types";
 import { ShieldPlus, ShieldMinus, CircleX } from "lucide-react";
+import { Avatar } from "@shared/components/ui/Avatar";
 
 // --- COMPONENT CON: HIỂN THỊ TỪNG THÀNH VIÊN ---
 const MemberItem = ({ member, myRole, onUpdateRole, onKick }: any) => {
   const name = member.displayName || "Thành viên";
-  const firstChar = name.trim().charAt(0).toUpperCase();
 
   return (
     <div className="group flex items-center justify-between py-3 px-2 hover:bg-slate-50 rounded-lg transition-all border-b border-slate-50 last:border-0">
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-sm">
-          {firstChar}
-        </div>
+        <Avatar name={name}/>
         <div>
           <p className="text-sm font-semibold text-slate-700">{name}</p>
           <p className="text-xs text-slate-400">
@@ -34,7 +32,13 @@ const MemberItem = ({ member, myRole, onUpdateRole, onKick }: any) => {
               className="p-2 hover:bg-indigo-100 rounded-full text-indigo-600 transition-colors"
               title={member.role === "CLASS_ADMIN" ? "Hạ cấp" : "Thăng cấp"}
             >
-              {member.role === "CLASS_ADMIN" ? <ShieldMinus/> : <ShieldPlus/>}
+              {member.role === "CLASS_ADMIN" ? 
+                <ShieldMinus
+                  aria-label="Hạ cấp"
+                /> : 
+                <ShieldPlus
+                  aria-label="Thăng cấp"
+                />}
             </button>
             <button
               onClick={() => onKick(member.userId)}
@@ -47,12 +51,12 @@ const MemberItem = ({ member, myRole, onUpdateRole, onKick }: any) => {
         )}
         {myRole === "CLASS_ADMIN" && member.role === "CLASS_MEMBER" && (
           <button
-            onClick={() => onKick(member.userId)}
-            className="p-2 hover:bg-red-100 rounded-full text-red-500 transition-colors"
-            title="Xóa khỏi nhóm"
-          >
-            🚫
-          </button>
+              onClick={() => onKick(member.userId)}
+              className="p-2 hover:bg-red-100 rounded-full text-red-500 transition-colors"
+              title="Xóa khỏi nhóm"
+            >
+              <CircleX color="#ff0000" />
+            </button>
         )}
       </div>
     </div>
