@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain.attendance.service;
 
+import com.mezon.classmanagement.backend.domain.attendance.dto.AttendanceRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.entity.GroupUser;
 import com.mezon.classmanagement.backend.domain.groupuser.service.GroupUserService;
 import com.mezon.classmanagement.backend.domain.seat.dto.ClassSeatResponseDto;
@@ -23,10 +24,10 @@ public class AttendanceService {
 	SeatService seatService;
 
 	@Transactional
-	public ClassSeatResponseDto attend(Long classId, Long groupId, Long userId, GroupUser.AttendanceStatus attendanceStatus) {
-		GroupUser currentGroupUser = groupUserService.findByClassIdAndGroupIdAndUserIdOrThrow(classId, groupId, userId);
+	public ClassSeatResponseDto attend(Long classId, Long groupId, AttendanceRequestDto request) {
+		GroupUser currentGroupUser = groupUserService.findByClassIdAndGroupIdAndUserIdOrThrow(classId, groupId, request.getUserId());
 
-		currentGroupUser.setAttendanceStatus(attendanceStatus);
+		currentGroupUser.setAttendanceStatus(request.getAttendanceStatus());
 
 		groupUserService.save(currentGroupUser);
 
