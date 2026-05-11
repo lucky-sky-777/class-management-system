@@ -7,6 +7,7 @@ import { ChevronRight } from "lucide-react";
 import { useUIStore } from "@app/store";
 import { CreateClassModal } from "@features/home/pages/CreateClass";
 import { JoinClassModal } from "@features/home/pages/JoinClass";
+import { Avatar } from "@shared/components/ui/Avatar";
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -131,10 +132,10 @@ export const Header = () => {
             }
             className={`ml-1 w-9 h-9 ${isAuthenticated ? "bg-ink-blue-fill border-ink-blue-border" : "bg-gradient-to-tr from-orange-100 to-orange-200 border-orange-300"} rounded-full flex items-center justify-center overflow-hidden border cursor-pointer shrink-0 hover:ring-4 hover:ring-ink-blue-fill transition-all`}
           >
-            {isAuthenticated ? (
-              <span className="text-warm-text font-bold text-sm">
-                {user?.displayName?.charAt(0).toUpperCase()}
-              </span>
+            {isAuthenticated && user ? (
+                <Avatar
+                  name={user.displayName ?? user.username}
+                />
             ) : (
               <User size={20} className="text-ink-3" />
             )}
