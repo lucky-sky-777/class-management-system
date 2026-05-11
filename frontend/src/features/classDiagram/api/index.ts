@@ -1,3 +1,4 @@
+// src/features/classDiagram/api.ts
 import type {
   ClassDiagramData,
   AttendanceStatus,
@@ -17,6 +18,9 @@ export const classDiagramAPI = {
       const groups: GroupData[] = [];
       let totalStudents = 0;
       let presentCount = 0;
+      let excusedCount = 0;
+      let unexcusedCount = 0;
+      let lateCount = 0;
 
       if (backendData && backendData.groups) {
         backendData.groups.forEach((groupObj: any) => {
@@ -26,36 +30,57 @@ export const classDiagramAPI = {
 
           const desks: DeskData[] = [];
 
-          groupDataBE.desks.forEach((deskObj: any) => {
-            const deskIdStr = Object.keys(deskObj)[0];
-            const deskPositionsBE = deskObj[deskIdStr].desk_positions;
-            const deskId = parseInt(deskIdStr);
+          if (groupDataBE.desks) {
+            groupDataBE.desks.forEach((deskObj: any) => {
+              const deskIdStr = Object.keys(deskObj)[0];
+              const deskPositionsBE = deskObj[deskIdStr].desk_positions;
+              const deskId = parseInt(deskIdStr);
 
-            const positions: PositionData[] = [];
+              const positions: PositionData[] = [];
 
-            deskPositionsBE.forEach((posObj: any) => {
-              const posIdStr = Object.keys(posObj)[0];
-              const studentData = posObj[posIdStr];
-              const positionId = parseInt(posIdStr);
+              if (deskPositionsBE) {
+                deskPositionsBE.forEach((posObj: any) => {
+                  const posIdStr = Object.keys(posObj)[0];
+                  const studentData = posObj[posIdStr];
+                  const positionId = parseInt(posIdStr);
 
-              let student = null;
-              if (studentData) {
-                totalStudents++;
-                presentCount++; // Giả sử mặc định là present
-                student = {
-                  id: String(studentData.user_id),
-                  name: studentData.user_display_name,
-                  avatarUrl: studentData.avatar_url || null, // Nếu BE có trả về
-                  status: "present" as AttendanceStatus,
-                  groupId,
-                  deskId,
-                  positionId,
-                };
+                  let student = null;
+                  if (studentData && studentData.user_id) {
+                    
+                    // 1. CHUYỂN ĐỔI TRẠNG THÁI TỪ BACKEND SANG FRONTEND
+                    const beStatus = studentData.attendance_status || "PRESENT";
+                    const statusMapUI: Record<string, AttendanceStatus> = {
+                      PRESENT: "present",
+                      ABSENT_EXCUSED: "absent_excused",
+                      ABSENT_UNEXCUSED: "absent_unexcused",
+                      LATE: "late",
+                    };
+                    const currentStatus = statusMapUI[beStatus] || "present";
+
+                    // 2. ĐẾM SỐ LƯỢNG CHO BẢNG THỐNG KÊ
+                    totalStudents++;
+                    if (currentStatus === "present") presentCount++;
+                    else if (currentStatus === "absent_excused") excusedCount++;
+                    else if (currentStatus === "absent_unexcused") unexcusedCount++;
+                    else if (currentStatus === "late") lateCount++;
+
+                    // 3. RÁP DỮ LIỆU VÀO GHẾ
+                    student = {
+                      id: String(studentData.user_id),
+                      name: studentData.user_display_name || "Vô danh",
+                      avatarUrl: studentData.avatar_url || null,
+                      status: currentStatus, // <-- ĐÃ SỬA THÀNH BIẾN ĐỘNG
+                      groupId,
+                      deskId,
+                      positionId,
+                    };
+                  }
+                  positions.push({ positionId, student });
+                });
               }
-              positions.push({ positionId, student });
+              desks.push({ deskId, positions });
             });
-            desks.push({ deskId, positions });
-          });
+          }
           groups.push({ groupId, desks });
         });
       }
@@ -63,8 +88,9 @@ export const classDiagramAPI = {
       return {
         totalStudents,
         presentCount,
-        excusedCount: 0,
-        unexcusedCount: 0,
+        excusedCount,
+        unexcusedCount,
+        lateCount,
         groups,
       };
     } catch (error) {
@@ -72,14 +98,38 @@ export const classDiagramAPI = {
       throw error;
     }
   },
+
   // 2. GỌI API ĐIỂM DANH
-  updateAttendance: async (studentId: string, status: AttendanceStatus) => {
-    console.log(`API: Cập nhật SV ${studentId} sang trạng thái ${status}`);
+  updateAttendance: async (
+    classId: string,
+    groupId: number,
+    studentId: string,
+    status: AttendanceStatus,
+  ) => {
+    // 1. Map trạng thái của Frontend (chữ thường) sang Enum của Backend (CHỮ IN HOA)
+    const statusMap: Record<string, string> = {
+      present: "PRESENT",
+      absent_excused: "ABSENT_EXCUSED",
+      absent_unexcused: "ABSENT_UNEXCUSED",
+      late: "LATE",
+    };
 
-    // KHI NÀO NỐI API THÌ MỞ COMMENT RA:
-    // return await apiClient.put(`/attendance/${studentId}`, { status });
+    const payload = {
+      user_id: parseInt(studentId),
+      attendance_status: statusMap[status] || "PRESENT", // Mặc định nếu lỗi thì là PRESENT
+    };
 
-    return new Promise((resolve) => setTimeout(resolve, 300));
+    try {
+      // 2. Gọi POST API theo chuẩn tài liệu Hào đưa
+      const response: any = await apiClient.post(
+        `/attendances/classes/${classId}/groups/${groupId}`,
+        payload,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi điểm danh:", error);
+      throw error;
+    }
   },
 
   assignSeat: async (
@@ -93,6 +143,7 @@ export const classDiagramAPI = {
     sourcePositionId: number | null,
   ) => {
     const payload = {
+      user_id: parseInt(studentId),
       source_group_id: sourceGroupId,
       source_desk: sourceDeskId,
       source_desk_position: sourcePositionId,
@@ -101,9 +152,8 @@ export const classDiagramAPI = {
       target_desk_position: targetPositionId,
     };
 
-    console.log(`Bắn dữ liệu xếp chỗ SV ${studentId}:`, payload);
     const response: any = await apiClient.patch(
-      `/seats/classes/${classId}/${studentId}`,
+      `/seats/classes/${classId}`,
       payload,
     );
     return response.data;
