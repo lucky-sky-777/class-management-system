@@ -565,7 +565,8 @@ sidebar: {
           },
         },
         ".input-field input, .input-field textarea, .input-field select": {
-          flex: "1",
+          width: "100%",
+          minWidth: "0",
           border: "none",
           outline: "none",
           background: "transparent",
@@ -574,6 +575,9 @@ sidebar: {
           color: theme("colors.ink.1"),
           padding: "9px 0",
           "&::placeholder": { color: theme("colors.ink.4") },
+        },
+        '.input-field input[type="datetime-local"]': {
+          paddingRight: "12px",
         },
         ".input-error .input-field": {
           borderColor: theme("colors.ink-red.text"),

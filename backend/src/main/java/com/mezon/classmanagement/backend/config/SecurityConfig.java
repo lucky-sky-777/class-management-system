@@ -1,10 +1,10 @@
 package com.mezon.classmanagement.backend.config;
 
-import com.mezon.classmanagement.backend.component.exceptionhandler.CustomAccessDeniedHandler;
-import com.mezon.classmanagement.backend.component.exceptionhandler.CustomAuthenticationEntryPoint;
-import com.mezon.classmanagement.backend.constant.JwtConstant;
-import com.mezon.classmanagement.backend.constant.WarningConstant;
-import com.mezon.classmanagement.backend.service.UserDetailsServiceImpl;
+import com.mezon.classmanagement.backend.common.exeption.custom.CustomAccessDeniedHandler;
+import com.mezon.classmanagement.backend.common.exeption.custom.CustomAuthenticationEntryPoint;
+import com.mezon.classmanagement.backend.common.constant.JwtConstant;
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.domain.auth.service.impl.UserDetailsServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -60,7 +60,12 @@ public class SecurityConfig {
 						.accessDeniedHandler(customAccessDeniedHandler)
 				)
 				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(HttpMethod.POST, "/api/auth/state").authenticated()
 						.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/auth/user").authenticated()
+						.requestMatchers(HttpMethod.GET, "/api/auth/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/seats/**").permitAll()
+						.requestMatchers(HttpMethod.PATCH, "/api/seats/**").permitAll()
 						.anyRequest().authenticated()
 				)
 				.oauth2ResourceServer(oauth2 -> oauth2
@@ -94,19 +99,34 @@ public class SecurityConfig {
 				.build();
 	}
 
+//	@Bean
+//	public CorsConfigurationSource corsConfigurationSource() {
+//		CorsConfiguration corsConfiguration = new CorsConfiguration();
+//
+//		corsConfiguration.setAllowedOrigins(/*List.of("http://localhost:5173")*/ List.of("*"));
+//		corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+//		corsConfiguration.setAllowedHeaders(List.of("*"));
+//		corsConfiguration.setAllowCredentials(true);
+//
+//		UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+//		urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
+//
+//		return urlBasedCorsConfigurationSource;
+//	}
+
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-		corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173"));
+		corsConfiguration.setAllowedOriginPatterns(List.of("*"));
 		corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		corsConfiguration.setAllowedHeaders(List.of("*"));
 		corsConfiguration.setAllowCredentials(true);
 
-		UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-		urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", corsConfiguration);
 
-		return urlBasedCorsConfigurationSource;
+		return source;
 	}
 
 }

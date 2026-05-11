@@ -43,7 +43,7 @@ export const useAuthInternal = () => {
 
           // tạo đối tượng user từ payload của access token lưu vào Zustand store
           const userData: User = {
-            id: accessToken.user_id || 0,
+            id: Number(accessToken.sub) || 0,
             username: data.username,
             type: "INTERNAL",
             avatarUrl: "",
@@ -125,11 +125,50 @@ export const useAuthInternal = () => {
     }
   }, [storeLogout]);
 
+  const loginWithGoogle = useCallback(
+    async (code: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authApi.callbackGoogle(code);
+      if (response.success && response.data) {
+        const token = response.data;
+        const accessToken = jwtDecode<AccessTokenPayload>(token.access_token);
+
+        storage.set(AUTH_STORAGE_KEY.TOKEN, token.access_token);
+        storage.set(AUTH_STORAGE_KEY.REFRESH, token.refresh_token);
+
+        const userData: User = {
+          id: Number(accessToken.sub) || 0,
+          username: accessToken.username || "",
+          type: UserType.GOOGLE,
+          avatarUrl: "",
+          token: token.access_token,
+        };
+
+        setUser(userData);
+        return true;
+      } else {
+        setError(response.message);
+        return false;
+      }
+    } catch (err: any) {
+      setError(err.message || "Lỗi xác thực Google");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [setUser],
+  );
+
   return {
+
     isLoading,
     error,
     login,
     signup,
     logout,
+    loginWithGoogle,
   };
 };

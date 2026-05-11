@@ -1,155 +1,144 @@
 import type {
   ClassDiagramData,
   AttendanceStatus,
+  GroupData,
+  DeskData,
+  PositionData,
 } from "@features/classDiagram/types";
-
-// Dữ liệu giả mô phỏng đúng thiết kế Figma
-const mockDiagramData: ClassDiagramData = {
-  totalStudents: 40,
-  presentCount: 35,
-  excusedCount: 3,
-  unexcusedCount: 3,
-  seats: [
-    // Dãy trái
-    {
-      id: "s1",
-      name: "Phong Hào",
-      row: 1,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    {
-      id: "s2",
-      name: "",
-      row: 1,
-      column: 3,
-      side: "left",
-      status: "absent_excused",
-    }, // Ô vàng
-    {
-      id: "s3",
-      name: "Trần Việt Tuấn",
-      row: 2,
-      column: 1,
-      side: "left",
-      status: "empty",
-    }, // Ô xám
-    {
-      id: "s4",
-      name: "Thiên Bảo",
-      row: 3,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    { id: "s5", name: "", row: 3, column: 3, side: "left", status: "empty" },
-    {
-      id: "s6",
-      name: "Thế Sơn",
-      row: 4,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    {
-      id: "s7",
-      name: "",
-      row: 4,
-      column: 3,
-      side: "left",
-      status: "absent_unexcused",
-    }, // Ô đỏ
-    {
-      id: "s8",
-      name: "Gia Huy",
-      row: 5,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    { id: "s9", name: "", row: 5, column: 2, side: "left", status: "empty" },
-    { id: "s10", name: "", row: 6, column: 2, side: "left", status: "empty" },
-
-    // Dãy phải
-    { id: "s11", name: "", row: 2, column: 2, side: "right", status: "empty" },
-    {
-      id: "s12",
-      name: "",
-      row: 2,
-      column: 3,
-      side: "right",
-      status: "absent_unexcused",
-    },
-    {
-      id: "s13",
-      name: "",
-      row: 5,
-      column: 2,
-      side: "right",
-      status: "absent_excused",
-    },
-    {
-      id: "s14",
-      name: "",
-      row: 5,
-      column: 4,
-      side: "right",
-      status: "absent_excused",
-    },
-    { id: "s15", name: "", row: 6, column: 3, side: "right", status: "empty" },
-  ],
-};
+import { homeAPI } from "@features/home/api";
+import { apiClient } from "@services/api-client";
 
 export const classDiagramAPI = {
   getDiagram: async (classId: string): Promise<ClassDiagramData> => {
-    // KHI TEST: Trả về mock data
-    return new Promise((resolve) =>
-      setTimeout(() => resolve(mockDiagramData), 500),
-    );
-    console.log("Đang lấy sơ đồ cho lớp có ID:", classId); //giả lập dùng vì kết nối api thật cần dùng classId
+    try {
+      const response: any = await apiClient.get(`/seats/classes/${classId}`);
+      const backendData = response.data?.data || response.data;
 
-    // KHI NỐI THẬT:
-    /*
-    const response = await fetch(`/api/classes/${classId}/diagram`);
-    if (!response.ok) throw new Error("Lỗi lấy sơ đồ lớp");
-    return response.json();
-    */
+      const groups: GroupData[] = [];
+      let totalStudents = 0;
+      let presentCount = 0;
+
+      if (backendData && backendData.groups) {
+        backendData.groups.forEach((groupObj: any) => {
+          const groupIdStr = Object.keys(groupObj)[0];
+          const groupDataBE = groupObj[groupIdStr];
+          const groupId = parseInt(groupIdStr);
+
+          const desks: DeskData[] = [];
+
+          groupDataBE.desks.forEach((deskObj: any) => {
+            const deskIdStr = Object.keys(deskObj)[0];
+            const deskPositionsBE = deskObj[deskIdStr].desk_positions;
+            const deskId = parseInt(deskIdStr);
+
+            const positions: PositionData[] = [];
+
+            deskPositionsBE.forEach((posObj: any) => {
+              const posIdStr = Object.keys(posObj)[0];
+              const studentData = posObj[posIdStr];
+              const positionId = parseInt(posIdStr);
+
+              let student = null;
+              if (studentData) {
+                totalStudents++;
+                presentCount++; // Giả sử mặc định là present
+                student = {
+                  id: String(studentData.user_id),
+                  name: studentData.user_display_name,
+                  avatarUrl: studentData.avatar_url || null, // Nếu BE có trả về
+                  status: "present" as AttendanceStatus,
+                  groupId,
+                  deskId,
+                  positionId,
+                };
+              }
+              positions.push({ positionId, student });
+            });
+            desks.push({ deskId, positions });
+          });
+          groups.push({ groupId, desks });
+        });
+      }
+
+      return {
+        totalStudents,
+        presentCount,
+        excusedCount: 0,
+        unexcusedCount: 0,
+        groups,
+      };
+    } catch (error) {
+      console.error("Lỗi lấy sơ đồ lớp:", error);
+      throw error;
+    }
   },
-  //cập nhật trang thái điểm danh
+  // 2. GỌI API ĐIỂM DANH
   updateAttendance: async (studentId: string, status: AttendanceStatus) => {
     console.log(`API: Cập nhật SV ${studentId} sang trạng thái ${status}`);
+
+    // KHI NÀO NỐI API THÌ MỞ COMMENT RA:
+    // return await apiClient.put(`/attendance/${studentId}`, { status });
+
     return new Promise((resolve) => setTimeout(resolve, 300));
   },
-  //xếp học sinh vào chỗ mới
+
   assignSeat: async (
     studentId: string,
-    row: number,
-    col: number,
-    side: "left" | "right",
+    targetGroupId: number, // ĐỔI PARAM: Nhận thẳng tọa độ Backend
+    targetDeskId: number,
+    targetPositionId: number,
+    classId: string,
+    sourceGroupId: number | null, // Nhận tọa độ cũ nếu có
+    sourceDeskId: number | null,
+    sourcePositionId: number | null,
   ) => {
-    console.log(
-      `API: Xếp SV ${studentId} vào Hàng ${row}, Cột ${col}, Dãy ${side}`,
+    const payload = {
+      source_group_id: sourceGroupId,
+      source_desk: sourceDeskId,
+      source_desk_position: sourcePositionId,
+      target_group_id: targetGroupId,
+      target_desk: targetDeskId,
+      target_desk_position: targetPositionId,
+    };
+
+    console.log(`Bắn dữ liệu xếp chỗ SV ${studentId}:`, payload);
+    const response: any = await apiClient.patch(
+      `/seats/classes/${classId}/${studentId}`,
+      payload,
     );
-    return new Promise((resolve) => setTimeout(resolve, 300));
+    return response.data;
   },
-  // Thêm vào classDiagramAPI
+
+  // Thêm vào file api.ts
+  shuffleSeats: async (classId: string) => {
+    try {
+      // Nhớ dùng apiClient.get nhé! Dùng post là nó báo lỗi 405 Method Not Allowed đó
+      const response: any = await apiClient.get(
+        `/seats/classes/${classId}/shuffle`,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi xếp chỗ tự động:", error);
+      throw error;
+    }
+  },
+
   getMembers: async (
     classId: string,
   ): Promise<{ id: string; name: string }[]> => {
-    return new Promise((resolve) =>
-      setTimeout(
-        () =>
-          resolve([
-            { id: "s1", name: "Phong Hào" },
-            { id: "s3", name: "Trần Việt Tuấn" },
-            { id: "s4", name: "Thiên Bảo" },
-            { id: "u1", name: "Học sinh mới A" },
-            { id: "u2", name: "Học sinh mới B" },
-          ]),
-        300,
-      ),
-    );
-    console.log("Đang lấy sơ đồ cho lớp có ID:", classId); //giả lập dùng vì kết nối api thật cần dùng classId
+    try {
+      const res = await homeAPI.getClassMembers(Number(classId));
+
+      if (res.success) {
+        return res.data.map((m) => ({
+          id: String(m.user_id), // Lấy ID học sinh
+          name: m.user_display_name || "Vô danh", // Lấy tên học sinh
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error("Lỗi lấy thành viên:", error);
+      return [];
+    }
   },
 };

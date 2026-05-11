@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage } from "@features/auth/pages/LoginPage";
 import { RegisterPage } from "@features/auth/pages/RegisterPage";
+import { GoogleCallbackPage } from "@features/auth/pages/GoogleCallbackPage";
 import App from "@/App";
 import { HomePage } from "@features/home/pages/HomePage";
 import { ClassDiagram } from "@features/classDiagram/pages/ClassDiagram";
@@ -9,6 +10,9 @@ import { NotFoundPage } from "@features/error";
 import { ClassLayout } from "@shared/components/layout/ClassLayout";
 import { Emulation } from "@features/emulation/pages/Emulation"
 import { FundPage } from "@features/fund"
+import { ProtectedRoute } from "./ProtectedRoute";
+import { ActivityPage } from "@features/activity";
+import { MemberPage } from "@features/member/pages/MemberPage";
 
 /**
  * Global application router configuration using React Router
@@ -23,8 +27,16 @@ export const router = createBrowserRouter([
     element: <RegisterPage />,
   },
   {
+    path: "/google-callback",
+    element: <GoogleCallbackPage />,
+  },
+  {
     path: "/",
-    element: <App />,
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
@@ -38,6 +50,8 @@ export const router = createBrowserRouter([
           { path: "nghiphep", element: <LeavePage /> },
           { path: "thidua", element: <Emulation /> },
           { path: "quy", element: <FundPage /> },
+          { path: "activity", element: <ActivityPage /> },
+          { path: "members", element: <MemberPage /> },
         ],
       },
     ],

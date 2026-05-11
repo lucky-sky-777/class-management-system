@@ -18,7 +18,7 @@ export const RegisterPage = () => {
         
         const success = await signup(formData.username, formData.password, formData.displayName);
         if (success) {
-            navigate('/');
+            navigate('/login');
         }
     };
 
