@@ -23,8 +23,10 @@ import java.time.Instant;
 		"class_name",
 		"user_id",
 		"user_display_name",
-		"user_avatar_url"
-		//"role",
+		"user_avatar_url",
+		"role",
+		"is_owner",
+		"joined_at"
 		//"permission_codes"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
