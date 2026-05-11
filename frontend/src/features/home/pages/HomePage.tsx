@@ -122,8 +122,7 @@ console.log("Dữ liệu 1 lớp học từ Backend:", myClasses[0]);
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {myClasses.map((item) => {
             // KIỂM TRA QUYỀN ADMIN: So sánh ID người dùng đang đăng nhập với ID người tạo lớp
-            // (Nếu Backend dùng user_id thì đổi user?.id thành user?.user_id nhé)
-            const isAdmin = String(user?.id) === String(item.owner_user_id);
+            const isAdmin = user?.id && item.owner_user_id && String(user.id) === String(item.owner_user_id);
 
             return (
               <div

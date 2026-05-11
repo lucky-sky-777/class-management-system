@@ -43,7 +43,7 @@ export const useAuthInternal = () => {
 
           // tạo đối tượng user từ payload của access token lưu vào Zustand store
           const userData: User = {
-            id: accessToken.user_id || 0,
+            id: Number(accessToken.sub) || 0,
             username: data.username,
             type: "INTERNAL",
             avatarUrl: "",
@@ -139,8 +139,8 @@ export const useAuthInternal = () => {
         storage.set(AUTH_STORAGE_KEY.REFRESH, token.refresh_token);
 
         const userData: User = {
-          id: accessToken.user_id || 0,
-          username: accessToken.sub || "",
+          id: Number(accessToken.sub) || 0,
+          username: accessToken.username || "",
           type: UserType.GOOGLE,
           avatarUrl: "",
           token: token.access_token,

@@ -1,138 +1,131 @@
 import type {
   ClassDiagramData,
   AttendanceStatus,
+  StudentSeat
 } from "@features/classDiagram/types";
 import { homeAPI } from "@features/home/api";
-
-// Dữ liệu giả mô phỏng đúng thiết kế Figma
-const mockDiagramData: ClassDiagramData = {
-  totalStudents: 40,
-  presentCount: 35,
-  excusedCount: 3,
-  unexcusedCount: 3,
-  seats: [
-    // Dãy trái
-    {
-      id: "s1",
-      name: "Phong Hào",
-      row: 1,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    {
-      id: "s2",
-      name: "",
-      row: 1,
-      column: 3,
-      side: "left",
-      status: "absent_excused",
-    }, // Ô vàng
-    {
-      id: "s3",
-      name: "Trần Việt Tuấn",
-      row: 2,
-      column: 1,
-      side: "left",
-      status: "empty",
-    }, // Ô xám
-    {
-      id: "s4",
-      name: "Thiên Bảo",
-      row: 3,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    { id: "s5", name: "", row: 3, column: 3, side: "left", status: "empty" },
-    {
-      id: "s6",
-      name: "Thế Sơn",
-      row: 4,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    {
-      id: "s7",
-      name: "",
-      row: 4,
-      column: 3,
-      side: "left",
-      status: "absent_unexcused",
-    }, // Ô đỏ
-    {
-      id: "s8",
-      name: "Gia Huy",
-      row: 5,
-      column: 1,
-      side: "left",
-      status: "present",
-    },
-    { id: "s9", name: "", row: 5, column: 2, side: "left", status: "empty" },
-    { id: "s10", name: "", row: 6, column: 2, side: "left", status: "empty" },
-
-    // Dãy phải
-    { id: "s11", name: "", row: 2, column: 2, side: "right", status: "empty" },
-    {
-      id: "s12",
-      name: "",
-      row: 2,
-      column: 3,
-      side: "right",
-      status: "absent_unexcused",
-    },
-    {
-      id: "s13",
-      name: "",
-      row: 5,
-      column: 2,
-      side: "right",
-      status: "absent_excused",
-    },
-    {
-      id: "s14",
-      name: "",
-      row: 5,
-      column: 4,
-      side: "right",
-      status: "absent_excused",
-    },
-    { id: "s15", name: "", row: 6, column: 3, side: "right", status: "empty" },
-  ],
-};
+import { apiClient } from "@services/api-client";
 
 export const classDiagramAPI = {
   getDiagram: async (classId: string): Promise<ClassDiagramData> => {
-    // KHI TEST: Trả về mock data
-    return new Promise((resolve) =>
-      setTimeout(() => resolve(mockDiagramData), 500),
-    );
-    console.log("Đang lấy sơ đồ cho lớp có ID:", classId); //giả lập dùng vì kết nối api thật cần dùng classId
+    try {
+      const response: any = await apiClient.get(`/seats/classes/${classId}`);
+      
+      const backendData = response.data?.data || response.data; 
 
-    // KHI NỐI THẬT:
-    /*
-    const response = await fetch(`/api/classes/${classId}/diagram`);
-    if (!response.ok) throw new Error("Lỗi lấy sơ đồ lớp");
-    return response.json();
-    */
+      const seats: StudentSeat[] = [];
+      let totalStudents = 0;
+      let presentCount = 0;
+
+      if (backendData && backendData.groups) {
+        backendData.groups.forEach((groupObj: any) => {
+          const groupId = Object.keys(groupObj)[0];
+          const groupData = groupObj[groupId];
+          const groupNum = parseInt(groupId);
+
+          groupData.desks.forEach((deskObj: any) => {
+            const deskId = Object.keys(deskObj)[0];
+            const deskPositions = deskObj[deskId].desk_positions;
+            const deskNum = parseInt(deskId);
+
+            deskPositions.forEach((posObj: any) => {
+              const posId = Object.keys(posObj)[0];
+              const studentData = posObj[posId];
+              const posNum = parseInt(posId);
+
+              // BỘ DỊCH TỌA ĐỘ
+              const side: "left" | "right" = groupNum <= 2 ? "left" : "right";
+              let col = 1;
+              
+              if (side === "left") {
+                if (groupNum === 1) col = posNum === 1 ? 1 : 2;
+                if (groupNum === 2) col = posNum === 1 ? 3 : 4;
+              } else {
+                if (groupNum === 3) col = posNum === 1 ? 1 : 2;
+                if (groupNum === 4) col = posNum === 1 ? 3 : 4;
+              }
+
+              if (studentData) {
+                totalStudents++;
+                presentCount++;
+                
+                seats.push({
+                  id: String(studentData.user_id),
+                  name: studentData.user_display_name,
+                  row: deskNum,
+                  column: col,
+                  side: side,
+                  status: "present", 
+                });
+              }
+            });
+          });
+        });
+      }
+
+      return {
+        totalStudents,
+        presentCount,
+        excusedCount: 0,
+        unexcusedCount: 0,
+        seats,
+      };
+
+    } catch (error) {
+      console.error("Lỗi lấy sơ đồ lớp:", error);
+      throw error;
+    }
   },
-  //cập nhật trang thái điểm danh
+  // 2. GỌI API ĐIỂM DANH
   updateAttendance: async (studentId: string, status: AttendanceStatus) => {
     console.log(`API: Cập nhật SV ${studentId} sang trạng thái ${status}`);
+    
+    // KHI NÀO NỐI API THÌ MỞ COMMENT RA:
+    // return await apiClient.put(`/attendance/${studentId}`, { status });
+    
     return new Promise((resolve) => setTimeout(resolve, 300));
   },
-  //xếp học sinh vào chỗ mới
+
   assignSeat: async (
     studentId: string,
     row: number,
     col: number,
     side: "left" | "right",
+    classId?: string 
   ) => {
-    console.log(
-      `API: Xếp SV ${studentId} vào Hàng ${row}, Cột ${col}, Dãy ${side}`,
-    );
-    return new Promise((resolve) => setTimeout(resolve, 300));
+    let group_id = 1;
+    let position_id = 1;
+
+    if (side === "left") {
+      if (col === 1) { group_id = 1; position_id = 1; }
+      if (col === 2) { group_id = 1; position_id = 2; }
+      if (col === 3) { group_id = 2; position_id = 1; }
+      if (col === 4) { group_id = 2; position_id = 2; }
+    } else { 
+      if (col === 1) { group_id = 3; position_id = 1; }
+      if (col === 2) { group_id = 3; position_id = 2; }
+      if (col === 3) { group_id = 4; position_id = 1; }
+      if (col === 4) { group_id = 4; position_id = 2; }
+    }
+    const desk_id = row;
+
+    // LƯU Ý: Vì studentId đã được truyền trên URL, có thể BE không cần user_id trong payload nữa
+    // (Tùy thuộc vào DTO UpdateGroupUserSeatRequestDto của BE)
+    const payload = {
+      group_id: group_id,
+      desk_id: desk_id,
+      position_id: position_id
+    };
+
+    console.log(`Bắn dữ liệu xếp chỗ SV ${studentId} lên lớp ${classId}:`, payload);
+
+    try {
+      const response: any = await apiClient.patch(`/seats/classes/${classId}/${studentId}`, payload);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi xếp chỗ:", error);
+      throw error;
+    }
   },
  
   getMembers: async (classId: string): Promise<{ id: string; name: string }[]> => {
@@ -143,6 +136,7 @@ export const classDiagramAPI = {
         return res.data.map((m) => ({
           id: String(m.user_id),                   // Lấy ID học sinh
           name: m.user_display_name || "Vô danh", // Lấy tên học sinh
+          
         }));
       }
       return [];
