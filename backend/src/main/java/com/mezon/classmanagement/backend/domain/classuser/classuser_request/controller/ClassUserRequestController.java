@@ -38,7 +38,10 @@ public class ClassUserRequestController {
 			@PathVariable Long classId,
 			@PathVariable Long requestId
 	) {
-		ClassUserRequestIdResponseDto response = classUserRequestService.approve(classId, requestId);
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
+
+		ClassUserRequestIdResponseDto response = classUserRequestService.approve(classId, userId, requestId);
 
 		return ResponseDTO.<ClassUserRequestIdResponseDto>builder()
 				.success(true)
