@@ -21,6 +21,7 @@ import java.time.Instant;
 		"id",
 		"owner_user_id",
 		"owner_display_name",
+		"owner_avatar_url",
 		"name",
 		"description",
 		"code",
@@ -46,6 +47,9 @@ public final class ClassResponseDto {
 
 	@JsonProperty(value = "owner_display_name")
 	String ownerDisplayName;
+
+	@JsonProperty(value = "owner_avatar_url")
+	String ownerAvatarUrl;
 
 	@JsonProperty(value = "name")
 	String name;

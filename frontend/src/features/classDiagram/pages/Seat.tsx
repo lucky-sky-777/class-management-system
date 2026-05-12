@@ -3,9 +3,9 @@ import type { StudentSeat } from "@features/classDiagram/types";
 
 interface SeatProps {
   student: StudentSeat | null;
-  // Bổ sung kiểu cho sự kiện click
   onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   isTeacherView: boolean;
+  isSelected?: boolean; // Mình vẫn giữ prop này ở đây để file Group.tsx truyền vào không bị báo lỗi đỏ nhé, nhưng mình không thèm dùng nó để đổi màu nữa
 }
 
 export const Seat = ({ student, onClick, isTeacherView }: SeatProps) => {
@@ -13,13 +13,13 @@ export const Seat = ({ student, onClick, isTeacherView }: SeatProps) => {
     if (!student) return "bg-transparent";
     switch (student.status) {
       case "present":
-        return "bg-[var(--green-text)]";
+        return "bg-green-500"; 
       case "absent_excused":
-        return "bg-[var(--amber-text)]";
+        return "bg-yellow-400"; 
       case "absent_unexcused":
-        return "bg-[var(--red-text)]";
+        return "bg-red-600";
       case "late":
-        return "bg-[#F97316]";
+        return "bg-orange-500";
       default:
         return "bg-[var(--ink-4)]";
     }

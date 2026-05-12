@@ -11,7 +11,7 @@ import { Group } from "@features/classDiagram/pages/Group";
 
 export const ClassDiagram = () => {
   const { classId } = useParams();
-  const { data, isLoading, refresh, shuffle } = useClassDiagram(classId!);
+  const { data, refresh, shuffle } = useClassDiagram(classId!);
   const [mode, setMode] = useState<"view" | "attendance" | "setup">("view");
   const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
@@ -84,7 +84,7 @@ export const ClassDiagram = () => {
     return columns;
   }, [currentGroups]);
 
-  if (isLoading || !data)
+  if (!data)
     return (
       <div className="p-10 text-center animate-pulse text-[var(--ink-3)] font-medium">
         Đang tải dữ liệu...
@@ -103,37 +103,55 @@ export const ClassDiagram = () => {
     );
     const studentAtSeat = targetPos?.student;
 
-    // LOGIC ĐIỂM DANH
+    // --- LOGIC ĐIỂM DANH ---
     if (mode === "attendance" && studentAtSeat?.id) {
+      // Logic vòng lặp trạng thái: Có mặt -> Vắng phép -> Vắng không phép -> Có mặt...
       const nextStatus: Record<string, AttendanceStatus> = {
         present: "absent_excused",
         absent_excused: "absent_unexcused",
         absent_unexcused: "present",
       };
-      await classDiagramAPI.updateAttendance(
-        studentAtSeat.id,
-        nextStatus[studentAtSeat.status] || "present",
-      );
-      refresh();
+      
+      const newStatus = nextStatus[studentAtSeat.status] || "present";
+
+      try {
+        // Truyền thêm classId và groupId vào hàm
+        await classDiagramAPI.updateAttendance(
+          classId!, 
+          groupId, 
+          studentAtSeat.id, 
+          newStatus
+        );
+        
+        // Gọi điểm danh xong thì refresh lại sơ đồ để cập nhật màu ghế
+        refresh(); 
+      } catch (error) {
+        console.error("Lỗi khi điểm danh:", error);
+        alert("Điểm danh thất bại, vui lòng thử lại!");
+      }
     }
 
-    // LOGIC XẾP CHỖ & ĐỔI CHỖ (SWAP)
+    // --- LOGIC XẾP CHỖ & ĐỔI CHỖ (SWAP) ---
     if (mode === "setup") {
+      // 1. CHƯA CÓ AI ĐƯỢC CHỌN (Nhấc lên)
       if (!selectedStudentId) {
         if (studentAtSeat) setSelectedStudentId(studentAtSeat.id);
         return;
       }
 
+      // 2. ĐÃ CÓ NGƯỜI ĐƯỢC CHỌN VÀ BẤM LẠI VÀO CHÍNH HỌ (Bỏ xuống)
       if (selectedStudentId === studentAtSeat?.id) {
         setSelectedStudentId(null);
         return;
       }
 
+      // 3. ĐÃ CÓ NGƯỜI ĐƯỢC CHỌN VÀ BẤM VÀO VỊ TRÍ KHÁC (Hoán đổi hoặc Di chuyển)
       try {
         let sourceGroup: number | null = null;
         let sourceDesk: number | null = null;
         let sourcePos: number | null = null;
 
+        // Tìm Tọa độ Nguồn
         data.groups.forEach((g) =>
           g.desks.forEach((d) =>
             d.positions.forEach((p) => {
@@ -146,6 +164,7 @@ export const ClassDiagram = () => {
           ),
         );
 
+        // Gọi API với Tọa độ Nguồn và Tọa độ Đích
         await classDiagramAPI.assignSeat(
           selectedStudentId,
           groupId,
@@ -156,7 +175,6 @@ export const ClassDiagram = () => {
           sourceDesk,
           sourcePos,
         );
-
         setSelectedStudentId(null);
         refresh();
       } catch (error) {
@@ -200,7 +218,7 @@ export const ClassDiagram = () => {
                     {m === "view"
                       ? "Xem"
                       : m === "attendance"
-                        ? "D.Danh"
+                        ? "Điểm danh"
                         : "Xếp"}
                   </span>
                 </button>
@@ -286,10 +304,7 @@ export const ClassDiagram = () => {
         </div>
       </div>
 
-      {/* ========================================== */}
-      {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC (ĐÃ SỬA MOBILE) */}
-      {/* ========================================== */}
-
+      {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
       {/* BỌC BÊN NGOÀI ĐỂ SCROLL NGANG */}
       <div
         className="w-full overflow-x-auto no-scrollbar bg-[var(--bg-surface-2)] rounded-2xl border border-[var(--rule)] shadow-inner"
@@ -341,6 +356,7 @@ export const ClassDiagram = () => {
                     groupData={groupData}
                     isTeacherView={isTeacherView}
                     onSeatClick={handleSeatClick}
+                    selectedStudentId={selectedStudentId}
                   />
                 ))}
               </div>

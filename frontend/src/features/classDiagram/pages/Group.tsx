@@ -6,12 +6,14 @@ interface GroupProps {
   groupData: GroupData;
   isTeacherView: boolean;
   onSeatClick: (groupId: number, deskId: number, positionId: number) => void;
+  selectedStudentId: string | null;
 }
 
 export const Group = ({
   groupData,
   isTeacherView,
   onSeatClick,
+  selectedStudentId,
 }: GroupProps) => {
   return (
     <div className="bg-[var(--bg-surface-2)] p-3 rounded-2xl border border-[var(--rule-md)] shadow-[var(--shadow-sm)] flex flex-col items-center gap-3 w-fit">
@@ -31,6 +33,7 @@ export const Group = ({
               <Seat
                 key={`pos-${pos.positionId}`}
                 student={pos.student}
+                isSelected={selectedStudentId === pos.student?.id}
                 isTeacherView={isTeacherView}
                 onClick={(e) => {
                   e.stopPropagation();

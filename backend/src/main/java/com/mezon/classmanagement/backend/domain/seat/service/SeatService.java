@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.constant.GroupConstant;
 import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
 import com.mezon.classmanagement.backend.domain.group.service.GroupService;
+import com.mezon.classmanagement.backend.domain.groupuser.dto.request.CreateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto;
 import com.mezon.classmanagement.backend.domain.groupuser.entity.GroupUser;
@@ -41,8 +42,16 @@ public class SeatService {
 	GroupUserService groupUserService;
 	ClassUserService classUserService;
 
+//	@Transactional
+//	public ClassSeatResponseDto create(
+//			Long classId,
+//			CreateGroupUserSeatRequestDto request
+//	) {
+//		groupUserService.throwIfExistsByClassIdAndGroupIdAndDeskAndDeskPosition(classId);
+//	}
+
 	@Transactional
-	public ClassSeatResponseDto updateClassSeats(
+	public ClassSeatResponseDto update(
 			Long classId,
 			UpdateGroupUserSeatRequestDto request
 	) {
@@ -85,7 +94,7 @@ public class SeatService {
 			groupUserService.save(sourceGroupUser);
 		}
 
-		return getClassSeats(classId);
+		return get(classId);
 	}
 
 	@Transactional
@@ -167,7 +176,7 @@ public class SeatService {
 
 		groupUserService.saveAll(groupUsers);
 
-		return getClassSeats(classId);
+		return get(classId);
 	}
 
 	@Transactional
@@ -211,11 +220,11 @@ public class SeatService {
 
 		groupUserService.saveAll(groupUsers);
 
-		return getClassSeats(classId);
+		return get(classId);
 	}
 
 	@Transactional(readOnly = true)
-	public ClassSeatResponseDto getClassSeats(Long classId) {
+	public ClassSeatResponseDto get(Long classId) {
 		List<GroupUserResponseDto> groupUserList = groupUserService.getByClassId(classId);
 		Map<Long, Map<Short, Map<Short, GroupUserResponseDto>>> seatMap = new HashMap<>();
 		Map<Long, String> groupNameMap = new HashMap<>();
@@ -236,7 +245,8 @@ public class SeatService {
 			);
 		}
 		List<LinkedHashMap<Long, GroupSeatResponseDto>> groups = new ArrayList<>();
-		for (long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++) {
+
+		for (/*long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++*/ Long groupId : groupNameMap.keySet()) {
 			List<LinkedHashMap<Short, DeskSeatResponseDto>> desks = new ArrayList<>();
 			Map<Short, Map<Short, GroupUserResponseDto>> groupData = seatMap.getOrDefault(groupId, Collections.emptyMap());
 			for (short desk = 1; desk <= GroupConstant.DESK_COUNT; desk++) {
