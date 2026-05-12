@@ -245,7 +245,8 @@ public class SeatService {
 			);
 		}
 		List<LinkedHashMap<Long, GroupSeatResponseDto>> groups = new ArrayList<>();
-		for (long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++) {
+
+		for (/*long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++*/ Long groupId : groupNameMap.keySet()) {
 			List<LinkedHashMap<Short, DeskSeatResponseDto>> desks = new ArrayList<>();
 			Map<Short, Map<Short, GroupUserResponseDto>> groupData = seatMap.getOrDefault(groupId, Collections.emptyMap());
 			for (short desk = 1; desk <= GroupConstant.DESK_COUNT; desk++) {

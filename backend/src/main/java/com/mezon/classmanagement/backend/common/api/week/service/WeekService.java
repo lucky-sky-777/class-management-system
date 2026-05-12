@@ -20,16 +20,15 @@ import java.util.List;
 public class WeekService {
 
 	public List<WeekResponseDto> getWeeks(int year) {
-
-		List<WeekResponseDto> result = new ArrayList<>();
+		List<WeekResponseDto> response = new ArrayList<>();
 
 		WeekFields weekFields = WeekFields.ISO;
 
-		int totalWeeks = LocalDate.of(year, 12, 28)
+		int totalWeeks = LocalDate
+				.of(year, 12, 28)
 				.get(weekFields.weekOfWeekBasedYear());
 
 		for (int week = 1; week <= totalWeeks; week++) {
-
 			LocalDate startDate = LocalDate.of(year, 1, 4)
 					.with(weekFields.weekOfWeekBasedYear(), week)
 					.with(weekFields.dayOfWeek(), 1);
@@ -46,14 +45,14 @@ public class WeekService {
 					.minusNanos(1)
 					.toInstant();
 
-			result.add(new WeekResponseDto(
+			response.add(new WeekResponseDto(
 					(long) week,
 					startAt,
 					endAt
 			));
 		}
 
-		return result;
+		return response;
 	}
 
 }
