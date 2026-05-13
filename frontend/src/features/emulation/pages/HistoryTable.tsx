@@ -17,87 +17,93 @@ export const HistoryTable = ({
   const filteredHistory = history.filter((h) => h.teamId === selectedTeam);
 
   return (
-    <div className="lg:col-span-3 bg-surface rounded-2xl border border-rule shadow-sm overflow-hidden min-h-[300px] md:min-h-[400px] flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b bg-surface-2 flex justify-between items-center">
+    <div className="bg-[var(--bg-surface)] rounded-[var(--r-xl)] border border-[var(--rule-md)] shadow-[var(--shadow-sm)] overflow-hidden flex flex-col h-[450px] transition-all">
+      {/* HEADER: Dùng font serif Lora cho tiêu đề cực sang */}
+      <div className="p-3.5 border-b border-[var(--rule)] bg-[var(--bg-paper)] flex justify-between items-center sticky top-0 z-10">
         <div>
-          <h3 className="text-sm font-bold italic text-ink-1">Lịch sử</h3>
-          <p className="text-[10px] text-ink-3 md:hidden">Tổ {selectedTeam}</p>
+          <h3 className="text-base font-semibold italic text-[var(--ink-1)] leading-none mb-1">
+            Lịch sử thi đua tổ {selectedTeam}
+          </h3>
         </div>
+
         {canEdit && (
           <button
             onClick={onOpenPointModal}
-            className="text-[10px] md:text-[11px] font-bold text-ink-blue-text hover:text-ink-blue-text bg-ink-blue-fill px-3 py-2 rounded-lg transition-all active:scale-95 shadow-sm"
+            className="flex items-center gap-1.5 bg-[var(--warm-400)] hover:bg-[var(--warm-600)] text-white px-3.5 py-1.5 rounded-[var(--r-md)] font-black text-[10px] uppercase tracking-tight shadow-[var(--shadow-sm)] transition-all active:scale-95"
           >
-            + Ghi điểm
+            <span>+ Ghi điểm</span>
           </button>
         )}
       </div>
 
-      <div className="overflow-x-auto flex-1">
-        <table className="w-full text-left text-sm border-collapse">
-          {/* Header chỉ hiện trên Tablet/Desktop */}
-          <thead className="hidden md:table-header-group bg-surface-2 text-ink-3 font-black uppercase text-[10px] tracking-widest border-b border-rule">
+      {/* TABLE BODY: Tối ưu thanh cuộn và layout */}
+      <div className="flex-1 overflow-y-auto no-scrollbar md:block bg-[var(--bg-surface)]">
+        <table className="w-full text-left border-collapse">
+          <thead className="hidden md:table-header-group sticky top-0 bg-[var(--bg-surface)] text-[var(--ink-3)] font-black uppercase text-[9px] tracking-widest border-b border-[var(--rule-md)] z-20">
             <tr>
-              <th className="px-6 py-3 w-32">Ngày tháng</th>
-              <th className="px-6 py-3">Chi tiết thay đổi</th>
-              <th className="px-6 py-3 text-center w-24">Điểm</th>
-              <th className="px-6 py-3 w-40">Người thực hiện</th>
+              <th className="px-6 py-4 w-44">Thời gian</th>
+              <th className="px-6 py-4">Nội dung thay đổi</th>
+              <th className="px-6 py-4 text-center w-28">Biến động</th>
+              <th className="px-6 py-4 text-center w-40">Người phê duyệt</th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-rule">
+          <tbody className="divide-y divide-[var(--rule)]">
             {filteredHistory.length > 0 ? (
-              filteredHistory.map((log) => (
-                <tr key={log.id} className="hover:bg-surface-2 transition-colors group flex flex-col md:table-row p-4 md:p-0">
-                  
-                  {/* Mobile Row 1: Ngày và Điểm */}
-                  <td className="md:table-cell md:px-6 md:py-4 flex justify-between items-center mb-1 md:mb-0">
-                    <span className="text-[10px] md:text-xs text-ink-3 md:text-ink-2 font-medium uppercase md:capitalize">
+              [...filteredHistory].reverse().map((log) => (
+                <tr
+                  key={log.id}
+                  className="hover:bg-[var(--bg-surface-2)] transition-colors group flex flex-col md:table-row p-3 md:p-0"
+                >
+                  {/* 1. Ngày tháng - Giảm padding py-3, text nhỏ xinh */}
+                  <td className="md:table-cell md:px-6 md:py-3.5">
+                    <span className="font-mono text-[10px] text-[var(--ink-2)] bg-[var(--bg-surface-3)] px-2 py-0.5 rounded-[var(--r-xs)]">
                       {log.date}
                     </span>
-                    {/* Điểm hiện ở cuối hàng trên Mobile */}
-                    <span className={`md:hidden text-[11px] font-black px-2 py-0.5 rounded-md ${
-                        log.points >= 0 ? "text-ink-green-text bg-ink-green-fill" : "text-ink-red-text bg-ink-red-fill"
-                      }`}>
-                      {log.points >= 0 ? `+${log.points}` : log.points}
-                    </span>
                   </td>
 
-                  {/* Chi tiết thay đổi */}
-                  <td className="md:table-cell md:px-6 md:py-4 mb-2 md:mb-0">
-                    <span className="text-sm text-ink-1 font-bold md:font-semibold line-clamp-2 md:line-clamp-1 group-hover:line-clamp-none transition-all">
+                  {/* 2. Nội dung - Giảm py-3, line-height gọn lại */}
+                  <td className="md:table-cell md:px-6 md:py-3.5">
+                    <p className="text-[13px] text-[var(--ink-1)] font-medium leading-snug max-w-md">
                       {log.content}
-                    </span>
+                    </p>
                   </td>
 
-                  {/* Điểm (Chỉ hiện trên Desktop ở cột riêng) */}
-                  <td className="hidden md:table-cell md:px-6 md:py-4 text-center">
-                    <span className={`text-xs font-black px-2 py-1 rounded-md ${
-                        log.points >= 0 ? "text-ink-green-text bg-ink-green-fill" : "text-ink-red-text bg-ink-red-fill"
-                      }`}>
+                  {/* 3. Điểm số - Đưa về lề trái cho đồng bộ tiêu đề mới */}
+                  <td className="md:table-cell md:px-6 md:py-3.5 text-left">
+                    <span
+                      className={`text-[13px] font-black tracking-tight ${
+                        log.points >= 0
+                          ? "text-[var(--green-text)]"
+                          : "text-[var(--red-text)]"
+                      }`}
+                    >
                       {log.points >= 0 ? `+${log.points}` : log.points}
                     </span>
                   </td>
 
-                  {/* Người thực hiện */}
-                  <td className="md:table-cell md:px-6 md:py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-ink-blue-fill flex items-center justify-center text-[9px] md:text-[10px] font-bold text-ink-blue-text uppercase border border-ink-blue-border">
-                        {log.actor.charAt(0)}
+                  {/* 4. Người phê duyệt - Avatar nhỏ lại một chút (w-7 h-7) */}
+                  <td className="md:table-cell md:px-6 md:py-3.5">
+                    <div className="flex items-center gap-2.5 justify-start">
+                      <div className="w-7 h-7 rounded-full bg-[var(--blue-fill)] border border-[var(--blue-border)] flex-shrink-0 flex items-center justify-center text-[10px] font-black text-[var(--blue-text)] shadow-sm">
+                        {log.actor.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-[11px] md:text-xs font-bold text-ink-3 md:text-ink-2 truncate italic md:not-italic">
+                      <span className="text-[12px] font-bold text-[var(--ink-2)] whitespace-nowrap">
                         {log.actor}
                       </span>
                     </div>
                   </td>
-
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="py-20 text-center text-ink-3 text-xs italic">
-                  Chưa có dữ liệu
+                <td colSpan={4} className="py-20 text-center">
+                  <div className="inline-flex flex-col items-center opacity-30">
+                    <div className="w-6 border-t border-[var(--ink-3)] mb-3" />
+                    <span className="text-[var(--ink-3)] text-[9px] font-black uppercase tracking-widest">
+                      Bản ghi trống
+                    </span>
+                  </div>
                 </td>
               </tr>
             )}

@@ -1,44 +1,24 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useEmulation } from "@features/emulation/hooks/useEmulation";
-import { FilterSelect } from "@features/emulation/pages/FilterSelect";
 import { RankingTable } from "@features/emulation/pages/RankingTable";
 import { HistoryTable } from "@features/emulation/pages/HistoryTable";
-import { emulationAPI } from "@features/emulation/api"; 
+import { emulationAPI } from "@features/emulation/api";
 import { Modal } from "@shared/components/ui/Modal";
-
-// --- Hàm bổ trợ tính các tuần trong tháng ---
-const getWeeksInMonth = (month: number, year: number) => {
-  const weeks = [];
-  const firstDate = new Date(year, month - 1, 1);
-  const lastDate = new Date(year, month, 0);
-
-  const currentStart = new Date(firstDate);
-  while (currentStart.getDay() !== 1) {
-    currentStart.setDate(currentStart.getDate() + 1);
-  }
-
-  while (currentStart <= lastDate) {
-    const currentEnd = new Date(currentStart);
-    currentEnd.setDate(currentEnd.getDate() + 6);
-
-    weeks.push({
-      label: `${currentStart.getDate()}/${month} - ${currentEnd.getDate()}/${month}`,
-      start: new Date(currentStart).toISOString(),
-      end: new Date(currentEnd).toISOString(),
-    });
-
-    currentStart.setDate(currentStart.getDate() + 7);
-  }
-  return weeks;
-};
 
 export const Emulation = () => {
   const { classId } = useParams<{ classId: string }>();
-  // Lưu ý: Đảm bảo Hook của Hào trả về setFilters (có chữ s)
-  const { data, isLoading, filters, setFilters, changeTeamCount, refresh } = useEmulation(classId!);
-  
+  const {
+    data,
+    isLoading,
+    filters,
+    weeks,
+    setFilters,
+    changeTeamCount,
+    refresh,
+  } = useEmulation(classId!);
+
   const [selectedTeam, setSelectedTeam] = useState(1);
   const [showPointModal, setShowPointModal] = useState(false);
   const [pointForm, setPointForm] = useState<{
@@ -50,23 +30,16 @@ export const Emulation = () => {
   });
 
   const canEdit = true; // TODO: Phân quyền sau
-
-  // 1. TÍNH TOÁN DỮ LIỆU (Phải nằm trên Early Return)
-  const weeks = useMemo(() => getWeeksInMonth(filters.month, filters.year), [filters.month, filters.year]);
-
-  // 2. USE_EFFECT (Phải nằm trên Early Return để không vi phạm rules of hooks)
-  useEffect(() => {
-    if (weeks.length > 0 && !filters.startDate) {
-      setFilters({ startDate: weeks[0].start, endDate: weeks[0].end });
-    }
-  }, [weeks, filters.startDate, setFilters]);
-
   // 3. EARLY RETURN (Chỉ return sau khi đã gọi hết Hooks)
   if (isLoading || !data) {
-    return <div className="p-10 text-center text-ink-3 font-medium animate-pulse">Đang tải dữ liệu thi đua...</div>;
+    return (
+      <div className="p-10 text-center text-ink-3 font-medium animate-pulse">
+        Đang tải dữ liệu thi đua...
+      </div>
+    );
   }
 
-  const currentTeamMembers = data?.teams?.[selectedTeam] || [];
+  // const currentTeamMembers = data?.teams?.[selectedTeam] || [];
 
   // 4. HÀM XỬ LÝ GHI ĐIỂM
   const handleSubmitPoint = async () => {
@@ -94,141 +67,138 @@ export const Emulation = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       {/* THANH BỘ LỌC */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-[var(--bg-surface)] p-4 rounded-2xl shadow-sm border border-[var(--rule)] gap-4">
-        <div className="flex flex-wrap items-center gap-4 md:gap-6">
-          <FilterSelect
-            label="Tháng"
-            val={filters.month}
-            options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
-            onChange={(m) => setFilters({ month: m, startDate: "", endDate: "" })} 
-          />
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[var(--ink-3)] font-bold uppercase tracking-wider">Từ:</span>
-            <select
-              className="text-xs font-bold bg-[var(--bg-surface-2)] text-[var(--ink-1)] border-none rounded-lg py-2 px-3 cursor-pointer outline-none focus:ring-2 focus:ring-[var(--ink-blue-fill)]"
-              value={filters.startDate}
-              onChange={(e) => {
-                const selected = weeks.find(w => w.start === e.target.value);
-                if (selected) setFilters({ startDate: selected.start, endDate: selected.end });
-              }}
-            >
-              {weeks.map((w, index) => (
-                <option key={index} value={w.start}>{w.label}</option>
-              ))}
-            </select>
-          </div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-2 px-1 gap-4 animate-fade-in">
+        {/* Cụm chọn tuần - Nhỏ nhắn */}
+        <div className="flex items-center gap-3 bg-[var(--bg-surface)] p-1.5 px-3 rounded-[var(--r-lg)] border border-[var(--rule)] shadow-[var(--shadow-xs)]">
+          <span className="text-[10px] text-[var(--ink-3)] font-black uppercase tracking-widest">
+            Tuần:
+          </span>
+          <select
+            className="text-[12px] font-bold bg-transparent text-[var(--ink-1)] border-none p-0 cursor-pointer outline-none focus:ring-0"
+            value={filters.startDate}
+            onChange={(e) => {
+              const selected = weeks.find(
+                (w: any) => w.start_at === e.target.value,
+              );
+              if (selected) {
+                setFilters({
+                  startDate: selected.start_at,
+                  endDate: selected.end_at,
+                });
+              }
+            }}
+          >
+            {weeks.map((w: any) => (
+              <option key={w.week} value={w.start_at}>
+                Tuần {w.week} ({w.formatted_start_at} - {w.formatted_end_at})
+                {w.is_current_week ? " • Hiện tại" : ""}
+              </option>
+            ))}
+          </select>
         </div>
-        
-        <button className="bg-[var(--ink-green-text)] text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-md hover:opacity-90 transition-all">
-          NỘI QUY
+
+        {/* NÚT NỘI QUY - Màu Sage (Xanh lá xám) */}
+        <button className="bg-[var(--sage-fill)] text-[var(--sage-text)] border border-[var(--sage-border)] px-4 py-1.5 rounded-[var(--r-full)] font-black text-[10px] uppercase tracking-tighter hover:bg-[var(--bg-surface-3)] transition-all active:scale-95 shadow-sm">
+          Nội quy thi đua
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* DANH SÁCH TỔ */}
-        <div className="bg-[var(--bg-surface)] p-4 rounded-2xl border border-[var(--rule)] shadow-sm h-fit">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest">
-              Danh sách tổ
-            </p>
-
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        {/* DANH SÁCH TỔ - Dạng Sidebar Menu */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-[0.2em]">
+              Lựa chọn tổ
+            </label>
             {canEdit && (
-              <div className="flex gap-1">
+              <div className="flex gap-1 bg-[var(--bg-surface-2)] p-1 rounded-lg border border-[var(--rule)]">
                 <button
                   onClick={() => changeTeamCount(data.teamCount - 1)}
-                  className="p-1 hover:bg-[var(--ink-red-fill)] text-[var(--ink-red-text)] rounded border border-[var(--ink-red-border)] transition-colors"
-                  title="Bớt 1 tổ"
+                  className="p-1 hover:text-[var(--red-text)] transition-colors"
                 >
-                  <Minus size={12} />
+                  <Minus size={10} />
                 </button>
+                <div className="w-[1px] bg-[var(--rule)] mx-0.5" />
                 <button
                   onClick={() => changeTeamCount(data.teamCount + 1)}
-                  className="p-1 hover:bg-[var(--ink-green-fill)] text-[var(--ink-green-text)] rounded border border-[var(--ink-green-border)] transition-colors"
-                  title="Thêm 1 tổ"
+                  className="p-1 hover:text-[var(--green-text)] transition-colors"
                 >
-                  <Plus size={12} />
+                  <Plus size={10} />
                 </button>
               </div>
             )}
           </div>
 
-          {/* CÁC NÚT CHỌN TỔ */}
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 mb-4">
+          <nav className="space-y-1">
             {Array.from({ length: data.teamCount }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedTeam(i + 1)}
-                className={`py-2 rounded-xl text-sm font-bold border transition-all ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
                   selectedTeam === i + 1
-                    ? "bg-[var(--bg-surface-2)] border-[var(--rule-md)] text-[var(--ink-1)] shadow-inner"
-                    : "bg-[var(--bg-surface)] border-transparent text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)]"
+                    ? "bg-[var(--warm-fill)] text-[var(--warm-text)] shadow-sm border border-[var(--warm-border)]"
+                    : "hover:bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-transparent"
                 }`}
               >
-                Tổ {i + 1}
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full transition-all ${
+                      selectedTeam === i + 1
+                        ? "bg-[var(--warm-400)] scale-125"
+                        : "bg-[var(--ink-4)] group-hover:bg-[var(--ink-3)]"
+                    }`}
+                  />
+                  <span className="text-sm font-bold">Tổ {i + 1}</span>
+                </div>
+                {selectedTeam === i + 1 && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--warm-400)] animate-pulse" />
+                )}
               </button>
             ))}
-          </div>
-
-          {/* HIỂN THỊ THÀNH VIÊN TRONG TỔ (Đã dọn dẹp nút xóa) */}
-          <div className="pt-4 border-t border-[var(--rule)]">
-            <p className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest mb-3">
-              Thành viên Tổ {selectedTeam}
-            </p>
-            <div className="space-y-2 min-h-[50px] max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-              {currentTeamMembers.length > 0 ? (
-                currentTeamMembers.map((member, idx) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between py-1 border-b border-dashed border-[var(--rule)] last:border-0"
-                  >
-                    <span className="text-sm font-medium text-[var(--ink-1)]">
-                      {idx + 1}. {member.name}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-[11px] text-[var(--ink-3)] italic text-center py-4">
-                  Chưa có thành viên
-                </p>
-              )}
-            </div>
-          </div>
+          </nav>
         </div>
 
         {/* LỊCH SỬ THAY ĐỔI */}
-        <HistoryTable
-          selectedTeam={selectedTeam}
-          history={data.history}
-          canEdit={canEdit}
-          onOpenPointModal={() => setShowPointModal(true)}
+        <div className="lg:col-span-3">
+          <HistoryTable
+            selectedTeam={selectedTeam}
+            history={data.history}
+            canEdit={canEdit}
+            onOpenPointModal={() => setShowPointModal(true)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <RankingTable title="Xếp hạng tuần" rows={data.weeklyRanking} />
+        <RankingTable
+          title="Xếp hạng tháng"
+          rows={data.monthlyRanking}
+          // isMonthly
         />
       </div>
 
-      <RankingTable title="Xếp hạng tuần" rows={data.weeklyRanking} />
-      <RankingTable
-        title="Xếp hạng tháng"
-        rows={data.monthlyRanking}
-        isMonthly
-      />
-
-      {/* MODAL GHI ĐIỂM */}
-      <Modal 
-        isOpen={showPointModal} 
-        onClose={() => { setShowPointModal(false); setPointForm({ content: "", points: 0 }); }} 
+      {/* MODAL GHI ĐIỂM GIỮ NGUYÊN */}
+      <Modal
+        isOpen={showPointModal}
+        onClose={() => {
+          setShowPointModal(false);
+          setPointForm({ content: "", points: 0 });
+        }}
         title={`Ghi điểm Tổ ${selectedTeam}`}
       >
-        <div className="space-y-4">
+        <div className="space-y-5 p-1">
+          {/* TRƯỜNG NỘI DUNG */}
           <div>
-            <label className="text-[11px] font-black text-[var(--ink-3)] uppercase mb-1 block">
-              Nội dung
+            <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest mb-1.5 block">
+              Nội dung vi phạm / Khen thưởng
             </label>
             <input
               type="text"
-              className="w-full border border-[var(--rule)] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[var(--ink-blue-text)] outline-none transition-all"
-              placeholder="Ví dụ: Phát biểu xây dựng bài..."
+              className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule)] rounded-[var(--r-lg)] p-3 text-sm text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:ring-2 focus:ring-[var(--warm-400)] focus:border-transparent outline-none transition-all"
+              placeholder="Ví dụ: Hăng hái xây dựng bài..."
               value={pointForm.content}
               onChange={(e) =>
                 setPointForm({ ...pointForm, content: e.target.value })
@@ -236,46 +206,48 @@ export const Emulation = () => {
             />
           </div>
 
+          {/* TRƯỜNG SỐ ĐIỂM */}
           <div>
-            <label className="text-[11px] font-black text-[var(--ink-3)] uppercase mb-1 block">
+            <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest mb-1.5 block">
               Số điểm (+ cộng, - trừ)
             </label>
-            <input
-              type="text"
-              inputMode="text"
-              className="w-full border border-[var(--rule)] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[var(--ink-blue-text)] outline-none transition-all"
-              placeholder="Ví dụ: 10 hoặc -5"
-              value={pointForm.points === 0 ? "" : pointForm.points}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === "" || val === "-" || !isNaN(Number(val))) {
-                  setPointForm({
-                    ...pointForm,
-                    points: val, 
-                  });
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSubmitPoint();
-              }}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule)] rounded-[var(--r-lg)] p-3 pl-4 text-sm font-bold text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:ring-2 focus:ring-[var(--warm-400)] outline-none transition-all"
+                placeholder="Nhập ví dụ: 10 hoặc -5"
+                value={pointForm.points === 0 ? "" : pointForm.points}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || val === "-" || !isNaN(Number(val))) {
+                    setPointForm({ ...pointForm, points: val });
+                  }
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmitPoint()}
+              />
+              {/* Badge gợi ý nhỏ bên cạnh */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-[var(--ink-3)] uppercase">
+                Points
+              </div>
+            </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          {/* CỤM NÚT BẤM */}
+          <div className="flex gap-3 pt-3">
             <button
               onClick={() => {
                 setShowPointModal(false);
                 setPointForm({ content: "", points: 0 });
               }}
-              className="flex-1 py-3 bg-[var(--bg-surface-2)] text-[var(--ink-2)] rounded-xl font-bold text-sm hover:bg-[var(--bg-surface-3)] transition-colors"
+              className="flex-1 py-2.5 bg-[var(--bg-surface-3)] text-[var(--ink-2)] rounded-[var(--r-lg)] font-bold text-xs hover:bg-[var(--ink-4)] transition-colors"
             >
-              Hủy
+              HỦY BỎ
             </button>
             <button
               onClick={handleSubmitPoint}
-              className="flex-1 py-3 bg-[var(--ink-blue-text)] text-white rounded-xl font-bold text-sm shadow-lg shadow-[var(--ink-blue-fill)] hover:opacity-90 transition-all"
+              className="flex-1 py-2.5 bg-[var(--warm-400)] text-white rounded-[var(--r-lg)] font-bold text-xs shadow-md shadow-blue-900/10 hover:bg-[var(--warm-600)] transition-all active:scale-95"
             >
-              Xác nhận
+              XÁC NHẬN GHI
             </button>
           </div>
         </div>
