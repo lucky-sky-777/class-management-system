@@ -14,14 +14,14 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RequestMapping("/api/public")
+@RequestMapping("/api/public/weeks")
 @RestController
 public class WeekController {
 
 	WeekService weekService;
 
-	@GetMapping("/weeks")
-	public List<WeekResponseDto> getWeeks(
+	@GetMapping
+	public List<WeekResponseDto> get(
 			@RequestParam int year
 	) {
 		return weekService.getWeeks(year);

@@ -66,7 +66,7 @@ public final class ClassResponseDto {
 	@JsonProperty(value = "privacy")
 	Class.Privacy privacy;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")
 	Instant createdAt;
 

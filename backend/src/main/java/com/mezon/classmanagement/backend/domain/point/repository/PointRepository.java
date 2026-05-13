@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,4 +36,32 @@ public interface PointRepository extends JpaRepository<Point, Long> {
 	order by point.createdAt desc
 	""")
 	List<PointResponseDto> getByClazz_IdAndGroup_IdOrderByCreatedAtDesc(Long classId, Long groupId);
+
+	@Query(value = """
+	select new com.mezon.classmanagement.backend.domain.point.dto.PointResponseDto (
+		point.id,
+		class.id,
+		group.id,
+		point.description,
+		point.point,
+		actor.id,
+		actor.displayName,
+		actor.avatarUrl,
+		point.createdAt
+	)
+	from Point point
+	join point.clazz class
+	join point.group group
+	join point.actor actor
+	where
+		class.id = :classId and group.id = :groupId and (point.createdAt between :startAt and :endAt)
+	order by point.createdAt desc
+	""")
+	List<PointResponseDto> getByClazz_IdAndGroup_IdOrderByCreatedAtDescFilterByStartAtAndEndAt(
+			Long classId,
+			Long groupId,
+			Instant startAt,
+			Instant endAt
+	);
+
 }

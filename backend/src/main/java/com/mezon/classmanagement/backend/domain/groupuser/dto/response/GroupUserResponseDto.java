@@ -70,7 +70,7 @@ public final class GroupUserResponseDto {
 	@JsonProperty(value = "attendance_status")
 	GroupUser.AttendanceStatus attendanceStatus;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "joined_at")
 	Instant joinedAt;
 

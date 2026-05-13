@@ -66,7 +66,7 @@ public final class ClassUserResponseDto {
 	//@JsonProperty(value = "permission_codes")
 	//List<String> permissionCodes;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "joined_at")
 	Instant joinedAt;
 
