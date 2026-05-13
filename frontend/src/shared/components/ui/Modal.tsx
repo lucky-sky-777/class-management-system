@@ -27,28 +27,28 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
     if (!isOpen) return null;
 
     const modalContent = (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
             {/* Backdrop Overlay */}
             <div 
-                className="absolute inset-0 bg-ink-1/40 backdrop-blur-sm transition-opacity"
+                className="absolute inset-0 bg-[var(--ink-1)]/40 transition-opacity"
                 onClick={onClose}
                 aria-hidden="true"
             />
 
-            {/* Modal Container: Fixed dimensions */}
+            {/* Modal Container: Đã thêm viền (border-[var(--rule)]) để phân biệt với nền trắng */}
             <div 
-                className="relative flex flex-col w-full max-w-lg h-[80vh] md:h-[600px] bg-paper rounded-xl shadow-xl overflow-hidden transform transition-all"
+                className="relative flex flex-col w-full max-w-lg max-h-[90vh] bg-[var(--bg-paper)] rounded-2xl border border-[var(--rule)] shadow-[var(--shadow-lg)] overflow-hidden transform transition-all"
                 role="dialog"
                 aria-modal="true"
             >
                 {/* Fixed Header */}
-                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-ink-1/10 shrink-0 bg-paper">
-                    <div className="text-xl font-heading font-bold text-ink-1 truncate pr-4">
+                <div className="flex items-center justify-between p-4 sm:px-6 sm:py-4 border-b border-[var(--rule)] shrink-0 bg-[var(--bg-paper)]">
+                    <div className="text-lg font-bold text-[var(--ink-1)] truncate pr-4">
                         {title}
                     </div>
                     <button 
                         onClick={onClose}
-                        className="p-2 rounded-full hover:bg-ink-1/5 text-ink-1/60 hover:text-ink-1 transition-colors focus:outline-none focus:ring-2 focus:ring-warm-accent shrink-0"
+                        className="p-1.5 rounded-lg hover:bg-[var(--bg-surface-2)] text-[var(--ink-2)] hover:text-[var(--ink-1)] transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--ink-blue-text)] shrink-0"
                         aria-label="Close"
                     >
                         <X className="w-5 h-5" />
@@ -56,13 +56,13 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
                 </div>
 
                 {/* Scrollable Content Body */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+                <div className="overflow-y-auto p-4 sm:p-6 custom-scrollbar">
                     {children}
                 </div>
 
                 {/* Fixed Footer */}
                 {footer && (
-                    <div className="p-4 sm:p-5 border-t border-ink-1/10 shrink-0 bg-paper">
+                    <div className="p-4 sm:px-6 sm:py-4 border-t border-[var(--rule)] shrink-0 bg-[var(--bg-surface-2)]">
                         {footer}
                     </div>
                 )}

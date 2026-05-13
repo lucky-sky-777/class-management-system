@@ -20,7 +20,7 @@ export const useMembers = (classId: string, currentUserId?: number | string) => 
         memberAPI.getMembers(classId),
         memberAPI.getPendingRequests(classId)
       ]);
-
+      
       // Gộp lại để Page chỉ cần dùng 1 biến 'members' duy nhất
       setMembers([...officialData, ...pendingData]);
     } catch (error) {

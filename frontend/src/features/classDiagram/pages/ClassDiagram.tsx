@@ -111,20 +111,20 @@ export const ClassDiagram = () => {
         absent_excused: "absent_unexcused",
         absent_unexcused: "present",
       };
-      
+
       const newStatus = nextStatus[studentAtSeat.status] || "present";
 
       try {
         // Truyền thêm classId và groupId vào hàm
         await classDiagramAPI.updateAttendance(
-          classId!, 
-          groupId, 
-          studentAtSeat.id, 
-          newStatus
+          classId!,
+          groupId,
+          studentAtSeat.id,
+          newStatus,
         );
-        
+
         // Gọi điểm danh xong thì refresh lại sơ đồ để cập nhật màu ghế
-        refresh(); 
+        refresh();
       } catch (error) {
         console.error("Lỗi khi điểm danh:", error);
         alert("Điểm danh thất bại, vui lòng thử lại!");
@@ -305,62 +305,73 @@ export const ClassDiagram = () => {
       </div>
 
       {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
-      {/* BỌC BÊN NGOÀI ĐỂ SCROLL NGANG */}
       <div
-        className="w-full overflow-x-auto no-scrollbar bg-[var(--bg-surface-2)] rounded-2xl border border-[var(--rule)] shadow-inner"
+        className="w-full bg-[var(--bg-surface-2)] rounded-3xl border border-[var(--rule-lg)] shadow-inner overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* LỚP MIN-W-MAX ĐỂ KHÓA KÍCH THƯỚC CHUẨN DESKTOP */}
-        <div
-          className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-8 transition-all duration-500 p-4 md:p-8 min-w-max`}
-        >
-          {/* BẢNG ĐEN */}
+        {/* THANH CUỘN NGANG TỰ DO */}
+        <div className="w-full overflow-x-auto custom-scrollbar p-6 md:p-12">
+          {/* LƯU Ý CỰC QUAN TRỌNG: 
+       - Dùng `min-w-max` để các tổ không bao giờ bị co lại.
+       - Dùng `mx-auto` để nếu ít tổ thì nó vẫn nằm giữa đẹp đẽ.
+    */}
           <div
-            className={`flex items-end justify-between w-full pt-4 md:pt-8 pb-4 px-2 md:px-10 ${isTeacherView ? "flex-row-reverse" : ""}`}
+            className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-12 transition-all duration-500 min-w-max mx-auto`}
           >
-            <div className="flex flex-col items-start w-1/4">
-              <div className="bg-yellow-400 px-4 md:px-8 py-3 rounded-xl font-bold text-slate-800 shadow-md border-b-4 border-yellow-600 text-[9px] md:text-xs whitespace-nowrap">
-                BÀN GIÁO VIÊN
+            {/* BẢNG ĐEN & BÀN GIÁO VIÊN */}
+            <div
+              className={`flex items-end justify-between w-full px-10 mb-8 ${
+                isTeacherView ? "flex-row-reverse" : "flex-row"
+              }`}
+            >
+              <div className="w-64">
+                <div className="bg-yellow-400 px-8 py-4 rounded-2xl font-black text-slate-800 shadow-lg border-b-4 border-yellow-600 text-xs uppercase tracking-wider text-center">
+                  Bàn Giáo Viên
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col items-center flex-1">
-              <div className="w-full max-w-[130px] md:max-w-[450px] h-3 bg-slate-800 rounded-full flex items-center justify-center shadow-2xl border border-slate-600 relative">
-                <span
-                  className={`absolute -top-6 text-[8px] md:text-[10px] text-slate-400 font-black uppercase tracking-[0.4em] md:tracking-[0.6em] whitespace-nowrap ${isTeacherView ? "rotate-180" : ""}`}
-                >
-                  Bảng Đen
-                </span>
+              <div className="flex-1 flex justify-center">
+                <div className="w-full max-w-md h-4 bg-slate-800 rounded-full shadow-2xl border border-slate-600 relative flex items-center justify-center">
+                  <span
+                    className={`absolute -top-8 text-[11px] text-slate-500 font-black uppercase tracking-[0.8em] ${isTeacherView ? "rotate-180" : ""}`}
+                  >
+                    BẢNG ĐEN
+                  </span>
+                </div>
               </div>
+              <div className="w-64"></div> {/* Giữ cân bằng layout */}
             </div>
-            <div className="hidden md:block w-1/4"></div>
-          </div>
 
-          {/* LƯỚI CHỖ NGỒI - DÙNG FLEX-NOWRAP ĐỂ ÉP NẰM NGANG */}
-          <div
-            style={{
-              transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-            className={`flex flex-nowrap justify-center gap-8 md:gap-20 pt-4 pb-8 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
-          >
-            {groupColumns.map((colGroups, colIndex) => (
-              <div
-                key={`col-${colIndex}`}
-                className="flex flex-col gap-8 md:gap-16 relative"
-              >
-                {colIndex < groupColumns.length - 1 && (
-                  <div className="absolute -right-[1.5rem] md:-right-[2.5rem] top-0 bottom-0 w-px border-r-2 border-dashed border-[var(--rule-md)] opacity-50" />
-                )}
-                {colGroups.map((groupData) => (
-                  <Group
-                    key={groupData.groupId}
-                    groupData={groupData}
-                    isTeacherView={isTeacherView}
-                    onSeatClick={handleSeatClick}
-                    selectedStudentId={selectedStudentId}
-                  />
-                ))}
-              </div>
-            ))}
+            {/* LƯỚI CHỖ NGỒI - NƠI CHỨA 6-8 TỔ */}
+            <div
+              style={{
+                transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
+              className={`flex flex-nowrap justify-center gap-12 md:gap-24 pb-10 ${
+                mode !== "view" ? "cursor-crosshair" : ""
+              } ${isTeacherView ? "rotate-180" : "rotate-0"}`}
+            >
+              {groupColumns.map((colGroups, colIndex) => (
+                <div
+                  key={`col-${colIndex}`}
+                  className="flex flex-col gap-12 md:gap-20 relative"
+                >
+                  {/* Đường kẻ phân cách giữa các dãy bàn (Cột) */}
+                  {colIndex < groupColumns.length - 1 && (
+                    <div className="absolute -right-6 md:-right-12 top-0 bottom-0 w-px border-r-2 border-dashed border-[var(--rule-md)] opacity-30" />
+                  )}
+
+                  {colGroups.map((groupData) => (
+                    <Group
+                      key={groupData.groupId}
+                      groupData={groupData}
+                      isTeacherView={isTeacherView}
+                      onSeatClick={handleSeatClick}
+                      selectedStudentId={selectedStudentId}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
