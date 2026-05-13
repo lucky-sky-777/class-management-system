@@ -1,10 +1,9 @@
 package com.mezon.classmanagement.backend.domain.point.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.PastOrPresent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,8 +12,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-import java.time.Instant;
-
+@JsonPropertyOrder(value = {
+		"rank",
+		"group_name",
+		"total_point"
+})
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
 @Getter
@@ -22,16 +25,15 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class GetPointRequestDto {
+public final class WeekPointRankingResponseDto {
 
-	@Past
-	@NotNull
-	@JsonProperty(value = "start_at")
-	Instant startAt;
+	@JsonProperty(value = "rank")
+	Short rank;
 
-	@PastOrPresent
-	@NotNull
-	@JsonProperty(value = "end_at")
-	Instant endAt;
+	@JsonProperty(value = "group_name")
+	String groupName;
+
+	@JsonProperty(value = "total_point")
+	Short totalPoint;
 
 }

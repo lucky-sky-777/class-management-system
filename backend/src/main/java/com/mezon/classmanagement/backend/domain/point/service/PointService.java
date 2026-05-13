@@ -8,8 +8,10 @@ import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
 import com.mezon.classmanagement.backend.domain.point.dto.CreatePointRequestDto;
 import com.mezon.classmanagement.backend.domain.point.dto.GetPointRequestDto;
+import com.mezon.classmanagement.backend.domain.point.dto.MonthPointRankingResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointIdResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointResponseDto;
+import com.mezon.classmanagement.backend.domain.point.dto.WeekPointRankingResponseDto;
 import com.mezon.classmanagement.backend.domain.point.entity.Point;
 import com.mezon.classmanagement.backend.domain.point.mapper.PointMapper;
 import com.mezon.classmanagement.backend.domain.point.repository.PointRepository;
@@ -90,6 +92,18 @@ public class PointService {
 
 	@RequireClassPermission
 	@Transactional(readOnly = true)
+	public List<PointResponseDto> getByClass(Long classId, GetPointRequestDto request) {
+		if (request == null) {
+			return getByClassId(
+					classId, weekService.getCurrentWeekStartAt(), weekService.getCurrentWeekEndAt()
+			);
+		}
+
+		return getByClassId(classId, request.getStartAt(), request.getEndAt());
+	}
+
+	@RequireClassPermission
+	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByGroup(Long classId, Long groupId, GetPointRequestDto request) {
 		if (request == null) {
 			return getByClassIdAndGroupId(
@@ -98,6 +112,52 @@ public class PointService {
 		}
 
 		return getByClassIdAndGroupId(classId, groupId, request.getStartAt(), request.getEndAt());
+	}
+
+	@RequireClassPermission
+	@Transactional(readOnly = true)
+	public List<WeekPointRankingResponseDto> getWeekRanking(Long classId) {
+		List<WeekPointRankingResponseDto> responseList = pointRepository.getWeekRankingAllGroupByClass(
+				classId,
+				weekService.getCurrentWeekStartAt(),
+				Instant.now()
+		);
+
+		short rank = 1;
+
+		for (WeekPointRankingResponseDto response : responseList) {
+			response.setRank(rank++);
+		}
+
+		return responseList;
+	}
+
+	@RequireClassPermission
+	@Transactional(readOnly = true)
+	public List<MonthPointRankingResponseDto> getMonthRanking(Long classId) {
+		List<MonthPointRankingResponseDto> monthPointRankingList = pointRepository.getMonthRankingByClass(
+				classId,
+
+				weekService.getWeekStartAtBefore(3),
+				weekService.getWeekEndAtBefore(3),
+
+				weekService.getWeekStartAtBefore(2),
+				weekService.getWeekEndAtBefore(2),
+
+				weekService.getWeekStartAtBefore(1),
+				weekService.getWeekEndAtBefore(1),
+
+				weekService.getWeekStartAtBefore(0),
+				weekService.getWeekEndAtBefore(0)
+		);
+
+		short rank = 1;
+
+		for (MonthPointRankingResponseDto monthPointRanking : monthPointRankingList) {
+			monthPointRanking.setRank(rank++);
+		}
+
+		return monthPointRankingList;
 	}
 
 	/**
@@ -137,6 +197,14 @@ public class PointService {
 	public List<PointResponseDto> getByClassIdAndGroupId(Long classId, Long groupId) {
 		return pointRepository
 				.getByClazz_IdAndGroup_IdOrderByCreatedAtDesc(classId, groupId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<PointResponseDto> getByClassId(Long classId, Instant startAt, Instant endAt) {
+		return pointRepository
+				.getByClazz_IdOrderByCreatedAtDescFilterByStartAtAndEndAt(
+						classId, startAt, endAt
+				);
 	}
 
 	@Transactional(readOnly = true)

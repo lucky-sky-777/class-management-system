@@ -41,6 +41,12 @@ public final class ClassUserRequestResponseDto {
 	@JsonProperty(value = "user_id")
 	Long userId;
 
+	@JsonProperty(value = "user_display_name")
+	String user_display_name;
+
+	@JsonProperty(value = "user_avatar_url")
+	String user_avatar_url;
+
 	@JsonProperty(value = "message")
 	String message;
 

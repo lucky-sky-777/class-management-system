@@ -162,11 +162,7 @@ public class ClassUserRequestService {
 	@RequireClassPermission
 	@Transactional(readOnly = true)
 	public List<ClassUserRequestResponseDto> getByClass(Long classId) {
-		List<ClassUserRequest> response = findByClassId(classId);
-
-		return response.stream()
-				.map(classUserRequestMapper::toClassUserRequestResponseDto)
-				.toList();
+		return getByClassId(classId);
 	}
 
 	@Transactional(readOnly = true)
@@ -195,6 +191,12 @@ public class ClassUserRequestService {
 	public List<ClassUserRequest> findByClassId(Long classId) {
 		return classUserRequestRepository
 				.findByClazz_IdOrderByCreatedAtDesc(classId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<ClassUserRequestResponseDto> getByClassId(Long classId) {
+		return classUserRequestRepository
+				.getByClazz_IdOrderByCreatedAtDesc(classId);
 	}
 
 	@Transactional(readOnly = true)

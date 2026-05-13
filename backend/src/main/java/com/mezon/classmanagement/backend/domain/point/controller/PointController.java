@@ -5,13 +5,16 @@ import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.point.dto.CreatePointRequestDto;
 import com.mezon.classmanagement.backend.domain.point.dto.GetPointRequestDto;
+import com.mezon.classmanagement.backend.domain.point.dto.MonthPointRankingResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointIdResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointResponseDto;
+import com.mezon.classmanagement.backend.domain.point.dto.WeekPointRankingResponseDto;
 import com.mezon.classmanagement.backend.domain.point.service.PointService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +37,7 @@ public class PointController {
 
 	PointService pointService;
 
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
 	@PostMapping("/groups/{groupId}")
 	public ResponseDTO<PointResponseDto> create(
 			@PathVariable Long classId,
@@ -52,6 +56,7 @@ public class PointController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
 	@DeleteMapping("/{pointId}")
 	public ResponseDTO<PointIdResponseDto> delete(
 			@PathVariable Long classId,
@@ -66,6 +71,22 @@ public class PointController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping
+	public ResponseDTO<List<PointResponseDto>> getByClass(
+			@PathVariable Long classId,
+			@Valid @RequestBody(required = false) GetPointRequestDto request
+	) {
+		List<PointResponseDto> response = pointService.getByClass(classId, request);
+
+		return ResponseDTO.<List<PointResponseDto>>builder()
+				.success(true)
+				.message("Get points by class successful")
+				.data(response)
+				.build();
+	}
+
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
 	@GetMapping("/groups/{groupId}")
 	public ResponseDTO<List<PointResponseDto>> getByGroup(
 			@PathVariable Long classId,
@@ -77,6 +98,34 @@ public class PointController {
 		return ResponseDTO.<List<PointResponseDto>>builder()
 				.success(true)
 				.message("Get points by class successful")
+				.data(response)
+				.build();
+	}
+
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping("/week-ranking")
+	public ResponseDTO<List<WeekPointRankingResponseDto>> getWeekRanking(
+			@PathVariable Long classId
+	) {
+		List<WeekPointRankingResponseDto> response = pointService.getWeekRanking(classId);
+
+		return ResponseDTO.<List<WeekPointRankingResponseDto>>builder()
+				.success(true)
+				.message("Get week point ranking successful")
+				.data(response)
+				.build();
+	}
+
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping("/month-ranking")
+	public ResponseDTO<List<MonthPointRankingResponseDto>> getMonthRanking(
+			@PathVariable Long classId
+	) {
+		List<MonthPointRankingResponseDto> response = pointService.getMonthRanking(classId);
+
+		return ResponseDTO.<List<MonthPointRankingResponseDto>>builder()
+				.success(true)
+				.message("Get month point ranking successful")
 				.data(response)
 				.build();
 	}
