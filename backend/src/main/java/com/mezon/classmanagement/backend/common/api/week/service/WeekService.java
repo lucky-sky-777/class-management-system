@@ -54,6 +54,33 @@ public class WeekService {
 		return response;
 	}
 
+	public Instant getMonthByWeekStartAt() {
+		LocalDate now = LocalDate.now(ZONE_ID).minusWeeks(3);
+
+		int year = now.get(WEEK_FIELDS.weekBasedYear());
+		int week = now.get(WEEK_FIELDS.weekOfWeekBasedYear());
+
+		return getWeekStartAt(year, week);
+	}
+
+	public Instant getWeekStartAtBefore(int weeksBefore) {
+		LocalDate date = LocalDate.now(ZONE_ID).minusWeeks(weeksBefore);
+
+		int year = date.get(WEEK_FIELDS.weekBasedYear());
+		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());
+
+		return getWeekStartAt(year, week);
+	}
+
+	public Instant getWeekEndAtBefore(int weeksBefore) {
+		LocalDate date = LocalDate.now(ZONE_ID).minusWeeks(weeksBefore);
+
+		int year = date.get(WEEK_FIELDS.weekBasedYear());
+		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());
+
+		return getWeekEndAt(year, week);
+	}
+
 	public Instant getCurrentWeekStartAt() {
 		LocalDate now = LocalDate.now(ZONE_ID);
 

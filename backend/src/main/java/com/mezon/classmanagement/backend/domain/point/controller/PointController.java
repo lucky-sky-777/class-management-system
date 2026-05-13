@@ -5,6 +5,7 @@ import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.point.dto.CreatePointRequestDto;
 import com.mezon.classmanagement.backend.domain.point.dto.GetPointRequestDto;
+import com.mezon.classmanagement.backend.domain.point.dto.MonthPointRankingResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointIdResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.WeekPointRankingResponseDto;
@@ -111,6 +112,20 @@ public class PointController {
 		return ResponseDTO.<List<WeekPointRankingResponseDto>>builder()
 				.success(true)
 				.message("Get week point ranking successful")
+				.data(response)
+				.build();
+	}
+
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping("/month-ranking")
+	public ResponseDTO<List<MonthPointRankingResponseDto>> getMonthRanking(
+			@PathVariable Long classId
+	) {
+		List<MonthPointRankingResponseDto> response = pointService.getMonthRanking(classId);
+
+		return ResponseDTO.<List<MonthPointRankingResponseDto>>builder()
+				.success(true)
+				.message("Get month point ranking successful")
 				.data(response)
 				.build();
 	}
