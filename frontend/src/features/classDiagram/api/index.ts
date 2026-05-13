@@ -45,7 +45,6 @@ export const classDiagramAPI = {
 
                   let student = null;
                   if (studentData && studentData.user_id) {
-                    
                     // 1. CHUYỂN ĐỔI TRẠNG THÁI TỪ BACKEND SANG FRONTEND
                     const beStatus = studentData.attendance_status || "PRESENT";
                     const statusMapUI: Record<string, AttendanceStatus> = {
@@ -60,7 +59,8 @@ export const classDiagramAPI = {
                     totalStudents++;
                     if (currentStatus === "present") presentCount++;
                     else if (currentStatus === "absent_excused") excusedCount++;
-                    else if (currentStatus === "absent_unexcused") unexcusedCount++;
+                    else if (currentStatus === "absent_unexcused")
+                      unexcusedCount++;
                     else if (currentStatus === "late") lateCount++;
 
                     // 3. RÁP DỮ LIỆU VÀO GHẾ
@@ -177,7 +177,7 @@ export const classDiagramAPI = {
   ): Promise<{ id: string; name: string }[]> => {
     try {
       const response: any = await apiClient.get(
-        `/seats/classes/${classId}/members/ungrouped`
+        `/classes/${classId}/members/ungrouped`,
       );
 
       // Bóc tách dữ liệu (tùy thuộc backend bọc data ở lớp nào)
@@ -190,7 +190,7 @@ export const classDiagramAPI = {
           name: m.user_display_name || "Vô danh", // Lấy tên học sinh
         }));
       }
-      
+
       return [];
     } catch (error) {
       console.error("Lỗi lấy danh sách học sinh chưa có chỗ:", error);
