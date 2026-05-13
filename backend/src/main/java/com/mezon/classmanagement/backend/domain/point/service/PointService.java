@@ -10,6 +10,7 @@ import com.mezon.classmanagement.backend.domain.point.dto.CreatePointRequestDto;
 import com.mezon.classmanagement.backend.domain.point.dto.GetPointRequestDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointIdResponseDto;
 import com.mezon.classmanagement.backend.domain.point.dto.PointResponseDto;
+import com.mezon.classmanagement.backend.domain.point.dto.WeekPointRankingResponseDto;
 import com.mezon.classmanagement.backend.domain.point.entity.Point;
 import com.mezon.classmanagement.backend.domain.point.mapper.PointMapper;
 import com.mezon.classmanagement.backend.domain.point.repository.PointRepository;
@@ -90,6 +91,18 @@ public class PointService {
 
 	@RequireClassPermission
 	@Transactional(readOnly = true)
+	public List<PointResponseDto> getByClass(Long classId, GetPointRequestDto request) {
+		if (request == null) {
+			return getByClassId(
+					classId, weekService.getCurrentWeekStartAt(), weekService.getCurrentWeekEndAt()
+			);
+		}
+
+		return getByClassId(classId, request.getStartAt(), request.getEndAt());
+	}
+
+	@RequireClassPermission
+	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByGroup(Long classId, Long groupId, GetPointRequestDto request) {
 		if (request == null) {
 			return getByClassIdAndGroupId(
@@ -98,6 +111,24 @@ public class PointService {
 		}
 
 		return getByClassIdAndGroupId(classId, groupId, request.getStartAt(), request.getEndAt());
+	}
+
+	@RequireClassPermission
+	@Transactional(readOnly = true)
+	public List<WeekPointRankingResponseDto> getWeekRanking(Long classId) {
+		List<WeekPointRankingResponseDto> responseList = pointRepository.getWeekRanking(
+				classId,
+				weekService.getCurrentWeekStartAt(),
+				Instant.now()
+		);
+
+		short rank = 1;
+
+		for (WeekPointRankingResponseDto response : responseList) {
+			response.setRank(rank++);
+		}
+
+		return responseList;
 	}
 
 	/**
@@ -137,6 +168,14 @@ public class PointService {
 	public List<PointResponseDto> getByClassIdAndGroupId(Long classId, Long groupId) {
 		return pointRepository
 				.getByClazz_IdAndGroup_IdOrderByCreatedAtDesc(classId, groupId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<PointResponseDto> getByClassId(Long classId, Instant startAt, Instant endAt) {
+		return pointRepository
+				.getByClazz_IdOrderByCreatedAtDescFilterByStartAtAndEndAt(
+						classId, startAt, endAt
+				);
 	}
 
 	@Transactional(readOnly = true)
