@@ -1,16 +1,12 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { 
     Calendar, 
     Clock, 
-    User as UserIcon, 
-    CheckCircle2, 
     XCircle, 
     RotateCcw, 
     ExternalLink, 
     Search, 
-    Filter,
-    MoreVertical,
     Check,
     X,
     Inbox,
@@ -23,6 +19,7 @@ import { useAuth } from "@features/auth";
 import { useMembers } from "@features/member/hooks/useMembers";
 import type { LeaveStatus, LeaveRequest } from "../types";
 import type { ID } from "@shared/utils/common";
+import { Avatar } from "@shared/components/ui/Avatar";
 
 const STATUS_LABELS: Record<LeaveStatus | "ALL", string> = {
     ALL: "Tất cả đơn",
@@ -39,13 +36,12 @@ const STATUS_LABELS: Record<LeaveStatus | "ALL", string> = {
  */
 const LeaveItem: React.FC<{ 
     leave: LeaveRequest; 
-    userName: string;
     isAdmin: boolean;
     currentUserId: ID;
     onApprove: (id: ID) => void;
     onReject: (id: ID) => void;
     onCancel: (id: ID) => void;
-}> = ({ leave, userName, isAdmin, currentUserId, onApprove, onReject, onCancel }) => {
+}> = ({ leave, isAdmin, currentUserId, onApprove, onReject, onCancel }) => {
     
     const getStatusStyles = (status: LeaveStatus) => {
         switch (status) {
@@ -59,6 +55,7 @@ const LeaveItem: React.FC<{
 
     const canManage = isAdmin && leave.status === "PENDING";
     const canCancel = String(leave.userId) === String(currentUserId) && leave.status === "PENDING";
+    const displayName = leave.user_display_name || `Thành viên #${leave.userId}`;
 
     return (
         <div className="card group hover:border-warm-200 transition-all duration-300 shadow-sm">
@@ -109,10 +106,14 @@ const LeaveItem: React.FC<{
                     <div className="flex flex-col items-start md:items-end">
                         <span className="text-[10px] font-bold text-ink-3 uppercase tracking-widest mb-1.5">Người gửi đơn</span>
                         <div className="flex items-center gap-2.5">
-                            <span className="font-bold text-ink-1 font-serif">{userName}</span>
-                            <div className="w-8 h-8 rounded-full bg-warm-fill text-warm-text flex items-center justify-center font-bold text-xs border border-warm-border">
-                                {userName.charAt(0).toUpperCase()}
-                            </div>
+                            <span className="font-bold text-ink-1 font-serif text-right">{displayName}</span>
+                            <Avatar
+                                name={displayName}
+                                size="md"
+                                shape="circle"
+                                src={leave.user_avatar_url}
+                                className="rounded-full border border-rule object-cover"
+                            />
                         </div>
                     </div>
 
@@ -163,26 +164,22 @@ export const LeavePage: React.FC = () => {
     } = useLeave(numericClassId);
     
     const { user } = useAuth();
-    const { members, myRole } = useMembers(classId || "", user?.id);
+    const { myRole } = useMembers(classId || "", user?.id);
     const isAdmin = myRole === "OWNER" || myRole === "CLASS_ADMIN";
 
     const [activeTab, setActiveTab] = useState<LeaveStatus | "ALL">("ALL");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
-    const getUserName = (userId: ID) => {
-        const member = members.find(m => String(m.userId) === String(userId));
-        return member?.displayName || member?.username || `Thành viên #${userId}`;
-    };
-
     const filteredLeaves = useMemo(() => {
         return leaves.filter(l => {
             const matchesTab = activeTab === "ALL" || l.status === activeTab;
+            const displayName = l.user_display_name || "";
             const matchesSearch = l.reason.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                 getUserName(l.userId).toLowerCase().includes(searchTerm.toLowerCase());
+                                 displayName.toLowerCase().includes(searchTerm.toLowerCase());
             return matchesTab && matchesSearch;
         });
-    }, [leaves, activeTab, searchTerm, members]);
+    }, [leaves, activeTab, searchTerm]);
 
     return (
         <div className="space-y-8 animate-fade-in max-w-5xl mx-auto pb-20 px-4">
@@ -258,7 +255,6 @@ export const LeavePage: React.FC = () => {
                                 <LeaveItem 
                                     key={leave.id} 
                                     leave={leave} 
-                                    userName={getUserName(leave.userId)}
                                     isAdmin={isAdmin}
                                     currentUserId={user?.id || 0}
                                     onApprove={approveLeave}

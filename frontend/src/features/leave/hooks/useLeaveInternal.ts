@@ -86,7 +86,7 @@ export const useLeaveInternal = (classId: ID) => {
             }
             setError(res.message);
             return false;
-        } catch (err) {
+        } catch {
             setError("Lỗi khi duyệt đơn");
             return false;
         } finally {
@@ -107,7 +107,7 @@ export const useLeaveInternal = (classId: ID) => {
             }
             setError(res.message);
             return false;
-        } catch (err) {
+        } catch {
             setError("Lỗi khi từ chối đơn");
             return false;
         } finally {
@@ -128,7 +128,7 @@ export const useLeaveInternal = (classId: ID) => {
             }
             setError(res.message);
             return false;
-        } catch (err) {
+        } catch {
             setError("Lỗi khi hủy đơn");
             return false;
         } finally {

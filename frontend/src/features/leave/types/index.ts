@@ -12,6 +12,8 @@ export interface LeaveRequest {
     id: ID;
     classId: ID;
     userId: ID;
+    user_display_name?: string;
+    user_avatar_url?: string;
     reason: string;
     from: Timestamp; // ISO Instant from backend
     to: Timestamp;   // ISO Instant from backend

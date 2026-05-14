@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Modal } from "@shared/components/ui/Modal";
 import { 
     Calendar, 
@@ -22,13 +22,12 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ isOpen, onClose,
     const [proofUrl, setProofUrl] = useState("");
     const [submitError, setSubmitError] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!isOpen) {
-            setSubmitError(null);
-        }
-    }, [isOpen]);
-
     if (!isOpen) return null;
+
+    const handleClose = () => {
+        setSubmitError(null);
+        onClose();
+    };
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,7 +43,7 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ isOpen, onClose,
             setFromDate("");
             setToDate("");
             setProofUrl("");
-            onClose();
+            handleClose();
         } else {
             setSubmitError(result.message || "Đã có lỗi xảy ra");
         }
@@ -53,7 +52,7 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ isOpen, onClose,
     return (
         <Modal 
             isOpen={isOpen} 
-            onClose={onClose} 
+            onClose={handleClose} 
             title={
                 <div className="flex items-center gap-2">
                     <FileText className="w-5 h-5 text-warm-400" />
@@ -153,7 +152,7 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ isOpen, onClose,
                 <div className="flex gap-3 pt-2">
                     <button
                         type="button"
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="btn btn-secondary flex-1"
                         disabled={isSubmitting}
                     >
