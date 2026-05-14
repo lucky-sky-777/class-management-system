@@ -7,6 +7,7 @@ import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.fund.dto.CreateFundRequestDto;
 import com.mezon.classmanagement.backend.domain.fund.dto.FundIdResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.dto.FundResponseDto;
+import com.mezon.classmanagement.backend.domain.fund.dto.FundSummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
 import com.mezon.classmanagement.backend.domain.fund.mapper.FundMapper;
 import com.mezon.classmanagement.backend.domain.fund.repository.FundRepository;
@@ -78,6 +79,12 @@ public class FundService {
 		return getByClassId(classId);
 	}
 
+	@RequireClassPermission
+	@Transactional
+	public FundSummaryResponseDto getSummaryByClass(Long classId) {
+		return getSummaryByClassIdOrThrow(classId);
+	}
+
 	/**
 	 * Action
 	 */
@@ -109,6 +116,15 @@ public class FundService {
 	public List<FundResponseDto> getByClassId(Long classId) {
 		return fundRepository
 				.getByClazz_IdOrderByCreatedAtDesc(classId);
+	}
+
+	@Transactional(readOnly = true)
+	public FundSummaryResponseDto getSummaryByClassIdOrThrow(Long classId) {
+		return fundRepository
+				.getSummaryByClassId(classId)
+				.orElseThrow(() ->
+						new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error")
+				);
 	}
 
 	/**

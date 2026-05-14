@@ -5,6 +5,8 @@ import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -56,6 +58,7 @@ public class FundPayment {
 	@JoinColumn(name = "creator_user_id", nullable = true)
 	User creator;
 
+	@Enumerated(EnumType.STRING)
 	@JoinColumn(name = "status", nullable = false)
 	Status status;
 

@@ -23,12 +23,10 @@ import lombok.experimental.FieldDefaults;
 @DTO
 public final class GetPointRequestDto {
 
-	// @Past
 	@NotNull
 	@JsonProperty(value = "start_at")
 	Instant startAt;
 
-	// @PastOrPresent
 	@NotNull
 	@JsonProperty(value = "end_at")
 	Instant endAt;

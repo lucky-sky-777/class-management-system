@@ -6,6 +6,7 @@ import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.fund.dto.CreateFundRequestDto;
 import com.mezon.classmanagement.backend.domain.fund.dto.FundIdResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.dto.FundResponseDto;
+import com.mezon.classmanagement.backend.domain.fund.dto.FundSummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.service.FundService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -79,5 +80,13 @@ public class FundController {
 				.data(response)
 				.build();
 	}
+
+//	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+//	@GetMapping("/summary")
+//	public ResponseDTO<FundSummaryResponseDto> getSummary(
+//			@PathVariable Long classId
+//	) {
+//		//
+//	}
 
 }

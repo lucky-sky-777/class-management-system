@@ -88,7 +88,6 @@ public class PointController {
 	@GetMapping
 	public ResponseDTO<List<PointResponseDto>> getByClass(
 			@PathVariable Long classId,
-			// @Valid @RequestBody(required = false) GetPointRequestDto request
 			@ModelAttribute GetPointRequestDto request
 	) {
 		List<PointResponseDto> response = pointService.getByClass(classId, request);
@@ -105,7 +104,7 @@ public class PointController {
 	public ResponseDTO<List<PointResponseDto>> getByGroup(
 			@PathVariable Long classId,
 			@PathVariable Long groupId,
-			@Valid @RequestBody(required = false) GetPointRequestDto request
+			@ModelAttribute GetPointRequestDto request
 	) {
 		List<PointResponseDto> response = pointService.getByGroup(classId, groupId, request);
 

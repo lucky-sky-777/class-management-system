@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.fund.repository;
 
 import com.mezon.classmanagement.backend.domain.fund.dto.FundResponseDto;
+import com.mezon.classmanagement.backend.domain.fund.dto.FundSummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -29,6 +30,46 @@ public interface FundRepository extends JpaRepository<Fund, Long> {
 	order by fund.createdAt desc
 	""")
 	List<FundResponseDto> getByClazz_IdOrderByCreatedAtDesc(Long classId);
+
+	@Query("""
+	SELECT new com.mezon.classmanagement.backend.domain.fund.dto.FundSummaryResponseDto(
+		CAST(
+			COALESCE(SUM(
+				CASE
+					WHEN fund.type = com.mezon.classmanagement.backend.domain.fund.entity.Fund.Type.INCOME
+					THEN fund.amount
+					ELSE -fund.amount
+				END
+			), 0)
+			AS long
+		),
+
+		CAST(
+			COALESCE(SUM(
+				CASE
+					WHEN fund.type = com.mezon.classmanagement.backend.domain.fund.entity.Fund.Type.INCOME
+					THEN fund.amount
+					ELSE 0
+				END
+			), 0)
+			AS long
+		),
+
+		CAST(
+			COALESCE(SUM(
+				CASE
+					WHEN fund.type = com.mezon.classmanagement.backend.domain.fund.entity.Fund.Type.EXPENSE
+					THEN fund.amount
+					ELSE 0
+				END
+			), 0)
+			AS long
+		)
+	)
+	FROM Fund fund
+	WHERE fund.clazz.id = :classId
+	""")
+	Optional<FundSummaryResponseDto> getSummaryByClassId(Long classId);
 
 	Optional<Fund> findByClazz_IdAndId(Long classId, Long fundId);
 }
