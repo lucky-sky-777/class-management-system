@@ -113,6 +113,12 @@ public class GroupService {
     }
 
     @Transactional(readOnly = true)
+    public List<GroupResponseDto> getByClassId(Long classId) {
+        return groupRepository
+                .getByClazz_IdOrderByCreatedAtAsc(classId);
+    }
+
+    @Transactional(readOnly = true)
     public Group findByClassIdAndGroupIdOrThrow(Long classId, Long groupId) {
         return groupRepository
                 .findByClazz_IdAndId(classId, groupId)

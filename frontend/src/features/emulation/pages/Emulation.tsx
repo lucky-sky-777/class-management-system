@@ -1,22 +1,24 @@
 import { useState } from "react";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Pencil, Check, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useEmulation } from "@features/emulation/hooks/useEmulation";
 import { RankingTable } from "@features/emulation/pages/RankingTable";
 import { HistoryTable } from "@features/emulation/pages/HistoryTable";
-import { emulationAPI } from "@features/emulation/api";
 import { Modal } from "@shared/components/ui/Modal";
 
 export const Emulation = () => {
   const { classId } = useParams<{ classId: string }>();
   const {
     data,
+    groups,
     isLoading,
     filters,
     weeks,
     setFilters,
-    changeTeamCount,
-    refresh,
+    addGroup,
+    addPoint,
+    editGroup,
+    removeGroup,
   } = useEmulation(classId!);
 
   const [selectedTeam, setSelectedTeam] = useState(1);
@@ -28,7 +30,14 @@ export const Emulation = () => {
     content: "",
     points: 0,
   });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  //state remove
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
+  //state edit
+  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
+  const [editGroupName, setEditGroupName] = useState("");
+  //state phân quyền
   const canEdit = true; // TODO: Phân quyền sau
   // 3. EARLY RETURN (Chỉ return sau khi đã gọi hết Hooks)
   if (isLoading || !data) {
@@ -43,26 +52,39 @@ export const Emulation = () => {
 
   // 4. HÀM XỬ LÝ GHI ĐIỂM
   const handleSubmitPoint = async () => {
+    // 1. Validation sớm
     const pointsToSubmit = Number(pointForm.points);
-    if (!pointForm.content) return alert("Vui lòng nhập nội dung!");
+    if (!pointForm.content.trim()) return alert("Vui lòng nhập nội dung!");
     if (isNaN(pointsToSubmit) || pointsToSubmit === 0) {
       return alert("Số điểm không hợp lệ!");
     }
 
     try {
-      await emulationAPI.addPoints(
-        classId!,
+      setIsSubmitting(true); // Khóa nút bấm lại
+
+      // 2. Gọi hàm addPoint từ Hook (Sử dụng hàm đã bọc trong useEmulation để đồng bộ)
+      // Lưu ý: Nên dùng hàm addPoint từ Hook trả về thay vì gọi trực tiếp emulationAPI ở đây
+      const result = await addPoint(
         selectedTeam,
         pointForm.content,
         pointsToSubmit,
       );
-      alert(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
-      setShowPointModal(false);
-      setPointForm({ content: "", points: 0 }); // Reset form
-      refresh(); // Load lại lịch sử và bảng xếp hạng
+
+      if (result.success) {
+        // 3. Xử lý sau khi thành công
+        setShowPointModal(false);
+        setPointForm({ content: "", points: 0 });
+
+        // Thông báo nhẹ nhàng (nên dùng Toast nếu có, alert hơi "cổ điển")
+        console.log(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
+      } else {
+        alert("Ghi điểm thất bại. Vui lòng kiểm tra lại kết nối!");
+      }
     } catch (error) {
-      console.error("Lỗi nhập điểm", error);
-      alert("Lỗi nhập điểm");
+      console.error("Lỗi nhập điểm:", error);
+      alert("Đã có lỗi xảy ra khi ghi điểm!");
+    } finally {
+      setIsSubmitting(false); // Mở khóa nút bấm
     }
   };
 
@@ -114,16 +136,19 @@ export const Emulation = () => {
             </label>
             {canEdit && (
               <div className="flex gap-1 bg-[var(--bg-surface-2)] p-1 rounded-lg border border-[var(--rule)]">
+                {/* 👉 NÚT TRỪ BẬT MODAL XÓA */}
                 <button
-                  onClick={() => changeTeamCount(data.teamCount - 1)}
+                  onClick={() => setShowDeleteModal(true)}
                   className="p-1 hover:text-[var(--red-text)] transition-colors"
+                  title="Xóa tổ chỉ định"
                 >
                   <Minus size={10} />
                 </button>
                 <div className="w-[1px] bg-[var(--rule)] mx-0.5" />
                 <button
-                  onClick={() => changeTeamCount(data.teamCount + 1)}
+                  onClick={addGroup}
                   className="p-1 hover:text-[var(--green-text)] transition-colors"
+                  title="Thêm tổ mới"
                 >
                   <Plus size={10} />
                 </button>
@@ -132,30 +157,75 @@ export const Emulation = () => {
           </div>
 
           <nav className="space-y-1">
-            {Array.from({ length: data.teamCount }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedTeam(i + 1)}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
-                  selectedTeam === i + 1
+            {groups.map((group) => (
+              <div
+                key={group.id}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative ${
+                  selectedTeam === group.id
                     ? "bg-[var(--warm-fill)] text-[var(--warm-text)] shadow-sm border border-[var(--warm-border)]"
                     : "hover:bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-transparent"
                 }`}
               >
-                <div className="flex items-center gap-3">
+                {/* LỚP PHỦ ĐỂ CLICK CHỌN TỔ (Nằm dưới nút sửa) */}
+                <div 
+                  className="absolute inset-0 cursor-pointer" 
+                  onClick={() => setSelectedTeam(group.id)} 
+                />
+
+                <div className="flex items-center gap-3 relative z-10 w-full">
                   <span
-                    className={`w-1.5 h-1.5 rounded-full transition-all ${
-                      selectedTeam === i + 1
-                        ? "bg-[var(--warm-400)] scale-125"
-                        : "bg-[var(--ink-4)] group-hover:bg-[var(--ink-3)]"
+                    className={`w-1.5 h-1.5 rounded-full transition-all flex-shrink-0 ${
+                      selectedTeam === group.id ? "bg-[var(--warm-400)] scale-125" : "bg-[var(--ink-4)] group-hover:bg-[var(--ink-3)]"
                     }`}
                   />
-                  <span className="text-sm font-bold">Tổ {i + 1}</span>
+                  
+                  {/* Ô NHẬP SỬA TÊN HOẶC HIỂN THỊ TÊN */}
+                  {editingGroupId === group.id ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editGroupName}
+                        onChange={(e) => setEditGroupName(e.target.value)}
+                        onKeyDown={(e) => {
+                           if (e.key === "Enter") {
+                              editGroup(group.id, editGroupName).then((success) => success && setEditingGroupId(null));
+                           }
+                        }}
+                        className="w-full bg-white border border-[var(--rule)] rounded text-xs px-2 py-1 outline-none text-black"
+                      />
+                      <button 
+                        onClick={() => editGroup(group.id, editGroupName).then((success) => success && setEditingGroupId(null))}
+                        className="text-green-600 hover:scale-110 transition-transform"
+                      >
+                        <Check size={14} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={() => setEditingGroupId(null)}
+                        className="text-red-500 hover:scale-110 transition-transform"
+                      >
+                        <X size={14} strokeWidth={3} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-bold flex-1 truncate">{group.name}</span>
+                  )}
                 </div>
-                {selectedTeam === i + 1 && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-[var(--warm-400)] animate-pulse" />
+
+                {/* NÚT BÚT CHÌ (Chỉ hiện khi có quyền sửa và chưa ở chế độ sửa) */}
+                {canEdit && editingGroupId !== group.id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Không kích hoạt sự kiện chọn tổ
+                      setEditingGroupId(group.id);
+                      setEditGroupName(group.name);
+                    }}
+                    className="relative z-10 opacity-0 group-hover:opacity-100 p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] hover:bg-white rounded-md transition-all"
+                  >
+                    <Pencil size={12} />
+                  </button>
                 )}
-              </button>
+              </div>
             ))}
           </nav>
         </div>
@@ -235,6 +305,7 @@ export const Emulation = () => {
           {/* CỤM NÚT BẤM */}
           <div className="flex gap-3 pt-3">
             <button
+              disabled={isSubmitting}
               onClick={() => {
                 setShowPointModal(false);
                 setPointForm({ content: "", points: 0 });
@@ -244,6 +315,7 @@ export const Emulation = () => {
               HỦY BỎ
             </button>
             <button
+              disabled={isSubmitting}
               onClick={handleSubmitPoint}
               className="flex-1 py-2.5 bg-[var(--warm-400)] text-white rounded-[var(--r-lg)] font-bold text-xs shadow-md shadow-blue-900/10 hover:bg-[var(--warm-600)] transition-all active:scale-95"
             >
@@ -252,6 +324,90 @@ export const Emulation = () => {
           </div>
         </div>
       </Modal>
+
+      {/* MODAL XÓA TỔ */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setGroupToDelete(null);
+        }}
+        title="Xóa Tổ Chỉ Định"
+      >
+        <div className="space-y-5 p-2">
+          
+          {/* Hộp cảnh báo - Dùng bộ Semantic Danger (--red-fill, --red-border, --red-text) */}
+          <div className="bg-[var(--red-fill)] text-[var(--red-text)] text-sm p-4 rounded-[var(--r-md)] border border-[var(--red-border)] font-medium flex gap-3 leading-relaxed">
+            <span className="flex-shrink-0 text-base">⚠️</span>
+            <span>
+              Hành động này sẽ xóa toàn bộ điểm số của tổ vĩnh viễn. Hãy kiểm tra thật kỹ trước khi xác nhận!
+            </span>
+          </div>
+
+          {/* Danh sách chọn Tổ */}
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar">
+            {groups.map((group) => {
+              const isSelected = groupToDelete === group.id;
+              return (
+                <label 
+                  key={group.id} 
+                  className={`flex items-center gap-3 p-3.5 rounded-[var(--r-md)] border cursor-pointer transition-all duration-200 ${
+                    isSelected 
+                    ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-[var(--shadow-sm)]" 
+                    : "border-[var(--rule)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-2)]"
+                  }`}
+                >
+                  {/* Dùng accent-color cho radio button để match với màu Danger */}
+                  <input
+                    type="radio"
+                    name="groupDelete"
+                    checked={isSelected}
+                    onChange={() => setGroupToDelete(group.id)}
+                    className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
+                  />
+                  <span className={`text-sm font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}>
+                    {group.name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Cụm nút bấm */}
+          <div className="flex gap-3 pt-2">
+            {/* Nút Hủy - Dùng Surface & Ink */}
+            <button
+              onClick={() => {
+                setShowDeleteModal(false);
+                setGroupToDelete(null);
+              }}
+              className="flex-1 py-2.5 bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-[var(--rule)] rounded-[var(--r-md)] font-bold text-[11px] tracking-[0.05em] hover:bg-[var(--bg-surface-3)] hover:text-[var(--ink-1)] transition-colors"
+            >
+              HỦY BỎ
+            </button>
+
+            {/* Nút Xóa - Dùng màu Red Text làm background cho nổi bật (vì globals.css không có red-button) */}
+            <button
+              disabled={!groupToDelete}
+              onClick={async () => {
+                if (!groupToDelete) return;
+                const isSuccess = await removeGroup(groupToDelete);
+                if (isSuccess) {
+                  setShowDeleteModal(false);
+                  setGroupToDelete(null);
+                  if (selectedTeam === groupToDelete) {
+                    setSelectedTeam(groups[0]?.id || 1);
+                  }
+                }
+              }}
+              className="flex-1 py-2.5 bg-[var(--red-text)] text-white rounded-[var(--r-md)] font-bold text-[11px] tracking-[0.05em] shadow-[var(--shadow-sm)] hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              XÁC NHẬN XÓA
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 };

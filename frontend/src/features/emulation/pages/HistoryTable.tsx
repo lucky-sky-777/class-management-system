@@ -50,7 +50,7 @@ export const HistoryTable = ({
 
           <tbody className="divide-y divide-[var(--rule)]">
             {filteredHistory.length > 0 ? (
-              [...filteredHistory].reverse().map((log) => (
+              [...filteredHistory].map((log) => (
                 <tr
                   key={log.id}
                   className="hover:bg-[var(--bg-surface-2)] transition-colors group flex flex-col md:table-row p-3 md:p-0"

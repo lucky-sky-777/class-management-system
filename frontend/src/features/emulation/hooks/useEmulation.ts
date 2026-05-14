@@ -6,6 +6,7 @@ export const useEmulation = (classId: string) => {
   const [data, setData] = useState<CompetitionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [weeks, setWeeks] = useState<any[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
 
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
@@ -15,14 +16,11 @@ export const useEmulation = (classId: string) => {
 
   const loadWeeks = useCallback(async () => {
     try {
-      // Lấy năm từ bộ lọc (hoặc dùng new Date().getFullYear())
       const currentYear = filters.year || new Date().getFullYear();
-
       const weeksData = await emulationAPI.getWeeks(currentYear);
       setWeeks(weeksData);
 
       if (weeksData && weeksData.length > 0) {
-        // CÓ DỮ LIỆU: Tìm tuần hiện tại hoặc lấy tuần đầu tiên
         const currentWeek = weeksData.find((w: any) => w.is_current_week);
         if (currentWeek) {
           setFilters((prev) => ({
@@ -38,7 +36,6 @@ export const useEmulation = (classId: string) => {
           }));
         }
       } else {
-        console.warn(`Không có dữ liệu tuần nào cho năm ${currentYear}!`);
         setData({
           teamCount: 4,
           teams: {},
@@ -50,78 +47,57 @@ export const useEmulation = (classId: string) => {
       }
     } catch (error) {
       console.error("Lỗi lấy danh sách tuần:", error);
-      setIsLoading(false); // Có lỗi cũng phải tắt loading
+      setIsLoading(false);
     }
   }, [filters.year]);
 
   const loadData = useCallback(
     async (silent = false) => {
-      if (!classId) return;
+      if (!classId || !filters.startDate) return;
       try {
         if (!silent) setIsLoading(true);
 
-        // Gọi đồng thời 3 API của Backend
-        const [historyRes, weekRankRes, monthRankRes] = await Promise.all([
-          emulationAPI.getHistoryByClass(
-            classId,
-            filters.startDate,
-            filters.endDate,
-          ),
-          emulationAPI.getWeekRanking(
-            classId,
-            filters.startDate,
-            filters.endDate,
-          ),
-          emulationAPI.getMonthRanking(classId),
+        const [historyRes, weekRankRes, monthRankRes, groupRes] = await Promise.all([
+          emulationAPI.getHistoryByClass(classId, filters.startDate, filters.endDate),
+          emulationAPI.getWeekRanking(classId, filters.startDate, filters.endDate),
+          emulationAPI.getMonthRanking(classId, filters.startDate, filters.endDate),
+          emulationAPI.getGroups(classId),
         ]);
 
-        // console.log("1. Data Lịch sử gốc:", historyRes);
-        // console.log("2. Data Rank Tuần gốc:", weekRankRes);
-        // console.log("3. Data Rank Tháng gốc:", monthRankRes);
+        
+        const rawHistory = historyRes?.data || (Array.isArray(historyRes) ? historyRes : []);
+        const rawWeekRank = weekRankRes?.data || (Array.isArray(weekRankRes) ? weekRankRes : []);
+        const rawMonthRank = monthRankRes?.data || (Array.isArray(monthRankRes) ? monthRankRes : []);
+        const rawGroups = groupRes?.data || (Array.isArray(groupRes) ? groupRes : []);
+        setGroups(rawGroups);
 
-        // 1. Map dữ liệu Xếp hạng Tuần
-        const weeklyRanking = weekRankRes.map((item: any) => ({
-          rank: item.rank,
-          teamId: parseInt(item.group_name.replace(/\D/g, "")) || 1, // Bóc tách số từ "Group 1" hoặc "Tổ 1"
-          points: item.total_point,
-        }));
-
-        // 2. Map dữ liệu Xếp hạng Tháng
-        const monthlyRanking = monthRankRes.map((item: any) => ({
-          rank: item.rank,
-          teamId: parseInt(item.group_name.replace(/\D/g, "")) || 1,
-          points: item.total_point,
-          weeks: {
-            t1: item.week_1_point || 0,
-            t2: item.week_2_point || 0,
-            t3: item.week_3_point || 0,
-            t4: item.week_4_point || 0,
-          },
-        }));
-
-        // 3. Map dữ liệu Lịch sử (Đoán tên trường DTO của Backend, nếu sai Hào sửa lại nhé)
-        const history = (
-          Array.isArray(historyRes) ? historyRes : historyRes.data || []
-        ).map((item: any) => ({
+        const history = rawHistory.map((item: any) => ({
           id: item.id?.toString() || Math.random().toString(),
-          // Chuyển ISO sang định dạng VN để dễ soi
-          date: item.created_at
-            ? new Date(item.created_at).toLocaleString("vi-VN")
-            : "Vừa xong",
+          date: item.created_at || "Vừa xong",
           content: item.description || "Chưa có nội dung",
           points: item.point || 0,
           teamId: item.group_id || 1,
           actor: item.actor_display_name || "Giáo viên",
         }));
-        // 4. Tìm teamCount tự động (Dựa vào số lượng tổ trong ranking)
-        const teamCount = Math.max(weeklyRanking.length, 4); // Mặc định ít nhất 4 tổ
+
+        const weeklyRanking = rawWeekRank.map((item: any) => ({
+          rank: item.rank,
+          teamId: item.group_id || (item.group_name ? parseInt(item.group_name.replace(/\D/g, "")) : 1),
+          points: item.total_point || 0,
+        }));
+
+        const monthlyRanking = rawMonthRank.map((item: any) => ({
+          rank: item.rank,
+          teamId: item.group_id || (item.group_name ? parseInt(item.group_name.replace(/\D/g, "")) : 1),
+          points: item.total_point || 0,
+        }));
 
         setData({
-          teamCount,
-          teams: {}, // Tạm thời để trống, UI vẫn chạy (hoặc gọi API lấy danh sách hs tổ sau)
-          history,
-          weeklyRanking,
-          monthlyRanking,
+          teamCount: Math.max(weeklyRanking.length, 4),
+          teams: {},
+          history: [...history],
+          weeklyRanking: [...weeklyRanking],
+          monthlyRanking: [...monthlyRanking], // Dùng biến đã Map
         });
       } catch (error) {
         console.error("Lỗi khi gọi API Thi đua:", error);
@@ -129,22 +105,31 @@ export const useEmulation = (classId: string) => {
         setIsLoading(false);
       }
     },
-    [classId, filters.startDate, filters.endDate], // Load lại mỗi khi startDate/endDate đổi
+    [classId, filters.startDate, filters.endDate],
   );
 
-  // Gọi Ghi điểm
   const addPoint = async (groupId: number, content: string, points: number) => {
     try {
-      await emulationAPI.addPoints(classId, groupId, content, points);
-      await loadData(true); // Ghi xong tự động chạy ngầm loadData để update biểu đồ
-      return { success: true };
+      const res = await emulationAPI.addPoints(classId, groupId, content, points);
+      
+      const responseData = res?.data ? res.data : res; 
+      const isSuccess = responseData && (responseData.success || responseData.code === 200 || responseData.id);
+
+      if (isSuccess) {
+        // Mẹo chống delay: Đợi DB commit transaction xong (200ms) rồi mới gọi lệnh Load
+        await new Promise(resolve => setTimeout(resolve, 200)); 
+        await loadData(true);
+        return { success: true };
+      }
+      
+      console.error("API báo lỗi hoặc thiếu dữ liệu:", res);
+      return { success: false };
     } catch (error) {
       console.error("Lỗi ghi điểm:", error);
       return { success: false };
     }
   };
 
-  // Gọi Xóa điểm
   const deletePoint = async (pointId: number) => {
     try {
       await emulationAPI.deletePointLog(classId, pointId);
@@ -154,9 +139,58 @@ export const useEmulation = (classId: string) => {
     }
   };
 
-  const changeTeamCount = async (newCount: number) => {
-    console.log("Cập nhật team count thành:", newCount);
-    // Hào bảo Backend viết thêm 1 API cấu hình lại số lượng tổ nhé
+// THÊM TỔ MỚI (Nút Dấu +)
+  const addGroup = async () => {
+    try {
+      // Tự động tính tên tổ tiếp theo (VD: Đang có 4 tổ -> Tạo "Tổ 5")
+      const nextNumber = groups.length + 1;
+      const groupName = `Tổ ${nextNumber}`;
+      
+      const res = await emulationAPI.createGroup(classId, groupName);
+      
+      if (res) {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Đợi DB lưu xíu
+        await loadData(true); // Load lại danh sách ngay lập tức
+        // alert(`Đã thêm ${groupName} thành công!`);
+      }
+    } catch (error) {
+      console.error("Lỗi thêm tổ:", error);
+      alert("Đã có lỗi xảy ra khi thêm tổ!");
+    }
+  };
+
+  // 1. HÀM SỬA TÊN TỔ
+  const editGroup = async (groupId: number, newName: string) => {
+    if (!newName.trim()) return false;
+    try {
+      const res = await emulationAPI.updateGroup(classId, groupId, newName.trim());
+      if (res) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        await loadData(true);
+        return true; // Trả về true để UI biết đường đóng ô nhập
+      }
+    } catch (error) {
+      console.error("Lỗi sửa tên tổ:", error);
+      alert("Đã có lỗi xảy ra khi sửa tên tổ!");
+    }
+    return false;
+  };
+
+  // 2. HÀM XÓA TỔ CHỈ ĐỊNH
+  const removeGroup = async (groupId: number) => {
+    try {
+      const res = await emulationAPI.deleteGroup(classId, groupId);
+      if (res) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        await loadData(true);
+        // alert("Đã xóa tổ thành công!");
+        return true;
+      }
+    } catch (error) {
+      console.error("Lỗi xóa tổ:", error);
+      alert("Đã có lỗi xảy ra khi xóa tổ!");
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -165,12 +199,13 @@ export const useEmulation = (classId: string) => {
 
   useEffect(() => {
     if (filters.startDate) {
-      loadData();
+      loadData(true);
     }
   }, [loadData, filters.startDate]);
 
   return {
     data,
+    groups,
     isLoading,
     filters,
     weeks,
@@ -180,6 +215,8 @@ export const useEmulation = (classId: string) => {
     refresh: () => loadData(true),
     addPoint,
     deletePoint,
-    changeTeamCount,
+    addGroup,
+    editGroup,
+    removeGroup,
   };
 };

@@ -12,5 +12,6 @@ public interface PointMapper {
 
 	@Mapping(source = "clazz.id", target = "classId")
 	@Mapping(source = "actor.id", target = "actorUserId")
+	@Mapping(source = "group.id", target = "groupId")
 	PointResponseDto toPointResponseDto(Point point);
 }
