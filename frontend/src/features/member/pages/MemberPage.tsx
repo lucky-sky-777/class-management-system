@@ -21,7 +21,7 @@ export const MemberPage = () => {
   const { members, isLoading, myRole, refresh } = useMembers(
     classId!,
     user?.id,
-    classInfo?.owner_user_id,
+    // classInfo?.owner_user_id,
   );
 
   // --- 2. EFFECT LẤY THÔNG TIN LỚP ---

@@ -42,10 +42,17 @@ export const emulationAPI = {
     return response.data?.data || response.data || [];
   },
 
-  // 3. LẤY XẾP HẠNG THÁNG (Không cần startDate/endDate, để Backend lo)
-  getMonthRanking: async (classId: string) => {
+ // 3. LẤY XẾP HẠNG THÁNG
+  getMonthRanking: async (classId: string, startDate?: string, endDate?: string) => {
+    const query = new URLSearchParams();
+    if (startDate && endDate) {
+      query.append("startAt", startDate);
+      query.append("endAt", endDate);
+    }
+    query.append("_t", new Date().getTime().toString()); // Phá cache
+
     const response = (await apiClient.get(
-      `/classes/${classId}/points/month-ranking`,
+      `/classes/${classId}/points/month-ranking?${query.toString()}`,
     )) as any;
     return response.data?.data || response.data || [];
   },
@@ -98,5 +105,40 @@ export const emulationAPI = {
   getWeeks: async (year: number) => {
     const response = (await apiClient.get(`/public/weeks?year=${year}`)) as any;
     return response.data?.data || response.data || response || [];
+  },
+
+  // 8. TẠO TỔ MỚI
+  createGroup: async (classId: string, name: string) => {
+    const response = (await apiClient.post(
+      `/classes/${classId}/groups`,
+      { name } // Gửi tên tổ lên (VD: "Tổ 5")
+    )) as any;
+    return response.data ?? response;
+  },
+
+  // 9. CẬP NHẬT TÊN TỔ (Dành cho sau này nếu muốn đổi tên)
+  updateGroup: async (classId: string, groupId: number, name: string) => {
+    const response = (await apiClient.patch(
+      `/classes/${classId}/groups/${groupId}`,
+      { name }
+    )) as any;
+    return response.data;
+  },
+
+  // 10. XÓA TỔ
+  deleteGroup: async (classId: string, groupId: number) => {
+    const response = (await apiClient.delete(
+      `/classes/${classId}/groups/${groupId}`
+    )) as any;
+    return response.data ?? response;
+  },
+
+   // 11 LẤY DANH SÁCH TỔ (GROUP)
+  getGroups: async (classId: string) => {
+    const response = (await apiClient.get(
+      `/classes/${classId}/groups?_t=${new Date().getTime()}`
+    )) as any;
+    
+    return response.data?.data || response.data || [];
   },
 };

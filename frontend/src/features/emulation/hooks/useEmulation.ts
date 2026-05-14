@@ -6,6 +6,7 @@ export const useEmulation = (classId: string) => {
   const [data, setData] = useState<CompetitionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [weeks, setWeeks] = useState<any[]>([]);
+  const [groups, setGroups] = useState<any[]>([]);
 
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
@@ -56,15 +57,19 @@ export const useEmulation = (classId: string) => {
       try {
         if (!silent) setIsLoading(true);
 
-        const [historyRes, weekRankRes, monthRankRes] = await Promise.all([
+        const [historyRes, weekRankRes, monthRankRes, groupRes] = await Promise.all([
           emulationAPI.getHistoryByClass(classId, filters.startDate, filters.endDate),
           emulationAPI.getWeekRanking(classId, filters.startDate, filters.endDate),
-          emulationAPI.getMonthRanking(classId),
+          emulationAPI.getMonthRanking(classId, filters.startDate, filters.endDate),
+          emulationAPI.getGroups(classId),
         ]);
 
+        
         const rawHistory = historyRes?.data || (Array.isArray(historyRes) ? historyRes : []);
         const rawWeekRank = weekRankRes?.data || (Array.isArray(weekRankRes) ? weekRankRes : []);
         const rawMonthRank = monthRankRes?.data || (Array.isArray(monthRankRes) ? monthRankRes : []);
+        const rawGroups = groupRes?.data || (Array.isArray(groupRes) ? groupRes : []);
+        setGroups(rawGroups);
 
         const history = rawHistory.map((item: any) => ({
           id: item.id?.toString() || Math.random().toString(),
@@ -81,7 +86,6 @@ export const useEmulation = (classId: string) => {
           points: item.total_point || 0,
         }));
 
-        // 👉 ĐÃ SỬA LỖI 3: Thêm Map cho Xếp Hạng Tháng để UI có thể hiển thị
         const monthlyRanking = rawMonthRank.map((item: any) => ({
           rank: item.rank,
           teamId: item.group_id || (item.group_name ? parseInt(item.group_name.replace(/\D/g, "")) : 1),
@@ -108,7 +112,6 @@ export const useEmulation = (classId: string) => {
     try {
       const res = await emulationAPI.addPoints(classId, groupId, content, points);
       
-      // 👉 ĐÃ SỬA LỖI 1 & 2: Bọc điều kiện an toàn, hỗ trợ trường hợp Axios bọc res.data
       const responseData = res?.data ? res.data : res; 
       const isSuccess = responseData && (responseData.success || responseData.code === 200 || responseData.id);
 
@@ -136,8 +139,58 @@ export const useEmulation = (classId: string) => {
     }
   };
 
-  const changeTeamCount = async (newCount: number) => {
-    console.log("Cập nhật team count thành:", newCount);
+// THÊM TỔ MỚI (Nút Dấu +)
+  const addGroup = async () => {
+    try {
+      // Tự động tính tên tổ tiếp theo (VD: Đang có 4 tổ -> Tạo "Tổ 5")
+      const nextNumber = groups.length + 1;
+      const groupName = `Tổ ${nextNumber}`;
+      
+      const res = await emulationAPI.createGroup(classId, groupName);
+      
+      if (res) {
+        await new Promise(resolve => setTimeout(resolve, 300)); // Đợi DB lưu xíu
+        await loadData(true); // Load lại danh sách ngay lập tức
+        // alert(`Đã thêm ${groupName} thành công!`);
+      }
+    } catch (error) {
+      console.error("Lỗi thêm tổ:", error);
+      alert("Đã có lỗi xảy ra khi thêm tổ!");
+    }
+  };
+
+  // 1. HÀM SỬA TÊN TỔ
+  const editGroup = async (groupId: number, newName: string) => {
+    if (!newName.trim()) return false;
+    try {
+      const res = await emulationAPI.updateGroup(classId, groupId, newName.trim());
+      if (res) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        await loadData(true);
+        return true; // Trả về true để UI biết đường đóng ô nhập
+      }
+    } catch (error) {
+      console.error("Lỗi sửa tên tổ:", error);
+      alert("Đã có lỗi xảy ra khi sửa tên tổ!");
+    }
+    return false;
+  };
+
+  // 2. HÀM XÓA TỔ CHỈ ĐỊNH
+  const removeGroup = async (groupId: number) => {
+    try {
+      const res = await emulationAPI.deleteGroup(classId, groupId);
+      if (res) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        await loadData(true);
+        // alert("Đã xóa tổ thành công!");
+        return true;
+      }
+    } catch (error) {
+      console.error("Lỗi xóa tổ:", error);
+      alert("Đã có lỗi xảy ra khi xóa tổ!");
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -146,12 +199,13 @@ export const useEmulation = (classId: string) => {
 
   useEffect(() => {
     if (filters.startDate) {
-      loadData();
+      loadData(true);
     }
   }, [loadData, filters.startDate]);
 
   return {
     data,
+    groups,
     isLoading,
     filters,
     weeks,
@@ -161,6 +215,8 @@ export const useEmulation = (classId: string) => {
     refresh: () => loadData(true),
     addPoint,
     deletePoint,
-    changeTeamCount,
+    addGroup,
+    editGroup,
+    removeGroup,
   };
 };
