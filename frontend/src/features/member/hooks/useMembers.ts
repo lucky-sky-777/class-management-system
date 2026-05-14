@@ -3,48 +3,43 @@ import { memberAPI } from "@features/member/api";
 import type { Member } from "@features/member/types";
 
 
-export const useMembers = (classId: string, currentUserId?: number | string, ownerId?: number | string) => {
+// src/features/member/hooks/useMembers.ts
+
+export const useMembers = (classId: string, currentUserId?: number | string) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchMembers = useCallback(async () => {
-    // Chỉ fetch khi có classId. Nếu chưa có ownerId cũng cứ fetch, 
-    // ta sẽ map lại role sau ở useEffect bên dưới.
-    if (!classId) return; 
+  const fetchMembers = useCallback(async (silent = false) => {
+    if (!classId) return;
 
     try {
-      setIsLoading(true);
-      const data = await memberAPI.getMembers(classId);
+      if (!silent) setIsLoading(true);
+
+      // Gọi song song nhưng tách biệt
+      const [officialData, pendingData] = await Promise.all([
+        memberAPI.getMembers(classId),
+        memberAPI.getPendingRequests(classId)
+      ]);
       
-      const mapped = data.map(m => ({
-        ...m,
-        role: (ownerId && String(m.userId) === String(ownerId)) ? "OWNER" : m.role
-      }));
-      
-      setMembers(mapped);
+      // Gộp lại để Page chỉ cần dùng 1 biến 'members' duy nhất
+      setMembers([...officialData, ...pendingData]);
     } catch (error) {
       console.error("Lỗi tải thành viên:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [classId, ownerId]);
+  }, [classId]);
 
   useEffect(() => {
     fetchMembers();
   }, [fetchMembers]);
 
-  // Cập nhật lại role OWNER ngay khi ownerId thay đổi (khi fetchClassInfo xong)
-  useEffect(() => {
-    if (members.length > 0 && ownerId) {
-      setMembers(prev => prev.map(m => ({
-        ...m,
-        role: String(m.userId) === String(ownerId) ? "OWNER" : m.role
-      })));
-    }
-  }, [ownerId]);
-
   const currentUser = members.find(m => String(m.userId) === String(currentUserId));
-  const myRole = currentUser?.role || "CLASS_MEMBER";
-
-  return { members, isLoading, myRole, refresh: fetchMembers };
+  
+  return { 
+    members, 
+    isLoading, 
+    myRole: currentUser?.role || "CLASS_MEMBER", 
+    refresh: (silent?: boolean) => fetchMembers(silent) 
+  };
 };

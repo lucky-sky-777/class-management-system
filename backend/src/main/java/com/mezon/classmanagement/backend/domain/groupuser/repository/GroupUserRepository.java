@@ -41,6 +41,8 @@ public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
 	join groupUser.group group
 	join groupUser.user user
 	where clazz.id = :classId
+	and groupUser.desk is not null
+	and groupUser.deskPosition is not null
 	order by group.id asc, groupUser.desk asc, groupUser.deskPosition asc
 	""")
 	List<GroupUserResponseDto> getByClazz_IdOrderByGroup_IdAscDeskAscDeskPositionAsc(Long classId);

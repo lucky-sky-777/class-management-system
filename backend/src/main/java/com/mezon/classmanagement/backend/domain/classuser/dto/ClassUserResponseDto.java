@@ -23,8 +23,10 @@ import java.time.Instant;
 		"class_name",
 		"user_id",
 		"user_display_name",
-		"user_avatar_url"
-		//"role",
+		"user_avatar_url",
+		"role",
+		"is_owner",
+		"joined_at"
 		//"permission_codes"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
@@ -58,10 +60,13 @@ public final class ClassUserResponseDto {
 	@JsonProperty(value = "role")
 	ClassUser.Role role;
 
+	@JsonProperty(value = "is_owner")
+	Boolean isOwner;
+
 	//@JsonProperty(value = "permission_codes")
 	//List<String> permissionCodes;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "joined_at")
 	Instant joinedAt;
 

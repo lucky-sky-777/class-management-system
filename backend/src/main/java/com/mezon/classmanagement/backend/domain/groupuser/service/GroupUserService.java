@@ -169,6 +169,13 @@ public class GroupUserService {
 	}
 
 	@Transactional(readOnly = true)
+	public void throwIfExistsByClassIdAndGroupIdAndDeskAndDeskPosition(Long classId, Long groupId, Short desk, Short deskPosition) {
+		if (existsByClassIdAndGroupIdAndDeskAndDeskPosition(classId, groupId, desk, deskPosition)) {
+			throw new GlobalException(GlobalException.Type.ALREADY_EXISTS, "Class user seat exists");
+		}
+	}
+
+	@Transactional(readOnly = true)
 	public void throwIfExistsByClassIdAndGroupIdAndUserId(Long classId, Long groupId, Long userId) {
 		if (existsByClassIdAndGroupIdAndUserid(classId, groupId, userId)) {
 			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Group user exists");

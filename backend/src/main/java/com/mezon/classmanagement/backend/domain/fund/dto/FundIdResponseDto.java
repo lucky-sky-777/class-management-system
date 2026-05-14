@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.domain.attendance.dto;
+package com.mezon.classmanagement.backend.domain.fund.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,7 +13,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @JsonPropertyOrder(value = {
-		"attendance_user_id"
+		"fund_id"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -23,9 +23,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class AttendanceUserIdResponseDto {
+public final class FundIdResponseDto {
 
-	@JsonProperty(value = "attendance_user_id")
-	Long attendanceUserId;
+	@JsonProperty(value = "fund_id")
+	Long fundId;
 
 }

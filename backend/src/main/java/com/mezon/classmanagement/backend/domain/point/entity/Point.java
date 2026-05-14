@@ -53,7 +53,7 @@ public class Point {
 	Short point;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "actor_user_id", nullable = false)
+	@JoinColumn(name = "actor_user_id", nullable = true)
 	User actor;
 
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)

@@ -1,9 +1,11 @@
 package com.mezon.classmanagement.backend.domain.seat.controller;
 
+import com.mezon.classmanagement.backend.domain.groupuser.dto.request.CreateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,11 +30,25 @@ public class SeatController {
 	public ResponseDTO<ClassSeatResponseDto> get(
 			@PathVariable Long classId
 	) {
-		ClassSeatResponseDto response = seatService.getClassSeats(classId);
+		ClassSeatResponseDto response = seatService.get(classId);
 
 		return ResponseDTO.<ClassSeatResponseDto>builder()
 				.success(true)
 				.message("Get class seats successful")
+				.data(response)
+				.build();
+	}
+
+	@PatchMapping("/seating")
+	public ResponseDTO<ClassSeatResponseDto> create(
+			@PathVariable Long classId,
+			@RequestBody CreateGroupUserSeatRequestDto request
+	) {
+		ClassSeatResponseDto response = seatService.create(classId, request);
+
+		return ResponseDTO.<ClassSeatResponseDto>builder()
+				.success(true)
+				.message("Create seat successful")
 				.data(response)
 				.build();
 	}
@@ -43,7 +59,7 @@ public class SeatController {
 			@PathVariable Long classId,
 			@RequestBody UpdateGroupUserSeatRequestDto request
 	) {
-		ClassSeatResponseDto response = seatService.updateClassSeats(classId, request);
+		ClassSeatResponseDto response = seatService.update(classId, request);
 
 		return ResponseDTO.<ClassSeatResponseDto>builder()
 				.success(true)

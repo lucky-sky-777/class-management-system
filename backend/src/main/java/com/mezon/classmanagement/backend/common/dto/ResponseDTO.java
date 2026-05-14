@@ -47,7 +47,7 @@ public final class ResponseDTO<Data> {
 	Data data;
 
 	@Builder.Default
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "time")
 	Instant timestamp = Instant.now();
 
