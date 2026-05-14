@@ -5,10 +5,13 @@ export const emulationAPI = {
   getHistoryByClass: async (classId: string, startDate?: string, endDate?: string) => {
     const query = new URLSearchParams();
     if (startDate && endDate) {
-      query.append("start_at", startDate);
-      query.append("end_at", endDate);
+      // ÉP TÊN BIẾN KHỚP VỚI JAVA (startAt, endAt)
+      query.append("startAt", startDate); 
+      query.append("endAt", endDate);
     }
     const queryString = query.toString() ? `?${query.toString()}` : "";
+    
+    // Gọi API với query string đã build
     const response = await apiClient.get(`/classes/${classId}/points${queryString}`) as any;
     return response.data?.data || response.data || [];
   },
@@ -17,10 +20,12 @@ export const emulationAPI = {
   getWeekRanking: async (classId: string, startDate?: string, endDate?: string) => {
     const query = new URLSearchParams();
     if (startDate && endDate) {
-      query.append("start_at", startDate);
-      query.append("end_at", endDate);
+      // KHỚP VỚI @ModelAttribute ở Backend
+      query.append("startAt", startDate); 
+      query.append("endAt", endDate);
     }
     const queryString = query.toString() ? `?${query.toString()}` : "";
+
     const response = await apiClient.get(`/classes/${classId}/points/week-ranking${queryString}`) as any;
     return response.data?.data || response.data || [];
   },

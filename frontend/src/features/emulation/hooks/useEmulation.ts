@@ -59,6 +59,7 @@ export const useEmulation = (classId: string) => {
       if (!classId) return;
       try {
         if (!silent) setIsLoading(true);
+
         // Gọi đồng thời 3 API của Backend
         const [historyRes, weekRankRes, monthRankRes] = await Promise.all([
           emulationAPI.getHistoryByClass(
@@ -67,16 +68,16 @@ export const useEmulation = (classId: string) => {
             filters.endDate,
           ),
           emulationAPI.getWeekRanking(
-            classId, 
-            filters.startDate, 
-            filters.endDate
+            classId,
+            filters.startDate,
+            filters.endDate,
           ),
           emulationAPI.getMonthRanking(classId),
         ]);
 
-        console.log("1. Data Lịch sử gốc:", historyRes);
-        console.log("2. Data Rank Tuần gốc:", weekRankRes);
-        console.log("3. Data Rank Tháng gốc:", monthRankRes);
+        // console.log("1. Data Lịch sử gốc:", historyRes);
+        // console.log("2. Data Rank Tuần gốc:", weekRankRes);
+        // console.log("3. Data Rank Tháng gốc:", monthRankRes);
 
         // 1. Map dữ liệu Xếp hạng Tuần
         const weeklyRanking = weekRankRes.map((item: any) => ({
@@ -99,23 +100,19 @@ export const useEmulation = (classId: string) => {
         }));
 
         // 3. Map dữ liệu Lịch sử (Đoán tên trường DTO của Backend, nếu sai Hào sửa lại nhé)
-        const history = historyRes.map((item: any) => ({
+        const history = (
+          Array.isArray(historyRes) ? historyRes : historyRes.data || []
+        ).map((item: any) => ({
           id: item.id?.toString() || Math.random().toString(),
+          // Chuyển ISO sang định dạng VN để dễ soi
           date: item.created_at
-            ? new Date(item.created_at).toLocaleString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+            ? new Date(item.created_at).toLocaleString("vi-VN")
             : "Vừa xong",
           content: item.description || "Chưa có nội dung",
           points: item.point || 0,
           teamId: item.group_id || 1,
           actor: item.actor_display_name || "Giáo viên",
         }));
-
         // 4. Tìm teamCount tự động (Dựa vào số lượng tổ trong ranking)
         const teamCount = Math.max(weeklyRanking.length, 4); // Mặc định ít nhất 4 tổ
 
