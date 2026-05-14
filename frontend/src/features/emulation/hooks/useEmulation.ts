@@ -73,7 +73,7 @@ export const useEmulation = (classId: string) => {
 
         const history = rawHistory.map((item: any) => ({
           id: item.id?.toString() || Math.random().toString(),
-          date: item.created_at ? new Date(item.created_at).toLocaleString("vi-VN") : "Vừa xong",
+          date: item.created_at || "Vừa xong",
           content: item.description || "Chưa có nội dung",
           points: item.point || 0,
           teamId: item.group_id || 1,
