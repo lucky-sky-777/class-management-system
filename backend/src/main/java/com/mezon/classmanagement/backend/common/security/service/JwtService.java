@@ -9,8 +9,10 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +23,9 @@ import java.util.UUID;
 
 @SuppressWarnings({WarningConstant.UNUSED})
 @Service
+@RequiredArgsConstructor
 public class JwtService {
+	private final JwtDecoder jwtDecoder;
 
 	public String generateAccessToken(Long userId, String username) {
 		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
@@ -100,4 +104,27 @@ public class JwtService {
 		return jwt.getId();
 	}
 
+	public String extractJti(String rawToken) {
+		Jwt jwt = jwtDecoder.decode(rawToken);
+		return jwt.getId();
+	}
+
+	public Instant extractExpiry(String rawToken) {
+		Jwt jwt = jwtDecoder.decode(rawToken);
+		return jwt.getExpiresAt();
+	}
+
+	public Jwt parseAndValidate(String rawToken) {
+		return jwtDecoder.decode(rawToken);  // Spring tự validate signature + expiry
+	}
+
+	// Overload: nhận Jwt, trả về userId
+	public Long extractUserId(Jwt jwt) {
+		return Long.valueOf(jwt.getSubject());
+	}
+
+	// Overload: nhận Jwt, trả về username
+	public String extractUsername(Jwt jwt) {
+		return jwt.getClaim("username").toString();
+	}
 }
