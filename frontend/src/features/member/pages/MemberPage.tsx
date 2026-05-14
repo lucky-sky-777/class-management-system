@@ -21,7 +21,7 @@ export const MemberPage = () => {
   const { members, isLoading, myRole, refresh } = useMembers(
     classId!,
     user?.id,
-    classInfo?.owner_user_id,
+    // classInfo?.owner_user_id,
   );
 
   // --- 2. EFFECT LẤY THÔNG TIN LỚP ---
@@ -88,7 +88,7 @@ export const MemberPage = () => {
           Thành viên lớp học
         </h2>
         <p className="text-[var(--ink-3)] text-sm font-medium">
-          Lớp: {classInfo.name} ({classInfo.code})
+          Lớp: {classInfo.name} (Mã lớp: {classInfo.code})
         </p>
       </header>
 

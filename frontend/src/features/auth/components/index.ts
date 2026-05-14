@@ -1,0 +1,1 @@
+export { CurrentUserInitializer } from './CurrentUserInitializer';

@@ -1,9 +1,11 @@
 package com.mezon.classmanagement.backend.domain.point.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
+import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -59,6 +61,7 @@ public final class PointResponseDto {
 	@JsonProperty(value = "actor_avatar_url")
 	String actorAvatarUrl;
 
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")
 	Instant createdAt;
 

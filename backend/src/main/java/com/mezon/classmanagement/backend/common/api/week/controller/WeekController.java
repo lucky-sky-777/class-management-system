@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.common.api.week.controller;
 
 import com.mezon.classmanagement.backend.common.api.week.dto.WeekResponseDto;
 import com.mezon.classmanagement.backend.common.api.week.service.WeekService;
+import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -14,17 +15,23 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RequestMapping("/api/public")
+@RequestMapping("/api/public/weeks")
 @RestController
 public class WeekController {
 
 	WeekService weekService;
 
-	@GetMapping("/weeks")
-	public List<WeekResponseDto> getWeeks(
+	@GetMapping
+	public ResponseDTO<List<WeekResponseDto>> get(
 			@RequestParam int year
 	) {
-		return weekService.getWeeks(year);
+		List<WeekResponseDto> response = weekService.getWeeks(year);
+
+		return ResponseDTO.<List<WeekResponseDto>>builder()
+				.success(true)
+				.message("Get weeks successful")
+				.data(response)
+				.build();
 	}
 
 }

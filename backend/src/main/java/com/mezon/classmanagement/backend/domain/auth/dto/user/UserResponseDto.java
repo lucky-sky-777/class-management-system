@@ -58,7 +58,7 @@ public class UserResponseDto {
 	@JsonProperty(value = "email")
 	String email;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "joined_at")
 	Instant joinedAt;
 

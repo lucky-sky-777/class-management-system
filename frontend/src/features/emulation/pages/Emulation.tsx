@@ -1,24 +1,27 @@
 import { useState } from "react";
-import { Plus, Minus, UserPlus, X } from "lucide-react";
+import { Plus, Minus, Pencil, Check, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useEmulation } from "@features/emulation/hooks/useEmulation";
-import { FilterSelect } from "@features/emulation/pages/FilterSelect";
 import { RankingTable } from "@features/emulation/pages/RankingTable";
 import { HistoryTable } from "@features/emulation/pages/HistoryTable";
-// import { useAuth } from "@features/auth";
-import { classDiagramAPI } from "@features/classDiagram/api";
-import { emulationAPI } from "@features/emulation/api"; // Giả sử bạn có API này
 import { Modal } from "@shared/components/ui/Modal";
 
 export const Emulation = () => {
   const { classId } = useParams<{ classId: string }>();
-  const { data, isLoading, filters, setFilters, changeTeamCount, refresh } =
-    useEmulation(classId!);
+  const {
+    data,
+    groups,
+    isLoading,
+    filters,
+    weeks,
+    setFilters,
+    addGroup,
+    addPoint,
+    editGroup,
+    removeGroup,
+  } = useEmulation(classId!);
+
   const [selectedTeam, setSelectedTeam] = useState(1);
-
-  const [showMemberModal, setShowMemberModal] = useState(false);
-  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
-
   const [showPointModal, setShowPointModal] = useState(false);
   const [pointForm, setPointForm] = useState<{
     content: string;
@@ -27,319 +30,384 @@ export const Emulation = () => {
     content: "",
     points: 0,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  //state remove
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
+  //state edit
+  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
+  const [editGroupName, setEditGroupName] = useState("");
+  //state phân quyền
+  const canEdit = true; // TODO: Phân quyền sau
+  // 3. EARLY RETURN (Chỉ return sau khi đã gọi hết Hooks)
+  if (isLoading || !data) {
+    return (
+      <div className="p-10 text-center text-ink-3 font-medium animate-pulse">
+        Đang tải dữ liệu thi đua...
+      </div>
+    );
+  }
 
-  // Kiểm tra quyền chỉnh sửa (Ví dụ: role là 'teacher' hoặc 'admin')
-  // const { user } = useAuth();
-  // TODO: Fetch ClassMember data for current user in this classId
-  // const currentMember: ClassMember = await fetchCurrentClassMember(classId, user.id);
-  // const canEdit = currentMember?.role === "ADMIN" || currentMember?.permissions.includes("DIAGRAM_EDIT");
-  const canEdit = true;
+  // const currentTeamMembers = data?.teams?.[selectedTeam] || [];
 
-  if (isLoading || !data)
-    return <div className="p-10 text-center">Đang tải...</div>;
-
-  const handleOpenAddMember = async () => {
-    const res = await classDiagramAPI.getMembers(classId!);
-    setMembers(res);
-    setShowMemberModal(true);
-  };
-
-  const currentTeamMembers = data?.teams?.[selectedTeam] || [];
-
-  // Nhấn vào tên học sinh để thêm vào tổ
-  const handleSelectMember = async (studentId: string, studentName: string) => {
-    try {
-      await emulationAPI.addMemberToTeam(classId!, selectedTeam, studentId);
-      alert(`Đã thêm ${studentName} vào Tổ ${selectedTeam}`);
-      setShowMemberModal(false);
-      refresh(); // Tải lại dữ liệu trang để cập nhật sĩ số/lịch sử
-    } catch (error) {
-      console.error("Lỗi khi thêm thành viên:", error);
-      alert("Lỗi khi thêm thành viên");
-    }
-  };
-
-  // Hàm xử lý xóa học sinh khỏi tổ
-  const handleRemoveMember = async (studentId: string, studentName: string) => {
-    if (
-      !window.confirm(
-        `Bạn có chắc chắn muốn xóa ${studentName} khỏi Tổ ${selectedTeam}?`,
-      )
-    )
-      return;
-
-    try {
-      await emulationAPI.removeMemberFromTeam(
-        classId!,
-        selectedTeam,
-        studentId,
-      );
-      alert(`Đã xóa ${studentName} khỏi Tổ ${selectedTeam}`);
-      refresh(); // Load lại dữ liệu để cập nhật danh sách
-    } catch (error) {
-      console.error("Lỗi khi xóa thành viên:", error);
-      alert("Lỗi khi xóa thành viên");
-    }
-  };
-
-  // 2. Hàm xử lý điểm
+  // 4. HÀM XỬ LÝ GHI ĐIỂM
   const handleSubmitPoint = async () => {
+    // 1. Validation sớm
     const pointsToSubmit = Number(pointForm.points);
-    if (!pointForm.content) return alert("Vui lòng nhập nội dung!");
-
+    if (!pointForm.content.trim()) return alert("Vui lòng nhập nội dung!");
     if (isNaN(pointsToSubmit) || pointsToSubmit === 0) {
       return alert("Số điểm không hợp lệ!");
     }
 
     try {
-      await emulationAPI.addPoints(
-        classId!,
+      setIsSubmitting(true); // Khóa nút bấm lại
+
+      // 2. Gọi hàm addPoint từ Hook (Sử dụng hàm đã bọc trong useEmulation để đồng bộ)
+      // Lưu ý: Nên dùng hàm addPoint từ Hook trả về thay vì gọi trực tiếp emulationAPI ở đây
+      const result = await addPoint(
         selectedTeam,
         pointForm.content,
         pointsToSubmit,
       );
-      alert(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
-      setShowPointModal(false);
-      setPointForm({ content: "", points: 0 }); // Reset form
-      refresh(); // Load lại lịch sử và bảng xếp hạng
+
+      if (result.success) {
+        // 3. Xử lý sau khi thành công
+        setShowPointModal(false);
+        setPointForm({ content: "", points: 0 });
+
+        // Thông báo nhẹ nhàng (nên dùng Toast nếu có, alert hơi "cổ điển")
+        console.log(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
+      } else {
+        alert("Ghi điểm thất bại. Vui lòng kiểm tra lại kết nối!");
+      }
     } catch (error) {
-      console.error("Lỗi nhập điểm", error);
-      alert("Lỗi nhập điểm");
+      console.error("Lỗi nhập điểm:", error);
+      alert("Đã có lỗi xảy ra khi ghi điểm!");
+    } finally {
+      setIsSubmitting(false); // Mở khóa nút bấm
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       {/* THANH BỘ LỌC */}
-      <div className="flex justify-between items-center bg-surface p-3 rounded-xl shadow-sm border border-rule">
-        <div className="flex gap-4">
-          <FilterSelect
-            label="Tuần"
-            val={filters.week}
-            onChange={(v) => setFilters({ week: v })}
-            options={[1, 2, 3, 4]}
-          />
-          <FilterSelect
-            label="Tháng"
-            val={filters.month}
-            onChange={(v) => setFilters({ month: v })}
-            options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]}
-          />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-2 px-1 gap-4 animate-fade-in">
+        {/* Cụm chọn tuần - Nhỏ nhắn */}
+        <div className="flex items-center gap-3 bg-[var(--bg-surface)] p-1.5 px-3 rounded-[var(--r-lg)] border border-[var(--rule)] shadow-[var(--shadow-xs)]">
+          <span className="text-[10px] text-[var(--ink-3)] font-black uppercase tracking-widest">
+            Tuần:
+          </span>
+          <select
+            className="text-[12px] font-bold bg-transparent text-[var(--ink-1)] border-none p-0 cursor-pointer outline-none focus:ring-0"
+            value={filters.startDate}
+            onChange={(e) => {
+              const selected = weeks.find(
+                (w: any) => w.start_at === e.target.value,
+              );
+              if (selected) {
+                setFilters({
+                  startDate: selected.start_at,
+                  endDate: selected.end_at,
+                });
+              }
+            }}
+          >
+            {weeks.map((w: any) => (
+              <option key={w.week} value={w.start_at}>
+                Tuần {w.week} ({w.formatted_start_at} - {w.formatted_end_at})
+                {w.is_current_week ? " • Hiện tại" : ""}
+              </option>
+            ))}
+          </select>
         </div>
-        <button className="bg-ink-green-text text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm hover:opacity-90">
-          nội quy
+
+        {/* NÚT NỘI QUY - Màu Sage (Xanh lá xám) */}
+        <button className="bg-[var(--sage-fill)] text-[var(--sage-text)] border border-[var(--sage-border)] px-4 py-1.5 rounded-[var(--r-full)] font-black text-[10px] uppercase tracking-tighter hover:bg-[var(--bg-surface-3)] transition-all active:scale-95 shadow-sm">
+          Nội quy thi đua
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* DANH SÁCH TỔ */}
-        <div className="bg-surface p-4 rounded-2xl border border-rule shadow-sm h-fit">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[10px] font-black text-ink-3 uppercase tracking-widest">
-              Danh sách tổ
-            </p>
-
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        {/* DANH SÁCH TỔ - Dạng Sidebar Menu */}
+        <div className="lg:col-span-1 space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-[0.2em]">
+              Lựa chọn tổ
+            </label>
             {canEdit && (
-              <div className="flex gap-1">
+              <div className="flex gap-1 bg-[var(--bg-surface-2)] p-1 rounded-lg border border-[var(--rule)]">
+                {/* 👉 NÚT TRỪ BẬT MODAL XÓA */}
                 <button
-                  onClick={() => changeTeamCount(data.teamCount - 1)}
-                  className="p-1 hover:bg-ink-red-fill text-ink-red-text rounded border border-ink-red-border transition-colors"
-                  title="Bớt 1 tổ"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="p-1 hover:text-[var(--red-text)] transition-colors"
+                  title="Xóa tổ chỉ định"
                 >
-                  <Minus size={12} />
+                  <Minus size={10} />
                 </button>
+                <div className="w-[1px] bg-[var(--rule)] mx-0.5" />
                 <button
-                  onClick={() => changeTeamCount(data.teamCount + 1)}
-                  className="p-1 hover:bg-ink-green-fill text-ink-green-text rounded border border-ink-green-border transition-colors"
-                  title="Thêm 1 tổ"
+                  onClick={addGroup}
+                  className="p-1 hover:text-[var(--green-text)] transition-colors"
+                  title="Thêm tổ mới"
                 >
-                  <Plus size={12} />
+                  <Plus size={10} />
                 </button>
               </div>
             )}
           </div>
 
-          {/* CÁC NÚT CHỌN TỔ */}
-          <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 mb-4">
-            {Array.from({ length: data.teamCount }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedTeam(i + 1)}
-                className={`py-2 rounded-xl text-sm font-bold border transition-all ${
-                  selectedTeam === i + 1
-                    ? "bg-surface-2 border-rule-md text-ink-1 shadow-inner"
-                    : "bg-surface border-transparent text-ink-2 hover:bg-surface-2"
+          <nav className="space-y-1">
+            {groups.map((group) => (
+              <div
+                key={group.id}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative ${
+                  selectedTeam === group.id
+                    ? "bg-[var(--warm-fill)] text-[var(--warm-text)] shadow-sm border border-[var(--warm-border)]"
+                    : "hover:bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-transparent"
                 }`}
               >
-                Tổ {i + 1}
-              </button>
-            ))}
-          </div>
+                {/* LỚP PHỦ ĐỂ CLICK CHỌN TỔ (Nằm dưới nút sửa) */}
+                <div 
+                  className="absolute inset-0 cursor-pointer" 
+                  onClick={() => setSelectedTeam(group.id)} 
+                />
 
-          {/* PHẦN HIỂN THỊ THÀNH VIÊN TRONG TỔ (MỚI) */}
-          <div className="pt-4 border-t border-rule">
-            <p className="text-[10px] font-black text-ink-3 uppercase tracking-widest mb-3">
-              Thành viên Tổ {selectedTeam}
-            </p>
-            <div className="space-y-2 min-h-[50px]">
-              {currentTeamMembers.length > 0 ? (
-                currentTeamMembers.map((member, idx) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between group"
-                  >
-                    <span className="text-sm font-medium text-ink-1">
-                      {idx + 1}. {member.name}
-                    </span>
-                    {/* Nút xóa thành viên khỏi tổ */}
-                    {canEdit && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveMember(member.id, member.name);
+                <div className="flex items-center gap-3 relative z-10 w-full">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full transition-all flex-shrink-0 ${
+                      selectedTeam === group.id ? "bg-[var(--warm-400)] scale-125" : "bg-[var(--ink-4)] group-hover:bg-[var(--ink-3)]"
+                    }`}
+                  />
+                  
+                  {/* Ô NHẬP SỬA TÊN HOẶC HIỂN THỊ TÊN */}
+                  {editingGroupId === group.id ? (
+                    <div className="flex items-center gap-2 w-full">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editGroupName}
+                        onChange={(e) => setEditGroupName(e.target.value)}
+                        onKeyDown={(e) => {
+                           if (e.key === "Enter") {
+                              editGroup(group.id, editGroupName).then((success) => success && setEditingGroupId(null));
+                           }
                         }}
-                        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 text-ink-3 hover:text-ink-red-text p-2 transition-all"
+                        className="w-full bg-white border border-[var(--rule)] rounded text-xs px-2 py-1 outline-none text-black"
+                      />
+                      <button 
+                        onClick={() => editGroup(group.id, editGroupName).then((success) => success && setEditingGroupId(null))}
+                        className="text-green-600 hover:scale-110 transition-transform"
                       >
-                        <X size={14} />{" "}
+                        <Check size={14} strokeWidth={3} />
                       </button>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <p className="text-[11px] text-ink-3 italic">
-                  Chưa có thành viên
-                </p>
-              )}
-            </div>
-          </div>
+                      <button 
+                        onClick={() => setEditingGroupId(null)}
+                        className="text-red-500 hover:scale-110 transition-transform"
+                      >
+                        <X size={14} strokeWidth={3} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-bold flex-1 truncate">{group.name}</span>
+                  )}
+                </div>
 
-          {canEdit && (
-            <button
-              onClick={handleOpenAddMember}
-              className="w-full mt-4 flex items-center justify-center gap-2 py-2 border-2 border-dashed border-rule rounded-xl text-ink-3 hover:border-ink-blue-border hover:text-ink-blue-text transition-all text-xs font-bold"
-            >
-              <UserPlus size={14} />
-              Thêm TV vào Tổ {selectedTeam}
-            </button>
-          )}
+                {/* NÚT BÚT CHÌ (Chỉ hiện khi có quyền sửa và chưa ở chế độ sửa) */}
+                {canEdit && editingGroupId !== group.id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Không kích hoạt sự kiện chọn tổ
+                      setEditingGroupId(group.id);
+                      setEditGroupName(group.name);
+                    }}
+                    className="relative z-10 opacity-0 group-hover:opacity-100 p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] hover:bg-white rounded-md transition-all"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </nav>
         </div>
 
         {/* LỊCH SỬ THAY ĐỔI */}
-        <HistoryTable
-          selectedTeam={selectedTeam}
-          history={data.history}
-          canEdit={canEdit}
-          onOpenPointModal={() => setShowPointModal(true)}
+        <div className="lg:col-span-3">
+          <HistoryTable
+            selectedTeam={selectedTeam}
+            history={data.history}
+            canEdit={canEdit}
+            onOpenPointModal={() => setShowPointModal(true)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <RankingTable title="Xếp hạng tuần" rows={data.weeklyRanking} />
+        <RankingTable
+          title="Xếp hạng tháng"
+          rows={data.monthlyRanking}
+          // isMonthly
         />
       </div>
 
-      <RankingTable title="Xếp hạng tuần" rows={data.weeklyRanking} />
-      <RankingTable
-        title="Xếp hạng tháng"
-        rows={data.monthlyRanking}
-        isMonthly
-      />
-
-      {/* MODAL */}
-      <Modal 
-        isOpen={showMemberModal} 
-        onClose={() => setShowMemberModal(false)} 
-        title={`Thêm học sinh vào Tổ ${selectedTeam}`}
-      >
-        <div className="flex flex-col gap-1">
-          {members.length > 0 ? (
-                members.map((m) => (
-                  <div
-                    key={m.id}
-                    onClick={() => handleSelectMember(m.id, m.name)} // Click để thêm
-                    className="p-3 hover:bg-ink-blue-fill rounded-xl cursor-pointer flex justify-between items-center group transition-colors"
-                  >
-                    <span className="text-sm font-medium text-ink-1">
-                      {m.name}
-                    </span>
-                    <Plus
-                      size={14}
-                      className="text-ink-blue-text opacity-0 group-hover:opacity-100"
-                    />
-                  </div>
-                ))
-              ) : (
-                <p className="text-center p-4 text-xs text-ink-3 italic">
-                  Không có học sinh khả dụng
-                </p>
-              )}
-            </div>
-      </Modal>
-
-      {/* MODAL GHI ĐIỂM */}
-      <Modal 
-        isOpen={showPointModal} 
-        onClose={() => { setShowPointModal(false); setPointForm({ content: "", points: 0 }); }} 
+      {/* MODAL GHI ĐIỂM GIỮ NGUYÊN */}
+      <Modal
+        isOpen={showPointModal}
+        onClose={() => {
+          setShowPointModal(false);
+          setPointForm({ content: "", points: 0 });
+        }}
         title={`Ghi điểm Tổ ${selectedTeam}`}
       >
-        <div className="space-y-4">
-              <div>
-                <label className="text-[11px] font-black text-ink-3 uppercase mb-1 block">
-                  Nội dung
-                </label>
-                <input
-                  type="text"
-                  className="w-full border border-rule rounded-xl p-3 text-sm focus:ring-2 focus:ring-ink-blue-text outline-none transition-all"
-                  placeholder="Ví dụ: Phát biểu xây dựng bài..."
-                  value={pointForm.content}
-                  onChange={(e) =>
-                    setPointForm({ ...pointForm, content: e.target.value })
+        <div className="space-y-5 p-1">
+          {/* TRƯỜNG NỘI DUNG */}
+          <div>
+            <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest mb-1.5 block">
+              Nội dung vi phạm / Khen thưởng
+            </label>
+            <input
+              type="text"
+              className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule)] rounded-[var(--r-lg)] p-3 text-sm text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:ring-2 focus:ring-[var(--warm-400)] focus:border-transparent outline-none transition-all"
+              placeholder="Ví dụ: Hăng hái xây dựng bài..."
+              value={pointForm.content}
+              onChange={(e) =>
+                setPointForm({ ...pointForm, content: e.target.value })
+              }
+            />
+          </div>
+
+          {/* TRƯỜNG SỐ ĐIỂM */}
+          <div>
+            <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest mb-1.5 block">
+              Số điểm (+ cộng, - trừ)
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule)] rounded-[var(--r-lg)] p-3 pl-4 text-sm font-bold text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:ring-2 focus:ring-[var(--warm-400)] outline-none transition-all"
+                placeholder="Nhập ví dụ: 10 hoặc -5"
+                value={pointForm.points === 0 ? "" : pointForm.points}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || val === "-" || !isNaN(Number(val))) {
+                    setPointForm({ ...pointForm, points: val });
                   }
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-black text-ink-3 uppercase mb-1 block">
-                  Số điểm (+ cộng, - trừ)
-                </label>
-                <input
-                  type="text" // Dùng text để kiểm soát chuỗi "-" tốt hơn trên mobile
-                  inputMode="text"
-                  className="w-full border border-rule rounded-xl p-3 text-sm focus:ring-2 focus:ring-ink-blue-text outline-none transition-all"
-                  placeholder="Ví dụ: 10 hoặc -5"
-                  // Hiển thị: Nếu là 0 thì trống, nếu không thì hiện giá trị đang có (số hoặc chuỗi "-")
-                  value={pointForm.points === 0 ? "" : pointForm.points}
-                  onChange={(e) => {
-                    const val = e.target.value;
-
-                    // Logic chặn người dùng nhập chữ, chỉ cho phép số và một dấu "-" duy nhất
-                    if (val === "" || val === "-" || !isNaN(Number(val))) {
-                      setPointForm({
-                        ...pointForm,
-                        points: val, // Lưu trực tiếp string vào state, không cần Number() ở đây
-                      });
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSubmitPoint();
-                  }}
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => {
-                    setShowPointModal(false);
-                    setPointForm({ content: "", points: 0 });
-                  }}
-                  className="flex-1 py-3 bg-surface-2 text-ink-2 rounded-xl font-bold text-sm hover:bg-surface-3 transition-colors"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleSubmitPoint}
-                  className="flex-1 py-3 bg-ink-blue-text text-white rounded-xl font-bold text-sm shadow-lg shadow-ink-blue-fill hover:opacity-90 transition-all"
-                >
-                  Xác nhận
-                </button>
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmitPoint()}
+              />
+              {/* Badge gợi ý nhỏ bên cạnh */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-[var(--ink-3)] uppercase">
+                Points
               </div>
             </div>
+          </div>
+
+          {/* CỤM NÚT BẤM */}
+          <div className="flex gap-3 pt-3">
+            <button
+              disabled={isSubmitting}
+              onClick={() => {
+                setShowPointModal(false);
+                setPointForm({ content: "", points: 0 });
+              }}
+              className="flex-1 py-2.5 bg-[var(--bg-surface-3)] text-[var(--ink-2)] rounded-[var(--r-lg)] font-bold text-xs hover:bg-[var(--ink-4)] transition-colors"
+            >
+              HỦY BỎ
+            </button>
+            <button
+              disabled={isSubmitting}
+              onClick={handleSubmitPoint}
+              className="flex-1 py-2.5 bg-[var(--warm-400)] text-white rounded-[var(--r-lg)] font-bold text-xs shadow-md shadow-blue-900/10 hover:bg-[var(--warm-600)] transition-all active:scale-95"
+            >
+              XÁC NHẬN GHI
+            </button>
+          </div>
+        </div>
       </Modal>
+
+      {/* MODAL XÓA TỔ */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setGroupToDelete(null);
+        }}
+        title="Xóa Tổ Chỉ Định"
+      >
+        <div className="space-y-5 p-2">
+          
+          {/* Hộp cảnh báo - Dùng bộ Semantic Danger (--red-fill, --red-border, --red-text) */}
+          <div className="bg-[var(--red-fill)] text-[var(--red-text)] text-sm p-4 rounded-[var(--r-md)] border border-[var(--red-border)] font-medium flex gap-3 leading-relaxed">
+            <span className="flex-shrink-0 text-base">⚠️</span>
+            <span>
+              Hành động này sẽ xóa toàn bộ điểm số của tổ vĩnh viễn. Hãy kiểm tra thật kỹ trước khi xác nhận!
+            </span>
+          </div>
+
+          {/* Danh sách chọn Tổ */}
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar">
+            {groups.map((group) => {
+              const isSelected = groupToDelete === group.id;
+              return (
+                <label 
+                  key={group.id} 
+                  className={`flex items-center gap-3 p-3.5 rounded-[var(--r-md)] border cursor-pointer transition-all duration-200 ${
+                    isSelected 
+                    ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-[var(--shadow-sm)]" 
+                    : "border-[var(--rule)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-2)]"
+                  }`}
+                >
+                  {/* Dùng accent-color cho radio button để match với màu Danger */}
+                  <input
+                    type="radio"
+                    name="groupDelete"
+                    checked={isSelected}
+                    onChange={() => setGroupToDelete(group.id)}
+                    className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
+                  />
+                  <span className={`text-sm font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}>
+                    {group.name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          {/* Cụm nút bấm */}
+          <div className="flex gap-3 pt-2">
+            {/* Nút Hủy - Dùng Surface & Ink */}
+            <button
+              onClick={() => {
+                setShowDeleteModal(false);
+                setGroupToDelete(null);
+              }}
+              className="flex-1 py-2.5 bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-[var(--rule)] rounded-[var(--r-md)] font-bold text-[11px] tracking-[0.05em] hover:bg-[var(--bg-surface-3)] hover:text-[var(--ink-1)] transition-colors"
+            >
+              HỦY BỎ
+            </button>
+
+            {/* Nút Xóa - Dùng màu Red Text làm background cho nổi bật (vì globals.css không có red-button) */}
+            <button
+              disabled={!groupToDelete}
+              onClick={async () => {
+                if (!groupToDelete) return;
+                const isSuccess = await removeGroup(groupToDelete);
+                if (isSuccess) {
+                  setShowDeleteModal(false);
+                  setGroupToDelete(null);
+                  if (selectedTeam === groupToDelete) {
+                    setSelectedTeam(groups[0]?.id || 1);
+                  }
+                }
+              }}
+              className="flex-1 py-2.5 bg-[var(--red-text)] text-white rounded-[var(--r-md)] font-bold text-[11px] tracking-[0.05em] shadow-[var(--shadow-sm)] hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              XÁC NHẬN XÓA
+            </button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 };

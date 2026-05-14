@@ -49,7 +49,7 @@ public final class GroupResponseDto {
     @JsonProperty(value = "name")
     String name;
 
-    @JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+    @JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
     @JsonProperty(value = "created_at")
     Instant createdAt;
 

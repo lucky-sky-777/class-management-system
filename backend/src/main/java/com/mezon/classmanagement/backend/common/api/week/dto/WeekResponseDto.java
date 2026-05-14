@@ -34,12 +34,21 @@ public final class WeekResponseDto {
 	@JsonProperty(value = "week")
 	Long week;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonProperty(value = "is_current_week")
+	Boolean isCurrentWeek;
+
 	@JsonProperty(value = "start_at")
 	Instant startAt;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "end_at")
 	Instant endAt;
+
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_DATE_ONLY, timezone = DateTimeConstant.TIMEZONE)
+	@JsonProperty(value = "formatted_start_at")
+	Instant formattedStartAt;
+
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_DATE_ONLY, timezone = DateTimeConstant.TIMEZONE)
+	@JsonProperty(value = "formatted_end_at")
+	Instant formattedEndAt;
 
 }
