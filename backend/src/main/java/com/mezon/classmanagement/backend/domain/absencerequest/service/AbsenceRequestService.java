@@ -115,12 +115,7 @@ public class AbsenceRequestService {
     @RequireClassPermission
     @Transactional(readOnly = true)
     public List<AbsenceRequestResponseDto> getByClass(Long classId) {
-        List<AbsenceRequest> response = findByClassId(classId);
-
-        return response.stream()
-                .map(absenceRequestMapper::toAbsenceRequestResponseDto)
-                .toList();
-
+        return getByClasId(classId);
     }
 
     @RequireClassPermission
@@ -150,6 +145,11 @@ public class AbsenceRequestService {
     public List<AbsenceRequest> findByClassId(Long classId) {
         return absenceRequestRepository
                 .findByClazz_IdOrderByCreatedAtDesc(classId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AbsenceRequestResponseDto> getByClasId(Long classId) {
+        return absenceRequestRepository.getByClazz_Id(classId);
     }
 
     @Transactional(readOnly = true)

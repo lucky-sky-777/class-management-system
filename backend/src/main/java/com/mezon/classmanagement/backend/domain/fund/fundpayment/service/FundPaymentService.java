@@ -140,6 +140,12 @@ public class FundPaymentService {
 				.build();
 	}
 
+	@RequireClassPermission
+	@Transactional(readOnly = true)
+	public List<FundPaymentResponseDto> getByClassAndFund(Long classId, Long fundId) {
+		return getByClassIdAndFundId(classId, fundId);
+	}
+
 	/**
 	 * Action
 	 */
@@ -186,6 +192,11 @@ public class FundPaymentService {
 		throwIfNotPending(fundPayment);
 
 		return fundPayment;
+	}
+
+	@Transactional(readOnly = true)
+	public List<FundPaymentResponseDto> getByClassIdAndFundId(Long classId, Long fundId) {
+		return fundPaymentRepository.getByClazz_IdAndFund_Id(classId, fundId);
 	}
 
 	private void throwIfEmptyList(List<FundPayment> fundPaymentList) {
