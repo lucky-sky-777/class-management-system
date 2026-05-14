@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -77,7 +78,8 @@ public class PointController {
 	@GetMapping
 	public ResponseDTO<List<PointResponseDto>> getByClass(
 			@PathVariable Long classId,
-			@Valid @RequestBody(required = false) GetPointRequestDto request
+			// @Valid @RequestBody(required = false) GetPointRequestDto request
+			@ModelAttribute GetPointRequestDto request
 	) {
 		List<PointResponseDto> response = pointService.getByClass(classId, request);
 
