@@ -54,11 +54,11 @@ public class AbsenceRequest {
 	String reason;
 
 	@FutureOrPresent
-	@Column(name = "from", nullable = false)
+	@Column(name = "\"from\"", nullable = false)
 	Instant from;
 
 	@Future
-	@Column(name = "to", nullable = false)
+	@Column(name = "\"to\"", nullable = false)
 	Instant to;
 
 	@Column(name = "proof_url", nullable = true)
@@ -84,5 +84,5 @@ public class AbsenceRequest {
 			status = Status.PENDING;
 		}
 	}
-//huytest
+
 }

@@ -16,4 +16,5 @@ public interface FundPaymentRepository extends JpaRepository<FundPayment, Long> 
 	);
 
 	List<FundPayment> findByClazz_IdAndId(Long classId, Long fundPaymentId);
+	List<FundPayment> findByClazz_IdAndCreator_IdAndId(Long classId, Long creatorUserId, Long fundPaymentId);
 }

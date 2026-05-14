@@ -75,11 +75,17 @@ public class FundPaymentService {
 	@Transactional
 	public FundPaymentIdResponseDto approve(
 			Long classId,
+			Long actorUserId,
 			Long fundPaymentId
 	) {
 		FundPayment currentFundPayment = findByClassIdAndFundPaymentIdOrThrow(classId, fundPaymentId);
 
+		User actor = User.builder()
+				.id(actorUserId)
+				.build();
+
 		currentFundPayment.setStatus(FundPayment.Status.APPROVED);
+		currentFundPayment.setActor(actor);
 
 		FundPayment responseFundPayment = save(currentFundPayment);
 
@@ -92,11 +98,40 @@ public class FundPaymentService {
 	@Transactional
 	public FundPaymentIdResponseDto reject(
 			Long classId,
+			Long actorUserId,
 			Long fundPaymentId
 	) {
 		FundPayment currentFundPayment = findByClassIdAndFundPaymentIdOrThrow(classId, fundPaymentId);
 
+		User actor = User.builder()
+				.id(actorUserId)
+				.build();
+
 		currentFundPayment.setStatus(FundPayment.Status.REJECTED);
+		currentFundPayment.setActor(actor);
+
+		FundPayment responseFundPayment = save(currentFundPayment);
+
+		return FundPaymentIdResponseDto.builder()
+				.fundPaymentId(responseFundPayment.getId())
+				.build();
+	}
+
+	@RequireClassPermission
+	@Transactional
+	public FundPaymentIdResponseDto cancel(
+			Long classId,
+			Long creatorUserId,
+			Long fundPaymentId
+	) {
+		FundPayment currentFundPayment = findByClassIdAndCreatorUserIdAndFundPaymentIdOrThrow(classId, creatorUserId, fundPaymentId);
+
+		User creator = User.builder()
+				.id(creatorUserId)
+				.build();
+
+		currentFundPayment.setStatus(FundPayment.Status.CANCELLED);
+		currentFundPayment.setActor(creator);
 
 		FundPayment responseFundPayment = save(currentFundPayment);
 
@@ -130,6 +165,22 @@ public class FundPaymentService {
 	) {
 		List<FundPayment> fundPaymentList = fundPaymentRepository
 				.findByClazz_IdAndId(classId, fundPaymentId);
+
+		FundPayment fundPayment = fundPaymentList.getFirst();
+		throwIfNotPending(fundPayment);
+
+		return fundPayment;
+	}
+
+	@Transactional(readOnly = true)
+	public FundPayment findByClassIdAndCreatorUserIdAndFundPaymentIdOrThrow(
+			Long classId,
+			Long creatorUserId,
+			Long fundPaymentId
+	) {
+		List<FundPayment> fundPaymentList = fundPaymentRepository
+				.findByClazz_IdAndCreator_IdAndId(classId, creatorUserId, fundPaymentId);
+		throwIfEmptyList(fundPaymentList);
 
 		FundPayment fundPayment = fundPaymentList.getFirst();
 		throwIfNotPending(fundPayment);
