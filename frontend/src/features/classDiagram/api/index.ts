@@ -11,8 +11,14 @@ import { apiClient } from "@services/api-client";
 export const classDiagramAPI = {
   getDiagram: async (classId: string): Promise<ClassDiagramData> => {
     try {
-      const response: any = await apiClient.get(`/seats/classes/${classId}`);
-      const backendData = response.data?.data || response.data;
+      const [seatsResponse, groupsResponse]: any = await Promise.all([
+        apiClient.get(`/seats/classes/${classId}`),
+        apiClient.get(`/classes/${classId}/groups?_t=${new Date().getTime()}`),
+      ]);
+
+      const backendData = seatsResponse.data?.data || seatsResponse.data;
+      const groupsListBE =
+        groupsResponse.data?.data || groupsResponse.data || []; // Danh sách tổ
 
       const groups: GroupData[] = [];
       let totalStudents = 0;
@@ -26,6 +32,10 @@ export const classDiagramAPI = {
           const groupIdStr = Object.keys(groupObj)[0];
           const groupDataBE = groupObj[groupIdStr];
           const groupId = parseInt(groupIdStr);
+
+          // 👉 2. TÌM TÊN TỔ TỪ API THỨ 2
+          const matchedGroup = groupsListBE.find((g: any) => g.id === groupId);
+          const groupName = matchedGroup ? matchedGroup.name : `Tổ ${groupId}`;
 
           const desks: DeskData[] = [];
 
@@ -45,7 +55,6 @@ export const classDiagramAPI = {
 
                   let student = null;
                   if (studentData && studentData.user_id) {
-                    // 1. CHUYỂN ĐỔI TRẠNG THÁI TỪ BACKEND SANG FRONTEND
                     const beStatus = studentData.attendance_status || "PRESENT";
                     const statusMapUI: Record<string, AttendanceStatus> = {
                       PRESENT: "present",
@@ -55,7 +64,6 @@ export const classDiagramAPI = {
                     };
                     const currentStatus = statusMapUI[beStatus] || "present";
 
-                    // 2. ĐẾM SỐ LƯỢNG CHO BẢNG THỐNG KÊ
                     totalStudents++;
                     if (currentStatus === "present") presentCount++;
                     else if (currentStatus === "absent_excused") excusedCount++;
@@ -63,12 +71,11 @@ export const classDiagramAPI = {
                       unexcusedCount++;
                     else if (currentStatus === "late") lateCount++;
 
-                    // 3. RÁP DỮ LIỆU VÀO GHẾ
                     student = {
                       id: String(studentData.user_id),
                       name: studentData.user_display_name || "Vô danh",
                       avatarUrl: studentData.avatar_url || null,
-                      status: currentStatus, // <-- ĐÃ SỬA THÀNH BIẾN ĐỘNG
+                      status: currentStatus,
                       groupId,
                       deskId,
                       positionId,
@@ -80,7 +87,7 @@ export const classDiagramAPI = {
               desks.push({ deskId, positions });
             });
           }
-          groups.push({ groupId, desks });
+          groups.push({ groupId, name: groupName, desks });
         });
       }
 
@@ -133,14 +140,15 @@ export const classDiagramAPI = {
 
   assignSeat: async (
     studentId: string,
-    targetGroupId: number, // ĐỔI PARAM: Nhận thẳng tọa độ Backend
+    targetGroupId: number,
     targetDeskId: number,
     targetPositionId: number,
     classId: string,
-    sourceGroupId: number | null, // Nhận tọa độ cũ nếu có
+    sourceGroupId: number | null,
     sourceDeskId: number | null,
     sourcePositionId: number | null,
   ) => {
+    // Payload giữ nguyên cấu trúc cũ
     const payload = {
       user_id: parseInt(studentId),
       source_group_id: sourceGroupId,
@@ -151,11 +159,17 @@ export const classDiagramAPI = {
       target_desk_position: targetPositionId,
     };
 
-    const response: any = await apiClient.patch(
-      `/seats/classes/${classId}`,
-      payload,
-    );
-    return response.data;
+    try {
+      // 👉 ĐÃ SỬA URL: Thêm /seating vào đuôi (Dựa theo @PatchMapping của Bảo)
+      const response: any = await apiClient.patch(
+        `/seats/classes/${classId}/seating`,
+        payload,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi xếp chỗ:", error);
+      throw error;
+    }
   },
 
   // Thêm vào file api.ts

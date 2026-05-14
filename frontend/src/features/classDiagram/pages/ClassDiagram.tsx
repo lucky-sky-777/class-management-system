@@ -177,9 +177,10 @@ export const ClassDiagram = () => {
         );
         setSelectedStudentId(null);
         refresh();
-      } catch (error) {
+      } catch (error : any) {
         console.error("Lỗi khi gọi API xếp chỗ:", error);
-        alert("Xếp chỗ thất bại, vui lòng thử lại!");
+        const backendMessage = error.response?.data?.message || "Xếp chỗ thất bại do lỗi không xác định!";
+        alert(`❌ Lỗi Xếp Chỗ:\n${backendMessage}`);
       }
     }
   };
