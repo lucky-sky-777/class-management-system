@@ -1,10 +1,9 @@
 package com.mezon.classmanagement.backend.domain.seat.service;
 
 import com.mezon.classmanagement.backend.common.constant.GroupConstant;
-import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
+import com.mezon.classmanagement.backend.domain.group.dto.GroupResponseDto;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
 import com.mezon.classmanagement.backend.domain.group.service.GroupService;
-import com.mezon.classmanagement.backend.domain.groupuser.dto.request.CreateGroupUserRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.CreateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto;
@@ -41,15 +40,6 @@ public class SeatService {
 
 	GroupService groupService;
 	GroupUserService groupUserService;
-	ClassUserService classUserService;
-
-//	@Transactional
-//	public ClassSeatResponseDto create(
-//			Long classId,
-//			CreateGroupUserSeatRequestDto request
-//	) {
-//		groupUserService.throwIfExistsByClassIdAndGroupIdAndDeskAndDeskPosition(classId);
-//	}
 
 	@Transactional
 	public ClassSeatResponseDto create(
@@ -69,6 +59,9 @@ public class SeatService {
 				request.getUserId()
 		);
 
+		Group group = groupService.findByClassIdAndGroupIdOrThrow(classId, request.getTargetGroupId());
+
+		groupUser.setGroup(group);
 		groupUser.setDesk(request.getTargetDesk());
 		groupUser.setDeskPosition(request.getTargetDeskPosition());
 
@@ -250,11 +243,74 @@ public class SeatService {
 		return get(classId);
 	}
 
+//	@Transactional(readOnly = true)
+//	public ClassSeatResponseDto get(Long classId) {
+//		List<GroupUserResponseDto> groupUserList = groupUserService.getByClassId(classId);
+//		Map<Long, Map<Short, Map<Short, GroupUserResponseDto>>> seatMap = new HashMap<>();
+//		Map<Long, String> groupNameMap = new HashMap<>();
+//		for (GroupUserResponseDto groupUser : groupUserList) {
+//			seatMap
+//					.computeIfAbsent(
+//							groupUser.getGroupId(),
+//							k -> new HashMap<>()
+//					)
+//					.computeIfAbsent(
+//							groupUser.getDesk(),
+//							k -> new HashMap<>()
+//					)
+//					.put(groupUser.getDeskPosition(), groupUser);
+//			groupNameMap.putIfAbsent(
+//					groupUser.getGroupId(),
+//					groupUser.getGroupName()
+//			);
+//		}
+//		List<LinkedHashMap<Long, GroupSeatResponseDto>> groups = new ArrayList<>();
+//
+//		for (/*long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++*/ Long groupId : groupNameMap.keySet()) {
+//			List<LinkedHashMap<Short, DeskSeatResponseDto>> desks = new ArrayList<>();
+//			Map<Short, Map<Short, GroupUserResponseDto>> groupData = seatMap.getOrDefault(groupId, Collections.emptyMap());
+//			for (short desk = 1; desk <= GroupConstant.DESK_COUNT; desk++) {
+//				List<LinkedHashMap<Short, DeskPositionSeatResponseDto>> deskPositions = new ArrayList<>();
+//				Map<Short, GroupUserResponseDto> deskData = groupData.getOrDefault(desk, Collections.emptyMap());
+//				for (short position = 1; position <= GroupConstant.DESK_POSITION_COUNT; position++) {
+//					GroupUserResponseDto user = deskData.get(position);
+//					DeskPositionSeatResponseDto seatDto = null;
+//					if (user != null) {
+//						seatDto = DeskPositionSeatResponseDto.builder()
+//								.userId(user.getUserId())
+//								.userDisplayName(user.getUserDisplayName())
+//								.attendanceStatus(user.getAttendanceStatus())
+//								.build();
+//					}
+//					LinkedHashMap<Short, DeskPositionSeatResponseDto> positionMap = new LinkedHashMap<>();
+//					positionMap.put(position, seatDto);
+//					deskPositions.add(positionMap);
+//				}
+//				DeskSeatResponseDto deskDto = DeskSeatResponseDto.builder()
+//						.deskPositions(deskPositions)
+//						.build();
+//				LinkedHashMap<Short, DeskSeatResponseDto> deskMap = new LinkedHashMap<>();
+//				deskMap.put(desk, deskDto);
+//				desks.add(deskMap);
+//			}
+//			GroupSeatResponseDto groupDto = GroupSeatResponseDto.builder()
+//					.name(groupNameMap.get(groupId))
+//					.desks(desks)
+//					.build();
+//			LinkedHashMap<Long, GroupSeatResponseDto> groupMap = new LinkedHashMap<>();
+//			groupMap.put(groupId, groupDto);
+//			groups.add(groupMap);
+//		}
+//		return ClassSeatResponseDto.builder()
+//				.groups(groups)
+//				.build();
+//	}
+
 	@Transactional(readOnly = true)
 	public ClassSeatResponseDto get(Long classId) {
+		List<GroupResponseDto> groupList = groupService.getByClassId(classId);
 		List<GroupUserResponseDto> groupUserList = groupUserService.getByClassId(classId);
 		Map<Long, Map<Short, Map<Short, GroupUserResponseDto>>> seatMap = new HashMap<>();
-		Map<Long, String> groupNameMap = new HashMap<>();
 		for (GroupUserResponseDto groupUser : groupUserList) {
 			seatMap
 					.computeIfAbsent(
@@ -266,14 +322,11 @@ public class SeatService {
 							k -> new HashMap<>()
 					)
 					.put(groupUser.getDeskPosition(), groupUser);
-			groupNameMap.putIfAbsent(
-					groupUser.getGroupId(),
-					groupUser.getGroupName()
-			);
 		}
 		List<LinkedHashMap<Long, GroupSeatResponseDto>> groups = new ArrayList<>();
 
-		for (/*long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++*/ Long groupId : groupNameMap.keySet()) {
+		for (/*long groupId = 1; groupId <= GroupConstant.GROUP_COUNT; groupId++*/ GroupResponseDto group : groupList) {
+			Long groupId = group.getId();
 			List<LinkedHashMap<Short, DeskSeatResponseDto>> desks = new ArrayList<>();
 			Map<Short, Map<Short, GroupUserResponseDto>> groupData = seatMap.getOrDefault(groupId, Collections.emptyMap());
 			for (short desk = 1; desk <= GroupConstant.DESK_COUNT; desk++) {
@@ -301,7 +354,7 @@ public class SeatService {
 				desks.add(deskMap);
 			}
 			GroupSeatResponseDto groupDto = GroupSeatResponseDto.builder()
-					.name(groupNameMap.get(groupId))
+					.name(group.getName())
 					.desks(desks)
 					.build();
 			LinkedHashMap<Long, GroupSeatResponseDto> groupMap = new LinkedHashMap<>();
