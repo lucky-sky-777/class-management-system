@@ -196,6 +196,13 @@ public class ClassService {
         return classRepository.getJoinedClasses(clientUserId);
     }
 
+    @RequireClassPermission
+    @Transactional
+    public ClassResponseDto getClassData(Long classId) {
+        Class clazz = findByIdOrThrow(classId);
+        return classMapper.toClassResponseDto(clazz);
+    }
+
     @Transactional(readOnly = true)
     public ClassPrivacyResponseDto getPrivacy(Long classId) {
         Class currentClass = findByIdOrThrow(classId);

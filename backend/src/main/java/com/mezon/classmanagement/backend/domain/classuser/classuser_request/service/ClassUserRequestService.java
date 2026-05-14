@@ -9,13 +9,22 @@ import com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto.
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.entity.ClassUserRequest;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.mapper.ClassUserRequestMapper;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.repository.ClassUserRequestRepository;
+import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
+import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
+import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.time.Instant;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -34,6 +43,34 @@ public class ClassUserRequestService {
 	 */
 
 	ClassUserRequestMapper classUserRequestMapper;
+
+	/**
+	 * Service
+	 */
+
+	ApplicationEventPublisher applicationEventPublisher;
+
+	public record RequestApprovedEvent(Long classId, Long userId) {}
+
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+	@RequiredArgsConstructor
+	@Component
+	public static class RequestEventListener {
+
+		ClassUserService classUserService;
+
+		@Transactional(propagation = Propagation.REQUIRES_NEW)
+		@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+		public void handleRequestApproved(RequestApprovedEvent event) {
+			classUserService.createClassUser(
+					event.classId(),
+					CreateClassUserRequestDto.builder()
+							.userId(event.userId())
+							.build(),
+					ClassUser.Role.CLASS_MEMBER
+			);
+		}
+	}
 
 	@Transactional
 	public void create(
@@ -61,13 +98,27 @@ public class ClassUserRequestService {
 	@Transactional
 	public ClassUserRequestIdResponseDto approve(
 			Long classId,
+			Long actorUserId,
 			Long classUserRequestId
 	) {
 		ClassUserRequest currentClassUserRequest = findByClassIdAndClassUserRequestIdOrThrow(classId, classUserRequestId);
 
+		User actor = User.builder()
+				.id(actorUserId)
+				.build();
+
 		currentClassUserRequest.setStatus(ClassUserRequest.Status.APPROVED);
+		currentClassUserRequest.setActor(actor);
+		currentClassUserRequest.setActedAt(Instant.now());
 
 		ClassUserRequest responseClassUserRequest = save(currentClassUserRequest);
+
+		applicationEventPublisher.publishEvent(
+				new RequestApprovedEvent(
+						responseClassUserRequest.getClazz().getId(),
+						responseClassUserRequest.getUser().getId()
+				)
+		);
 
 		return ClassUserRequestIdResponseDto.builder()
 				.classUserRequestId(responseClassUserRequest.getId())
@@ -111,11 +162,7 @@ public class ClassUserRequestService {
 	@RequireClassPermission
 	@Transactional(readOnly = true)
 	public List<ClassUserRequestResponseDto> getByClass(Long classId) {
-		List<ClassUserRequest> response = findByClassId(classId);
-
-		return response.stream()
-				.map(classUserRequestMapper::toClassUserRequestResponseDto)
-				.toList();
+		return getByClassId(classId);
 	}
 
 	@Transactional(readOnly = true)
@@ -144,6 +191,12 @@ public class ClassUserRequestService {
 	public List<ClassUserRequest> findByClassId(Long classId) {
 		return classUserRequestRepository
 				.findByClazz_IdOrderByCreatedAtDesc(classId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<ClassUserRequestResponseDto> getByClassId(Long classId) {
+		return classUserRequestRepository
+				.getByClazz_IdOrderByCreatedAtDesc(classId);
 	}
 
 	@Transactional(readOnly = true)

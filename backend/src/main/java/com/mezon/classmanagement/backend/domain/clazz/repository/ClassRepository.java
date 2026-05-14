@@ -38,6 +38,7 @@ public interface ClassRepository extends JpaRepository<Class, Long> {
 			clazz.id,
 			clazz.owner.id,
 			clazz.owner.displayName,
+			clazz.owner.avatarUrl,
 			clazz.name,
 			clazz.description,
 			clazz.code,

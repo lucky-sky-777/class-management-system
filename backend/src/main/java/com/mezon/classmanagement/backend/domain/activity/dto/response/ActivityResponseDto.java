@@ -69,7 +69,7 @@ public final class ActivityResponseDto {
 	@JsonProperty(value = "is_mandatory")
 	Boolean isMandatory;
 
-	@JsonFormat(pattern = DateTimeConstant.PATTERN, timezone = DateTimeConstant.TIMEZONE)
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")
 	Instant createdAt;
 

@@ -146,6 +146,20 @@ public class ClassController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping("/{classId}/data")
+	public ResponseDTO<ClassResponseDto> getClassData(
+			@PathVariable Long classId
+	) {
+		ClassResponseDto response = classService.getClassData(classId);
+
+		return ResponseDTO.<ClassResponseDto>builder()
+				.success(true)
+				.message("Get class data successful")
+				.data(response)
+				.build();
+	}
+
 	@GetMapping("/{classId}/privacy")
 	public ResponseDTO<ClassPrivacyResponseDto> getClassPrivacy(
 			@PathVariable Long classId

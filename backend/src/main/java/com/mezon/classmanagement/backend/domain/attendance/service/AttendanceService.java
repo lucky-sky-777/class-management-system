@@ -31,7 +31,7 @@ public class AttendanceService {
 
 		groupUserService.save(currentGroupUser);
 
-		return seatService.getClassSeats(classId);
+		return seatService.get(classId);
 	}
 
 }
