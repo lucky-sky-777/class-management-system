@@ -68,9 +68,8 @@ const LeaveItem: React.FC<{
                         </span>
                         <div className="flex items-center gap-1.5 text-[10px] font-mono text-ink-3">
                             <Clock className="w-3 h-3" />
-                            {new Date(leave.created_at).toLocaleDateString('vi-VN', { 
-                                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
-                            })}
+                            {leave.created_at}
+                            
                         </div>
                     </div>
 
