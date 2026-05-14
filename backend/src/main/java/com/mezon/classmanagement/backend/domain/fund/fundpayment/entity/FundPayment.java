@@ -1,8 +1,8 @@
-package com.mezon.classmanagement.backend.domain.point.entity;
+package com.mezon.classmanagement.backend.domain.fund.fundpayment.entity;
 
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
-import com.mezon.classmanagement.backend.domain.group.entity.Group;
+import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -30,12 +30,12 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "points")
-public class Point {
+@Table(name = "fund_payments")
+public class FundPayment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false)
+	@Column(name = "id")
 	Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -43,26 +43,37 @@ public class Point {
 	Class clazz;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "group_id", nullable = false)
-	Group group;
+	@JoinColumn(name = "fund_id", nullable = false)
+	Fund fund;
 
-	@Column(name = "description", nullable = false)
-	String description;
+	@Column(name = "proof_url", nullable = true)
+	String proofUrl;
 
-	@Column(name = "point", nullable = false)
-	Short point;
+	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+	Instant createdAt;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "creator_user_id", nullable = true)
+	User creator;
+
+	@JoinColumn(name = "status", nullable = false)
+	Status status;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "actor_user_id", nullable = true)
 	User actor;
 
-	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
-	Instant createdAt;
+	public enum Status {
+		PENDING,
+		APPROVED,
+		REJECTED,
+		CANCELLED
+	}
 
 	@PrePersist
 	public void prePersist() {
-		if (point == null) {
-			point = 0;
+		if (status == null) {
+			status = Status.PENDING;
 		}
 	}
 

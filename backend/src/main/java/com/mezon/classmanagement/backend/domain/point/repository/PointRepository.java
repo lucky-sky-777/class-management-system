@@ -59,7 +59,7 @@ public interface PointRepository extends JpaRepository<Point, Long> {
 		class.id = :classId and (point.createdAt between :startAt and :endAt)
 	order by group.id asc , point.createdAt desc
 	""")
-	List<PointResponseDto> getByClazz_IdOrderByCreatedAtDescFilterByStartAtAndEndAt(
+	List<PointResponseDto> getByClazz_IdOrderByGroup_IdAscCreatedAtDescFilterByStartAtAndEndAt(
 			Long classId,
 			Instant startAt,
 			Instant endAt

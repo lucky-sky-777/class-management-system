@@ -94,6 +94,7 @@ public class PointService {
 	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByClass(Long classId, GetPointRequestDto request) {
 		if (request == null) {
+			System.out.println("request dto null in getByClass");
 			return getByClassId(
 					classId, weekService.getCurrentWeekStartAt(), weekService.getCurrentWeekEndAt()
 			);
@@ -116,7 +117,7 @@ public class PointService {
 
 	@RequireClassPermission
 	@Transactional(readOnly = true)
-	public List<WeekPointRankingResponseDto> getWeekRanking(Long classId) {
+	public List<WeekPointRankingResponseDto> getWeekRanking(Long classId, GetPointRequestDto request) {
 		List<WeekPointRankingResponseDto> responseList = pointRepository.getWeekRankingAllGroupByClass(
 				classId,
 				weekService.getCurrentWeekStartAt(),
@@ -134,7 +135,7 @@ public class PointService {
 
 	@RequireClassPermission
 	@Transactional(readOnly = true)
-	public List<MonthPointRankingResponseDto> getMonthRanking(Long classId) {
+	public List<MonthPointRankingResponseDto> getMonthRanking(Long classId, GetPointRequestDto request) {
 		List<MonthPointRankingResponseDto> monthPointRankingList = pointRepository.getMonthRankingByClass(
 				classId,
 
@@ -202,7 +203,7 @@ public class PointService {
 	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByClassId(Long classId, Instant startAt, Instant endAt) {
 		return pointRepository
-				.getByClazz_IdOrderByCreatedAtDescFilterByStartAtAndEndAt(
+				.getByClazz_IdOrderByGroup_IdAscCreatedAtDescFilterByStartAtAndEndAt(
 						classId, startAt, endAt
 				);
 	}
