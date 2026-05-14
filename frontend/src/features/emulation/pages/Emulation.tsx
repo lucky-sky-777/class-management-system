@@ -16,7 +16,7 @@ export const Emulation = () => {
     weeks,
     setFilters,
     changeTeamCount,
-    refresh,
+    addPoint,
   } = useEmulation(classId!);
 
   const [selectedTeam, setSelectedTeam] = useState(1);
@@ -28,6 +28,7 @@ export const Emulation = () => {
     content: "",
     points: 0,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canEdit = true; // TODO: Phân quyền sau
   // 3. EARLY RETURN (Chỉ return sau khi đã gọi hết Hooks)
@@ -43,26 +44,39 @@ export const Emulation = () => {
 
   // 4. HÀM XỬ LÝ GHI ĐIỂM
   const handleSubmitPoint = async () => {
+    // 1. Validation sớm
     const pointsToSubmit = Number(pointForm.points);
-    if (!pointForm.content) return alert("Vui lòng nhập nội dung!");
+    if (!pointForm.content.trim()) return alert("Vui lòng nhập nội dung!");
     if (isNaN(pointsToSubmit) || pointsToSubmit === 0) {
       return alert("Số điểm không hợp lệ!");
     }
 
     try {
-      await emulationAPI.addPoints(
-        classId!,
+      setIsSubmitting(true); // Khóa nút bấm lại
+
+      // 2. Gọi hàm addPoint từ Hook (Sử dụng hàm đã bọc trong useEmulation để đồng bộ)
+      // Lưu ý: Nên dùng hàm addPoint từ Hook trả về thay vì gọi trực tiếp emulationAPI ở đây
+      const result = await addPoint(
         selectedTeam,
         pointForm.content,
         pointsToSubmit,
       );
-      alert(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
-      setShowPointModal(false);
-      setPointForm({ content: "", points: 0 }); // Reset form
-      refresh(); // Load lại lịch sử và bảng xếp hạng
+
+      if (result.success) {
+        // 3. Xử lý sau khi thành công
+        setShowPointModal(false);
+        setPointForm({ content: "", points: 0 });
+
+        // Thông báo nhẹ nhàng (nên dùng Toast nếu có, alert hơi "cổ điển")
+        console.log(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
+      } else {
+        alert("Ghi điểm thất bại. Vui lòng kiểm tra lại kết nối!");
+      }
     } catch (error) {
-      console.error("Lỗi nhập điểm", error);
-      alert("Lỗi nhập điểm");
+      console.error("Lỗi nhập điểm:", error);
+      alert("Đã có lỗi xảy ra khi ghi điểm!");
+    } finally {
+      setIsSubmitting(false); // Mở khóa nút bấm
     }
   };
 
@@ -235,6 +249,7 @@ export const Emulation = () => {
           {/* CỤM NÚT BẤM */}
           <div className="flex gap-3 pt-3">
             <button
+              disabled={isSubmitting}
               onClick={() => {
                 setShowPointModal(false);
                 setPointForm({ content: "", points: 0 });
@@ -244,6 +259,7 @@ export const Emulation = () => {
               HỦY BỎ
             </button>
             <button
+              disabled={isSubmitting}
               onClick={handleSubmitPoint}
               className="flex-1 py-2.5 bg-[var(--warm-400)] text-white rounded-[var(--r-lg)] font-bold text-xs shadow-md shadow-blue-900/10 hover:bg-[var(--warm-600)] transition-all active:scale-95"
             >
