@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.constant.GroupConstant;
 import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
 import com.mezon.classmanagement.backend.domain.group.service.GroupService;
+import com.mezon.classmanagement.backend.domain.groupuser.dto.request.CreateGroupUserRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.CreateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto;
@@ -42,13 +43,31 @@ public class SeatService {
 	GroupUserService groupUserService;
 	ClassUserService classUserService;
 
-//	@Transactional
-//	public ClassSeatResponseDto create(
-//			Long classId,
-//			CreateGroupUserSeatRequestDto request
-//	) {
-//		groupUserService.throwIfExistsByClassIdAndGroupIdAndDeskAndDeskPosition(classId);
-//	}
+	@Transactional
+	public ClassSeatResponseDto create(
+			Long classId,
+			CreateGroupUserSeatRequestDto request
+	) {
+		groupUserService.throwIfExistsByClassIdAndGroupIdAndDeskAndDeskPosition(
+				classId,
+				request.getTargetGroupId(),
+				request.getTargetDesk(),
+				request.getTargetDeskPosition()
+		);
+
+		GroupUser groupUser = groupUserService.findByClassIdAndGroupIdAndUserIdOrThrow(
+				classId,
+				request.getTargetGroupId(),
+				request.getUserId()
+		);
+
+		groupUser.setDesk(request.getTargetDesk());
+		groupUser.setDeskPosition(request.getTargetDeskPosition());
+
+		groupUserService.save(groupUser);
+
+		return get(classId);
+	}
 
 	@Transactional
 	public ClassSeatResponseDto update(

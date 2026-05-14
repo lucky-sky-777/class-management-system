@@ -164,6 +164,12 @@ public class PointService {
 					weekService.getWeekEndAtBefore(0)
 			);
 		} else {
+			if (request.getStartAt() == null) {
+				request.setStartAt(weekService.getCurrentWeekStartAt());
+			}
+			if (request.getEndAt() == null) {
+				request.setEndAt(weekService.getCurrentWeekEndAt());
+			}
 			monthPointRankingList = pointRepository.getMonthRankingByClass(
 					classId,
 

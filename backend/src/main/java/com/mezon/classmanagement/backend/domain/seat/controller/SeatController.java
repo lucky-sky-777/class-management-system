@@ -39,13 +39,19 @@ public class SeatController {
 				.build();
 	}
 
-//	@PutMapping()
-//	public ResponseDTO<ClassSeatResponseDto> create(
-//			@PathVariable Long classId,
-//			@RequestBody CreateGroupUserSeatRequestDto request
-//	) {
-//		//
-//	}
+	@PatchMapping("/seating")
+	public ResponseDTO<ClassSeatResponseDto> create(
+			@PathVariable Long classId,
+			@RequestBody CreateGroupUserSeatRequestDto request
+	) {
+		ClassSeatResponseDto response = seatService.create(classId, request);
+
+		return ResponseDTO.<ClassSeatResponseDto>builder()
+				.success(true)
+				.message("Create seat successful")
+				.data(response)
+				.build();
+	}
 
 	//@PreAuthorize("@ClassPermission.manageGroup(#classId)")
 	@PatchMapping
