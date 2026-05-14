@@ -43,6 +43,14 @@ public class SeatService {
 	GroupUserService groupUserService;
 	ClassUserService classUserService;
 
+//	@Transactional
+//	public ClassSeatResponseDto create(
+//			Long classId,
+//			CreateGroupUserSeatRequestDto request
+//	) {
+//		groupUserService.throwIfExistsByClassIdAndGroupIdAndDeskAndDeskPosition(classId);
+//	}
+
 	@Transactional
 	public ClassSeatResponseDto create(
 			Long classId,

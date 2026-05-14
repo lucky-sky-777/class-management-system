@@ -22,7 +22,7 @@ export interface Paginated<T> {
 
 // ID chuẩn hóa — backend dùng bigint, TS dùng number
 // Nếu sau này BE đổi sang string/UUID → chỉ sửa ở đây
-export type ID = number;
+export type ID = number | string;
 
 // Timestamp chuẩn hóa — luôn là string ISO từ API
 export type Timestamp = string;

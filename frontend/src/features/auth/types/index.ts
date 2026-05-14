@@ -25,3 +25,14 @@ export interface SignOutRequest {
 export interface SignOutResponse {
     success: boolean;
 }
+
+export interface UserResponse {
+    id: string;
+    username: string;
+    display_name?: string;
+    provider?: string;
+    avatar_url?: string;
+    phone?: string;
+    email?: string;
+    joined_at?: string;
+}
