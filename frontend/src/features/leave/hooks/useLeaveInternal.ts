@@ -39,9 +39,8 @@ export const useLeaveInternal = (classId: ID) => {
     /**
      * Gửi đơn xin nghỉ phép mới
      */
-    const submitLeave = async (data: Omit<CreateLeaveRequestDTO, "classId">) => {
+    const submitLeave = async (data: Omit<CreateLeaveRequestDTO, "classId">): Promise<{ success: boolean; message?: string }> => {
         setIsSubmitting(true);
-        setError(null);
         try {
             // Backend sử dụng Instant (ISO 8601). 
             // Input từ UI là 'YYYY-MM-DD', cần chuyển sang 'YYYY-MM-DDT00:00:00Z'
@@ -62,15 +61,13 @@ export const useLeaveInternal = (classId: ID) => {
             const response = await leaveAPI.createLeave(classId, payload);
             if (response.success) {
                 await fetchLeaves();
-                return true;
+                return { success: true };
             } else {
-                setError(response.message);
-                return false;
+                return { success: false, message: response.message };
             }
         } catch (err) {
             const message = err instanceof Error ? err.message : "Lỗi khi gửi đơn xin nghỉ";
-            setError(message);
-            return false;
+            return { success: false, message };
         } finally {
             setIsSubmitting(false);
         }

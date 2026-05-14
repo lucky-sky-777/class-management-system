@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "@shared/components/ui/Modal";
 import { 
     Calendar, 
@@ -11,7 +11,7 @@ import {
 interface LeaveFormModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: { reason: string; from: string; to: string; proof_url?: string }) => Promise<boolean>;
+    onSubmit: (data: { reason: string; from: string; to: string; proof_url?: string }) => Promise<{ success: boolean; message?: string }>;
     isSubmitting: boolean;
 }
 
@@ -20,23 +20,33 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ isOpen, onClose,
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
     const [proofUrl, setProofUrl] = useState("");
+    const [submitError, setSubmitError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setSubmitError(null);
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const success = await onSubmit({ 
+        setSubmitError(null);
+        const result = await onSubmit({ 
             reason, 
             from: fromDate, 
             to: toDate, 
             proof_url: proofUrl || undefined 
         });
-        if (success) {
+        if (result.success) {
             setReason("");
             setFromDate("");
             setToDate("");
             setProofUrl("");
             onClose();
+        } else {
+            setSubmitError(result.message || "Đã có lỗi xảy ra");
         }
     };
 
@@ -52,6 +62,14 @@ export const LeaveFormModal: React.FC<LeaveFormModalProps> = ({ isOpen, onClose,
             }
         >
             <form onSubmit={handleFormSubmit} className="space-y-6">
+                {submitError && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3 animate-fade-in">
+                        <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+                        <p className="text-sm text-red-800 leading-relaxed font-medium">
+                            {submitError}
+                        </p>
+                    </div>
+                )}
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
                     <p className="text-xs text-amber-800 leading-relaxed">
