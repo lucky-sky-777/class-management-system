@@ -30,7 +30,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
             {/* Backdrop Overlay */}
             <div 
-                className="absolute inset-0 bg-[var(--ink-1)]/40 transition-opacity"
+                className="absolute inset-0 bg-[var(--ink-1)]/40 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
                 aria-hidden="true"
             />

@@ -1,0 +1,8 @@
+- thích hợp tạo mã cho phía giáo viên trong quỹ lớp
+- hiển thị qr cho học sinh
+- tạm ẩn thống kê số dư, tổng thu
+- sửa lại ui của "nghỉ phép" cho nhất quán giữa chủ sở hữu và member
+- tương tự với "hoạt động"
+- sửa lại avatar component cho đồng nhất giữa các page
+- bàng với thiên bảo về khả năng thích hợp payos cho việc track người dùng nào đã nộp tiền
+- tối ưu hiệu năng của trang chủ
