@@ -18,9 +18,9 @@ export const Group = ({
   return (
     <div className="bg-[var(--bg-surface-2)] p-3 rounded-2xl border border-[var(--rule-md)] shadow-[var(--shadow-sm)] flex flex-col items-center gap-3 w-fit">
       <div
-        className={`px-4 py-1 bg-[var(--bg-surface)] border border-[var(--rule-md)] rounded-full text-[10px] md:text-xs font-bold text-[var(--ink-2)] shadow-[var(--shadow-xs)] ${isTeacherView ? "rotate-180" : ""}`}
+        className={`px-4 py-1 bg-[var(--bg-surface)] border border-[var(--rule-md)] rounded-full text-[10px] md:text-xs font-bold text-[var(--ink-2)] shadow-[var(--shadow-xs)] uppercase ${isTeacherView ? "rotate-180" : ""}`}
       >
-        TỔ {groupData.groupId}
+        {groupData.name || `Tổ ${groupData.groupId}`}
       </div>
 
       <div className="flex flex-col gap-3">

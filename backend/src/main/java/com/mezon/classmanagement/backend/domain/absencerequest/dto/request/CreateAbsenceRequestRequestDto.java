@@ -26,11 +26,11 @@ public final class CreateAbsenceRequestRequestDto {
     @JsonProperty(value = "reason")
     String reason;
 
-    @FutureOrPresent
+    //@FutureOrPresent
     @JsonProperty(value = "from")
     Instant from;
 
-    @Future
+    //@Future
     @JsonProperty(value = "to")
     Instant to;
 

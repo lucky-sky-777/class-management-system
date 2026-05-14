@@ -136,6 +136,15 @@ public class GroupUserService {
 	}
 
 	@Transactional(readOnly = true)
+	public GroupUser findByClassIdAndUserIdOrThrow(Long classId, Long userId) {
+		return groupUserRepository
+				.findByClazz_IdAndUser_Id(classId, userId)
+				.orElseThrow(() ->
+						new GlobalException(GlobalException.Type.NOT_FOUND, "Group user not found")
+				);
+	}
+
+	@Transactional(readOnly = true)
 	public GroupUser findByClassIdAndGroupIdAndUserIdOrThrow(Long classId, Long groupId, Long userId) {
 		return groupUserRepository
 				.findByClazz_IdAndGroup_IdAndUser_Id(classId, groupId, userId)

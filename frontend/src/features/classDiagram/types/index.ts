@@ -33,6 +33,7 @@ export interface DeskData {
 
 export interface GroupData {
   groupId: number;
+  name?: string;
   desks: DeskData[];
 }
 

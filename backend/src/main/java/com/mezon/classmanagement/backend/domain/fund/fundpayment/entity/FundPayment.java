@@ -59,7 +59,7 @@ public class FundPayment {
 	User creator;
 
 	@Enumerated(EnumType.STRING)
-	@JoinColumn(name = "status", nullable = false)
+	@Column(name = "status", nullable = false)
 	Status status;
 
 	@ManyToOne(fetch = FetchType.LAZY)
