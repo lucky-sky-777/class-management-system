@@ -160,7 +160,6 @@ export const classDiagramAPI = {
     };
 
     try {
-      // 👉 ĐÃ SỬA URL: Thêm /seating vào đuôi (Dựa theo @PatchMapping của Bảo)
       const response: any = await apiClient.patch(
         `/seats/classes/${classId}/seating`,
         payload,
@@ -191,7 +190,7 @@ export const classDiagramAPI = {
   ): Promise<{ id: string; name: string }[]> => {
     try {
       const response: any = await apiClient.get(
-        `/classes/${classId}/members/ungrouped`,
+        `/classes/${classId}/members/unseated`,
       );
 
       // Bóc tách dữ liệu (tùy thuộc backend bọc data ở lớp nào)
