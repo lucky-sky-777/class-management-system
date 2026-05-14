@@ -147,21 +147,39 @@ public class PointService {
 	public List<MonthPointRankingResponseDto> getMonthRanking(Long classId, GetPointRequestDto request) {
 		List<MonthPointRankingResponseDto> monthPointRankingList;
 
-		monthPointRankingList = pointRepository.getMonthRankingByClass(
-				classId,
+		if (request == null) {
+			monthPointRankingList = pointRepository.getMonthRankingByClass(
+					classId,
 
-				weekService.getWeekStartAtBefore(3),
-				weekService.getWeekEndAtBefore(3),
+					weekService.getWeekStartAtBefore(3),
+					weekService.getWeekEndAtBefore(3),
 
-				weekService.getWeekStartAtBefore(2),
-				weekService.getWeekEndAtBefore(2),
+					weekService.getWeekStartAtBefore(2),
+					weekService.getWeekEndAtBefore(2),
 
-				weekService.getWeekStartAtBefore(1),
-				weekService.getWeekEndAtBefore(1),
+					weekService.getWeekStartAtBefore(1),
+					weekService.getWeekEndAtBefore(1),
 
-				weekService.getWeekStartAtBefore(0),
-				weekService.getWeekEndAtBefore(0)
-		);
+					weekService.getWeekStartAtBefore(0),
+					weekService.getWeekEndAtBefore(0)
+			);
+		} else {
+			monthPointRankingList = pointRepository.getMonthRankingByClass(
+					classId,
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 3),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 3),
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 2),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 2),
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 1),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 1),
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 0),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 0)
+			);
+		}
 
 		short rank = 1;
 
