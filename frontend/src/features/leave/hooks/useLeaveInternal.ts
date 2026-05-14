@@ -43,10 +43,16 @@ export const useLeaveInternal = (classId: ID) => {
         setIsSubmitting(true);
         setError(null);
         try {
-            const response = await leaveAPI.createLeave({ ...data, classId });
+            // Chuyển đổi ngày sang ISO Instant để backend nhận diện (Instant trong Java)
+            const payload: CreateLeaveRequestDTO = {
+                ...data,
+                from: new Date(data.from).toISOString(),
+                to: new Date(data.to).toISOString()
+            };
+
+            const response = await leaveAPI.createLeave(classId, payload);
             if (response.success) {
-                // Cập nhật state cục bộ để UI phản hồi ngay lập tức
-                setLeaves(prev => [response.data, ...prev]);
+                await fetchLeaves(); // Tải lại danh sách để có đủ thông tin
                 return true;
             } else {
                 setError(response.message);
@@ -61,6 +67,69 @@ export const useLeaveInternal = (classId: ID) => {
         }
     };
 
+    /**
+     * Phê duyệt đơn (Admin)
+     */
+    const approveLeave = async (requestId: ID) => {
+        setIsLoading(true);
+        try {
+            const res = await leaveAPI.approveLeave(classId, requestId);
+            if (res.success) {
+                await fetchLeaves();
+                return true;
+            }
+            setError(res.message);
+            return false;
+        } catch (err) {
+            setError("Lỗi khi duyệt đơn");
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    /**
+     * Từ chối đơn (Admin)
+     */
+    const rejectLeave = async (requestId: ID) => {
+        setIsLoading(true);
+        try {
+            const res = await leaveAPI.rejectLeave(classId, requestId);
+            if (res.success) {
+                await fetchLeaves();
+                return true;
+            }
+            setError(res.message);
+            return false;
+        } catch (err) {
+            setError("Lỗi khi từ chối đơn");
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    /**
+     * Hủy đơn (Người tạo)
+     */
+    const cancelLeave = async (requestId: ID) => {
+        setIsLoading(true);
+        try {
+            const res = await leaveAPI.cancelLeave(classId, requestId);
+            if (res.success) {
+                await fetchLeaves();
+                return true;
+            }
+            setError(res.message);
+            return false;
+        } catch (err) {
+            setError("Lỗi khi hủy đơn");
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // Tự động tải dữ liệu khi hook được mount hoặc classId thay đổi
     useEffect(() => {
         fetchLeaves();
@@ -72,6 +141,9 @@ export const useLeaveInternal = (classId: ID) => {
         isSubmitting,
         error,
         fetchLeaves,
-        submitLeave
+        submitLeave,
+        approveLeave,
+        rejectLeave,
+        cancelLeave
     };
 };

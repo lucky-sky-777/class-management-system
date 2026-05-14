@@ -3,7 +3,7 @@ import type { ID, Timestamp } from "@shared/utils/common";
 /**
  * Các trạng thái của một đơn xin nghỉ phép
  */
-export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type LeaveStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
 
 /**
  * Model đại diện cho một bản ghi đơn xin nghỉ phép
@@ -12,24 +12,22 @@ export interface LeaveRequest {
     id: ID;
     classId: ID;
     userId: ID;
-    userName: string;
     reason: string;
-    fromDate: string; // Định dạng YYYY-MM-DD
-    toDate: string;   // Định dạng YYYY-MM-DD
-    proofUrl?: string;
+    from: Timestamp; // ISO Instant from backend
+    to: Timestamp;   // ISO Instant from backend
+    proof_url?: string;
     status: LeaveStatus;
-    createdAt: Timestamp;
+    created_at: Timestamp;
 }
 
 /**
  * DTO dùng để tạo đơn xin nghỉ phép mới
  */
 export interface CreateLeaveRequestDTO {
-    classId: ID;
     reason: string;
-    fromDate: string;
-    toDate: string;
-    proofUrl?: string;
+    from: string; // ISO String or YYYY-MM-DD
+    to: string;   // ISO String or YYYY-MM-DD
+    proof_url?: string;
 }
 
 /**
