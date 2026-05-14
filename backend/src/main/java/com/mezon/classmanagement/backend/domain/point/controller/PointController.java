@@ -119,7 +119,7 @@ public class PointController {
 	@GetMapping("/week-ranking")
 	public ResponseDTO<List<WeekPointRankingResponseDto>> getWeekRanking(
 			@PathVariable Long classId,
-			@Valid @RequestBody(required = false) GetPointRequestDto request
+			@ModelAttribute GetPointRequestDto request
 	) {
 		List<WeekPointRankingResponseDto> response = pointService.getWeekRanking(classId, request);
 
@@ -134,7 +134,7 @@ public class PointController {
 	@GetMapping("/month-ranking")
 	public ResponseDTO<List<MonthPointRankingResponseDto>> getMonthRanking(
 			@PathVariable Long classId,
-			@Valid @RequestBody(required = false) GetPointRequestDto request
+			@ModelAttribute GetPointRequestDto request
 	) {
 		List<MonthPointRankingResponseDto> response = pointService.getMonthRanking(classId, request);
 

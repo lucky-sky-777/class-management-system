@@ -81,12 +81,18 @@ public class FundController {
 				.build();
 	}
 
-//	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
-//	@GetMapping("/summary")
-//	public ResponseDTO<FundSummaryResponseDto> getSummary(
-//			@PathVariable Long classId
-//	) {
-//		//
-//	}
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping("/summary")
+	public ResponseDTO<FundSummaryResponseDto> getSummary(
+			@PathVariable Long classId
+	) {
+		FundSummaryResponseDto response = fundService.getSummaryByClass(classId);
+
+		return ResponseDTO.<FundSummaryResponseDto>builder()
+				.success(true)
+				.message("Get fund summary successful")
+				.data(response)
+				.build();
+	}
 
 }
