@@ -94,7 +94,6 @@ public class PointService {
 	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByClass(Long classId, GetPointRequestDto request) {
 		if (request == null) {
-			System.out.println("request dto null in getByClass");
 			return getByClassId(
 					classId, weekService.getCurrentWeekStartAt(), weekService.getCurrentWeekEndAt()
 			);
@@ -118,11 +117,21 @@ public class PointService {
 	@RequireClassPermission
 	@Transactional(readOnly = true)
 	public List<WeekPointRankingResponseDto> getWeekRanking(Long classId, GetPointRequestDto request) {
-		List<WeekPointRankingResponseDto> responseList = pointRepository.getWeekRankingAllGroupByClass(
-				classId,
-				weekService.getCurrentWeekStartAt(),
-				Instant.now()
-		);
+		List<WeekPointRankingResponseDto> responseList;
+
+		if (request == null) {
+			responseList = pointRepository.getWeekRankingAllGroupByClass(
+					classId,
+					weekService.getCurrentWeekStartAt(),
+					Instant.now()
+			);
+		} else {
+			responseList = pointRepository.getWeekRankingAllGroupByClass(
+					classId,
+					request.getStartAt(),
+					request.getEndAt()
+			);
+		}
 
 		short rank = 1;
 
@@ -136,21 +145,41 @@ public class PointService {
 	@RequireClassPermission
 	@Transactional(readOnly = true)
 	public List<MonthPointRankingResponseDto> getMonthRanking(Long classId, GetPointRequestDto request) {
-		List<MonthPointRankingResponseDto> monthPointRankingList = pointRepository.getMonthRankingByClass(
-				classId,
+		List<MonthPointRankingResponseDto> monthPointRankingList;
 
-				weekService.getWeekStartAtBefore(3),
-				weekService.getWeekEndAtBefore(3),
+		if (request == null) {
+			monthPointRankingList = pointRepository.getMonthRankingByClass(
+					classId,
 
-				weekService.getWeekStartAtBefore(2),
-				weekService.getWeekEndAtBefore(2),
+					weekService.getWeekStartAtBefore(3),
+					weekService.getWeekEndAtBefore(3),
 
-				weekService.getWeekStartAtBefore(1),
-				weekService.getWeekEndAtBefore(1),
+					weekService.getWeekStartAtBefore(2),
+					weekService.getWeekEndAtBefore(2),
 
-				weekService.getWeekStartAtBefore(0),
-				weekService.getWeekEndAtBefore(0)
-		);
+					weekService.getWeekStartAtBefore(1),
+					weekService.getWeekEndAtBefore(1),
+
+					weekService.getWeekStartAtBefore(0),
+					weekService.getWeekEndAtBefore(0)
+			);
+		} else {
+			monthPointRankingList = pointRepository.getMonthRankingByClass(
+					classId,
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 3),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 3),
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 2),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 2),
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 1),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 1),
+
+					weekService.getWeekStartAtBefore(request.getStartAt(), 0),
+					weekService.getWeekEndAtBefore(request.getEndAt(), 0)
+			);
+		}
 
 		short rank = 1;
 
