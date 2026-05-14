@@ -43,16 +43,25 @@ export const useLeaveInternal = (classId: ID) => {
         setIsSubmitting(true);
         setError(null);
         try {
-            // Chuyển đổi ngày sang ISO Instant để backend nhận diện (Instant trong Java)
+            // Backend sử dụng Instant (ISO 8601). 
+            // Input từ UI là 'YYYY-MM-DD', cần chuyển sang 'YYYY-MM-DDT00:00:00Z'
+            // Chú ý: Backend có validation @FutureOrPresent và @Future
+            
+            const fromDate = new Date(data.from);
+            fromDate.setHours(0, 0, 0, 0); // Đặt về đầu ngày
+
+            const toDate = new Date(data.to);
+            toDate.setHours(23, 59, 59, 999); // Đặt về cuối ngày để thỏa mãn @Future
+
             const payload: CreateLeaveRequestDTO = {
                 ...data,
-                from: new Date(data.from).toISOString(),
-                to: new Date(data.to).toISOString()
+                from: fromDate.toISOString(),
+                to: toDate.toISOString()
             };
 
             const response = await leaveAPI.createLeave(classId, payload);
             if (response.success) {
-                await fetchLeaves(); // Tải lại danh sách để có đủ thông tin
+                await fetchLeaves();
                 return true;
             } else {
                 setError(response.message);
