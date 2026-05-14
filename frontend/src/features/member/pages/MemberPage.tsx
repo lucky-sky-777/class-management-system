@@ -88,7 +88,7 @@ export const MemberPage = () => {
           Thành viên lớp học
         </h2>
         <p className="text-[var(--ink-3)] text-sm font-medium">
-          Lớp: {classInfo.name} ({classInfo.code})
+          Lớp: {classInfo.name} (Mã lớp: {classInfo.code})
         </p>
       </header>
 

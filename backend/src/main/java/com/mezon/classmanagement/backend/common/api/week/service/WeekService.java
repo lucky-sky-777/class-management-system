@@ -64,7 +64,21 @@ public class WeekService {
 	}
 
 	public Instant getWeekStartAtBefore(int weeksBefore) {
-		LocalDate date = LocalDate.now(ZONE_ID).minusWeeks(weeksBefore);
+		LocalDate date = LocalDate
+				.now(ZONE_ID)
+				.minusWeeks(weeksBefore);
+
+		int year = date.get(WEEK_FIELDS.weekBasedYear());
+		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());
+
+		return getWeekStartAt(year, week);
+	}
+
+	public Instant getWeekStartAtBefore(Instant instant, int weeksBefore) {
+		LocalDate date = instant
+				.atZone(ZONE_ID)
+				.toLocalDate()
+				.minusWeeks(weeksBefore);
 
 		int year = date.get(WEEK_FIELDS.weekBasedYear());
 		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());
@@ -73,7 +87,21 @@ public class WeekService {
 	}
 
 	public Instant getWeekEndAtBefore(int weeksBefore) {
-		LocalDate date = LocalDate.now(ZONE_ID).minusWeeks(weeksBefore);
+		LocalDate date = LocalDate
+				.now(ZONE_ID)
+				.minusWeeks(weeksBefore);
+
+		int year = date.get(WEEK_FIELDS.weekBasedYear());
+		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());
+
+		return getWeekEndAt(year, week);
+	}
+
+	public Instant getWeekEndAtBefore(Instant instant, int weeksBefore) {
+		LocalDate date = instant
+				.atZone(ZONE_ID)
+				.toLocalDate()
+				.minusWeeks(weeksBefore);
 
 		int year = date.get(WEEK_FIELDS.weekBasedYear());
 		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());

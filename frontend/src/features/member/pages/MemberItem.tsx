@@ -63,7 +63,7 @@ export const MemberItem = ({
         <div>
           <p className="text-sm font-bold text-[var(--ink-1)] leading-tight">{name}</p>
           <p className="text-[10px] text-[var(--ink-3)] font-medium mt-0.5">
-            @{member.username || `user_${member.userId}`} • {member.joinedAt}
+            {member.username} Ngày tham gia:  {member.joinedAt}
           </p>
         </div>
       </div>

@@ -1,17 +1,17 @@
-package com.mezon.classmanagement.backend.domain.point.entity;
+package com.mezon.classmanagement.backend.domain.fund.entity;
 
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
-import com.mezon.classmanagement.backend.domain.group.entity.Group;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -30,40 +30,41 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "points")
-public class Point {
+@Table(name = "funds")
+public class Fund {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id", nullable = false)
+	@Column(name = "id")
 	Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "class_id", nullable = false)
 	Class clazz;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "group_id", nullable = false)
-	Group group;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "type", nullable = false)
+	Type type;
 
-	@Column(name = "description", nullable = false)
+	@Column(name = "amount", nullable = false)
+	Long amount;
+
+	@Column(name = "title", nullable = false)
+	String title;
+
+	@Column(name = "description", nullable = true)
 	String description;
-
-	@Column(name = "point", nullable = false)
-	Short point;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "actor_user_id", nullable = true)
-	User actor;
 
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
 
-	@PrePersist
-	public void prePersist() {
-		if (point == null) {
-			point = 0;
-		}
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "creator_user_id", nullable = true)
+	User creator;
+
+	public enum Type {
+		INCOME,
+		EXPENSE
 	}
 
 }

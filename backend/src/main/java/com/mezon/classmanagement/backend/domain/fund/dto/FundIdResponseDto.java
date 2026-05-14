@@ -1,11 +1,9 @@
-package com.mezon.classmanagement.backend.domain.point.dto;
+package com.mezon.classmanagement.backend.domain.fund.dto;
 
-import java.time.Instant;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
-
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +12,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+@JsonPropertyOrder(value = {
+		"fund_id"
+})
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
 @Getter
@@ -21,14 +23,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class GetPointRequestDto {
+public final class FundIdResponseDto {
 
-	@NotNull
-	@JsonProperty(value = "start_at")
-	Instant startAt;
-
-	@NotNull
-	@JsonProperty(value = "end_at")
-	Instant endAt;
+	@JsonProperty(value = "fund_id")
+	Long fundId;
 
 }

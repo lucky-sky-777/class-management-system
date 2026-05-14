@@ -121,4 +121,18 @@ public class ClassUserController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@GetMapping("/unseated")
+	public ResponseDTO<List<ClassUserResponseDto>> getUnseatedClassUsers(
+			@PathVariable Long classId
+	) {
+		List<ClassUserResponseDto> response = classUserService.getUnseatedClassUsers(classId);
+
+		return ResponseDTO.<List<ClassUserResponseDto>>builder()
+				.success(true)
+				.message("Get unseated class users successful")
+				.data(response)
+				.build();
+	}
+
 }
