@@ -43,6 +43,10 @@ public class FundService {
 			Long creatorUserId,
 			CreateFundRequestDto request
 	) {
+		if (isExpense(request.getType())) {
+			request.setAmount(-request.getAmount());
+		}
+
 		throwIfTypeAndAmountNotCompatible(request.getType(), request.getAmount());
 
 		Class clazz = Class.builder()
