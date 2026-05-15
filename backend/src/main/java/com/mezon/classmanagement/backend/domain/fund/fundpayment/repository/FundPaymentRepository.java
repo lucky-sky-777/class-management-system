@@ -25,8 +25,12 @@ public interface FundPaymentRepository extends JpaRepository<FundPayment, Long> 
 		fundPayment.proofUrl,
 		fundPayment.createdAt,
 		creator.id,
+		creator.displayName,
+		creator.avatarUrl,
 		fundPayment.status,
-		actor.id
+		actor.id,
+		actor.displayName,
+		actor.avatarUrl
 	)
 	from FundPayment fundPayment
 	join fundPayment.clazz class

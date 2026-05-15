@@ -22,8 +22,12 @@ import java.time.Instant;
 		"proof_url",
 		"created_at",
 		"creator_user_id",
+		"creator_display_name",
+		"creator_avatar_url",
 		"status",
-		"actor_user_id"
+		"actor_user_id",
+		"actor_display_name",
+		"actor_avatar_url"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -53,10 +57,22 @@ public class FundPaymentResponseDto {
 	@JsonProperty(value = "creator_user_id")
 	Long creatorUserId;
 
+	@JsonProperty(value = "creator_display_name")
+	String creatorDisplayName;
+
+	@JsonProperty(value = "creator_avatar_url")
+	String creatorAvatarUrl;
+
 	@JsonProperty(value = "status")
 	FundPayment.Status status;
 
 	@JsonProperty(value = "actor_user_id")
 	Long actorUserId;
+
+	@JsonProperty(value = "actor_display_name")
+	String actorDisplayName;
+
+	@JsonProperty(value = "actor_avatar_url")
+	String actorAvatarUrl;
 
 }
