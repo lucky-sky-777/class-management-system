@@ -141,4 +141,42 @@ export const emulationAPI = {
     
     return response.data?.data || response.data || [];
   },
+
+  // 12. LẤY DANH SÁCH THÀNH VIÊN TRONG TỔ
+  getGroupMembers: async (classId: string, groupId: number) => {
+    const response = (await apiClient.get(
+      `/classes/${classId}/groups/${groupId}/members`
+    )) as any;
+    return response.data?.data || response.data || [];
+  },
+
+  // 13. THÊM THÀNH VIÊN VÀO TỔ
+  addGroupMember: async (classId: string, groupId: number, userId: string) => {
+    const response = (await apiClient.post(
+      `/classes/${classId}/groups/${groupId}/members`,
+      { user_id: parseInt(userId) } // Dự đoán payload dựa theo chuẩn chung
+    )) as any;
+    return response.data;
+  },
+
+  // 14. XÓA THÀNH VIÊN KHỎI TỔ
+  removeGroupMember: async (classId: string, groupId: number, userId: string) => {
+    const response = (await apiClient.delete(
+      `/classes/${classId}/groups/${groupId}/members/${userId}`
+    )) as any;
+    return response.data;
+  },
+
+  // 15. LẤY DANH SÁCH HỌC SINH CHƯA CÓ TỔ
+  getUngroupedMembers: async (classId: string) => {
+    try {
+      const response = (await apiClient.get(
+        `/classes/${classId}/members/ungrouped`
+      )) as any;
+      return response.data?.data || response.data || [];
+    } catch (error) {
+      console.error("Lỗi lấy danh sách chưa có tổ:", error);
+      return []; // Lỗi thì trả về mảng rỗng để UI không sập
+    }
+  },
 };

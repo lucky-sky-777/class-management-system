@@ -5,9 +5,9 @@ export const ClassLayout = () => {
 
   const menuItems = [
     { path: "", label: "Sơ đồ lớp" },
-    { path: "quy", label: "Quỹ lớp" },
-    { path: "thidua", label: "Thi đua" },
-    { path: "nghiphep", label: "Nghỉ phép" },
+    { path: "fund", label: "Quỹ lớp" },
+    { path: "emulation", label: "Thi đua" },
+    { path: "absent", label: "Nghỉ phép" },
     { path: "activity", label: "Hoạt động" },
     {path: "members", label: "Thành viên"},
   ];

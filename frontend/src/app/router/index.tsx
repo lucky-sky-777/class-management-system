@@ -47,9 +47,9 @@ export const router = createBrowserRouter([
         element: <ClassLayout />,
         children: [
           { index: true, element: <ClassDiagram /> },
-          { path: "nghiphep", element: <LeavePage /> },
-          { path: "thidua", element: <Emulation /> },
-          { path: "quy", element: <FundPage /> },
+          { path: "absent", element: <LeavePage /> },
+          { path: "emulation", element: <Emulation /> },
+          { path: "fund", element: <FundPage /> },
           { path: "activity", element: <ActivityPage /> },
           { path: "members", element: <MemberPage /> },
         ],

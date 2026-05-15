@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { useEmulation } from "@features/emulation/hooks/useEmulation";
 import { RankingTable } from "@features/emulation/pages/RankingTable";
 import { HistoryTable } from "@features/emulation/pages/HistoryTable";
+import { GroupSidebar } from "@features/emulation/pages/GroupSidebar";
 import { Modal } from "@shared/components/ui/Modal";
 
 export const Emulation = () => {
@@ -19,6 +20,10 @@ export const Emulation = () => {
     addPoint,
     editGroup,
     removeGroup,
+    fetchGroupMembers,
+    fetchUngroupedMembers,
+    addMemberToGroup,
+    removeMemberFromGroup,
   } = useEmulation(classId!);
 
   const [selectedTeam, setSelectedTeam] = useState(1);
@@ -34,9 +39,9 @@ export const Emulation = () => {
   //state remove
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
-  //state edit
-  const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
-  const [editGroupName, setEditGroupName] = useState("");
+  // //state edit
+  // const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
+  // const [editGroupName, setEditGroupName] = useState("");
   //state phân quyền
   const canEdit = true; // TODO: Phân quyền sau
   // 3. EARLY RETURN (Chỉ return sau khi đã gọi hết Hooks)
@@ -128,104 +133,22 @@ export const Emulation = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* DANH SÁCH TỔ - Dạng Sidebar Menu */}
-        <div className="lg:col-span-1 space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-[0.2em]">
-              Lựa chọn tổ
-            </label>
-            {canEdit && (
-              <div className="flex gap-1 bg-[var(--bg-surface-2)] p-1 rounded-lg border border-[var(--rule)]">
-                <button
-                  onClick={() => setShowDeleteModal(true)}
-                  className="p-1 hover:text-[var(--red-text)] transition-colors"
-                  title="Xóa tổ chỉ định"
-                >
-                  <Minus size={10} />
-                </button>
-                <div className="w-[1px] bg-[var(--rule)] mx-0.5" />
-                <button
-                  onClick={addGroup}
-                  className="p-1 hover:text-[var(--green-text)] transition-colors"
-                  title="Thêm tổ mới"
-                >
-                  <Plus size={10} />
-                </button>
-              </div>
-            )}
-          </div>
-
-          <nav className="space-y-1">
-            {groups.map((group) => (
-              <div
-                key={group.id}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative cursor-pointer ${
-                  selectedTeam === group.id
-                    ? "bg-[var(--warm-fill)] text-[var(--warm-text)] shadow-sm border border-[var(--warm-border)]"
-                    : "hover:bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-transparent"
-                }`}
-        
-                onClick={() => setSelectedTeam(group.id)}
-              >
-                <div className="flex items-center gap-3 relative z-10 w-full">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full transition-all flex-shrink-0 ${
-                      selectedTeam === group.id ? "bg-[var(--warm-400)] scale-125" : "bg-[var(--ink-4)] group-hover:bg-[var(--ink-3)]"
-                    }`}
-                  />
-                  
-                  {/* Ô NHẬP SỬA TÊN HOẶC HIỂN THỊ TÊN */}
-                  {editingGroupId === group.id ? (
-                    <div 
-                      className="flex items-center gap-2 w-full"
-                      onClick={(e) => e.stopPropagation()} // 👉 Chặn không cho click lan ra ngoài
-                    >
-                      <input
-                        autoFocus
-                        type="text"
-                        value={editGroupName}
-                        onChange={(e) => setEditGroupName(e.target.value)}
-                        onKeyDown={(e) => {
-                           if (e.key === "Enter") {
-                              editGroup(group.id, editGroupName).then((success) => success && setEditingGroupId(null));
-                           }
-                        }}
-                        className="w-full bg-white border border-[var(--rule)] rounded text-xs px-2 py-1 outline-none text-black"
-                      />
-                      <button 
-                        onClick={() => editGroup(group.id, editGroupName).then((success) => success && setEditingGroupId(null))}
-                        className="text-green-600 hover:scale-110 transition-transform"
-                      >
-                        <Check size={14} strokeWidth={3} />
-                      </button>
-                      <button 
-                        onClick={() => setEditingGroupId(null)}
-                        className="text-red-500 hover:scale-110 transition-transform"
-                      >
-                        <X size={14} strokeWidth={3} />
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="text-sm font-bold flex-1 truncate">{group.name}</span>
-                  )}
-                </div>
-
-                {/* NÚT BÚT CHÌ */}
-                {canEdit && editingGroupId !== group.id && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingGroupId(group.id);
-                      setEditGroupName(group.name);
-                    }}
-                    className="relative z-10 opacity-0 group-hover:opacity-100 p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] hover:bg-white rounded-md transition-all"
-                  >
-                    <Pencil size={12} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </nav>
+        {/* DANH SÁCH TỔ ĐÃ ĐƯỢC TÁCH COMPONENT */}
+        <div className="lg:col-span-1">
+          <GroupSidebar
+            classId={classId!}
+            groups={groups}
+            selectedTeam={selectedTeam}
+            setSelectedTeam={setSelectedTeam}
+            canEdit={canEdit}
+            addGroup={addGroup}
+            editGroup={editGroup}
+            setShowDeleteModal={setShowDeleteModal}
+            fetchGroupMembers={fetchGroupMembers}
+            fetchUngroupedMembers={fetchUngroupedMembers}
+            addMemberToGroup={addMemberToGroup}
+            removeMemberFromGroup={removeMemberFromGroup}
+          />
         </div>
 
         {/* LỊCH SỬ THAY ĐỔI */}
@@ -333,12 +256,12 @@ export const Emulation = () => {
         title="Xóa Tổ Chỉ Định"
       >
         <div className="space-y-5 p-2">
-          
           {/* Hộp cảnh báo - Dùng bộ Semantic Danger (--red-fill, --red-border, --red-text) */}
           <div className="bg-[var(--red-fill)] text-[var(--red-text)] text-sm p-4 rounded-[var(--r-md)] border border-[var(--red-border)] font-medium flex gap-3 leading-relaxed">
             <span className="flex-shrink-0 text-base">⚠️</span>
             <span>
-              Hành động này sẽ xóa toàn bộ điểm số của tổ vĩnh viễn. Hãy kiểm tra thật kỹ trước khi xác nhận!
+              Hành động này sẽ xóa toàn bộ điểm số của tổ vĩnh viễn. Hãy kiểm
+              tra thật kỹ trước khi xác nhận!
             </span>
           </div>
 
@@ -347,12 +270,12 @@ export const Emulation = () => {
             {groups.map((group) => {
               const isSelected = groupToDelete === group.id;
               return (
-                <label 
-                  key={group.id} 
+                <label
+                  key={group.id}
                   className={`flex items-center gap-3 p-3.5 rounded-[var(--r-md)] border cursor-pointer transition-all duration-200 ${
-                    isSelected 
-                    ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-[var(--shadow-sm)]" 
-                    : "border-[var(--rule)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-2)]"
+                    isSelected
+                      ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-[var(--shadow-sm)]"
+                      : "border-[var(--rule)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-2)]"
                   }`}
                 >
                   {/* Dùng accent-color cho radio button để match với màu Danger */}
@@ -363,7 +286,9 @@ export const Emulation = () => {
                     onChange={() => setGroupToDelete(group.id)}
                     className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
                   />
-                  <span className={`text-sm font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}>
+                  <span
+                    className={`text-sm font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}
+                  >
                     {group.name}
                   </span>
                 </label>
@@ -405,7 +330,6 @@ export const Emulation = () => {
           </div>
         </div>
       </Modal>
-
     </div>
   );
 };

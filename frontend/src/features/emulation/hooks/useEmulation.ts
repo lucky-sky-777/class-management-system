@@ -193,6 +193,45 @@ export const useEmulation = (classId: string) => {
     return false;
   };
 
+  // --- QUẢN LÝ THÀNH VIÊN TỔ ---
+  const fetchGroupMembers = async (groupId: number) => {
+    try {
+      return await emulationAPI.getGroupMembers(classId, groupId);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách thành viên tổ:", error);
+      return [];
+    }
+  };
+
+  const fetchUngroupedMembers = async () => {
+    try {
+      return await emulationAPI.getUngroupedMembers(classId);
+    } catch (error) {
+      console.error("Lỗi lấy học sinh chưa có tổ:", error);
+      return [];
+    }
+  };
+
+  const addMemberToGroup = async (groupId: number, userId: string) => {
+    try {
+      await emulationAPI.addGroupMember(classId, groupId, userId);
+      return true;
+    } catch (error) {
+      console.error("Lỗi thêm thành viên:", error);
+      return false;
+    }
+  };
+
+  const removeMemberFromGroup = async (groupId: number, userId: string) => {
+    try {
+      await emulationAPI.removeGroupMember(classId, groupId, userId);
+      return true;
+    } catch (error) {
+      console.error("Lỗi xóa thành viên:", error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     loadWeeks();
   }, [loadWeeks]);
@@ -218,5 +257,9 @@ export const useEmulation = (classId: string) => {
     addGroup,
     editGroup,
     removeGroup,
+    fetchGroupMembers,
+    fetchUngroupedMembers,
+    addMemberToGroup,
+    removeMemberFromGroup,
   };
 };

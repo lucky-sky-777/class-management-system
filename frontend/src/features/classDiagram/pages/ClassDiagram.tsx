@@ -1,82 +1,30 @@
 // src/features/classDiagram/pages/ClassDiagram.tsx
-import { useState, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useParams, Link} from "react-router-dom";
 import { useClassDiagram } from "@features/classDiagram/hooks/useClassDiagram";
-import type { AttendanceStatus } from "@features/classDiagram/types";
-import { classDiagramAPI } from "@features/classDiagram/api";
-import { useAuth } from "@features/auth";
-import { ClassRole } from "@shared/domain/enums";
-import { homeAPI } from "@features/home/api";
 import { Group } from "@features/classDiagram/pages/Group";
 
 export const ClassDiagram = () => {
   const { classId } = useParams();
-  const { data, refresh, shuffle } = useClassDiagram(classId!);
   const [mode, setMode] = useState<"view" | "attendance" | "setup">("view");
-  const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
-    null,
-  );
-
-  const [perspective, setPerspective] = useState<"student" | "teacher">(
-    "student",
-  );
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [perspective, setPerspective] = useState<"student" | "teacher">("student");
   const isTeacherView = perspective === "teacher";
 
-  const { user } = useAuth();
-  const [canEdit, setCanEdit] = useState(false);
-
-  useEffect(() => {
-    const checkPermission = async () => {
-      if (!classId || !user?.id) return;
-      try {
-        const res = await homeAPI.getClassMembers(Number(classId));
-        if (res.success) {
-          const currentMember = res.data.find(
-            (m) => String(m.user_id) === String(user.id),
-          );
-          if (currentMember && currentMember.role === ClassRole.CLASS_ADMIN) {
-            setCanEdit(true);
-          } else {
-            setCanEdit(false);
-          }
-        }
-      } catch (error) {
-        console.error("Lỗi kiểm tra quyền:", error);
-      }
-    };
-    checkPermission();
-  }, [classId, user?.id]);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadMembers = async () => {
-      if (mode === "setup" && classId) {
-        try {
-          const memberList = await classDiagramAPI.getMembers(classId);
-          if (isMounted) setMembers(memberList);
-        } catch (error) {
-          console.error(error);
-        }
-      } else {
-        setMembers([]);
-        setSelectedStudentId(null);
-      }
-    };
-    loadMembers();
-    return () => {
-      isMounted = false;
-    };
-  }, [mode, classId]);
+  const { 
+    data, 
+    canEdit, 
+    unseatedMembers, 
+    shuffle, 
+    assignSeat, 
+    markAttendance 
+  } = useClassDiagram(classId!, mode);
 
   // THUẬT TOÁN CHIA CỘT TỔ CHỖ NGỒI
   const currentGroups = data?.groups;
   const groupColumns = useMemo(() => {
     if (!currentGroups) return [];
-    const sortedGroups = [...currentGroups].sort(
-      (a, b) => a.groupId - b.groupId,
-    );
-
+    const sortedGroups = [...currentGroups].sort((a, b) => a.groupId - b.groupId);
     const columns: (typeof sortedGroups)[] = [];
     for (let i = 0; i < sortedGroups.length; i += 2) {
       columns.push(sortedGroups.slice(i, i + 2));
@@ -84,104 +32,54 @@ export const ClassDiagram = () => {
     return columns;
   }, [currentGroups]);
 
-  if (!data)
-    return (
-      <div className="p-10 text-center animate-pulse text-[var(--ink-3)] font-medium">
-        Đang tải dữ liệu...
-      </div>
-    );
+  if (!data) return (
+    <div className="p-10 text-center animate-pulse text-[var(--ink-3)] font-medium">
+      Đang tải dữ liệu...
+    </div>
+  );
 
-  const handleSeatClick = async (
-    groupId: number,
-    deskId: number,
-    positionId: number,
-  ) => {
+  const handleSeatClick = async (groupId: number, deskId: number, positionId: number) => {
     const targetGroup = data.groups.find((g) => g.groupId === groupId);
     const targetDesk = targetGroup?.desks.find((d) => d.deskId === deskId);
-    const targetPos = targetDesk?.positions.find(
-      (p) => p.positionId === positionId,
-    );
+    const targetPos = targetDesk?.positions.find((p) => p.positionId === positionId);
     const studentAtSeat = targetPos?.student;
 
-    // --- LOGIC ĐIỂM DANH ---
     if (mode === "attendance" && studentAtSeat?.id) {
-      // Logic vòng lặp trạng thái: Có mặt -> Vắng phép -> Vắng không phép -> Có mặt...
-      const nextStatus: Record<string, AttendanceStatus> = {
-        present: "absent_excused",
-        absent_excused: "absent_unexcused",
-        absent_unexcused: "present",
-      };
-
-      const newStatus = nextStatus[studentAtSeat.status] || "present";
-
-      try {
-        // Truyền thêm classId và groupId vào hàm
-        await classDiagramAPI.updateAttendance(
-          classId!,
-          groupId,
-          studentAtSeat.id,
-          newStatus,
-        );
-
-        // Gọi điểm danh xong thì refresh lại sơ đồ để cập nhật màu ghế
-        refresh();
-      } catch (error) {
-        console.error("Lỗi khi điểm danh:", error);
-        alert("Điểm danh thất bại, vui lòng thử lại!");
-      }
+      await markAttendance(groupId, studentAtSeat.id, studentAtSeat.status);
     }
 
-    // --- LOGIC XẾP CHỖ & ĐỔI CHỖ (SWAP) ---
     if (mode === "setup") {
-      // 1. CHƯA CÓ AI ĐƯỢC CHỌN (Nhấc lên)
       if (!selectedStudentId) {
         if (studentAtSeat) setSelectedStudentId(studentAtSeat.id);
         return;
       }
-
-      // 2. ĐÃ CÓ NGƯỜI ĐƯỢC CHỌN VÀ BẤM LẠI VÀO CHÍNH HỌ (Bỏ xuống)
       if (selectedStudentId === studentAtSeat?.id) {
         setSelectedStudentId(null);
         return;
       }
 
-      // 3. ĐÃ CÓ NGƯỜI ĐƯỢC CHỌN VÀ BẤM VÀO VỊ TRÍ KHÁC (Hoán đổi hoặc Di chuyển)
-      try {
-        let sourceGroup: number | null = null;
-        let sourceDesk: number | null = null;
-        let sourcePos: number | null = null;
+      let sourceGroup: number | null = null;
+      let sourceDesk: number | null = null;
+      let sourcePos: number | null = null;
 
-        // Tìm Tọa độ Nguồn
-        data.groups.forEach((g) =>
-          g.desks.forEach((d) =>
-            d.positions.forEach((p) => {
-              if (p.student?.id === selectedStudentId) {
-                sourceGroup = p.student.groupId;
-                sourceDesk = p.student.deskId;
-                sourcePos = p.student.positionId;
-              }
-            }),
-          ),
-        );
+      data.groups.forEach((g) =>
+        g.desks.forEach((d) =>
+          d.positions.forEach((p) => {
+            if (p.student?.id === selectedStudentId) {
+              sourceGroup = p.student.groupId;
+              sourceDesk = p.student.deskId;
+              sourcePos = p.student.positionId;
+            }
+          }),
+        ),
+      );
 
-        // Gọi API với Tọa độ Nguồn và Tọa độ Đích
-        await classDiagramAPI.assignSeat(
-          selectedStudentId,
-          groupId,
-          deskId,
-          positionId,
-          classId!,
-          sourceGroup,
-          sourceDesk,
-          sourcePos,
-        );
-        setSelectedStudentId(null);
-        refresh();
-      } catch (error : any) {
-        console.error("Lỗi khi gọi API xếp chỗ:", error);
-        const backendMessage = error.response?.data?.message || "Xếp chỗ thất bại do lỗi không xác định!";
-        alert(`❌ Lỗi Xếp Chỗ:\n${backendMessage}`);
-      }
+      const isSuccess = await assignSeat(
+        selectedStudentId, groupId, deskId, positionId,
+        sourceGroup, sourceDesk, sourcePos
+      );
+
+      if (isSuccess) setSelectedStudentId(null);
     }
   };
 
@@ -209,18 +107,10 @@ export const ClassDiagram = () => {
                   }`}
                 >
                   <span className="hidden xs:inline">
-                    {m === "view"
-                      ? "Xem"
-                      : m === "attendance"
-                        ? "Điểm danh"
-                        : "Xếp chỗ"}
+                    {m === "view" ? "Xem" : m === "attendance" ? "Điểm danh" : "Xếp chỗ"}
                   </span>
                   <span className="xs:hidden">
-                    {m === "view"
-                      ? "Xem"
-                      : m === "attendance"
-                        ? "Điểm danh"
-                        : "Xếp"}
+                    {m === "view" ? "Xem" : m === "attendance" ? "Điểm danh" : "Xếp"}
                   </span>
                 </button>
               ))}
@@ -231,11 +121,7 @@ export const ClassDiagram = () => {
             <Badge theme="neutral" label="Sĩ số" val={data.totalStudents} />
             <Badge theme="success" label="Có mặt" val={data.presentCount} />
             <Badge theme="warning" label="Vắng phép" val={data.excusedCount} />
-            <Badge
-              theme="danger"
-              label="Không phép"
-              val={data.unexcusedCount}
-            />
+            <Badge theme="danger" label="Không phép" val={data.unexcusedCount} />
           </div>
         </div>
       </div>
@@ -245,20 +131,35 @@ export const ClassDiagram = () => {
         <div className="w-full md:w-2/3" onClick={(e) => e.stopPropagation()}>
           {mode === "setup" && (
             <div className="bg-[var(--warm-fill)] p-3 rounded-xl border border-[var(--warm-border)] animate-in fade-in zoom-in-95 duration-300 flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] md:text-xs font-bold text-[var(--warm-600)] uppercase tracking-wider">
-                  Danh sách xếp chỗ
-                </span>
+              {/* Header: Tiêu đề & Nút Xếp tự động */}
+              <div className="flex justify-between items-start sm:items-center gap-2 mb-3">
+                
+                {/* Cụm Tiêu đề + Ghi chú nằm chung 1 dòng */}
+                <div className="flex-1 leading-snug">
+                  <span className="text-[10px] md:text-xs font-bold text-[var(--warm-600)] uppercase tracking-wider">
+                    Danh sách xếp chỗ
+                  </span>
+                  <span className="text-[9px] md:text-[10px] text-[var(--ink-3)] font-medium ml-1.5 normal-case tracking-normal inline-block">
+                    (Cần phân tổ trước khi xếp chỗ.{" "}
+                    <Link 
+                      to={`/class/${classId}/emulation`} 
+                      className="font-bold text-[var(--warm-600)] underline hover:text-[var(--warm-800)] transition-colors"
+                    >
+                      Tại đây!
+                    </Link>)
+                  </span>
+                </div>
+
                 <button
                   onClick={() => shuffle()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[var(--warm-border)] text-[var(--warm-600)] rounded-lg text-[10px] md:text-xs font-bold shadow-sm hover:bg-[var(--bg-surface-2)] transition-all"
+                  className="flex items-center shrink-0 gap-1.5 px-3 py-1.5 bg-white border border-[var(--warm-border)] text-[var(--warm-600)] rounded-lg text-[10px] md:text-xs font-bold shadow-[var(--shadow-sm)] hover:bg-[var(--bg-surface-2)] transition-all"
                 >
                   🎲 Xếp tự động
                 </button>
               </div>
 
               <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto pr-2 custom-scrollbar">
-                {members.map((m) => {
+                {unseatedMembers.map((m) => {
                   let isAssigned = false;
                   data.groups.forEach((g) =>
                     g.desks.forEach((d) =>
@@ -289,14 +190,9 @@ export const ClassDiagram = () => {
           )}
         </div>
 
-        <div
-          className="flex justify-end w-full md:w-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="flex justify-end w-full md:w-auto" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={() =>
-              setPerspective(isTeacherView ? "student" : "teacher")
-            }
+            onClick={() => setPerspective(isTeacherView ? "student" : "teacher")}
             className="group flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[11px] md:text-xs font-bold bg-[var(--bg-surface)] text-[var(--warm-600)] border-2 border-[var(--warm-border)] hover:bg-[var(--warm-fill)] transition-all shadow-[var(--shadow-sm)] w-full sm:w-auto"
           >
             <span className="text-sm">{isTeacherView ? "👨‍🏫" : "🎓"}</span>
@@ -305,60 +201,52 @@ export const ClassDiagram = () => {
         </div>
       </div>
 
-      {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
+{/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
       <div
         className="w-full bg-[var(--bg-surface-2)] rounded-3xl border border-[var(--rule-lg)] shadow-inner overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* THANH CUỘN NGANG TỰ DO */}
         <div className="w-full overflow-x-auto custom-scrollbar p-6 md:p-12">
-          {/* LƯU Ý CỰC QUAN TRỌNG: 
-       - Dùng `min-w-max` để các tổ không bao giờ bị co lại.
-       - Dùng `mx-auto` để nếu ít tổ thì nó vẫn nằm giữa đẹp đẽ.
-    */}
-          <div
-            className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-12 transition-all duration-500 min-w-max mx-auto`}
-          >
-            {/* BẢNG ĐEN & BÀN GIÁO VIÊN */}
-            <div
-              className={`flex items-end justify-between w-full px-10 mb-8 ${
-                isTeacherView ? "flex-row-reverse" : "flex-row"
-              }`}
-            >
-              <div className="w-64">
-                <div className="bg-yellow-400 px-8 py-4 rounded-2xl font-black text-slate-800 shadow-lg border-b-4 border-yellow-600 text-xs uppercase tracking-wider text-center">
-                  Bàn Giáo Viên
-                </div>
+          {/* Main Layout wrapper: Xoay trên/dưới theo góc nhìn */}
+          <div className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-10 md:gap-16 transition-all duration-500 min-w-max mx-auto`}>
+            
+            {/* Dùng flex-row để xếp ngang, flex-row-reverse để đổi bên khi nhìn từ bục giảng */}
+            <div className={`flex w-full items-center justify-center gap-8 md:gap-16 flex-row`}>
+              
+              {/* BÀN GIÁO VIÊN — Nằm bên TRÁI */}
+              <div className="bg-[var(--bg-surface)] px-8 md:px-12 py-3.5 md:py-4 rounded-xl shadow-[var(--shadow-md)] border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
+                 <div className="absolute top-1 w-1/3 h-1 bg-[var(--rule)] rounded-full"></div>
+                 <span className="text-[11px] md:text-xs font-black text-[var(--warm-600)] uppercase tracking-[0.15em] mt-1">
+                    Bàn Giáo Viên
+                 </span>
               </div>
-              <div className="flex-1 flex justify-center">
-                <div className="w-full max-w-md h-4 bg-slate-800 rounded-full shadow-2xl border border-slate-600 relative flex items-center justify-center">
-                  <span
-                    className={`absolute -top-8 text-[11px] text-slate-500 font-black uppercase tracking-[0.8em] ${isTeacherView ? "rotate-180" : ""}`}
-                  >
-                    BẢNG ĐEN
-                  </span>
-                </div>
+
+              {/* BẢNG ĐEN — Mỏng lại, dài ra, chữ nằm ngoài */}
+              <div className="flex flex-col items-center gap-2 shrink-0">
+                 {/* Chữ được bế ra ngoài, làm màu xám nhẹ cho tinh tế */}
+                 <span className="text-[10px] md:text-[11px] font-black text-[var(--ink-3)] uppercase tracking-[0.4em]">
+                   Bảng Đen
+                 </span>
+                 
+                 {/* Khối bảng: Bóp chiều cao (h-4), kéo chiều dài (w-72/w-96) */}
+                 <div className="w-72 md:w-96 h-4 md:h-5 bg-[#1a1c23] rounded-md shadow-[0_5px_15px_rgba(0,0,0,0.12)] border-x-2 border-t-2 border-b-[4px] border-[#4a3f35] relative">
+                    {/* Đường Highlight mỏng giả khay phấn */}
+                    <div className="absolute bottom-0 w-full h-[1.5px] bg-white/20"></div>
+                 </div>
               </div>
-              <div className="w-64"></div> {/* Giữ cân bằng layout */}
+              
             </div>
 
-            {/* LƯỚI CHỖ NGỒI - NƠI CHỨA 6-8 TỔ */}
+            {/* LƯỚI CHỖ NGỒI (Đã chia cột đối xứng) */}
             <div
-              style={{
-                transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-              className={`flex flex-nowrap justify-center gap-12 md:gap-24 pb-10 ${
-                mode !== "view" ? "cursor-crosshair" : ""
-              } ${isTeacherView ? "rotate-180" : "rotate-0"}`}
+              style={{ transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }}
+              className={`flex flex-nowrap justify-center gap-10 md:gap-12 pb-10 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
             >
               {groupColumns.map((colGroups, colIndex) => (
-                <div
-                  key={`col-${colIndex}`}
-                  className="flex flex-col gap-12 md:gap-20 relative"
-                >
-                  {/* Đường kẻ phân cách giữa các dãy bàn (Cột) */}
-                  {colIndex < groupColumns.length - 1 && (
-                    <div className="absolute -right-6 md:-right-12 top-0 bottom-0 w-px border-r-2 border-dashed border-[var(--rule-md)] opacity-30" />
+                <div key={`col-${colIndex}`} className="flex flex-col gap-10 md:gap-12 relative w-fit">
+                  {/* Đường kẻ đứt nét chia luồng đi ở giữa */}
+                  {colIndex === 0 && (
+                    <div className="absolute -right-5 md:-right-6 top-0 bottom-0 w-px border-r-2 border-dashed border-[var(--rule-md)] opacity-40" />
                   )}
 
                   {colGroups.map((groupData) => (
@@ -373,37 +261,25 @@ export const ClassDiagram = () => {
                 </div>
               ))}
             </div>
+
           </div>
         </div>
       </div>
+
     </div>
   );
 };
 
-const Badge = ({
-  theme,
-  label,
-  val,
-}: {
-  theme: "neutral" | "success" | "warning" | "danger";
-  label: string;
-  val: number;
-}) => {
+const Badge = ({ theme, label, val }: { theme: "neutral" | "success" | "warning" | "danger"; label: string; val: number; }) => {
   const themeClasses = {
-    neutral:
-      "bg-[var(--bg-surface-3)] text-[var(--ink-2)] border-[var(--rule-md)]",
-    success:
-      "bg-[var(--green-fill)] text-[var(--green-text)] border-[var(--green-border)]",
-    warning:
-      "bg-[var(--amber-fill)] text-[var(--amber-text)] border-[var(--amber-border)]",
-    danger:
-      "bg-[var(--red-fill)] text-[var(--red-text)] border-[var(--red-border)]",
+    neutral: "bg-[var(--bg-surface-3)] text-[var(--ink-2)] border-[var(--rule-md)]",
+    success: "bg-[var(--green-fill)] text-[var(--green-text)] border-[var(--green-border)]",
+    warning: "bg-[var(--amber-fill)] text-[var(--amber-text)] border-[var(--amber-border)]",
+    danger: "bg-[var(--red-fill)] text-[var(--red-text)] border-[var(--red-border)]",
   };
 
   return (
-    <div
-      className={`px-2 py-1.5 rounded-lg text-[10px] md:text-[11px] font-bold shadow-sm border flex items-center gap-1.5 whitespace-nowrap ${themeClasses[theme]}`}
-    >
+    <div className={`px-2 py-1.5 rounded-lg text-[10px] md:text-[11px] font-bold shadow-sm border flex items-center gap-1.5 whitespace-nowrap ${themeClasses[theme]}`}>
       <span className="opacity-70">{label}:</span>
       <span className="font-black text-[var(--ink-1)]">{val}</span>
     </div>

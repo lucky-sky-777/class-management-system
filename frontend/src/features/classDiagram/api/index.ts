@@ -33,7 +33,6 @@ export const classDiagramAPI = {
           const groupDataBE = groupObj[groupIdStr];
           const groupId = parseInt(groupIdStr);
 
-          // 👉 2. TÌM TÊN TỔ TỪ API THỨ 2
           const matchedGroup = groupsListBE.find((g: any) => g.id === groupId);
           const groupName = matchedGroup ? matchedGroup.name : `Tổ ${groupId}`;
 
@@ -148,7 +147,6 @@ export const classDiagramAPI = {
     sourceDeskId: number | null,
     sourcePositionId: number | null,
   ) => {
-    // Payload giữ nguyên cấu trúc cũ
     const payload = {
       user_id: parseInt(studentId),
       source_group_id: sourceGroupId,
@@ -171,10 +169,42 @@ export const classDiagramAPI = {
     }
   },
 
-  // Thêm vào file api.ts
+  // CHUYỂN CHỖ / ĐỔI CHỖ cho học sinh ĐÃ CÓ GHẾ
+  updateSeat: async (
+    studentId: string,
+    targetGroupId: number,
+    targetDeskId: number,
+    targetPositionId: number,
+    classId: string,
+    sourceGroupId: number,
+    sourceDeskId: number,
+    sourcePositionId: number,
+  ) => {
+    const payload = {
+      user_id: parseInt(studentId),
+      source_group_id: sourceGroupId,
+      source_desk: sourceDeskId,
+      source_desk_position: sourcePositionId,
+      target_group_id: targetGroupId,
+      target_desk: targetDeskId,
+      target_desk_position: targetPositionId,
+    };
+
+    try {
+      const response: any = await apiClient.patch(
+        `/seats/classes/${classId}`,
+        payload,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi đổi chỗ:", error);
+      throw error;
+    }
+  },
+
+  // Random chỗ ngồi
   shuffleSeats: async (classId: string) => {
     try {
-      // Nhớ dùng apiClient.get nhé! Dùng post là nó báo lỗi 405 Method Not Allowed đó
       const response: any = await apiClient.get(
         `/seats/classes/${classId}/shuffle`,
       );
@@ -193,7 +223,7 @@ export const classDiagramAPI = {
         `/classes/${classId}/members/unseated`,
       );
 
-      // Bóc tách dữ liệu (tùy thuộc backend bọc data ở lớp nào)
+      // Bóc tách dữ liệu 
       const responseData = response.data?.data || response.data;
 
       // Nếu có dữ liệu trả về và là một mảng
