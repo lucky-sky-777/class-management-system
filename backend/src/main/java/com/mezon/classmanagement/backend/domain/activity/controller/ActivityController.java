@@ -34,7 +34,7 @@ public class ActivityController {
 			@PathVariable Long classId,
 			@RequestBody CreateAndUpdateActivityRequestDto request
 	) {
-		ActivityResponseDto response = activityService.createActivity(classId, request);
+		ActivityResponseDto response = activityService.create(classId, request);
 
 		return ResponseDTO.<ActivityResponseDto>builder()
 				.success(true)
@@ -50,7 +50,7 @@ public class ActivityController {
 			@PathVariable Long activityId,
 			@RequestBody CreateAndUpdateActivityRequestDto request
 	) {
-		ActivityResponseDto response = activityService.updateActivity(classId, activityId, request);
+		ActivityResponseDto response = activityService.update(classId, activityId, request);
 
 		return ResponseDTO.<ActivityResponseDto>builder()
 				.success(true)
@@ -65,7 +65,7 @@ public class ActivityController {
 			@PathVariable Long classId,
 			@PathVariable Long activityId
 	) {
-		ActivityIdResponseDto response = activityService.deleteActivity(classId, activityId);
+		ActivityIdResponseDto response = activityService.delete(classId, activityId);
 
 		return ResponseDTO.<ActivityIdResponseDto>builder()
 				.success(true)
@@ -76,14 +76,14 @@ public class ActivityController {
 
 	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
 	@GetMapping
-	public ResponseDTO<List<ActivityResponseDto>> getActivities(
+	public ResponseDTO<List<ActivityResponseDto>> getByClass(
 			@PathVariable Long classId
 	) {
-		List<ActivityResponseDto> response = activityService.getActivities(classId);
+		List<ActivityResponseDto> response = activityService.getByClass(classId);
 
 		return ResponseDTO.<List<ActivityResponseDto>>builder()
 				.success(true)
-				.message("Get activities successful")
+				.message("Get activities by class successful")
 				.data(response)
 				.build();
 	}
