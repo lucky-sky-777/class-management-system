@@ -54,7 +54,7 @@ public class BankController {
 	}
 
 	@Deprecated
-	@GetMapping(value = "/qrcode-image2", produces = MediaType.IMAGE_PNG_VALUE)
+	@GetMapping(value = "/qrcode-image", produces = MediaType.IMAGE_PNG_VALUE)
 	public ResponseEntity<byte[]> getQrCodeImage(
 			@RequestParam(required = true) String bankCode,
 			@RequestParam(required = true) String accountNumber,
@@ -86,7 +86,7 @@ public class BankController {
 				.body(response.getBody());
 	}
 
-	@GetMapping(value = "/qrcode-image", produces = MediaType.IMAGE_PNG_VALUE)
+	@GetMapping(value = "/qrcode-image2", produces = MediaType.IMAGE_PNG_VALUE)
 	public ResponseEntity<byte[]> getQrCodeImage(
 			@RequestBody GetQrCodeRequestDto request
 	) {

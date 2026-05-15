@@ -24,48 +24,49 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
 
-@Entity
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@Setter
-@Getter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "activity_registrations")
+//@Entity
+//@FieldDefaults(level = AccessLevel.PRIVATE)
+//@Setter
+//@Getter
+//@Builder
+//@NoArgsConstructor
+//@AllArgsConstructor
+//@Table(name = "activity_registrations")
+@Deprecated
 public class ActivityRegistration {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	Long id;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "activity_id", nullable = false)
-	Activity activity;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "registered_user_id", nullable = false)
-	User registered;
-
-	@Column(name = "proof_image_url", nullable = true)
-	String proofImageUrl;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "status", nullable = false)
-	Status status;
-
-	@Column(name = "registered_at", nullable = false, insertable = false, updatable = false)
-	Instant registeredAt;
-
-	public enum Status {
-		APPROVED,
-		REJECTED,
-		PENDING
-	}
-
-	@PrePersist
-	public void prePersist() {
-		if (status == null) {
-			status = Status.PENDING;
-		}
-	}
+//	@Id
+//	@GeneratedValue(strategy = GenerationType.IDENTITY)
+//	@Column(name = "id")
+//	Long id;
+//
+//	@ManyToOne(fetch = FetchType.LAZY)
+//	@JoinColumn(name = "activity_id", nullable = false)
+//	Activity activity;
+//
+//	@ManyToOne(fetch = FetchType.LAZY)
+//	@JoinColumn(name = "registered_user_id", nullable = false)
+//	User registered;
+//
+//	@Column(name = "proof_image_url", nullable = true)
+//	String proofImageUrl;
+//
+//	@Enumerated(EnumType.STRING)
+//	@Column(name = "status", nullable = false)
+//	Status status;
+//
+//	@Column(name = "registered_at", nullable = false, insertable = false, updatable = false)
+//	Instant registeredAt;
+//
+//	public enum Status {
+//		APPROVED,
+//		REJECTED,
+//		PENDING
+//	}
+//
+//	@PrePersist
+//	public void prePersist() {
+//		if (status == null) {
+//			status = Status.PENDING;
+//		}
+//	}
 }
