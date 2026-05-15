@@ -17,7 +17,9 @@
  */
 
 /* ─── FONT IMPORT ──────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+/* ─── FONT IMPORT ──────────────────────────────────────────── */
+/* Đã tối ưu: Đưa tất cả về font Sans-Serif và Monospace hỗ trợ tiếng Việt tốt nhất, không có gạch chân */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -25,11 +27,9 @@
 
 /* ─── CSS VARIABLES — Light Mode ───────────────────────────── */
 :root {
-  /* Fonts */
-  --font-serif: 'Lora', Georgia, serif;
-  --font-sans:  'Plus Jakarta Sans', 'Helvetica Neue', sans-serif;
-  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
-
+  --font-serif: 'Be Vietnam Pro', sans-serif;
+  --font-sans:  'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
   /* Paper / Background — slate tones, học thuật sáng sủa */
   --bg-paper:     #F8FAFC; /* slate-50 */
   --bg-surface:   #FFFFFF;
