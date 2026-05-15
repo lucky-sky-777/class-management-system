@@ -4,11 +4,13 @@ import { useAuthInternal } from '@features/auth/hooks/useAuthInternal';
 import { User, Lock } from 'lucide-react';
 import { GoogleIcon, MezonIcon } from '@shared/components/icons';
 import { BASE_URL } from '@services/api-client';
+import { useFetchCurrentUser } from '@features/auth/hooks/useFetchCurrentUser';
 
 export const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const { login, isLoading, error } = useAuthInternal();
+    const { refetch } = useFetchCurrentUser(); 
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -17,6 +19,7 @@ export const LoginPage = () => {
         
         const success = await login({ username, password });
         if (success) {
+            await refetch(); // Lấy thông tin user hiện tại sau khi đăng nhập thành công
             navigate('/');
         }
     };

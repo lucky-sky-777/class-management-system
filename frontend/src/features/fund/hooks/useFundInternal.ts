@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ID } from "@shared/utils/common";
 import { fundAPI } from "../api";
-import type { FundCampaign, FundOverview, FundStatus } from "../types";
+import type { FundResponseDto, FundSummaryResponseDto, CreateFundRequestDto } from "../types";
 
 export const useFundInternal = (classId: ID) => {
-    const [overview, setOverview] = useState<FundOverview | null>(null);
-    const [campaigns, setCampaigns] = useState<FundCampaign[]>([]);
+    const [summary, setSummary] = useState<FundSummaryResponseDto | null>(null);
+    const [funds, setFunds] = useState<FundResponseDto[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -14,67 +14,59 @@ export const useFundInternal = (classId: ID) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fundAPI.getFundOverview(classId);
-            if (response.success) {
-                setOverview(response.data.overview);
-                setCampaigns(response.data.campaigns);
+            const [summaryRes, fundsRes] = await Promise.all([
+                fundAPI.getFundSummary(classId),
+                fundAPI.getFunds(classId)
+            ]);
+
+            if (summaryRes.success && fundsRes.success) {
+                setSummary(summaryRes.data);
+                setFunds(fundsRes.data);
             } else {
-                setError(response.message);
+                setError(summaryRes.message || fundsRes.message || "Lỗi khi lấy dữ liệu quỹ lớp");
             }
         } catch (err) {
-            setError("Lỗi khi tải dữ liệu quỹ");
+            setError("Lỗi kết nối khi tải dữ liệu quỹ lớp");
         } finally {
             setIsLoading(false);
         }
     }, [classId]);
 
-    const createCampaign = async (data: Omit<FundCampaign, "id" | "classId" | "createdAt">) => {
+    const createFund = async (data: CreateFundRequestDto) => {
+        setIsLoading(true);
         try {
-            const response = await fundAPI.createCampaign(classId, data);
+            const response = await fundAPI.createFund(classId, data);
             if (response.success) {
-                setCampaigns(prev => [...prev, response.data]);
+                await fetchData(); // Refresh to get updated list and summary
                 return true;
+            } else {
+                setError(response.message);
+                return false;
             }
-            return false;
         } catch (err) {
-            setError("Lỗi khi tạo khoản thu");
+            setError("Lỗi kết nối khi tạo giao dịch");
             return false;
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const submitProof = async (transactionId: ID, proofUrl: string) => {
+    const deleteFund = async (fundId: ID) => {
+        setIsLoading(true);
         try {
-            const response = await fundAPI.submitProof(transactionId, proofUrl);
-            return response.success;
-        } catch (err) {
-            setError("Lỗi khi gửi minh chứng");
-            return false;
-        }
-    };
-
-    const verifyTransaction = async (transactionId: ID, status: FundStatus) => {
-        try {
-            const response = await fundAPI.verifyTransaction(transactionId, status);
-            if (response.success && status === "APPROVED") {
-                fetchData(); // Refresh overview balance
-            }
-            return response.success;
-        } catch (err) {
-            setError("Lỗi khi duyệt giao dịch");
-            return false;
-        }
-    };
-
-    const handleQRSuccess = async (campaignId: ID, userId: ID, userName: string, amount: number) => {
-        try {
-            const response = await fundAPI.mockWebhookQRSuccess(campaignId, userId, userName, amount);
+            const response = await fundAPI.deleteFund(classId, fundId);
             if (response.success) {
-                fetchData();
+                await fetchData(); // Refresh list and summary
+                return true;
+            } else {
+                setError(response.message);
+                return false;
             }
-            return response.success;
         } catch (err) {
-            setError("Lỗi khi xử lý thanh toán QR");
+            setError("Lỗi kết nối khi xóa giao dịch");
             return false;
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -83,14 +75,12 @@ export const useFundInternal = (classId: ID) => {
     }, [fetchData]);
 
     return {
-        overview,
-        campaigns,
+        summary,
+        funds,
         isLoading,
         error,
         refresh: fetchData,
-        createCampaign,
-        submitProof,
-        verifyTransaction,
-        handleQRSuccess
+        createFund,
+        deleteFund
     };
 };
