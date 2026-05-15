@@ -36,10 +36,21 @@ public class BankService {
 		return response.getData();
 	}
 
-	public BankQrCodeUrlResponseDto getQrCodeUrl(GetQrCodeRequestDto request) {
+	public BankQrCodeUrlResponseDto getQrCodeUrl(String imageTypeName, GetQrCodeRequestDto request) {
+		if (!BankQrCodeUrlGenerator.isValidImageType(imageTypeName)) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid image type");
+		}
+		if (request.getBankCode() == null) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Bank code cannot be null");
+		}
+		if (request.getAccountNumber() == null) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Account number cannot be null");
+		}
+
 		return BankQrCodeUrlResponseDto.builder()
 				.qrCodeUrl(
 						BankQrCodeUrlGenerator.generate(
+								BankQrCodeUrlGenerator.imageTypeMap.get(BankQrCodeUrlGenerator.normalizeImageTypeName(imageTypeName)),
 								request.getBankCode(),
 								request.getAccountNumber(),
 								request.getAccountName(),

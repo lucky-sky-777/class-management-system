@@ -24,6 +24,7 @@ import java.time.Instant;
 		"group_name",
 		"user_id",
 		"user_display_name",
+		"user_avatar_url",
 		"role",
 		"desk",
 		"desk_position",
@@ -57,6 +58,9 @@ public final class GroupUserResponseDto {
 
 	@JsonProperty(value = "user_display_name")
 	String userDisplayName;
+
+	@JsonProperty(value = "user_avatar_url")
+	String userAvatarUrl;
 
 	@JsonProperty(value = "role")
 	GroupUser.Role role;

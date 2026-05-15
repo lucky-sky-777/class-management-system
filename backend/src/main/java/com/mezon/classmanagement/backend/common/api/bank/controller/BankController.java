@@ -12,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,7 +45,7 @@ public class BankController {
 	public ResponseDTO<BankQrCodeUrlResponseDto> getQrCodeUrl(
 			@RequestBody GetQrCodeRequestDto request
 	) {
-		BankQrCodeUrlResponseDto response = bankService.getQrCodeUrl(request);
+		BankQrCodeUrlResponseDto response = bankService.getQrCodeUrl("full-info", request);
 
 		return ResponseDTO.<BankQrCodeUrlResponseDto>builder()
 				.success(true)
@@ -53,9 +54,9 @@ public class BankController {
 				.build();
 	}
 
-	@Deprecated
-	@GetMapping(value = "/qrcode-image", produces = MediaType.IMAGE_PNG_VALUE)
+	@GetMapping(value = "/qrcode-image/{imageTypeName}", produces = MediaType.IMAGE_PNG_VALUE)
 	public ResponseEntity<byte[]> getQrCodeImage(
+			@PathVariable String imageTypeName,
 			@RequestParam(required = true) String bankCode,
 			@RequestParam(required = true) String accountNumber,
 			@RequestParam(required = false) String accountName,
@@ -70,7 +71,7 @@ public class BankController {
 				.notes(notes)
 				.build();
 
-		BankQrCodeUrlResponseDto bankQrCodeUrlResponseDto = bankService.getQrCodeUrl(request);
+		BankQrCodeUrlResponseDto bankQrCodeUrlResponseDto = bankService.getQrCodeUrl(imageTypeName, request);
 
 		String url = bankQrCodeUrlResponseDto.getQrCodeUrl();
 
@@ -90,7 +91,7 @@ public class BankController {
 	public ResponseEntity<byte[]> getQrCodeImage(
 			@RequestBody GetQrCodeRequestDto request
 	) {
-		BankQrCodeUrlResponseDto bankQrCodeUrlResponseDto = bankService.getQrCodeUrl(request);
+		BankQrCodeUrlResponseDto bankQrCodeUrlResponseDto = bankService.getQrCodeUrl("full-info", request);
 
 		String url = bankQrCodeUrlResponseDto.getQrCodeUrl();
 

@@ -84,7 +84,7 @@ public class GroupUserController {
 			@PathVariable Long classId,
 			@PathVariable Long groupId
 	) {
-		List<GroupUserResponseDto> response = groupUserService.getGroupUsers(classId, groupId);
+		List<GroupUserResponseDto> response = groupUserService.getByClassAndGroup(classId, groupId);
 
 		return ResponseDTO.<List<GroupUserResponseDto>>builder()
 				.success(true)

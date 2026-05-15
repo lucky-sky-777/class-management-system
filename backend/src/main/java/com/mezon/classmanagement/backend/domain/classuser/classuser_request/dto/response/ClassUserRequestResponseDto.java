@@ -1,9 +1,11 @@
 package com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
+import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.entity.ClassUserRequest;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,8 @@ import java.time.Instant;
 		"class_id",
 		"user_id",
 		"status",
+		"actor_user_id",
+		"acted_at",
 		"created_at"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
@@ -53,10 +57,14 @@ public final class ClassUserRequestResponseDto {
 	@JsonProperty(value = "status")
 	ClassUserRequest.Status status;
 
-	//Long actorUserId;
+	@JsonProperty(value = "actor_user_id")
+	Long actorUserId;
 
-	//Instant actedAt;
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
+	@JsonProperty(value = "acted_at")
+	Instant actedAt;
 
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")
 	Instant createdAt;
 

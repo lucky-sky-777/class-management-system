@@ -27,6 +27,8 @@ public interface ClassUserRequestRepository extends JpaRepository<ClassUserReque
 		user.avatarUrl,
 		classUserRequest.message,
 		classUserRequest.status,
+		user.id,
+		classUserRequest.actedAt,
 		classUserRequest.createdAt
 	)
 	from ClassUserRequest classUserRequest

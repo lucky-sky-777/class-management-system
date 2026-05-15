@@ -86,12 +86,8 @@ public class GroupUserService {
 
 	@RequireClassPermission
 	@Transactional(readOnly = true)
-	public List<GroupUserResponseDto> getGroupUsers(Long classId, Long groupId) {
-		groupService.throwIfNotExistsByClassIdAndGroupId(classId, groupId);
-
-		return findByClassIdAndGroupId(classId, groupId).stream()
-				.map(groupUserMapper::toGroupUserResponseDto)
-				.toList();
+	public List<GroupUserResponseDto> getByClassAndGroup(Long classId, Long groupId) {
+		return getByClassIdAndGroupId(classId, groupId);
 	}
 
 	/**
@@ -127,6 +123,12 @@ public class GroupUserService {
 	public List<GroupUserResponseDto> getByClassId(Long classId) {
 		return groupUserRepository
 				.getByClazz_IdOrderByGroup_IdAscDeskAscDeskPositionAsc(classId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GroupUserResponseDto> getByClassIdAndGroupId(Long classId, Long groupId) {
+		return groupUserRepository
+				.getByClazz_IdAndGroup_IdOrderByGroup_IdAscUser_DisplayNameAsc(classId, groupId);
 	}
 
 	@Transactional(readOnly = true)
