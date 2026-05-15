@@ -66,6 +66,8 @@ public class SeatService {
 
 		groupUserService.save(groupUser);
 
+		System.out.println("create");
+
 		return get(classId);
 	}
 
@@ -98,6 +100,7 @@ public class SeatService {
 							request.getTargetDeskPosition()
 					);
 			swap(sourceGroupUser, targetGroupUser);
+			System.out.println("swap");
 
 			//groupUserService.save(sourceGroupUser);
 			//groupUserService.save(targetGroupUser);
@@ -109,6 +112,7 @@ public class SeatService {
 					request.getTargetDesk(),
 					request.getTargetDeskPosition()
 			);
+			System.out.println("set");
 
 			groupUserService.save(sourceGroupUser);
 		}

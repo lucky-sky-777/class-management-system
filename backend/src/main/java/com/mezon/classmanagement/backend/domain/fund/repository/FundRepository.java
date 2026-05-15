@@ -34,15 +34,9 @@ public interface FundRepository extends JpaRepository<Fund, Long> {
 	@Query("""
 	SELECT new com.mezon.classmanagement.backend.domain.fund.dto.FundSummaryResponseDto(
 		CAST(
-			COALESCE(SUM(
-				CASE
-					WHEN fund.type = com.mezon.classmanagement.backend.domain.fund.entity.Fund.Type.INCOME
-					THEN fund.amount
-					ELSE -fund.amount
-				END
-			), 0)
-			AS long
-		),
+  			COALESCE(SUM(fund.amount), 0)
+  			AS long
+  		),
 
 		CAST(
 			COALESCE(SUM(
