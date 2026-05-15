@@ -1,39 +1,52 @@
 import type { ID, Timestamp } from "@shared/utils/common";
 
-export type FundStatus = "PENDING" | "APPROVED" | "REJECTED";
-
-export interface BankAccount {
-    bankName: string;
-    accountNumber: string;
-    accountHolder: string;
-}
-
-export interface FundCampaign {
+export interface FundResponseDto {
     id: ID;
-    classId: ID;
+    class_id: ID;
+    type: "INCOME" | "EXPENSE";
+    amount: number;
     title: string;
     description: string;
-    amount: number; // Số tiền mỗi người cần đóng
-    totalTarget?: number; // Tổng mục tiêu (nếu có)
-    bankAccount: BankAccount;
-    createdAt: Timestamp;
-    status: "OPEN" | "CLOSED";
+    created_at: Timestamp;
+    creator_user_id: ID;
 }
 
-export interface FundTransaction {
-    id: ID;
-    campaignId: ID;
-    userId: ID;
-    userName: string;
-    amount: number;
-    status: FundStatus;
-    proofUrl?: string;
-    paidAt?: Timestamp;
-    createdAt: Timestamp;
-}
-
-export interface FundOverview {
+export interface FundSummaryResponseDto {
     balance: number;
-    totalCollected: number;
-    totalSpent: number;
+    total_income: number;
+    total_expense: number;
+}
+
+export interface CreateFundRequestDto {
+    type: "INCOME" | "EXPENSE";
+    amount: number;
+    title: string;
+    description: string;
+}
+
+export interface VietQrBankResponseDto {
+    id: ID;
+    name: string;
+    code: string;
+    bin: string;
+    shortName: string;
+    logo: string;
+    transferSupported: number;
+    lookupSupported: number;
+    short_name: string;
+    support: number;
+    isTransfer: number;
+    swift_code: string;
+}
+
+export interface GetQrCodeRequestDto {
+    bank_code: string;
+    account_number: string;
+    account_name: string;
+    amount: number;
+    notes: string;
+}
+
+export interface BankQrCodeUrlResponseDto {
+    qr_code_url: string;
 }

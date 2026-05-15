@@ -53,9 +53,8 @@ public class SeatService {
 				request.getTargetDeskPosition()
 		);
 
-		GroupUser groupUser = groupUserService.findByClassIdAndGroupIdAndUserIdOrThrow(
+		GroupUser groupUser = groupUserService.findByClassIdAndUserIdOrThrow(
 				classId,
-				request.getTargetGroupId(),
 				request.getUserId()
 		);
 

@@ -41,16 +41,16 @@ export const useAuthInternal = () => {
           storage.set(AUTH_STORAGE_KEY.TOKEN, token.access_token);
           storage.set(AUTH_STORAGE_KEY.REFRESH, token.refresh_token);
 
-          // tạo đối tượng user từ payload của access token lưu vào Zustand store
-          const userData: User = {
-            id: Number(accessToken.sub) || 0,
-            username: data.username,
-            type: "INTERNAL",
-            avatarUrl: "",
-            token: token.access_token, // them dong nay de bat token
-          };
+          // useFetchCurrentUser(); // Tự động fetch user hiện tại sau khi có token mới
+          // const userData: User = {
+          //   id: Number(accessToken.sub) || 0,
+          //   username: data.username,
+          //   type: "INTERNAL",
+          //   avatarUrl: "",
+          //   token: token.access_token, // them dong nay de bat token
+          // };
 
-          setUser(userData); // Zustand sẽ tự lưu vào localStorage 'auth-storage'
+          // setUser(userData); // Zustand sẽ tự lưu vào localStorage 'auth-storage'
           return true;
         } else {
           setError(response.message);

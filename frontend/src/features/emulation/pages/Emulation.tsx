@@ -136,7 +136,6 @@ export const Emulation = () => {
             </label>
             {canEdit && (
               <div className="flex gap-1 bg-[var(--bg-surface-2)] p-1 rounded-lg border border-[var(--rule)]">
-                {/* 👉 NÚT TRỪ BẬT MODAL XÓA */}
                 <button
                   onClick={() => setShowDeleteModal(true)}
                   className="p-1 hover:text-[var(--red-text)] transition-colors"
@@ -160,18 +159,14 @@ export const Emulation = () => {
             {groups.map((group) => (
               <div
                 key={group.id}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group relative cursor-pointer ${
                   selectedTeam === group.id
                     ? "bg-[var(--warm-fill)] text-[var(--warm-text)] shadow-sm border border-[var(--warm-border)]"
                     : "hover:bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-transparent"
                 }`}
+        
+                onClick={() => setSelectedTeam(group.id)}
               >
-                {/* LỚP PHỦ ĐỂ CLICK CHỌN TỔ (Nằm dưới nút sửa) */}
-                <div 
-                  className="absolute inset-0 cursor-pointer" 
-                  onClick={() => setSelectedTeam(group.id)} 
-                />
-
                 <div className="flex items-center gap-3 relative z-10 w-full">
                   <span
                     className={`w-1.5 h-1.5 rounded-full transition-all flex-shrink-0 ${
@@ -181,7 +176,10 @@ export const Emulation = () => {
                   
                   {/* Ô NHẬP SỬA TÊN HOẶC HIỂN THỊ TÊN */}
                   {editingGroupId === group.id ? (
-                    <div className="flex items-center gap-2 w-full">
+                    <div 
+                      className="flex items-center gap-2 w-full"
+                      onClick={(e) => e.stopPropagation()} // 👉 Chặn không cho click lan ra ngoài
+                    >
                       <input
                         autoFocus
                         type="text"
@@ -212,11 +210,11 @@ export const Emulation = () => {
                   )}
                 </div>
 
-                {/* NÚT BÚT CHÌ (Chỉ hiện khi có quyền sửa và chưa ở chế độ sửa) */}
+                {/* NÚT BÚT CHÌ */}
                 {canEdit && editingGroupId !== group.id && (
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // Không kích hoạt sự kiện chọn tổ
+                      e.stopPropagation();
                       setEditingGroupId(group.id);
                       setEditGroupName(group.name);
                     }}

@@ -13,6 +13,8 @@ import java.time.Instant;
         "id",
         "class_id",
         "user_id",
+        "user_display_name",
+        "user_avatar_url",
         "reason",
         "from",
         "to",
@@ -38,6 +40,12 @@ public final class AbsenceRequestResponseDto {
 
     @JsonProperty(value = "user_id")
     Long userId;
+
+    @JsonProperty(value = "user_display_name")
+    String userDisplayName;
+
+    @JsonProperty(value = "user_avatar_url;")
+    String userAvatarUrl;
 
     @JsonProperty(value = "reason")
     String reason;

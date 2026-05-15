@@ -1,167 +1,71 @@
-import type { ApiResponse, ID } from "@shared/utils/common";
-import type { FundCampaign, FundTransaction, FundOverview, FundStatus } from "../types";
-
-let mockOverview: FundOverview = {
-    balance: 5250000,
-    totalCollected: 8000000,
-    totalSpent: 2750000
-};
-
-let mockCampaigns: FundCampaign[] = [
-    {
-        id: 1,
-        classId: 1,
-        title: "Quỹ lớp học kỳ 2",
-        description: "Tiền quỹ lớp dùng cho các hoạt động ngoại khóa và photo tài liệu học tập.",
-        amount: 200000,
-        bankAccount: {
-            bankName: "MB Bank",
-            accountNumber: "999922226666",
-            accountHolder: "NGUYEN VAN ADMIN"
-        },
-        status: "OPEN",
-        createdAt: new Date().toISOString()
-    }
-];
-
-let mockTransactions: FundTransaction[] = [
-    {
-        id: 101,
-        campaignId: 1,
-        userId: 1,
-        userName: "Nguyễn Văn A",
-        amount: 200000,
-        status: "APPROVED",
-        paidAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 102,
-        campaignId: 1,
-        userId: 102,
-        userName: "Trần Thị B",
-        amount: 200000,
-        status: "PENDING",
-        proofUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRz-M8v4mR6VpX6pL4V6_Z9V7R7_X9v8R7R7Q&s",
-        createdAt: new Date().toISOString()
-    }
-];
+import { apiClient } from "@services/api-client";
+import axios from "axios";
+import type { ID, ApiResponse } from "@shared/utils/common";
+import type { 
+    FundResponseDto, 
+    FundSummaryResponseDto, 
+    CreateFundRequestDto,
+    VietQrBankResponseDto,
+    GetQrCodeRequestDto,
+    BankQrCodeUrlResponseDto
+} from "../types";
 
 export const fundAPI = {
-    getFundOverview: async (classId: ID): Promise<ApiResponse<{overview: FundOverview, campaigns: FundCampaign[]}>> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
+    getFunds: async (classId: ID): Promise<ApiResponse<FundResponseDto[]>> => {
+        return await apiClient.get(`/classes/${classId}/funds`);
+    },
+
+    getFundSummary: async (classId: ID): Promise<ApiResponse<FundSummaryResponseDto>> => {
+        return await apiClient.get(`/classes/${classId}/funds/summary`);
+    },
+
+    createFund: async (classId: ID, data: CreateFundRequestDto): Promise<ApiResponse<FundResponseDto>> => {
+        return await apiClient.post(`/classes/${classId}/funds`, data);
+    },
+
+    deleteFund: async (classId: ID, fundId: ID): Promise<ApiResponse<{ fund_id: ID }>> => {
+        return await apiClient.delete(`/classes/${classId}/funds/${fundId}`);
+    },
+
+    getBanks: async (): Promise<ApiResponse<VietQrBankResponseDto[]>> => {
+        return await apiClient.get('/public/banks');
+    },
+
+    getQrCodeUrl: async (data: GetQrCodeRequestDto): Promise<ApiResponse<BankQrCodeUrlResponseDto>> => {
+        try {
+            // Using direct VietQR API as backend is currently having issues
+            const response = await axios.post("https://api.vietqr.io/v2/generate", {
+                accountNo: data.account_number,
+                accountName: data.account_name,
+                acqId: data.bank_code, // acqId is usually the BIN or bank code
+                addInfo: data.notes,
+                amount: data.amount,
+                template: "compact" // Using compact template
+            });
+
+            if (response.data && response.data.code === "00") {
+                return {
                     success: true,
-                    message: "Lấy thông tin quỹ thành công",
+                    message: "Tạo mã QR thành công",
                     data: {
-                        overview: mockOverview,
-                        campaigns: mockCampaigns.filter(c => String(c.classId) === String(classId))
+                        qr_code_url: response.data.data.qrDataURL
                     },
                     time: new Date().toISOString()
-                });
-            }, 500);
-        });
-    },
-
-    getTransactions: async (campaignId: ID): Promise<ApiResponse<FundTransaction[]>> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    success: true,
-                    message: "Lấy lịch sử giao dịch thành công",
-                    data: mockTransactions.filter(t => String(t.campaignId) === String(campaignId)),
-                    time: new Date().toISOString()
-                });
-            }, 500);
-        });
-    },
-
-    createCampaign: async (classId: ID, data: Omit<FundCampaign, "id" | "classId" | "createdAt">): Promise<ApiResponse<FundCampaign>> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newCampaign: FundCampaign = {
-                    id: Math.floor(Math.random() * 1000),
-                    classId,
-                    ...data,
-                    createdAt: new Date().toISOString()
                 };
-                mockCampaigns.push(newCampaign);
-                resolve({
-                    success: true,
-                    message: "Tạo khoản thu thành công",
-                    data: newCampaign,
+            } else {
+                return {
+                    success: false,
+                    message: response.data?.desc || "Không thể tạo mã QR",
                     time: new Date().toISOString()
-                });
-            }, 800);
-        });
-    },
-
-    submitProof: async (transactionId: ID, proofUrl: string): Promise<ApiResponse<FundTransaction>> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const index = mockTransactions.findIndex(t => String(t.id) === String(transactionId));
-                if (index !== -1) {
-                    mockTransactions[index].proofUrl = proofUrl;
-                    mockTransactions[index].status = "PENDING";
-                }
-                resolve({
-                    success: true,
-                    message: "Gửi minh chứng thành công",
-                    data: mockTransactions[index],
-                    time: new Date().toISOString()
-                });
-            }, 600);
-        });
-    },
-
-    verifyTransaction: async (transactionId: ID, status: FundStatus): Promise<ApiResponse<FundTransaction>> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const index = mockTransactions.findIndex(t => String(t.id) === String(transactionId));
-                if (index !== -1) {
-                    mockTransactions[index].status = status;
-                    if (status === "APPROVED") {
-                        mockTransactions[index].paidAt = new Date().toISOString();
-                        mockOverview.balance += mockTransactions[index].amount;
-                        mockOverview.totalCollected += mockTransactions[index].amount;
-                    }
-                }
-                resolve({
-                    success: true,
-                    message: "Cập nhật trạng thái thành công",
-                    data: mockTransactions[index],
-                    time: new Date().toISOString()
-                });
-            }, 500);
-        });
-    },
-
-    // Giả lập Webhook khi quét QR thành công (Phase 2)
-    mockWebhookQRSuccess: async (campaignId: ID, userId: ID, userName: string, amount: number): Promise<ApiResponse<FundTransaction>> => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const newTransaction: FundTransaction = {
-                    id: Math.floor(Math.random() * 10000),
-                    campaignId,
-                    userId,
-                    userName,
-                    amount,
-                    status: "APPROVED",
-                    paidAt: new Date().toISOString(),
-                    createdAt: new Date().toISOString()
-                };
-                mockTransactions.push(newTransaction);
-                mockOverview.balance += amount;
-                mockOverview.totalCollected += amount;
-                
-                resolve({
-                    success: true,
-                    message: "Thanh toán QR thành công",
-                    data: newTransaction,
-                    time: new Date().toISOString()
-                });
-            }, 1000);
-        });
+                } as any;
+            }
+        } catch (error) {
+            console.error("VietQR API Error:", error);
+            return {
+                success: false,
+                message: "Lỗi khi kết nối với VietQR API",
+                timestamp: new Date().toISOString()
+            } as any;
+        }
     }
 };
