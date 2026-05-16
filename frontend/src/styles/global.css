@@ -70,6 +70,13 @@
   --sage-text:   #3A5C36;
   --sage-border: #C5DCC0;
 
+/* Professional Bright Gold Accent (Tone vàng tươi, không ám cam/đỏ) */
+  --gold-400:    #FACC15; /* Primary Gold (Vàng chói cực sáng) */
+  --gold-600:    #EAB308; /* Hover Gold (Vàng chuẩn) */
+  --gold-fill:   #FEF9C3; /* Background vàng nhạt */
+  --gold-text:   #CA8A04; /* Text vàng sậm vừa đủ rõ, không bị nâu đỏ */
+  --gold-border: #FDE047; /* Border vàng tươi */
+
   /* Professional Blue Accent (Primary for EduAdmin) */
   --warm-400:    #2563EB; /* Primary Blue (Blue 600) */
   --warm-600:    #1D4ED8; /* Hover Blue (Blue 700) */
@@ -145,6 +152,13 @@
   --sage-fill:   #162010;
   --sage-text:   #A7D9A2;
   --sage-border: #1E3A18;
+
+/* Professional Bright Gold Accent - Dark Mode */
+  --gold-400:    #FDE047; /* Vàng sáng rực rỡ để chấm tròn nổi bần bật */
+  --gold-600:    #FACC15; /* Vàng chói */
+  --gold-fill:   #332200; /* Nền vàng đen (chuyển từ nâu đỏ sang vàng sẫm) */
+  --gold-text:   #FEF08A; /* Text Vàng Neon siêu sáng */
+  --gold-border: #715100; /* Border vàng đen */
 
   --warm-400:    #60A5FA; /* Light Blue for Dark Mode (Blue 400) */
   --warm-600:    #2563EB; /* Primary Blue for Dark Mode (Blue 600) */

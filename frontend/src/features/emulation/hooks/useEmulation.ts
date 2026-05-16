@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { emulationAPI } from "@features/emulation/api";
+import { homeAPI } from "@features/home/api";
+import { useAuth } from "@features/auth";
+import { ClassRole } from "@shared/domain/enums";
 import type { CompetitionData } from "@features/emulation/types";
 
 export const useEmulation = (classId: string) => {
@@ -7,12 +10,35 @@ export const useEmulation = (classId: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [weeks, setWeeks] = useState<any[]>([]);
   const [groups, setGroups] = useState<any[]>([]);
+  const [canEdit, setCanEdit] = useState(false);
+  const { user } = useAuth();
 
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     startDate: "",
     endDate: "",
   });
+
+  const checkPermission = useCallback(async () => {
+    if (!classId || !user?.id) return;
+    try {
+      const res = await homeAPI.getClassMembers(Number(classId));
+      if (res.success) {
+        const currentMember = res.data.find(
+          (m: any) => String(m.user_id) === String(user.id)
+        );
+
+        // Chấp nhận CLASS_ADMIN hoặc nếu backend có trả vai trò khác tương đương
+        const hasPermission = 
+          currentMember?.role === ClassRole.CLASS_ADMIN;
+
+        setCanEdit(!!hasPermission);
+      }
+    } catch (error) {
+      console.error("Lỗi xác thực quyền thi đua:", error);
+      setCanEdit(false);
+    }
+  }, [classId, user?.id]);
 
   const loadWeeks = useCallback(async () => {
     try {
@@ -233,6 +259,10 @@ export const useEmulation = (classId: string) => {
   };
 
   useEffect(() => {
+    checkPermission();
+  }, [checkPermission]);
+
+  useEffect(() => {
     loadWeeks();
   }, [loadWeeks]);
 
@@ -248,6 +278,7 @@ export const useEmulation = (classId: string) => {
     isLoading,
     filters,
     weeks,
+    canEdit,
     setFilters: (newFilters: Partial<typeof filters>) => {
       setFilters((prev) => ({ ...prev, ...newFilters }));
     },

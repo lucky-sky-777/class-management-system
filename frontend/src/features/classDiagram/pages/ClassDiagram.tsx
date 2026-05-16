@@ -1,30 +1,37 @@
 // src/features/classDiagram/pages/ClassDiagram.tsx
 import { useState, useMemo } from "react";
-import { useParams, Link} from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { GraduationCap, Presentation, Shuffle } from "lucide-react";
 import { useClassDiagram } from "@features/classDiagram/hooks/useClassDiagram";
 import { Group } from "@features/classDiagram/pages/Group";
 
 export const ClassDiagram = () => {
   const { classId } = useParams();
   const [mode, setMode] = useState<"view" | "attendance" | "setup">("view");
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
-  const [perspective, setPerspective] = useState<"student" | "teacher">("student");
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null,
+  );
+  const [perspective, setPerspective] = useState<"student" | "teacher">(
+    "student",
+  );
   const isTeacherView = perspective === "teacher";
 
-  const { 
-    data, 
-    canEdit, 
-    unseatedMembers, 
-    shuffle, 
-    assignSeat, 
-    markAttendance 
+  const {
+    data,
+    canEdit,
+    unseatedMembers,
+    shuffle,
+    assignSeat,
+    markAttendance,
   } = useClassDiagram(classId!, mode);
 
   // THUẬT TOÁN CHIA CỘT TỔ CHỖ NGỒI
   const currentGroups = data?.groups;
   const groupColumns = useMemo(() => {
     if (!currentGroups) return [];
-    const sortedGroups = [...currentGroups].sort((a, b) => a.groupId - b.groupId);
+    const sortedGroups = [...currentGroups].sort(
+      (a, b) => a.groupId - b.groupId,
+    );
     const columns: (typeof sortedGroups)[] = [];
     for (let i = 0; i < sortedGroups.length; i += 2) {
       columns.push(sortedGroups.slice(i, i + 2));
@@ -32,16 +39,23 @@ export const ClassDiagram = () => {
     return columns;
   }, [currentGroups]);
 
-  if (!data) return (
-    <div className="p-10 text-center animate-pulse text-[var(--ink-3)] font-medium">
-      Đang tải dữ liệu...
-    </div>
-  );
+  if (!data)
+    return (
+      <div className="p-10 text-center animate-pulse text-[var(--ink-3)] font-medium">
+        Đang tải dữ liệu...
+      </div>
+    );
 
-  const handleSeatClick = async (groupId: number, deskId: number, positionId: number) => {
+  const handleSeatClick = async (
+    groupId: number,
+    deskId: number,
+    positionId: number,
+  ) => {
     const targetGroup = data.groups.find((g) => g.groupId === groupId);
     const targetDesk = targetGroup?.desks.find((d) => d.deskId === deskId);
-    const targetPos = targetDesk?.positions.find((p) => p.positionId === positionId);
+    const targetPos = targetDesk?.positions.find(
+      (p) => p.positionId === positionId,
+    );
     const studentAtSeat = targetPos?.student;
 
     if (mode === "attendance" && studentAtSeat?.id) {
@@ -75,8 +89,13 @@ export const ClassDiagram = () => {
       );
 
       const isSuccess = await assignSeat(
-        selectedStudentId, groupId, deskId, positionId,
-        sourceGroup, sourceDesk, sourcePos
+        selectedStudentId,
+        groupId,
+        deskId,
+        positionId,
+        sourceGroup,
+        sourceDesk,
+        sourcePos,
       );
 
       if (isSuccess) setSelectedStudentId(null);
@@ -107,10 +126,18 @@ export const ClassDiagram = () => {
                   }`}
                 >
                   <span className="hidden xs:inline">
-                    {m === "view" ? "Xem" : m === "attendance" ? "Điểm danh" : "Xếp chỗ"}
+                    {m === "view"
+                      ? "Xem"
+                      : m === "attendance"
+                        ? "Điểm danh"
+                        : "Xếp chỗ"}
                   </span>
                   <span className="xs:hidden">
-                    {m === "view" ? "Xem" : m === "attendance" ? "Điểm danh" : "Xếp"}
+                    {m === "view"
+                      ? "Xem"
+                      : m === "attendance"
+                        ? "Điểm danh"
+                        : "Xếp"}
                   </span>
                 </button>
               ))}
@@ -121,7 +148,11 @@ export const ClassDiagram = () => {
             <Badge theme="neutral" label="Sĩ số" val={data.totalStudents} />
             <Badge theme="success" label="Có mặt" val={data.presentCount} />
             <Badge theme="warning" label="Vắng phép" val={data.excusedCount} />
-            <Badge theme="danger" label="Không phép" val={data.unexcusedCount} />
+            <Badge
+              theme="danger"
+              label="Không phép"
+              val={data.unexcusedCount}
+            />
           </div>
         </div>
       </div>
@@ -133,7 +164,6 @@ export const ClassDiagram = () => {
             <div className="bg-[var(--warm-fill)] p-3 rounded-xl border border-[var(--warm-border)] animate-in fade-in zoom-in-95 duration-300 flex flex-col gap-3">
               {/* Header: Tiêu đề & Nút Xếp tự động */}
               <div className="flex justify-between items-start sm:items-center gap-2 mb-3">
-                
                 {/* Cụm Tiêu đề + Ghi chú nằm chung 1 dòng */}
                 <div className="flex-1 leading-snug">
                   <span className="text-[10px] md:text-xs font-bold text-[var(--warm-600)] uppercase tracking-wider">
@@ -141,20 +171,27 @@ export const ClassDiagram = () => {
                   </span>
                   <span className="text-[9px] md:text-[10px] text-[var(--ink-3)] font-medium ml-1.5 normal-case tracking-normal inline-block">
                     (Cần phân tổ trước khi xếp chỗ.{" "}
-                    <Link 
-                      to={`/class/${classId}/emulation`} 
+                    <Link
+                      to={`/class/${classId}/emulation`}
                       className="font-bold text-[var(--warm-600)] underline hover:text-[var(--warm-800)] transition-colors"
                     >
                       Tại đây!
-                    </Link>)
+                    </Link>
+                    )
                   </span>
                 </div>
 
                 <button
                   onClick={() => shuffle()}
-                  className="flex items-center shrink-0 gap-1.5 px-3 py-1.5 bg-white border border-[var(--warm-border)] text-[var(--warm-600)] rounded-lg text-[10px] md:text-xs font-bold shadow-[var(--shadow-sm)] hover:bg-[var(--bg-surface-2)] transition-all"
+                  className="group flex items-center shrink-0 gap-1.5 px-3 py-1.5 bg-white border border-[var(--warm-border)] text-[var(--warm-600)] rounded-lg text-[10px] md:text-xs font-bold shadow-[var(--shadow-sm)] hover:bg-[var(--bg-surface-2)] transition-all active:scale-95"
                 >
-                  🎲 Xếp tự động
+                  <Shuffle
+                    size={14}
+                    strokeWidth={2.5}
+                    className="transition-transform duration-300 group-hover:rotate-45"
+                  />
+
+                  <span className="tracking-wide">Xếp tự động</span>
                 </button>
               </div>
 
@@ -190,60 +227,77 @@ export const ClassDiagram = () => {
           )}
         </div>
 
-        <div className="flex justify-end w-full md:w-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex justify-end w-full md:w-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
-            onClick={() => setPerspective(isTeacherView ? "student" : "teacher")}
+            onClick={() =>
+              setPerspective(isTeacherView ? "student" : "teacher")
+            }
             className="group flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-[11px] md:text-xs font-bold bg-[var(--bg-surface)] text-[var(--warm-600)] border-2 border-[var(--warm-border)] hover:bg-[var(--warm-fill)] transition-all shadow-[var(--shadow-sm)] w-full sm:w-auto"
           >
-            <span className="text-sm">{isTeacherView ? "👨‍🏫" : "🎓"}</span>
-            <span>Góc nhìn: {isTeacherView ? "Giáo viên" : "Học sinh"}</span>
+            <div className="text-[var(--warm-600)] transition-transform duration-300 group-hover:scale-110">
+              {isTeacherView ? (
+                <Presentation size={15} strokeWidth={2.5} />
+              ) : (
+                <GraduationCap size={16} strokeWidth={2.5} />
+              )}
+            </div>
+
+            <span className="uppercase tracking-wider">
+              Góc nhìn: {isTeacherView ? "Giáo viên" : "Học sinh"}
+            </span>
           </button>
         </div>
       </div>
 
-{/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
+      {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
       <div
         className="w-full bg-[var(--bg-surface-2)] rounded-3xl border border-[var(--rule-lg)] shadow-inner overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full overflow-x-auto custom-scrollbar p-6 md:p-12">
           {/* Main Layout wrapper: Xoay trên/dưới theo góc nhìn */}
-          <div className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-10 md:gap-16 transition-all duration-500 min-w-max mx-auto`}>
-            
-            {/* Dùng flex-row để xếp ngang, flex-row-reverse để đổi bên khi nhìn từ bục giảng */}
-            <div className={`flex w-full items-center justify-center gap-8 md:gap-16 flex-row`}>
-              
-              {/* BÀN GIÁO VIÊN — Nằm bên TRÁI */}
+          <div
+            className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-10 md:gap-16 transition-all duration-500 min-w-max mx-auto`}
+          >
+            <div
+              className={`flex w-full items-center justify-center gap-8 md:gap-16 ${isTeacherView ? "flex-row-reverse" : "flex-row"}`}
+            >
+              {/* KHỐI 1: BÀN GIÁO VIÊN */}
+              {/* Mặc định nằm TRÁI (Học sinh nhìn lên), khi lật sẽ nhảy sang PHẢI */}
               <div className="bg-[var(--bg-surface)] px-8 md:px-12 py-3.5 md:py-4 rounded-xl shadow-[var(--shadow-md)] border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
-                 <div className="absolute top-1 w-1/3 h-1 bg-[var(--rule)] rounded-full"></div>
-                 <span className="text-[11px] md:text-xs font-black text-[var(--warm-600)] uppercase tracking-[0.15em] mt-1">
-                    Bàn Giáo Viên
-                 </span>
+                <div className="absolute top-1 w-1/3 h-1 bg-[var(--rule)] rounded-full"></div>
+                <span className="text-[11px] md:text-xs font-black text-[var(--warm-600)] uppercase tracking-[0.15em] mt-1">
+                  Bàn Giáo Viên
+                </span>
               </div>
 
-              {/* BẢNG ĐEN — Mỏng lại, dài ra, chữ nằm ngoài */}
+              {/* KHỐI 2: BẢNG ĐEN */}
+              {/* Mặc định nằm PHẢI (Học sinh nhìn lên), khi lật sẽ nhảy sang TRÁI */}
               <div className="flex flex-col items-center gap-2 shrink-0">
-                 {/* Chữ được bế ra ngoài, làm màu xám nhẹ cho tinh tế */}
-                 <span className="text-[10px] md:text-[11px] font-black text-[var(--ink-3)] uppercase tracking-[0.4em]">
-                   Bảng Đen
-                 </span>
-                 
-                 {/* Khối bảng: Bóp chiều cao (h-4), kéo chiều dài (w-72/w-96) */}
-                 <div className="w-72 md:w-96 h-4 md:h-5 bg-[#1a1c23] rounded-md shadow-[0_5px_15px_rgba(0,0,0,0.12)] border-x-2 border-t-2 border-b-[4px] border-[#4a3f35] relative">
-                    {/* Đường Highlight mỏng giả khay phấn */}
-                    <div className="absolute bottom-0 w-full h-[1.5px] bg-white/20"></div>
-                 </div>
+                <span className="text-[10px] md:text-[11px] font-black text-[var(--ink-3)] uppercase tracking-[0.4em]">
+                  Bảng Đen
+                </span>
+                <div className="w-72 md:w-96 h-4 md:h-5 bg-[#1a1c23] rounded-md shadow-[0_5px_15px_rgba(0,0,0,0.12)] border-x-2 border-t-2 border-b-[4px] border-[#4a3f35] relative">
+                  <div className="absolute bottom-0 w-full h-[1.5px] bg-white/20"></div>
+                </div>
               </div>
-              
             </div>
 
             {/* LƯỚI CHỖ NGỒI (Đã chia cột đối xứng) */}
             <div
-              style={{ transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }}
+              style={{
+                transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+              }}
               className={`flex flex-nowrap justify-center gap-10 md:gap-12 pb-10 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
             >
               {groupColumns.map((colGroups, colIndex) => (
-                <div key={`col-${colIndex}`} className="flex flex-col gap-10 md:gap-12 relative w-fit">
+                <div
+                  key={`col-${colIndex}`}
+                  className="flex flex-col gap-10 md:gap-12 relative w-fit"
+                >
                   {/* Đường kẻ đứt nét chia luồng đi ở giữa */}
                   {colIndex === 0 && (
                     <div className="absolute -right-5 md:-right-6 top-0 bottom-0 w-px border-r-2 border-dashed border-[var(--rule-md)] opacity-40" />
@@ -261,25 +315,37 @@ export const ClassDiagram = () => {
                 </div>
               ))}
             </div>
-
           </div>
         </div>
       </div>
-
     </div>
   );
 };
 
-const Badge = ({ theme, label, val }: { theme: "neutral" | "success" | "warning" | "danger"; label: string; val: number; }) => {
+const Badge = ({
+  theme,
+  label,
+  val,
+}: {
+  theme: "neutral" | "success" | "warning" | "danger";
+  label: string;
+  val: number;
+}) => {
   const themeClasses = {
-    neutral: "bg-[var(--bg-surface-3)] text-[var(--ink-2)] border-[var(--rule-md)]",
-    success: "bg-[var(--green-fill)] text-[var(--green-text)] border-[var(--green-border)]",
-    warning: "bg-[var(--amber-fill)] text-[var(--amber-text)] border-[var(--amber-border)]",
-    danger: "bg-[var(--red-fill)] text-[var(--red-text)] border-[var(--red-border)]",
+    neutral:
+      "bg-[var(--bg-surface-3)] text-[var(--ink-2)] border-[var(--rule-md)]",
+    success:
+      "bg-[var(--green-fill)] text-[var(--green-text)] border-[var(--green-border)]",
+    warning:
+      "bg-[var(--amber-fill)] text-[var(--amber-text)] border-[var(--amber-border)]",
+    danger:
+      "bg-[var(--red-fill)] text-[var(--red-text)] border-[var(--red-border)]",
   };
 
   return (
-    <div className={`px-2 py-1.5 rounded-lg text-[10px] md:text-[11px] font-bold shadow-sm border flex items-center gap-1.5 whitespace-nowrap ${themeClasses[theme]}`}>
+    <div
+      className={`px-2 py-1.5 rounded-lg text-[10px] md:text-[11px] font-bold shadow-sm border flex items-center gap-1.5 whitespace-nowrap ${themeClasses[theme]}`}
+    >
       <span className="opacity-70">{label}:</span>
       <span className="font-black text-[var(--ink-1)]">{val}</span>
     </div>

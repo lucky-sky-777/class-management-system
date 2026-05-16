@@ -15,6 +15,7 @@ export const Emulation = () => {
     isLoading,
     filters,
     weeks,
+    canEdit,
     setFilters,
     addGroup,
     addPoint,
@@ -43,7 +44,6 @@ export const Emulation = () => {
   // const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   // const [editGroupName, setEditGroupName] = useState("");
   //state phân quyền
-  const canEdit = true; // TODO: Phân quyền sau
   // 3. EARLY RETURN (Chỉ return sau khi đã gọi hết Hooks)
   if (isLoading || !data) {
     return (

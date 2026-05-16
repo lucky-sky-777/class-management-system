@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, Plus, User, Hash, LogIn, LogOut } from "lucide-react";
+import { Menu, Plus, User, Hash, LogIn, LogOut, Sun, Moon } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useHome } from "@features/home/hooks/useHome";
 import { useAuth } from "@features/auth";
@@ -15,13 +15,21 @@ export const Header = () => {
   const { classId } = useParams();
   const [classCode, setClassCode] = useState("");
   const { user, isAuthenticated, logout } = useAuth();
-  const { toggleSidebar } = useUIStore();
-
+  const toggleSidebar = useUIStore((state: any) => state.toggleSidebar);
   // 1. Lấy danh sách lớp từ useHome
-  const { classes } = useHome();
+  const { classes, refresh } = useHome();
+  React.useEffect(() => {
+    if (classes.length === 0 && isAuthenticated) {
+      refresh();
+    }
+  }, [classes.length, isAuthenticated]);
+
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("theme") || "light";
+  });
 
   // 2. Tìm lớp hiện tại dựa trên classId từ URL
   const currentClass = classes.find((item) => String(item.id) === classId);
@@ -41,8 +49,22 @@ export const Header = () => {
     console.log("Đang tìm lớp với mã:", classCode);
   };
 
+  React.useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
   return (
-    <header className="flex items-center justify-between h-16 px-4 bg-surface border-b border-rule shrink-0 relative z-30 shadow-sm">
+    <header className="flex items-center justify-between h-16 px-4 bg-surface border-b border-rule shrink-0 relative z-40 shadow-sm">
       <div className="flex items-center gap-2 sm:gap-4 flex-1">
         <button
           onClick={toggleSidebar}
@@ -56,7 +78,14 @@ export const Header = () => {
           {/* Logo & Tên App */}
           <div
             className="flex items-center gap-2 cursor-pointer shrink-0"
-            onClick={() => navigate("/")}
+            onClick={() => {
+              if (location.pathname === "/") {
+                window.dispatchEvent(new Event("refreshHomeClasses"));
+              } else {
+                // Đang ở trong lớp: Bay về trang chủ
+                navigate("/");
+              }
+            }}
           >
             <div className="w-8 h-8 bg-ink-blue-text rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-ink-blue-fill">
               C
@@ -103,22 +132,46 @@ export const Header = () => {
       </div>
 
       <div className="flex items-center justify-end gap-2 sm:gap-3 flex-1">
+        <button
+          onClick={toggleTheme}
+          title={
+            theme === "light"
+              ? "Chuyển sang giao diện tối"
+              : "Chuyển sang giao diện sáng"
+          }
+          className="p-2 text-ink-2 hover:bg-surface-2 rounded-full transition-all active:scale-95"
+        >
+          {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+        </button>
+
         {isAuthenticated && (
           <>
+            {/* NÚT THAM GIA LỚP */}
             <button
               onClick={() => setIsJoinModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-ink-blue-text hover:bg-ink-blue-fill rounded-lg font-bold transition-colors text-sm border border-transparent hover:border-ink-blue-border"
+              title="Tham gia lớp"
+              className="flex items-center justify-center gap-1.5 p-2 md:px-3 md:py-1.5 text-ink-blue-text hover:bg-ink-blue-fill rounded-xl font-bold transition-all text-sm border border-transparent hover:border-ink-blue-border active:scale-95"
             >
-              <LogIn size={18} />
-              Tham gia
+              <LogIn
+                size={20}
+                strokeWidth={2.5}
+                className="md:w-[18px] md:h-[18px] md:stroke-2"
+              />
+              <span className="hidden md:block">Tham gia</span>
             </button>
 
+            {/* NÚT TẠO LỚP */}
             <button
-              className="btn btn-warm btn-sm"
               onClick={() => setIsCreateModalOpen(true)}
+              title="Tạo lớp mới"
+              className="btn btn-warm btn-sm flex items-center justify-center gap-1.5 p-2 md:px-3 md:py-1.5 rounded-xl transition-all active:scale-95"
             >
-              <Plus size={18} />
-              <span className="hidden lg:inline">Tạo lớp</span>
+              <Plus
+                size={20}
+                strokeWidth={2.5}
+                className="md:w-[18px] md:h-[18px] md:stroke-2"
+              />
+              <span className="hidden md:block">Tạo lớp</span>
             </button>
           </>
         )}
@@ -133,9 +186,7 @@ export const Header = () => {
             className={`ml-1 w-9 h-9 ${isAuthenticated ? "bg-ink-blue-fill border-ink-blue-border" : "bg-gradient-to-tr from-orange-100 to-orange-200 border-orange-300"} rounded-full flex items-center justify-center overflow-hidden border cursor-pointer shrink-0 hover:ring-4 hover:ring-ink-blue-fill transition-all`}
           >
             {isAuthenticated && user ? (
-                <Avatar
-                  name={user.displayName ?? user.username}
-                />
+              <Avatar name={user.displayName ?? user.username} />
             ) : (
               <User size={20} className="text-ink-3" />
             )}
@@ -147,9 +198,7 @@ export const Header = () => {
                 <p className="text-sm font-bold text-ink-1 truncate">
                   {user?.displayName}
                 </p>
-                <p className="text-xs text-ink-2 truncate">
-                  @{user?.username}
-                </p>
+                <p className="text-xs text-ink-2 truncate">@{user?.username}</p>
               </div>
               <button
                 onClick={handleLogout}

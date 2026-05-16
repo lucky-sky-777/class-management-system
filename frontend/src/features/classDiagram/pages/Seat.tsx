@@ -13,7 +13,7 @@ export const Seat = ({ student, onClick, isTeacherView, isSelected }: SeatProps)
     if (!student) return "bg-transparent";
     switch (student.status) {
       case "present": return "bg-[var(--green-text)]"; 
-      case "absent_excused": return "bg-[var(--amber-border)]"; 
+      case "absent_excused": return "bg-[var(--gold-text)]"; 
       case "absent_unexcused": return "bg-[var(--red-text)]";
       case "late": return "bg-[var(--sage-text)]"; // Dùng màu Sage cho đi trễ
       default: return "bg-[var(--ink-4)]";

@@ -24,19 +24,19 @@ export const useHome = () => {
     }
   };
 
-  useEffect(() => {
-    loadData();
+  // useEffect(() => {
+  //   loadData();
 
-    // Lắng nghe sự kiện để đồng bộ state giữa các component dùng chung hook này (ví dụ Header và HomePage)
-    const handleRefresh = () => {
-      loadData();
-    };
-    window.addEventListener("refreshHomeClasses", handleRefresh);
+  //   // Lắng nghe sự kiện để đồng bộ state giữa các component dùng chung hook này (ví dụ Header và HomePage)
+  //   const handleRefresh = () => {
+  //     loadData();
+  //   };
+  //   window.addEventListener("refreshHomeClasses", handleRefresh);
 
-    return () => {
-      window.removeEventListener("refreshHomeClasses", handleRefresh);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("refreshHomeClasses", handleRefresh);
+  //   };
+  // }, []);
 
   const createClassMutation = async (formData: {
     className: string;

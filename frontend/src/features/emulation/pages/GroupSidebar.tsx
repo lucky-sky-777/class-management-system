@@ -281,7 +281,7 @@ export const GroupSidebar = ({
                           {studentName || "Học sinh"}
                         </p>
                         <p className="text-[9px] text-[var(--ink-3)] font-medium">
-                          Gia nhập: {m.joined_at?.split(",")[1] || "..."}
+                          Tham gia vào: {m.joined_at?.split(",")[1] || "..."}
                         </p>
                       </div>
                     </div>

@@ -24,7 +24,6 @@ export const MemberItem = ({
   const { classId } = useParams();
 
   const name = member.user_display_name || member.displayName || "Thành viên";
-
   // 👉 FALLBACK AVATAR VỚI MÀU WARM GLOBAL
   const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e2e8f0&color=475569&bold=true`;
 
@@ -71,12 +70,6 @@ export const MemberItem = ({
             {name}
           </p>
           <div className="flex items-center gap-2 mt-1 overflow-hidden text-[9px]">
-            {member.username && (
-              <span className="font-bold text-[var(--ink-3)] bg-[var(--bg-surface-3)] px-1.5 py-0.5 rounded">
-                {member.username}
-              </span>
-            )}
-
             <span className="text-[var(--ink-3)] font-medium truncate tracking-tighter">
               {isPending ? "Yêu cầu vào:" : "Tham gia:"}{" "}
               {member.joined_at || member.joinedAt}
@@ -115,7 +108,7 @@ export const MemberItem = ({
             {myRole === "OWNER" && member.role !== "OWNER" && (
               <>
                 <button
-                  onClick={() => onUpdateRole?.(member.user_id, member.role)}
+                  onClick={() => onUpdateRole?.(member.userId, member.role)}
                   className="p-2 text-[var(--ink-3)] hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] rounded-xl transition-all"
                 >
                   {member.role === "CLASS_ADMIN" ? (
@@ -125,7 +118,7 @@ export const MemberItem = ({
                   )}
                 </button>
                 <button
-                  onClick={() => onKick?.(member.user_id)}
+                  onClick={() => onKick?.(member.userId)}
                   className="p-2 text-[var(--ink-3)] hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] rounded-xl transition-all"
                 >
                   <CircleX size={18} />
@@ -136,7 +129,7 @@ export const MemberItem = ({
             {/* Quyền của ADMIN đối với Member thường */}
             {myRole === "CLASS_ADMIN" && member.role === "CLASS_MEMBER" && (
               <button
-                onClick={() => onKick?.(member.user_id)}
+                onClick={() => onKick?.(member.userId)}
                 className="p-2 text-[var(--ink-3)] hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] rounded-xl transition-all"
               >
                 <CircleX size={18} />
