@@ -1,20 +1,25 @@
 /**
  * EduAdmin — globals.css
  * Modern Editorial × Humanist Design System
+ * Tông màu học thuật nhất quán:
+ *   Blue    → primary action, navigation
+ *   Emerald → thành công, đạt, hoàn thành
+ *   Amber   → cảnh báo, hạn chót
+ *   Red     → nguy hiểm, không đạt, lỗi
+ *   Violet  → xuất sắc, học bổng, đặc biệt
+ *   Sky     → info, thông báo hệ thống
+ *   Slate   → neutral UI, text, border
  *
- * Import file này vào root layout:
+ * Import vào root layout:
  *   Next.js App Router → app/layout.tsx
  *   Next.js Pages      → pages/_app.tsx
  *   Vite/React         → src/main.tsx
- *
- * Sau đó đảm bảo tailwind.config.js đã được load:
- *   @tailwind base;
- *   @tailwind components;
- *   @tailwind utilities;
  */
 
 /* ─── FONT IMPORT ──────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+/* ─── FONT IMPORT ──────────────────────────────────────────── */
+/* Đã tối ưu: Đưa tất cả về font Sans-Serif và Monospace hỗ trợ tiếng Việt tốt nhất, không có gạch chân */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,500;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -22,76 +27,96 @@
 
 /* ─── CSS VARIABLES — Light Mode ───────────────────────────── */
 :root {
-  /* Fonts */
-  --font-serif: 'Lora', Georgia, serif;
-  --font-sans:  'Plus Jakarta Sans', 'Helvetica Neue', sans-serif;
-  --font-mono:  'JetBrains Mono', 'Fira Code', monospace;
-
-  /* Paper / Background */
-  --bg-paper:     #FAFAF8;
+  --font-serif: 'Be Vietnam Pro', sans-serif;
+  --font-sans:  'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
+  --font-mono:  'JetBrains Mono', monospace;
+  /* Paper / Background — slate tones, học thuật sáng sủa */
+  --bg-paper:     #F8FAFC; /* slate-50 */
   --bg-surface:   #FFFFFF;
-  --bg-surface-2: #F5F4F1;
-  --bg-surface-3: #EDEBE6;
+  --bg-surface-2: #F1F5F9; /* slate-100 */
+  --bg-surface-3: #E2E8F0; /* slate-200 */
   --bg-overlay:   rgba(255, 255, 255, 0.88);
 
-  /* Ink / Text */
-  --ink-1: #1C1917;
-  --ink-2: #57534E;
-  --ink-3: #A8A29E;
-  --ink-4: #D6D3D1;
+  /* Ink / Text — slate warm */
+  --ink-1: #0F172A; /* slate-900 — primary text */
+  --ink-2: #475569; /* slate-600 — secondary */
+  --ink-3: #94A3B8; /* slate-400 — placeholder / tertiary */
+  --ink-4: #CBD5E1; /* slate-300 — disabled / decorative */
 
-  /* Border (alpha — hoạt động tốt trên mọi nền) */
-  --rule:    rgba(0, 0, 0, 0.08);
-  --rule-md: rgba(0, 0, 0, 0.13);
-  --rule-lg: rgba(0, 0, 0, 0.20);
+  /* Border (alpha) */
+  --rule:    rgba(15, 23, 42, 0.08);
+  --rule-md: rgba(15, 23, 42, 0.13);
+  --rule-lg: rgba(15, 23, 42, 0.20);
 
-  /* Semantic — Info (ink-blue) */
-  --blue-fill:   #EEF4FE;
-  --blue-text:   #1E4FA8;
-  --blue-border: #C5D8F8;
+  /* ── Primary Blue — màu chủ đạo ─────────────────────────── */
+  --primary:        #2563EB; /* Blue-600 */
+  --primary-hover:  #1D4ED8; /* Blue-700 */
+  --primary-fill:   #EFF6FF; /* Blue-50  */
+  --primary-text:   #1E40AF; /* Blue-800 */
+  --primary-border: #BFDBFE; /* Blue-200 */
 
-  /* Semantic — Success (ink-green) */
-  --green-fill:   #EDFAF3;
-  --green-text:   #166534;
-  --green-border: #BBF0D6;
+  /* Backward compat alias */
+  --warm-400:    #2563EB;
+  --warm-600:    #1D4ED8;
+  --warm-fill:   #EFF6FF;
+  --warm-text:   #1E40AF;
+  --warm-border: #BFDBFE;
 
-  /* Semantic — Warning (ink-amber) */
+  /* ── Emerald — thành công / đạt ─────────────────────────── */
+  --green-fill:   #ECFDF5;
+  --green-text:   #065F46;
+  --green-border: #A7F3D0;
+  --green:        #059669;
+
+  /* ── Amber — cảnh báo / hạn chót ────────────────────────── */
   --amber-fill:   #FFFBEB;
   --amber-text:   #92400E;
   --amber-border: #FDE68A;
+  --amber:        #D97706;
 
-  /* Semantic — Danger (ink-red) */
+  /* ── Red — nguy hiểm / không đạt ────────────────────────── */
   --red-fill:   #FEF2F2;
   --red-text:   #991B1B;
   --red-border: #FECACA;
+  --red:        #DC2626;
 
-  /* Semantic — Special (ink-sage) */
-  --sage-fill:   #F0F4EE;
-  --sage-text:   #3A5C36;
-  --sage-border: #C5DCC0;
+  /* ── Violet — xuất sắc / học bổng ───────────────────────── */
+  --violet-fill:   #F5F3FF;
+  --violet-text:   #4C1D95;
+  --violet-border: #DDD6FE;
+  --violet:        #7C3AED;
 
-  /* Professional Blue Accent (Primary for EduAdmin) */
-  --warm-400:    #2563EB; /* Primary Blue (Blue 600) */
-  --warm-600:    #1D4ED8; /* Hover Blue (Blue 700) */
-  --warm-fill:   #EFF6FF; /* Light Blue Fill (Blue 50) */
-  --warm-text:   #1E40AF; /* Darker Blue Text (Blue 800) */
-  --warm-border: #BFDBFE; /* Light Blue Border (Blue 200) */
+  /* ── Sky — info / thông báo hệ thống ────────────────────── */
+  --sky-fill:   #F0F9FF;
+  --sky-text:   #0C4A6E;
+  --sky-border: #BAE6FD;
+  --sky:        #0284C7;
 
-  /* Sidebar shell */
-  --sidebar-bg:          #1C1917;
-  --sidebar-text:        #A8A29E;
-  --sidebar-text-active: #FAF9F7;
-  --sidebar-active-bg:   rgba(255, 255, 255, 0.07);
-  --sidebar-border:      rgba(255, 255, 255, 0.06);
-  --sidebar-accent:      #C2714F;
+  /* Backward compat: blue → primary */
+  --blue-fill:   #EFF6FF;
+  --blue-text:   #1E40AF;
+  --blue-border: #BFDBFE;
 
-  /* Shadow */
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
-  --shadow-sm: 0 1px 4px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06);
+  /* Backward compat: sage → violet */
+  --sage-fill:   #F5F3FF;
+  --sage-text:   #4C1D95;
+  --sage-border: #DDD6FE;
 
-  /* Radius */
+  /* ── Sidebar ─────────────────────────────────────────────── */
+  --sidebar-bg:          #F8FAFC; /* slate-50 — nhẹ nhàng, học thuật */
+  --sidebar-text:        #475569; /* slate-600 */
+  --sidebar-text-active: #1D4ED8; /* blue-700 */
+  --sidebar-active-bg:   #E0EAFB; /* blue tinted */
+  --sidebar-border:      #CBD5E1; /* slate-300 */
+  --sidebar-accent:      #2563EB; /* blue-600 */
+
+  /* ── Shadow ──────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(15,23,42,.06), 0 0 0 1px rgba(15,23,42,.04);
+  --shadow-sm: 0 1px 4px rgba(15,23,42,.08), 0 0 0 1px rgba(15,23,42,.04);
+  --shadow-md: 0 4px 12px rgba(15,23,42,.10), 0 1px 3px rgba(15,23,42,.06);
+  --shadow-lg: 0 8px 24px rgba(15,23,42,.12), 0 2px 6px rgba(15,23,42,.06);
+
+  /* ── Radius ──────────────────────────────────────────────── */
   --r-xs:   2px;
   --r-sm:   4px;
   --r-md:   8px;
@@ -99,68 +124,94 @@
   --r-xl:   14px;
   --r-full: 9999px;
 
-  /* Transition */
+  /* ── Transition ──────────────────────────────────────────── */
   --t-fast: 120ms ease;
   --t-base: 200ms ease;
   --t-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* Layout */
+  /* ── Layout ──────────────────────────────────────────────── */
   --sidebar-w: 208px;
   --topbar-h:  52px;
 }
 
 /* ─── CSS VARIABLES — Dark Mode ────────────────────────────── */
 .dark {
-  --bg-paper:     #141210;
-  --bg-surface:   #1E1B18;
-  --bg-surface-2: #252220;
-  --bg-surface-3: #2E2A27;
-  --bg-overlay:   rgba(20, 18, 16, 0.92);
+  --bg-paper:     #0F172A; /* slate-900 */
+  --bg-surface:   #1E293B; /* slate-800 */
+  --bg-surface-2: #263345;
+  --bg-surface-3: #2D3F55;
+  --bg-overlay:   rgba(15, 23, 42, 0.92);
 
-  --ink-1: #F5F4F1;
-  --ink-2: #A8A29E;
-  --ink-3: #57534E;
-  --ink-4: #2C2927;
+  --ink-1: #F1F5F9; /* slate-100 */
+  --ink-2: #94A3B8; /* slate-400 */
+  --ink-3: #475569; /* slate-600 */
+  --ink-4: #1E293B; /* slate-800 */
 
-  --rule:    rgba(255, 255, 255, 0.07);
-  --rule-md: rgba(255, 255, 255, 0.12);
-  --rule-lg: rgba(255, 255, 255, 0.18);
+  --rule:    rgba(241, 245, 249, 0.07);
+  --rule-md: rgba(241, 245, 249, 0.12);
+  --rule-lg: rgba(241, 245, 249, 0.18);
 
-  --blue-fill:   #1A2845;
-  --blue-text:   #93C5FD;
-  --blue-border: #1E3A6E;
+  /* Primary Blue — dark */
+  --primary:        #60A5FA; /* Blue-400 — sáng trên nền tối */
+  --primary-hover:  #3B82F6; /* Blue-500 */
+  --primary-fill:   #1E293B; /* slate-800 tinted */
+  --primary-text:   #60A5FA;
+  --primary-border: #1E3A8A;
 
-  --green-fill:   #0F2A1A;
+  --warm-400:    #60A5FA;
+  --warm-600:    #3B82F6;
+  --warm-fill:   #1E293B;
+  --warm-text:   #60A5FA;
+  --warm-border: #1E3A8A;
+
+  /* Emerald — dark */
+  --green-fill:   #022C22;
   --green-text:   #6EE7B7;
-  --green-border: #134E2A;
+  --green-border: #065F46;
+  --green:        #34D399;
 
-  --amber-fill:   #271D08;
+  /* Amber — dark */
+  --amber-fill:   #27180A;
   --amber-text:   #FCD34D;
-  --amber-border: #4A3208;
+  --amber-border: #92400E;
+  --amber:        #FBBF24;
 
+  /* Red — dark */
   --red-fill:   #2A1010;
   --red-text:   #FCA5A5;
-  --red-border: #4A1A1A;
+  --red-border: #7F1D1D;
+  --red:        #F87171;
 
-  --sage-fill:   #162010;
-  --sage-text:   #A7D9A2;
-  --sage-border: #1E3A18;
+  /* Violet — dark */
+  --violet-fill:   #1C1035;
+  --violet-text:   #C4B5FD;
+  --violet-border: #4C1D95;
+  --violet:        #A78BFA;
 
-  --warm-400:    #60A5FA; /* Light Blue for Dark Mode (Blue 400) */
-  --warm-600:    #2563EB; /* Primary Blue for Dark Mode (Blue 600) */
-  --warm-fill:   #1E293B; /* Deep Blue Fill (Slate 800) */
-  --warm-text:   #60A5FA; /* Light Blue Text */
-  --warm-border: #334155; /* Blue-Gray Border (Slate 700) */
+  /* Sky — dark */
+  --sky-fill:   #082F49;
+  --sky-text:   #7DD3FC;
+  --sky-border: #0C4A6E;
+  --sky:        #38BDF8;
 
-  --sidebar-bg:          #0E0C0A;
-  --sidebar-text:        #57534E;
-  --sidebar-text-active: #F5F4F1;
-  --sidebar-active-bg:   rgba(255, 255, 255, 0.06);
-  --sidebar-border:      rgba(255, 255, 255, 0.05);
-  --sidebar-accent:      #D4845A;
+  --blue-fill:   #1E293B;
+  --blue-text:   #60A5FA;
+  --blue-border: #1E3A8A;
 
-  --shadow-xs: 0 1px 2px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.04);
-  --shadow-sm: 0 1px 4px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04);
+  --sage-fill:   #1C1035;
+  --sage-text:   #C4B5FD;
+  --sage-border: #4C1D95;
+
+  /* Sidebar — dark */
+  --sidebar-bg:          #0F172A;
+  --sidebar-text:        #64748B;
+  --sidebar-text-active: #60A5FA;
+  --sidebar-active-bg:   #1E293B;
+  --sidebar-border:      rgba(241, 245, 249, 0.06);
+  --sidebar-accent:      #60A5FA;
+
+  --shadow-xs: 0 1px 2px rgba(0,0,0,.35), 0 0 0 1px rgba(241,245,249,.04);
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.45), 0 0 0 1px rgba(241,245,249,.04);
   --shadow-md: 0 4px 12px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.30);
   --shadow-lg: 0 8px 24px rgba(0,0,0,.65), 0 2px 6px rgba(0,0,0,.35);
 }
@@ -168,27 +219,21 @@
 /* ─── BASE STYLES ───────────────────────────────────────────── */
 @layer base {
   html {
-    font-family: var(--font-sans);
-    font-size:   16px;
-    line-height: 1.6;
-    color:       var(--ink-1);
-    background:  var(--bg-paper);
+    font-family:             var(--font-sans);
+    font-size:               16px;
+    line-height:             1.6;
+    color:                   var(--ink-1);
+    background:              var(--bg-paper);
     -webkit-font-smoothing:  antialiased;
     -moz-osx-font-smoothing: grayscale;
-    scroll-behavior: smooth;
+    scroll-behavior:         smooth;
   }
 
-  /* Desktop scaling — giúp giao diện to rõ hơn trên màn hình lớn */
   @media (min-width: 1024px) {
-    html {
-      font-size: 16px;
-    }
+    html { font-size: 16px; }
   }
-
   @media (min-width: 1440px) {
-    html {
-      font-size: 17px;
-    }
+    html { font-size: 17px; }
   }
 
   body {
@@ -199,7 +244,7 @@
   /* Heading scale — Lora serif */
   h1 {
     font-family:    var(--font-serif);
-    font-size:      2.25rem;       /* ~36px - 38px */
+    font-size:      2.25rem;
     font-weight:    600;
     letter-spacing: -0.04em;
     line-height:    1.1;
@@ -207,7 +252,7 @@
   }
   h2 {
     font-family:    var(--font-serif);
-    font-size:      1.875rem;      /* ~30px - 32px */
+    font-size:      1.875rem;
     font-weight:    600;
     letter-spacing: -0.035em;
     line-height:    1.15;
@@ -215,7 +260,7 @@
   }
   h3 {
     font-family:    var(--font-serif);
-    font-size:      1.5rem;        /* ~24px - 26px */
+    font-size:      1.5rem;
     font-weight:    600;
     letter-spacing: -0.03em;
     line-height:    1.2;
@@ -223,14 +268,14 @@
   }
   h4 {
     font-family: var(--font-sans);
-    font-size:   1rem;             /* 16px */
+    font-size:   1rem;
     font-weight: 600;
     line-height: 1.4;
     color:       var(--ink-1);
   }
   h5, h6 {
     font-family: var(--font-sans);
-    font-size:   0.875rem;         /* 14px */
+    font-size:   0.875rem;
     font-weight: 500;
     color:       var(--ink-2);
   }
@@ -241,7 +286,7 @@
   }
 
   a {
-    color:           var(--blue-text);
+    color:           var(--primary-text);
     text-decoration: none;
     transition:      opacity var(--t-fast);
     &:hover { opacity: 0.75; }
@@ -256,12 +301,12 @@
   }
 
   code {
-    font-family:    var(--font-mono);
-    font-size:      0.8rem;
-    background:     var(--bg-surface-2);
-    color:          var(--warm-600);
-    padding:        2px 6px;
-    border-radius:  var(--r-xs);
+    font-family:   var(--font-mono);
+    font-size:     0.8rem;
+    background:    var(--bg-surface-2);
+    color:         var(--primary);
+    padding:       2px 6px;
+    border-radius: var(--r-xs);
   }
 
   pre {
@@ -279,13 +324,11 @@
     margin:     0;
   }
 
-  /* Selection */
   ::selection {
-    background: var(--blue-fill);
-    color:      var(--blue-text);
+    background: var(--primary-fill);
+    color:      var(--primary-text);
   }
 
-  /* Scrollbar */
   ::-webkit-scrollbar       { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: var(--bg-surface-2); }
   ::-webkit-scrollbar-thumb {
@@ -293,44 +336,40 @@
     border-radius: var(--r-full);
   }
 
-  /* Focus visible */
   :focus-visible {
-    outline:       2px solid var(--blue-text);
-    outline-offset:2px;
-    border-radius: var(--r-xs);
+    outline:        2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius:  var(--r-xs);
   }
 }
 
 /* ─── COMPONENT OVERRIDES (dark mode) ──────────────────────── */
 @layer components {
 
-  /* Stat card — dark */
+  /* Stat card */
   .dark .stat-card {
-    background:  var(--bg-surface);
-    border-color: var(--rule);
-  }
-
-  /* Card — dark */
-  .dark .card {
     background:   var(--bg-surface);
     border-color: var(--rule);
   }
-  .dark .card-header,
-  .dark .card-footer { border-color: var(--rule); }
-  .dark .card-footer  { background: var(--bg-surface-2); }
 
-  /* Table — dark */
+  /* Card */
+  .dark .card          { background: var(--bg-surface); border-color: var(--rule); }
+  .dark .card-header,
+  .dark .card-footer   { border-color: var(--rule); }
+  .dark .card-footer   { background: var(--bg-surface-2); }
+
+  /* Table */
   .dark .data-table thead th {
     background:   var(--bg-surface-2);
     border-color: var(--rule);
     color:        var(--ink-3);
   }
-  .dark .data-table tbody tr  { border-color: var(--rule); }
-  .dark .data-table tbody tr:hover td { background: var(--bg-surface-2); }
-  .dark .data-table tbody td  { color: var(--ink-2); }
+  .dark .data-table tbody tr             { border-color: var(--rule); }
+  .dark .data-table tbody tr:hover td    { background: var(--bg-surface-2); }
+  .dark .data-table tbody td             { color: var(--ink-2); }
   .dark .data-table tbody td:first-child { color: var(--ink-1); }
 
-  /* Input — dark */
+  /* Input */
   .dark .input-field {
     background:   var(--bg-surface);
     border-color: var(--rule-md);
@@ -339,35 +378,91 @@
   .dark .input-field textarea,
   .dark .input-field select { color: var(--ink-1); }
 
-  /* Button — dark */
+  /* Button */
   .dark .btn-secondary {
     background:   var(--bg-surface);
     color:        var(--ink-1);
     border-color: var(--rule-md);
     &:hover { background: var(--bg-surface-2); }
   }
-  .dark .btn-ghost { color: var(--ink-2); }
+  .dark .btn-ghost  { color: var(--ink-2); }
+  .dark .btn-primary {
+    background:  var(--primary);
+    border-color: var(--primary);
+    &:hover { background: var(--primary-hover); }
+  }
 
-  /* Pills — dark */
-  .dark .pill-blue  { background: var(--blue-fill);  color: var(--blue-text);  border-color: var(--blue-border); }
-  .dark .pill-green { background: var(--green-fill); color: var(--green-text); border-color: var(--green-border); }
-  .dark .pill-amber { background: var(--amber-fill); color: var(--amber-text); border-color: var(--amber-border); }
-  .dark .pill-red   { background: var(--red-fill);   color: var(--red-text);   border-color: var(--red-border); }
-  .dark .pill-sage  { background: var(--sage-fill);  color: var(--sage-text);  border-color: var(--sage-border); }
-  .dark .pill-warm  { background: var(--warm-fill);  color: var(--warm-text);  border-color: var(--warm-border); }
+  /* Pills */
+  .dark .pill-blue   { background: var(--primary-fill);  color: var(--primary-text);  border-color: var(--primary-border); }
+  .dark .pill-green  { background: var(--green-fill);    color: var(--green-text);    border-color: var(--green-border); }
+  .dark .pill-amber  { background: var(--amber-fill);    color: var(--amber-text);    border-color: var(--amber-border); }
+  .dark .pill-red    { background: var(--red-fill);      color: var(--red-text);      border-color: var(--red-border); }
+  .dark .pill-sage   { background: var(--violet-fill);   color: var(--violet-text);   border-color: var(--violet-border); }
+  .dark .pill-warm   { background: var(--primary-fill);  color: var(--primary-text);  border-color: var(--primary-border); }
+  .dark .pill-violet { background: var(--violet-fill);   color: var(--violet-text);   border-color: var(--violet-border); }
+  .dark .pill-info   { background: var(--sky-fill);      color: var(--sky-text);      border-color: var(--sky-border); }
 
-  /* Skeleton — dark */
+  /* Grade badges */
+  .dark .grade-a  { background: var(--green-fill);  color: var(--green-text); }
+  .dark .grade-b  { background: var(--primary-fill); color: var(--primary-text); }
+  .dark .grade-c  { background: var(--amber-fill);  color: var(--amber-text); }
+  .dark .grade-d  { background: var(--red-fill);    color: var(--red-text); }
+  .dark .grade-f  { background: var(--red-fill);    color: var(--red-text); }
+  .dark .grade-xa { background: var(--violet-fill); color: var(--violet-text); }
+
+  /* Skeleton */
   .dark .skeleton {
     background-image:
       linear-gradient(90deg, var(--bg-surface-2) 0%, var(--bg-surface-3) 50%, var(--bg-surface-2) 100%);
   }
 
-  /* Pull quote — dark */
+  /* Pull quote */
   .dark .pull-quote {
-    background:  var(--bg-surface-2);
-    border-color: var(--warm-400);
+    background:   var(--bg-surface-2);
+    border-color: var(--primary);
     color:        var(--ink-2);
   }
+
+  /* Sidebar */
+  .dark .sidebar {
+    background:  var(--sidebar-bg);
+    border-color: var(--sidebar-border);
+  }
+  .dark .sidebar-item {
+    color: var(--sidebar-text);
+    &:hover {
+      background: var(--sidebar-active-bg);
+      color:      var(--sidebar-text-active);
+    }
+  }
+  .dark .sidebar-item.active {
+    background:  var(--sidebar-active-bg);
+    color:       var(--sidebar-text-active);
+    border-color: var(--sidebar-accent);
+  }
+}
+
+/* ─── SEMANTIC ALERT HELPERS ────────────────────────────────── */
+/* Dùng cho thông báo trong ngữ cảnh giáo dục */
+@layer components {
+  .alert {
+    display:      flex;
+    gap:          10px;
+    padding:      12px 14px;
+    border-radius: var(--r-md);
+    font-size:    0.875rem;
+    line-height:  1.5;
+    border-left:  3px solid;
+    border-top:   none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 0 var(--r-md) var(--r-md) 0;
+  }
+  .alert-info    { background: var(--primary-fill); color: var(--primary-text); border-color: var(--primary); }
+  .alert-success { background: var(--green-fill);   color: var(--green-text);   border-color: var(--green); }
+  .alert-warning { background: var(--amber-fill);   color: var(--amber-text);   border-color: var(--amber); }
+  .alert-danger  { background: var(--red-fill);     color: var(--red-text);     border-color: var(--red); }
+  .alert-honor   { background: var(--violet-fill);  color: var(--violet-text);  border-color: var(--violet); }
 }
 
 /* ─── KEYFRAMES ─────────────────────────────────────────────── */
@@ -392,13 +487,9 @@
   50%       { opacity: 0.35; }
 }
 
-/* Ẩn thanh cuộn cho Chrome, Safari và Opera */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Ẩn thanh cuộn cho IE, Edge và Firefox */
+/* ─── SCROLLBAR UTILITIES ───────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE và Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width:    none;
 }

@@ -58,7 +58,7 @@ const LeaveItem: React.FC<{
     const displayName = leave.user_display_name || `Thành viên #${leave.userId}`;
 
     return (
-        <div className="card group hover:border-warm-200 transition-all duration-300 shadow-sm">
+        <div className="hover:border-warm-200 transition-all duration-300  m-1.5">
             <div className="p-5 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-4 flex-1">
                     <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ const LeaveItem: React.FC<{
                         </div>
                     </div>
 
-                    <h4 className="text-lg font-serif font-bold text-ink-1 leading-snug group-hover:text-warm-600 transition-colors">
+                    <h4 className="text-lg font-sans font-bold text-ink-1 leading-snug group-hover:text-warm-600 transition-colors">
                         {leave.reason}
                     </h4>
 
@@ -103,9 +103,8 @@ const LeaveItem: React.FC<{
 
                 <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-4 border-t md:border-t-0 md:border-l border-rule pt-4 md:pt-0 md:pl-6 min-w-[160px]">
                     <div className="flex flex-col items-start md:items-end">
-                        <span className="text-[10px] font-bold text-ink-3 uppercase tracking-widest mb-1.5">Người gửi đơn</span>
                         <div className="flex items-center gap-2.5">
-                            <span className="font-bold text-ink-1 font-serif text-right">{displayName}</span>
+                            <span className="text-ink-1 font-sans text-right">{displayName}</span>
                             <Avatar
                                 name={displayName}
                                 size="md"
@@ -200,17 +199,8 @@ export const LeavePage: React.FC = () => {
             {/* Filter & Search Bar */}
             <div className="card shadow-sm border-rule">
                 <div className="p-4 space-y-4">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" />
-                            <input 
-                                type="text"
-                                placeholder="Tìm theo lý do hoặc tên học sinh..."
-                                className="input-field w-full pl-10"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
+                    <div className="flex flex-col sm:flex-col gap-4">
+                        {/* nav bar */}
                         <div className="flex overflow-x-auto no-scrollbar gap-1 p-1 bg-surface-2 rounded-xl shrink-0">
                             {(Object.keys(STATUS_LABELS) as Array<LeaveStatus | "ALL">).map((tab) => (
                                 <button
@@ -225,6 +215,17 @@ export const LeavePage: React.FC = () => {
                                     {STATUS_LABELS[tab]}
                                 </button>
                             ))}
+                        </div>
+                        {/* search bar */}
+                        <div className="input-field justify-center align-middle w-full">
+                            <Search className=" w-4 h-4 text-ink-3" />
+                            <input 
+                                type="text"
+                                placeholder="Tìm theo lý do hoặc tên học sinh..."
+                                className="w-full pl-10"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
                     </div>
                 </div>
