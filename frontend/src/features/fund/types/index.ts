@@ -50,3 +50,30 @@ export interface GetQrCodeRequestDto {
 export interface BankQrCodeUrlResponseDto {
     qr_code_url: string;
 }
+
+export type FundPaymentStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+
+export interface FundPaymentResponseDto {
+    id: ID;
+    class_id: ID;
+    fund_id: ID;
+    proof_url: string;
+    created_at: Timestamp;
+    creator_user_id: ID;
+    creator_display_name: string;
+    creator_avatar_url: string;
+    status: FundPaymentStatus;
+    actor_user_id?: ID;
+    actor_display_name?: string;
+    actor_avatar_url?: string;
+}
+
+export interface CreateFundPaymentRequestDto {
+    proof_url: string;
+}
+
+export interface BankConfig {
+    bank_code: string;
+    account_number: string;
+    account_name: string;
+}

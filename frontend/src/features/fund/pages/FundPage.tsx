@@ -13,11 +13,17 @@ import {
     User,
     ArrowUpRight,
     ArrowDownLeft,
-    Inbox
+    Inbox,
+    Building2,
+    Upload,
+    ShieldCheck
 } from "lucide-react";
 import { useFund } from "../hooks/useFund";
 import { FundFormModal } from "../components/FundFormModal";
 import { FundQrModal } from "../components/FundQrModal";
+import { BankConfigModal } from "../components/BankConfigModal";
+import { SubmitPaymentModal } from "../components/SubmitPaymentModal";
+import { FundPaymentList } from "../components/FundPaymentList";
 import { useAuth } from "@features/auth";
 import { useMembers } from "@features/member/hooks/useMembers"; 
 import type { ID } from "@shared/utils/common";
@@ -28,7 +34,8 @@ export const FundPage: React.FC = () => {
     
     const { 
         summary, funds, isLoading, error, 
-        createFund, deleteFund 
+        createFund, deleteFund,
+        bankConfig, updateBankConfig
     } = useFund(numericClassId);
     
     const { user } = useAuth();
@@ -38,8 +45,13 @@ export const FundPage: React.FC = () => {
 
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isQrOpen, setIsQrOpen] = useState(false);
+    const [isBankConfigOpen, setIsBankConfigOpen] = useState(false);
+    const [submitPaymentFundId, setSubmitPaymentFundId] = useState<ID | null>(null);
+    const [viewPaymentsFundId, setViewPaymentsFundId] = useState<ID | null>(null);
+    const [selectedFundTitle, setSelectedFundTitle] = useState("");
+    const [selectedFundAmount, setSelectedFundAmount] = useState(0);
     const [searchTerm, setSearchTerm] = useState("");
-    const [filterType, setFilterType] = useState<"ALL" | "INCOME" | "EXPENSE">("ALL");
+    const [activeTab, setActiveTab] = useState<"INCOME" | "EXPENSE">("INCOME");
 
     const getUserName = (userId: ID) => {
         const member = members.find(m => String(m.userId) === String(userId));
@@ -56,10 +68,9 @@ export const FundPage: React.FC = () => {
         return funds.filter(fund => {
             const matchesSearch = fund.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                 (fund.description && fund.description.toLowerCase().includes(searchTerm.toLowerCase()));
-            const matchesType = filterType === "ALL" || fund.type === filterType;
-            return matchesSearch && matchesType;
+            return matchesSearch && fund.type === activeTab;
         });
-    }, [funds, searchTerm, filterType]);
+    }, [funds, searchTerm, activeTab]);
 
     if (isLoading && !summary && funds.length === 0) {
         return (
@@ -89,24 +100,7 @@ export const FundPage: React.FC = () => {
                     <p className="text-ink-3 mt-1">Quản lý thu chi và minh bạch tài chính trong lớp học</p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                    {isAdminOrOwner && (
-                        <>
-                            <button 
-                                onClick={() => setIsQrOpen(true)} 
-                                className="btn btn-secondary flex-1 md:flex-none shadow-sm"
-                            >
-                                <QrCode className="w-4 h-4" />
-                                <span>Mã QR Quỹ</span>
-                            </button>
-                            <button 
-                                onClick={() => setIsFormOpen(true)} 
-                                className="btn btn-primary flex-1 md:flex-none shadow-md shadow-warm-400/20"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span>Thêm Giao Dịch</span>
-                            </button>
-                        </>
-                    )}
+                    {/* Optionally we can put general buttons here, but now they are moved to the tabs */}
                 </div>
             </div>
 
@@ -152,47 +146,74 @@ export const FundPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Transactions Section */}
-            <div className="card shadow-sm border-rule">
-                <div className="card-header border-none pb-0">
-                    <div>
-                        <h2 className="card-title text-xl">Lịch sử giao dịch</h2>
-                        <p className="card-subtitle">Theo dõi mọi biến động số dư</p>
-                    </div>
+            {/* Transactions Section with Tabs */}
+            <div className="card shadow-sm border-rule overflow-hidden">
+                <div className="flex border-b border-rule">
+                    <button
+                        onClick={() => setActiveTab("INCOME")}
+                        className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors ${
+                            activeTab === "INCOME" 
+                            ? "text-ink-green-text border-b-2 border-ink-green-text bg-ink-green-fill/10" 
+                            : "text-ink-3 hover:bg-surface-2"
+                        }`}
+                    >
+                        Thu Tiền (Khoản Thu)
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("EXPENSE")}
+                        className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors ${
+                            activeTab === "EXPENSE" 
+                            ? "text-warm-text border-b-2 border-warm-text bg-warm-fill/10" 
+                            : "text-ink-3 hover:bg-surface-2"
+                        }`}
+                    >
+                        Chi Tiêu (Khoản Chi)
+                    </button>
                 </div>
                 
-                {/* Filter Bar */}
-                <div className="p-4 flex flex-col sm:flex-row gap-4">
-                    <div className="relative flex-1">
+                {/* Actions & Filter Bar */}
+                <div className="p-4 flex flex-col sm:flex-row justify-between gap-4 bg-surface-2/30">
+                    <div className="relative flex-1 max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-3" />
                         <input 
                             type="text"
-                            placeholder="Tìm kiếm giao dịch..."
-                            className="input-field w-full pl-10"
+                            placeholder={activeTab === "INCOME" ? "Tìm kiếm khoản thu..." : "Tìm kiếm khoản chi..."}
+                            className="input-field w-full pl-10 bg-white"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => setFilterType("ALL")}
-                            className={`btn btn-sm ${filterType === "ALL" ? "btn-primary" : "btn-secondary"}`}
-                        >
-                            Tất cả
-                        </button>
-                        <button 
-                            onClick={() => setFilterType("INCOME")}
-                            className={`btn btn-sm ${filterType === "INCOME" ? "bg-ink-green-fill text-ink-green-text border-ink-green-border" : "btn-secondary"}`}
-                        >
-                            Thu
-                        </button>
-                        <button 
-                            onClick={() => setFilterType("EXPENSE")}
-                            className={`btn btn-sm ${filterType === "EXPENSE" ? "bg-warm-fill text-warm-text border-warm-border" : "btn-secondary"}`}
-                        >
-                            Chi
-                        </button>
-                    </div>
+                    
+                    {isAdminOrOwner && (
+                        <div className="flex gap-2">
+                            {activeTab === "INCOME" && (
+                                <>
+                                    <button 
+                                        onClick={() => setIsBankConfigOpen(true)} 
+                                        className="btn btn-secondary shadow-sm"
+                                        title="Cài đặt tài khoản ngân hàng nhận tiền"
+                                    >
+                                        <Building2 className="w-4 h-4 md:mr-2" />
+                                        <span className="hidden md:inline">Cài đặt Bank</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => setIsQrOpen(true)} 
+                                        className="btn btn-secondary shadow-sm"
+                                    >
+                                        <QrCode className="w-4 h-4 md:mr-2" />
+                                        <span className="hidden md:inline">Mã QR Quỹ</span>
+                                    </button>
+                                </>
+                            )}
+                            <button 
+                                onClick={() => setIsFormOpen(true)} 
+                                className={`btn shadow-md ${activeTab === "INCOME" ? "btn-primary bg-ink-green-text hover:bg-green-600 border-none shadow-ink-green-fill" : "btn-primary shadow-warm-400/20"}`}
+                            >
+                                <Plus className="w-4 h-4 md:mr-2" />
+                                <span className="hidden md:inline">{activeTab === "INCOME" ? "Thêm Khoản Thu" : "Thêm Khoản Chi"}</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="card-body p-0">
@@ -202,7 +223,7 @@ export const FundPage: React.FC = () => {
                                 <Inbox className="w-8 h-8 opacity-20" />
                             </div>
                             <p className="font-medium">Không tìm thấy giao dịch nào</p>
-                            <p className="text-sm opacity-60">Hãy thử thay đổi từ khóa hoặc bộ lọc</p>
+                            <p className="text-sm opacity-60">Hãy thử thay đổi từ khóa tìm kiếm</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -266,15 +287,44 @@ export const FundPage: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
-                                                {isAdminOrOwner && (
-                                                    <button 
-                                                        onClick={() => handleDelete(fund.id)}
-                                                        className="opacity-0 group-hover:opacity-100 p-2 text-ink-3 hover:text-ink-red-text hover:bg-ink-red-fill rounded-lg transition-all"
-                                                        title="Xóa giao dịch"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                )}
+                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                                                    {fund.type === "INCOME" && (
+                                                        isAdminOrOwner ? (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setViewPaymentsFundId(fund.id);
+                                                                    setSelectedFundTitle(fund.title);
+                                                                }}
+                                                                className="p-2 text-ink-3 hover:text-warm-400 hover:bg-warm-fill rounded-lg transition-all"
+                                                                title="Xem và duyệt minh chứng"
+                                                            >
+                                                                <ShieldCheck className="w-4 h-4" />
+                                                            </button>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setSubmitPaymentFundId(fund.id);
+                                                                    setSelectedFundTitle(fund.title);
+                                                                    setSelectedFundAmount(fund.amount);
+                                                                }}
+                                                                className="p-2 text-ink-3 hover:text-ink-green-text hover:bg-ink-green-fill rounded-lg transition-all"
+                                                                title="Nộp minh chứng thanh toán"
+                                                            >
+                                                                <Upload className="w-4 h-4" />
+                                                            </button>
+                                                        )
+                                                    )}
+                                                    
+                                                    {isAdminOrOwner && (
+                                                        <button 
+                                                            onClick={() => handleDelete(fund.id)}
+                                                            className="p-2 text-ink-3 hover:text-ink-red-text hover:bg-ink-red-fill rounded-lg transition-all"
+                                                            title="Xóa giao dịch"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -301,12 +351,45 @@ export const FundPage: React.FC = () => {
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
                 onSubmit={createFund}
+                defaultType={activeTab}
             />
 
             <FundQrModal 
                 isOpen={isQrOpen}
                 onClose={() => setIsQrOpen(false)}
+                initialConfig={bankConfig}
             />
+
+            {isAdminOrOwner && (
+                <BankConfigModal
+                    isOpen={isBankConfigOpen}
+                    onClose={() => setIsBankConfigOpen(false)}
+                    initialConfig={bankConfig}
+                    onSave={updateBankConfig}
+                />
+            )}
+
+            {submitPaymentFundId && (
+                <SubmitPaymentModal
+                    isOpen={true}
+                    onClose={() => setSubmitPaymentFundId(null)}
+                    fundId={submitPaymentFundId}
+                    classId={numericClassId}
+                    fundTitle={selectedFundTitle}
+                    fundAmount={selectedFundAmount}
+                    bankConfig={bankConfig}
+                />
+            )}
+
+            {viewPaymentsFundId && (
+                <FundPaymentList
+                    isOpen={true}
+                    onClose={() => setViewPaymentsFundId(null)}
+                    fundId={viewPaymentsFundId}
+                    classId={numericClassId}
+                    fundTitle={selectedFundTitle}
+                />
+            )}
         </div>
     );
 };

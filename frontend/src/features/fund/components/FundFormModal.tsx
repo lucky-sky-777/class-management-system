@@ -14,13 +14,20 @@ interface FundFormModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: CreateFundRequestDto) => Promise<boolean>;
+    defaultType?: "INCOME" | "EXPENSE";
 }
 
-export const FundFormModal: React.FC<FundFormModalProps> = ({ isOpen, onClose, onSubmit }) => {
+export const FundFormModal: React.FC<FundFormModalProps> = ({ isOpen, onClose, onSubmit, defaultType = "INCOME" }) => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState<number | "">("");
-    const [type, setType] = useState<"INCOME" | "EXPENSE">("INCOME");
+    const [type, setType] = useState<"INCOME" | "EXPENSE">(defaultType);
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setType(defaultType);
+        }
+    }, [isOpen, defaultType]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -40,7 +47,7 @@ export const FundFormModal: React.FC<FundFormModalProps> = ({ isOpen, onClose, o
             setTitle("");
             setDescription("");
             setAmount("");
-            setType("INCOME");
+            setType(defaultType);
             onClose();
         }
     };
