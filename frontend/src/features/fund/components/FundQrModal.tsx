@@ -12,14 +12,15 @@ import {
     ExternalLink
 } from "lucide-react";
 import { fundAPI } from "../api";
-import type { VietQrBankResponseDto } from "../types";
+import type { VietQrBankResponseDto, BankConfig } from "../types";
 
 interface FundQrModalProps {
     isOpen: boolean;
     onClose: () => void;
+    initialConfig?: BankConfig | null;
 }
 
-export const FundQrModal: React.FC<FundQrModalProps> = ({ isOpen, onClose }) => {
+export const FundQrModal: React.FC<FundQrModalProps> = ({ isOpen, onClose, initialConfig }) => {
     const [banks, setBanks] = useState<VietQrBankResponseDto[]>([]);
     const [selectedBankBin, setSelectedBankBin] = useState("");
     const [accountNumber, setAccountNumber] = useState("");
@@ -37,12 +38,20 @@ export const FundQrModal: React.FC<FundQrModalProps> = ({ isOpen, onClose }) => 
         }
     }, [isOpen]);
 
+    useEffect(() => {
+        if (initialConfig && isOpen) {
+            setSelectedBankBin(initialConfig.bank_code);
+            setAccountNumber(initialConfig.account_number);
+            setAccountName(initialConfig.account_name);
+        }
+    }, [initialConfig, isOpen, banks]);
+
     const fetchBanks = async () => {
         try {
             const res = await fundAPI.getBanks();
             if (res.success) {
                 setBanks(res.data);
-                if (res.data.length > 0) {
+                if (res.data.length > 0 && (!initialConfig || !initialConfig.bank_code)) {
                     setSelectedBankBin(res.data[0].bin);
                 }
             }
