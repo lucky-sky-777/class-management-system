@@ -9,6 +9,7 @@ export interface FundResponseDto {
     description: string;
     created_at: Timestamp;
     creator_user_id: ID;
+    qr_code_url?: string; 
 }
 
 export interface FundSummaryResponseDto {
