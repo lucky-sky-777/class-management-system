@@ -77,3 +77,22 @@ export interface BankConfig {
     account_number: string;
     account_name: string;
 }
+
+export interface CreateOrUpdatePaymentAccountRequest {
+    bank_code: string;
+    number: string;
+    name: string;
+}
+
+export interface PaymentAccountResponse {
+    "id": ID,
+    "class_id": ID,
+    "bank_code": string,
+    "number": string,
+    "name": string,
+    "qr_code_url": string,
+    "creator_user_id": string,
+    "creator_display_name": string,
+    "creator_avatar_url": string,
+    "created_at": Timestamp
+}

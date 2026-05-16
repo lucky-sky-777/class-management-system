@@ -7,10 +7,8 @@ import {
     Plus, 
     QrCode, 
     Search, 
-    Filter,
     Trash2,
     Calendar,
-    User,
     ArrowUpRight,
     ArrowDownLeft,
     Inbox,
@@ -20,8 +18,8 @@ import {
 } from "lucide-react";
 import { useFund } from "../hooks/useFund";
 import { FundFormModal } from "../components/FundFormModal";
-import { FundQrModal } from "../components/FundQrModal";
 import { BankConfigModal } from "../components/BankConfigModal";
+import { BankQrModal } from "../components/BankQrModal";
 import { SubmitPaymentModal } from "../components/SubmitPaymentModal";
 import { FundPaymentList } from "../components/FundPaymentList";
 import { useAuth } from "@features/auth";
@@ -44,12 +42,13 @@ export const FundPage: React.FC = () => {
     const isAdminOrOwner = myRole === "OWNER" || myRole === "CLASS_ADMIN";
 
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [isQrOpen, setIsQrOpen] = useState(false);
     const [isBankConfigOpen, setIsBankConfigOpen] = useState(false);
+    const [isBankQrOpen, setIsBankQrOpen] = useState(false);
     const [submitPaymentFundId, setSubmitPaymentFundId] = useState<ID | null>(null);
     const [viewPaymentsFundId, setViewPaymentsFundId] = useState<ID | null>(null);
     const [selectedFundTitle, setSelectedFundTitle] = useState("");
     const [selectedFundAmount, setSelectedFundAmount] = useState(0);
+    const [selectedFundQrUrl, setSelectedFundQrUrl] = useState<string | undefined>(undefined);
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState<"INCOME" | "EXPENSE">("INCOME");
 
@@ -184,39 +183,38 @@ export const FundPage: React.FC = () => {
                         />
                     </div>
                     
-                    {isAdminOrOwner && (
-                        <div className="flex gap-2">
-                            {activeTab === "INCOME" && (
-                                <>
-                                    <button 
-                                        onClick={() => setIsBankConfigOpen(true)} 
-                                        className="btn btn-secondary shadow-sm"
-                                        title="Cài đặt tài khoản ngân hàng nhận tiền"
-                                    >
-                                        <Building2 className="w-4 h-4 md:mr-2" />
-                                        <span className="hidden md:inline">Cài đặt Bank</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => setIsQrOpen(true)} 
-                                        className="btn btn-secondary shadow-sm"
-                                    >
-                                        <QrCode className="w-4 h-4 md:mr-2" />
-                                        <span className="hidden md:inline">Mã QR Quỹ</span>
-                                    </button>
-                                </>
-                            )}
-                            <button 
-                                onClick={() => setIsFormOpen(true)} 
-                                className={`btn shadow-md ${activeTab === "INCOME" ? "btn-primary bg-ink-green-text hover:bg-green-600 border-none shadow-ink-green-fill" : "btn-primary shadow-warm-400/20"}`}
+                    <div className="flex gap-2">
+                        {bankConfig && (
+                            <button
+                                onClick={() => setIsBankQrOpen(true)}
+                                className="btn btn-secondary shadow-sm"
+                                title="Xem mã QR thanh toán lớp"
                             >
-                                <Plus className="w-4 h-4 md:mr-2" />
-                                <span className="hidden md:inline">{activeTab === "INCOME" ? "Thêm Khoản Thu" : "Thêm Khoản Chi"}</span>
+                                <QrCode className="w-4 h-4 md:mr-2" />
+                                <span className="hidden md:inline">Xem QR Quỹ Lớp</span>
                             </button>
-                        </div>
-                    )}
+                        )}
+                        {isAdminOrOwner && activeTab === "INCOME" && (
+                            <button 
+                                onClick={() => setIsBankConfigOpen(true)} 
+                                className="btn btn-secondary shadow-sm"
+                                title="Cài đặt tài khoản ngân hàng nhận tiền"
+                            >
+                                <Building2 className="w-4 h-4 md:mr-2" />
+                                <span className="hidden md:inline">Cài đặt Bank</span>
+                            </button>
+                        )}
+                        <button 
+                            onClick={() => setIsFormOpen(true)} 
+                            className={`btn shadow-md ${activeTab === "INCOME" ? "btn-primary bg-ink-green-text hover:bg-green-600 border-none shadow-ink-green-fill" : "btn-primary shadow-warm-400/20"}`}
+                        >
+                            <Plus className="w-4 h-4 md:mr-2" />
+                            <span className="hidden md:inline">{activeTab === "INCOME" ? "Thêm Khoản Thu" : "Thêm Khoản Chi"}</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div className="card-body p-0">
+                <div className="card-body">
                     {filteredFunds.length === 0 ? (
                         <div className="py-20 flex flex-col items-center justify-center text-ink-3">
                             <div className="w-16 h-16 bg-surface-2 rounded-full flex items-center justify-center mb-4">
@@ -306,6 +304,7 @@ export const FundPage: React.FC = () => {
                                                                     setSubmitPaymentFundId(fund.id);
                                                                     setSelectedFundTitle(fund.title);
                                                                     setSelectedFundAmount(fund.amount);
+                                                                    setSelectedFundQrUrl(fund.qr_code_url);
                                                                 }}
                                                                 className="p-2 text-ink-3 hover:text-ink-green-text hover:bg-ink-green-fill rounded-lg transition-all"
                                                                 title="Nộp minh chứng thanh toán"
@@ -354,20 +353,18 @@ export const FundPage: React.FC = () => {
                 defaultType={activeTab}
             />
 
-            <FundQrModal 
-                isOpen={isQrOpen}
-                onClose={() => setIsQrOpen(false)}
+            <BankConfigModal
+                isOpen={isBankConfigOpen}
+                onClose={() => setIsBankConfigOpen(false)}
                 initialConfig={bankConfig}
+                onSave={updateBankConfig}
             />
 
-            {isAdminOrOwner && (
-                <BankConfigModal
-                    isOpen={isBankConfigOpen}
-                    onClose={() => setIsBankConfigOpen(false)}
-                    initialConfig={bankConfig}
-                    onSave={updateBankConfig}
-                />
-            )}
+            <BankQrModal
+                isOpen={isBankQrOpen}
+                onClose={() => setIsBankQrOpen(false)}
+                bankConfig={bankConfig}
+            />
 
             {submitPaymentFundId && (
                 <SubmitPaymentModal
@@ -377,7 +374,7 @@ export const FundPage: React.FC = () => {
                     classId={numericClassId}
                     fundTitle={selectedFundTitle}
                     fundAmount={selectedFundAmount}
-                    bankConfig={bankConfig}
+                    qrCodeUrl={selectedFundQrUrl}
                 />
             )}
 

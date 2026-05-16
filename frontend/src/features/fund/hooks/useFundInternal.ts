@@ -18,9 +18,23 @@ export const useFundInternal = (classId: ID) => {
         }
     });
 
-    const updateBankConfig = useCallback((config: BankConfig) => {
+    const updateBankConfig = useCallback(async (config: BankConfig) => {
         setBankConfig(config);
-        localStorage.setItem(`class_${classId}_bank_config`, JSON.stringify(config));
+        try {
+            const res = await fundAPI.updatePaymentAccount(classId, {
+                bank_code: config.bank_code,
+                number: config.account_number,
+                name: config.account_name
+            });
+            if (res.success == false) {
+                setError("Cập nhật thông tin tài khoản thất bại");
+                console.error("Failed to update payment account:");
+                console.error(res);
+            }
+        } catch (err) {
+            setError("Lỗi kết nối khi cập nhật thông tin tài khoản");
+            console.error("Failed to update payment account:", err);
+        }
     }, [classId]);
 
 
