@@ -72,6 +72,10 @@ public final class BankQrCodeUrlGenerator {
 //			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Account number cannot be null");
 //		}
 
+		if (bankCode == null || accountNumber == null) {
+			return "";
+		}
+
 		StringBuilder stringBuilder = new StringBuilder(BASE_URL);
 
 		stringBuilder.append("/").append(bankCode);

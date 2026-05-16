@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
+import jakarta.persistence.Column;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,6 +53,9 @@ public final class FundResponseDto {
 
 	@JsonProperty(value = "description")
 	String description;
+
+	@JsonProperty(value = "qr_code_url")
+	String qrCodeUrl;
 
 	@JsonProperty(value = "created_at")
 	Instant createdAt;

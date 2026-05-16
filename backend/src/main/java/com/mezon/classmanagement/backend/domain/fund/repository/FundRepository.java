@@ -19,6 +19,7 @@ public interface FundRepository extends JpaRepository<Fund, Long> {
 		fund.type,
 		fund.amount,
 		fund.title,
+		null,
 		fund.description,
 		fund.createdAt,
 		creator.id
