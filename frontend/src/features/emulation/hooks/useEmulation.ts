@@ -3,13 +3,42 @@ import { emulationAPI } from "@features/emulation/api";
 import { homeAPI } from "@features/home/api";
 import { useAuth } from "@features/auth";
 import { ClassRole } from "@shared/domain/enums";
-import type { CompetitionData } from "@features/emulation/types";
+import type { 
+  CompetitionData, 
+  WeekItem, 
+  GroupItem, 
+  GroupMember,
+  CompetitionHistory,
+  TeamRanking
+} from "@features/emulation/types";
+
+// Type cục bộ map dữ liệu thô từ API trả về
+type RawHistoryItem = {
+  id?: string | number;
+  created_at?: string;
+  description?: string;
+  point?: number;
+  group_id?: number;
+  actor_display_name?: string;
+};
+
+type RawRankItem = {
+  rank: number;
+  group_id?: number;
+  group_name?: string;
+  total_point?: number;
+};
+
+type RawMemberItem = {
+  user_id: string | number;
+  role: ClassRole;
+};
 
 export const useEmulation = (classId: string) => {
   const [data, setData] = useState<CompetitionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [weeks, setWeeks] = useState<any[]>([]);
-  const [groups, setGroups] = useState<any[]>([]);
+  const [weeks, setWeeks] = useState<WeekItem[]>([]);
+  const [groups, setGroups] = useState<GroupItem[]>([]);
   const [canEdit, setCanEdit] = useState(false);
   const { user } = useAuth();
 
@@ -25,13 +54,10 @@ export const useEmulation = (classId: string) => {
       const res = await homeAPI.getClassMembers(Number(classId));
       if (res.success) {
         const currentMember = res.data.find(
-          (m: any) => String(m.user_id) === String(user.id)
+          (m: RawMemberItem) => String(m.user_id) === String(user.id)
         );
 
-        // Chấp nhận CLASS_ADMIN hoặc nếu backend có trả vai trò khác tương đương
-        const hasPermission = 
-          currentMember?.role === ClassRole.CLASS_ADMIN;
-
+        const hasPermission = currentMember?.role === ClassRole.CLASS_ADMIN;
         setCanEdit(!!hasPermission);
       }
     } catch (error) {
@@ -47,7 +73,7 @@ export const useEmulation = (classId: string) => {
       setWeeks(weeksData);
 
       if (weeksData && weeksData.length > 0) {
-        const currentWeek = weeksData.find((w: any) => w.is_current_week);
+        const currentWeek = weeksData.find((w: WeekItem) => w.is_current_week);
         if (currentWeek) {
           setFilters((prev) => ({
             ...prev,
@@ -90,14 +116,10 @@ export const useEmulation = (classId: string) => {
           emulationAPI.getGroups(classId),
         ]);
 
-        
-        const rawHistory = historyRes?.data || (Array.isArray(historyRes) ? historyRes : []);
-        const rawWeekRank = weekRankRes?.data || (Array.isArray(weekRankRes) ? weekRankRes : []);
-        const rawMonthRank = monthRankRes?.data || (Array.isArray(monthRankRes) ? monthRankRes : []);
-        const rawGroups = groupRes?.data || (Array.isArray(groupRes) ? groupRes : []);
-        setGroups(rawGroups);
+        setGroups(groupRes);
 
-        const history = rawHistory.map((item: any) => ({
+        // Ép kiểu ngược lại thành Raw Item để Map dữ liệu an toàn
+        const history: CompetitionHistory[] = (historyRes as unknown as RawHistoryItem[]).map((item) => ({
           id: item.id?.toString() || Math.random().toString(),
           date: item.created_at || "Vừa xong",
           content: item.description || "Chưa có nội dung",
@@ -106,13 +128,13 @@ export const useEmulation = (classId: string) => {
           actor: item.actor_display_name || "Giáo viên",
         }));
 
-        const weeklyRanking = rawWeekRank.map((item: any) => ({
+        const weeklyRanking: TeamRanking[] = (weekRankRes as unknown as RawRankItem[]).map((item) => ({
           rank: item.rank,
           teamId: item.group_id || (item.group_name ? parseInt(item.group_name.replace(/\D/g, "")) : 1),
           points: item.total_point || 0,
         }));
 
-        const monthlyRanking = rawMonthRank.map((item: any) => ({
+        const monthlyRanking: TeamRanking[] = (monthRankRes as unknown as RawRankItem[]).map((item) => ({
           rank: item.rank,
           teamId: item.group_id || (item.group_name ? parseInt(item.group_name.replace(/\D/g, "")) : 1),
           points: item.total_point || 0,
@@ -121,9 +143,9 @@ export const useEmulation = (classId: string) => {
         setData({
           teamCount: Math.max(weeklyRanking.length, 4),
           teams: {},
-          history: [...history],
-          weeklyRanking: [...weeklyRanking],
-          monthlyRanking: [...monthlyRanking], // Dùng biến đã Map
+          history,
+          weeklyRanking,
+          monthlyRanking,
         });
       } catch (error) {
         console.error("Lỗi khi gọi API Thi đua:", error);
@@ -138,11 +160,9 @@ export const useEmulation = (classId: string) => {
     try {
       const res = await emulationAPI.addPoints(classId, groupId, content, points);
       
-      const responseData = res?.data ? res.data : res; 
-      const isSuccess = responseData && (responseData.success || responseData.code === 200 || responseData.id);
+      const isSuccess = res && (res.success || res.code === 200 || res.id);
 
       if (isSuccess) {
-        // Mẹo chống delay: Đợi DB commit transaction xong (200ms) rồi mới gọi lệnh Load
         await new Promise(resolve => setTimeout(resolve, 200)); 
         await loadData(true);
         return { success: true };
@@ -165,19 +185,16 @@ export const useEmulation = (classId: string) => {
     }
   };
 
-// THÊM TỔ MỚI (Nút Dấu +)
   const addGroup = async () => {
     try {
-      // Tự động tính tên tổ tiếp theo (VD: Đang có 4 tổ -> Tạo "Tổ 5")
       const nextNumber = groups.length + 1;
       const groupName = `Tổ ${nextNumber}`;
       
       const res = await emulationAPI.createGroup(classId, groupName);
       
       if (res) {
-        await new Promise(resolve => setTimeout(resolve, 300)); // Đợi DB lưu xíu
-        await loadData(true); // Load lại danh sách ngay lập tức
-        // alert(`Đã thêm ${groupName} thành công!`);
+        await new Promise(resolve => setTimeout(resolve, 300)); 
+        await loadData(true); 
       }
     } catch (error) {
       console.error("Lỗi thêm tổ:", error);
@@ -185,15 +202,15 @@ export const useEmulation = (classId: string) => {
     }
   };
 
-  // 1. HÀM SỬA TÊN TỔ
   const editGroup = async (groupId: number, newName: string) => {
     if (!newName.trim()) return false;
     try {
       const res = await emulationAPI.updateGroup(classId, groupId, newName.trim());
+      // Check luôn res thẳng vì đã xóa vỏ .data
       if (res) {
         await new Promise(resolve => setTimeout(resolve, 300));
         await loadData(true);
-        return true; // Trả về true để UI biết đường đóng ô nhập
+        return true; 
       }
     } catch (error) {
       console.error("Lỗi sửa tên tổ:", error);
@@ -202,14 +219,12 @@ export const useEmulation = (classId: string) => {
     return false;
   };
 
-  // 2. HÀM XÓA TỔ CHỈ ĐỊNH
   const removeGroup = async (groupId: number) => {
     try {
       const res = await emulationAPI.deleteGroup(classId, groupId);
       if (res) {
         await new Promise(resolve => setTimeout(resolve, 300));
         await loadData(true);
-        // alert("Đã xóa tổ thành công!");
         return true;
       }
     } catch (error) {
@@ -219,8 +234,7 @@ export const useEmulation = (classId: string) => {
     return false;
   };
 
-  // --- QUẢN LÝ THÀNH VIÊN TỔ ---
-  const fetchGroupMembers = async (groupId: number) => {
+  const fetchGroupMembers = async (groupId: number): Promise<GroupMember[]> => {
     try {
       return await emulationAPI.getGroupMembers(classId, groupId);
     } catch (error) {
@@ -229,7 +243,7 @@ export const useEmulation = (classId: string) => {
     }
   };
 
-  const fetchUngroupedMembers = async () => {
+  const fetchUngroupedMembers = async (): Promise<GroupMember[]> => {
     try {
       return await emulationAPI.getUngroupedMembers(classId);
     } catch (error) {

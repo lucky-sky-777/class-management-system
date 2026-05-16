@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Plus, Minus, Pencil, Check, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useEmulation } from "@features/emulation/hooks/useEmulation";
 import { RankingTable } from "@features/emulation/pages/RankingTable";
 import { HistoryTable } from "@features/emulation/pages/HistoryTable";
 import { GroupSidebar } from "@features/emulation/pages/GroupSidebar";
 import { Modal } from "@shared/components/ui/Modal";
+import type { WeekItem } from "@features/emulation/types";
 
 export const Emulation = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -37,27 +37,22 @@ export const Emulation = () => {
     points: 0,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  //state remove
+
+  // State quản lý xóa tổ
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
-  // //state edit
-  // const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
-  // const [editGroupName, setEditGroupName] = useState("");
-  //state phân quyền
-  // 3. EARLY RETURN (Chỉ return sau khi đã gọi hết Hooks)
+
+  // Early Return kiểm tra đang tải dữ liệu
   if (isLoading || !data) {
     return (
-      <div className="p-10 text-center text-ink-3 font-medium animate-pulse">
+      <div className="p-10 text-center text-[var(--ink-3)] text-sm font-medium animate-pulse">
         Đang tải dữ liệu thi đua...
       </div>
     );
   }
 
-  // const currentTeamMembers = data?.teams?.[selectedTeam] || [];
-
-  // 4. HÀM XỬ LÝ GHI ĐIỂM
+  // Hàm xử lý ghi điểm
   const handleSubmitPoint = async () => {
-    // 1. Validation sớm
     const pointsToSubmit = Number(pointForm.points);
     if (!pointForm.content.trim()) return alert("Vui lòng nhập nội dung!");
     if (isNaN(pointsToSubmit) || pointsToSubmit === 0) {
@@ -65,10 +60,8 @@ export const Emulation = () => {
     }
 
     try {
-      setIsSubmitting(true); // Khóa nút bấm lại
+      setIsSubmitting(true);
 
-      // 2. Gọi hàm addPoint từ Hook (Sử dụng hàm đã bọc trong useEmulation để đồng bộ)
-      // Lưu ý: Nên dùng hàm addPoint từ Hook trả về thay vì gọi trực tiếp emulationAPI ở đây
       const result = await addPoint(
         selectedTeam,
         pointForm.content,
@@ -76,11 +69,8 @@ export const Emulation = () => {
       );
 
       if (result.success) {
-        // 3. Xử lý sau khi thành công
         setShowPointModal(false);
         setPointForm({ content: "", points: 0 });
-
-        // Thông báo nhẹ nhàng (nên dùng Toast nếu có, alert hơi "cổ điển")
         console.log(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
       } else {
         alert("Ghi điểm thất bại. Vui lòng kiểm tra lại kết nối!");
@@ -89,25 +79,25 @@ export const Emulation = () => {
       console.error("Lỗi nhập điểm:", error);
       alert("Đã có lỗi xảy ra khi ghi điểm!");
     } finally {
-      setIsSubmitting(false); // Mở khóa nút bấm
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
-      {/* THANH BỘ LỌC */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-2 px-1 gap-4 animate-fade-in">
-        {/* Cụm chọn tuần - Nhỏ nhắn */}
-        <div className="flex items-center gap-3 bg-[var(--bg-surface)] p-1.5 px-3 rounded-[var(--r-lg)] border border-[var(--rule)] shadow-[var(--shadow-xs)]">
+      {/* THANH BỘ LỌC VÀ TIỆN ÍCH */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 px-1 gap-4">
+        {/* Cụm chọn tuần học */}
+        <div className="flex items-center gap-3 bg-[var(--bg-surface)] p-2 px-4 rounded-xl border border-[var(--rule)] shadow-2xs">
           <span className="text-[10px] text-[var(--ink-3)] font-black uppercase tracking-widest">
             Tuần:
           </span>
           <select
-            className="text-[12px] font-bold bg-transparent text-[var(--ink-1)] border-none p-0 cursor-pointer outline-none focus:ring-0"
+            className="text-xs font-bold bg-transparent text-[var(--ink-1)] border-none p-0 cursor-pointer outline-none focus:ring-0"
             value={filters.startDate}
-            onChange={(e) => {
-              const selected = weeks.find(
-                (w: any) => w.start_at === e.target.value,
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              const selected = (weeks as WeekItem[]).find(
+                (w) => w.start_at === e.target.value,
               );
               if (selected) {
                 setFilters({
@@ -117,8 +107,12 @@ export const Emulation = () => {
               }
             }}
           >
-            {weeks.map((w: any) => (
-              <option key={w.week} value={w.start_at}>
+            {(weeks as WeekItem[]).map((w) => (
+              <option
+                key={w.week}
+                value={w.start_at}
+                className="bg-[var(--bg-surface)] text-[var(--ink-1)]"
+              >
                 Tuần {w.week} ({w.formatted_start_at} - {w.formatted_end_at})
                 {w.is_current_week ? " • Hiện tại" : ""}
               </option>
@@ -126,14 +120,14 @@ export const Emulation = () => {
           </select>
         </div>
 
-        {/* NÚT NỘI QUY - Màu Sage (Xanh lá xám) */}
-        <button className="bg-[var(--sage-fill)] text-[var(--sage-text)] border border-[var(--sage-border)] px-4 py-1.5 rounded-[var(--r-full)] font-black text-[10px] uppercase tracking-tighter hover:bg-[var(--bg-surface-3)] transition-all active:scale-95 shadow-sm">
+        {/* NÚT NỘI QUY */}
+        <button className="bg-[var(--sage-fill)] text-[var(--sage-text)] border border-[var(--sage-border)] px-4 py-1.5 rounded-full font-bold text-[10px] uppercase tracking-wider hover:opacity-90 transition-all active:scale-95 shadow-2xs">
           Nội quy thi đua
         </button>
       </div>
 
+      {/* KHU VỰC SIDEBAR VÀ LỊCH SỬ BẢNG ĐIỂM */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* DANH SÁCH TỔ ĐÃ ĐƯỢC TÁCH COMPONENT */}
         <div className="lg:col-span-1">
           <GroupSidebar
             classId={classId!}
@@ -151,7 +145,6 @@ export const Emulation = () => {
           />
         </div>
 
-        {/* LỊCH SỬ THAY ĐỔI */}
         <div className="lg:col-span-3">
           <HistoryTable
             selectedTeam={selectedTeam}
@@ -162,16 +155,13 @@ export const Emulation = () => {
         </div>
       </div>
 
+      {/* KHU VỰC BẢNG XẾP HẠNG THI ĐUA */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <RankingTable title="Xếp hạng tuần" rows={data.weeklyRanking} />
-        <RankingTable
-          title="Xếp hạng tháng"
-          rows={data.monthlyRanking}
-          // isMonthly
-        />
+        <RankingTable title="Xếp hạng tháng" rows={data.monthlyRanking} />
       </div>
 
-      {/* MODAL GHI ĐIỂM GIỮ NGUYÊN */}
+      {/* MODAL GHI ĐIỂM */}
       <Modal
         isOpen={showPointModal}
         onClose={() => {
@@ -181,14 +171,13 @@ export const Emulation = () => {
         title={`Ghi điểm Tổ ${selectedTeam}`}
       >
         <div className="space-y-5 p-1">
-          {/* TRƯỜNG NỘI DUNG */}
           <div>
             <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest mb-1.5 block">
               Nội dung vi phạm / Khen thưởng
             </label>
             <input
               type="text"
-              className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule)] rounded-[var(--r-lg)] p-3 text-sm text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:ring-2 focus:ring-[var(--warm-400)] focus:border-transparent outline-none transition-all"
+              className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule-md)] rounded-lg p-3 text-sm text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:border-[var(--warm-400)] outline-none transition-all"
               placeholder="Ví dụ: Hăng hái xây dựng bài..."
               value={pointForm.content}
               onChange={(e) =>
@@ -197,7 +186,6 @@ export const Emulation = () => {
             />
           </div>
 
-          {/* TRƯỜNG SỐ ĐIỂM */}
           <div>
             <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-widest mb-1.5 block">
               Số điểm (+ cộng, - trừ)
@@ -205,7 +193,7 @@ export const Emulation = () => {
             <div className="relative">
               <input
                 type="text"
-                className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule)] rounded-[var(--r-lg)] p-3 pl-4 text-sm font-bold text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:ring-2 focus:ring-[var(--warm-400)] outline-none transition-all"
+                className="w-full bg-[var(--bg-surface-2)] border border-[var(--rule-md)] rounded-lg p-3 pl-4 text-sm font-bold text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:border-[var(--warm-400)] outline-none transition-all"
                 placeholder="Nhập ví dụ: 10 hoặc -5"
                 value={pointForm.points === 0 ? "" : pointForm.points}
                 onChange={(e) => {
@@ -216,29 +204,27 @@ export const Emulation = () => {
                 }}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmitPoint()}
               />
-              {/* Badge gợi ý nhỏ bên cạnh */}
               <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-black text-[var(--ink-3)] uppercase">
                 Points
               </div>
             </div>
           </div>
 
-          {/* CỤM NÚT BẤM */}
-          <div className="flex gap-3 pt-3">
+          <div className="flex gap-3 pt-2">
             <button
               disabled={isSubmitting}
               onClick={() => {
                 setShowPointModal(false);
                 setPointForm({ content: "", points: 0 });
               }}
-              className="flex-1 py-2.5 bg-[var(--bg-surface-3)] text-[var(--ink-2)] rounded-[var(--r-lg)] font-bold text-xs hover:bg-[var(--ink-4)] transition-colors"
+              className="flex-1 py-2.5 bg-[var(--bg-surface-3)] text-[var(--ink-2)] rounded-lg font-bold text-xs hover:bg-[var(--ink-4)] hover:text-[var(--ink-1)] transition-colors"
             >
               HỦY BỎ
             </button>
             <button
               disabled={isSubmitting}
               onClick={handleSubmitPoint}
-              className="flex-1 py-2.5 bg-[var(--warm-400)] text-white rounded-[var(--r-lg)] font-bold text-xs shadow-md shadow-blue-900/10 hover:bg-[var(--warm-600)] transition-all active:scale-95"
+              className="flex-1 py-2.5 bg-[var(--warm-400)] hover:bg-[var(--warm-600)] text-white rounded-lg font-bold text-xs shadow-xs transition-all active:scale-95"
             >
               XÁC NHẬN GHI
             </button>
@@ -246,7 +232,7 @@ export const Emulation = () => {
         </div>
       </Modal>
 
-      {/* MODAL XÓA TỔ */}
+      {/* MODAL XÓA TỔ THI ĐUA */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => {
@@ -255,30 +241,27 @@ export const Emulation = () => {
         }}
         title="Xóa Tổ Chỉ Định"
       >
-        <div className="space-y-5 p-2">
-          {/* Hộp cảnh báo - Dùng bộ Semantic Danger (--red-fill, --red-border, --red-text) */}
-          <div className="bg-[var(--red-fill)] text-[var(--red-text)] text-sm p-4 rounded-[var(--r-md)] border border-[var(--red-border)] font-medium flex gap-3 leading-relaxed">
-            <span className="flex-shrink-0 text-base">⚠️</span>
+        <div className="space-y-5 p-1">
+          <div className="bg-[var(--red-fill)] text-[var(--red-text)] text-xs p-4 rounded-xl border border-[var(--red-border)] font-semibold flex gap-2.5 leading-relaxed">
+            <span className="flex-shrink-0 text-sm">⚠️</span>
             <span>
               Hành động này sẽ xóa toàn bộ điểm số của tổ vĩnh viễn. Hãy kiểm
               tra thật kỹ trước khi xác nhận!
             </span>
           </div>
 
-          {/* Danh sách chọn Tổ */}
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar">
             {groups.map((group) => {
               const isSelected = groupToDelete === group.id;
               return (
                 <label
                   key={group.id}
-                  className={`flex items-center gap-3 p-3.5 rounded-[var(--r-md)] border cursor-pointer transition-all duration-200 ${
+                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
                     isSelected
-                      ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-[var(--shadow-sm)]"
-                      : "border-[var(--rule)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-2)]"
+                      ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-xs"
+                      : "border-[var(--rule)] bg-surface hover:bg-[var(--bg-surface-2)]"
                   }`}
                 >
-                  {/* Dùng accent-color cho radio button để match với màu Danger */}
                   <input
                     type="radio"
                     name="groupDelete"
@@ -287,7 +270,7 @@ export const Emulation = () => {
                     className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
                   />
                   <span
-                    className={`text-sm font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}
+                    className={`text-xs font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}
                   >
                     {group.name}
                   </span>
@@ -296,20 +279,16 @@ export const Emulation = () => {
             })}
           </div>
 
-          {/* Cụm nút bấm */}
           <div className="flex gap-3 pt-2">
-            {/* Nút Hủy - Dùng Surface & Ink */}
             <button
               onClick={() => {
                 setShowDeleteModal(false);
                 setGroupToDelete(null);
               }}
-              className="flex-1 py-2.5 bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-[var(--rule)] rounded-[var(--r-md)] font-bold text-[11px] tracking-[0.05em] hover:bg-[var(--bg-surface-3)] hover:text-[var(--ink-1)] transition-colors"
+              className="flex-1 py-2.5 bg-[var(--bg-surface-2)] text-[var(--ink-2)] border border-[var(--rule)] rounded-xl font-bold text-xs hover:bg-[var(--bg-surface-3)] hover:text-[var(--ink-1)] transition-colors"
             >
               HỦY BỎ
             </button>
-
-            {/* Nút Xóa - Dùng màu Red Text làm background cho nổi bật (vì globals.css không có red-button) */}
             <button
               disabled={!groupToDelete}
               onClick={async () => {
@@ -323,7 +302,7 @@ export const Emulation = () => {
                   }
                 }
               }}
-              className="flex-1 py-2.5 bg-[var(--red-text)] text-white rounded-[var(--r-md)] font-bold text-[11px] tracking-[0.05em] shadow-[var(--shadow-sm)] hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 py-2.5 bg-[var(--red-text)] text-white rounded-xl font-bold text-xs shadow-xs hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               XÁC NHẬN XÓA
             </button>
