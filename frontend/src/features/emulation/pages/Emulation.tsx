@@ -48,9 +48,7 @@ export const Emulation = () => {
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
         <div className="animate-in fade-in duration-300 flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--warm-400)]"></div>
-          <p className="text-ink-2 text-sm font-medium">
-            Đang tải thi đua...
-          </p>
+          <p className="text-ink-2 text-sm font-medium">Đang tải thi đua...</p>
         </div>
       </div>
     );
@@ -256,32 +254,34 @@ export const Emulation = () => {
           </div>
 
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar">
-            {groups.map((group) => {
-              const isSelected = groupToDelete === group.id;
-              return (
-                <label
-                  key={group.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
-                    isSelected
-                      ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-xs"
-                      : "border-[var(--rule)] bg-surface hover:bg-[var(--bg-surface-2)]"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="groupDelete"
-                    checked={isSelected}
-                    onChange={() => setGroupToDelete(group.id)}
-                    className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
-                  />
-                  <span
-                    className={`text-xs font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}
+            {[...groups]
+              .sort((a, b) => a.id - b.id)
+              .map((group) => {
+                const isSelected = groupToDelete === group.id;
+                return (
+                  <label
+                    key={group.id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
+                      isSelected
+                        ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-xs"
+                        : "border-[var(--rule)] bg-surface hover:bg-[var(--bg-surface-2)]"
+                    }`}
                   >
-                    {group.name}
-                  </span>
-                </label>
-              );
-            })}
+                    <input
+                      type="radio"
+                      name="groupDelete"
+                      checked={isSelected}
+                      onChange={() => setGroupToDelete(group.id)}
+                      className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
+                    />
+                    <span
+                      className={`text-xs font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}
+                    >
+                      {group.name}
+                    </span>
+                  </label>
+                );
+              })}
           </div>
 
           <div className="flex gap-3 pt-2">
