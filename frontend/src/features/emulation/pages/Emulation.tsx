@@ -134,7 +134,7 @@ export const Emulation = () => {
         <div className="lg:col-span-1">
           <GroupSidebar
             classId={classId!}
-            groups={[...groups].sort((a, b) => a.id - b.id)}
+            groups={groups}
             selectedTeam={selectedTeam}
             setSelectedTeam={setSelectedTeam}
             canEdit={canEdit}
@@ -254,34 +254,32 @@ export const Emulation = () => {
           </div>
 
           <div className="space-y-2 max-h-60 overflow-y-auto pr-1 no-scrollbar">
-            {[...groups]
-              .sort((a, b) => a.id - b.id)
-              .map((group) => {
-                const isSelected = groupToDelete === group.id;
-                return (
-                  <label
-                    key={group.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
-                      isSelected
-                        ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-xs"
-                        : "border-[var(--rule)] bg-surface hover:bg-[var(--bg-surface-2)]"
-                    }`}
+            {groups.map((group) => {
+              const isSelected = groupToDelete === group.id;
+              return (
+                <label
+                  key={group.id}
+                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
+                    isSelected
+                      ? "border-[var(--red-border)] bg-[var(--red-fill)] shadow-xs"
+                      : "border-[var(--rule)] bg-surface hover:bg-[var(--bg-surface-2)]"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="groupDelete"
+                    checked={isSelected}
+                    onChange={() => setGroupToDelete(group.id)}
+                    className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
+                  />
+                  <span
+                    className={`text-xs font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}
                   >
-                    <input
-                      type="radio"
-                      name="groupDelete"
-                      checked={isSelected}
-                      onChange={() => setGroupToDelete(group.id)}
-                      className="w-4 h-4 accent-[var(--red-text)] cursor-pointer"
-                    />
-                    <span
-                      className={`text-xs font-bold ${isSelected ? "text-[var(--red-text)]" : "text-[var(--ink-1)]"}`}
-                    >
-                      {group.name}
-                    </span>
-                  </label>
-                );
-              })}
+                    {group.name}
+                  </span>
+                </label>
+              );
+            })}
           </div>
 
           <div className="flex gap-3 pt-2">
