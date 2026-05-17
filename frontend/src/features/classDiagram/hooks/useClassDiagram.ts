@@ -5,6 +5,13 @@ import { homeAPI } from '@features/home/api';
 import { useAuth } from '@features/auth';
 import { ClassRole } from '@shared/domain/enums';
 import type { ClassDiagramData, AttendanceStatus } from '@features/classDiagram/types';
+import axios from 'axios'; // Dùng để ép kiểu bắt lỗi an toàn
+
+// Interface hỗ trợ nội bộ cho Member
+interface MemberItem {
+  user_id: string | number;
+  role: ClassRole;
+}
 
 export const useClassDiagram = (classId: string, mode: "view" | "attendance" | "setup") => {
   const { user } = useAuth();
@@ -45,7 +52,7 @@ export const useClassDiagram = (classId: string, mode: "view" | "attendance" | "
       try {
         const res = await homeAPI.getClassMembers(Number(classId));
         if (res.success) {
-          const currentMember = res.data.find((m) => String(m.user_id) === String(user.id));
+          const currentMember = res.data.find((m: MemberItem) => String(m.user_id) === String(user.id));
           setCanEdit(currentMember?.role === ClassRole.CLASS_ADMIN);
         }
       } catch (error) {
@@ -87,13 +94,19 @@ export const useClassDiagram = (classId: string, mode: "view" | "attendance" | "
         );
       }
       
-      // Thành công thì tải lại cả Sơ đồ VÀ Danh sách khay chờ
       await fetchDiagram();
       if (mode === "setup") await fetchUnseatedMembers(); 
       return true; 
-    } catch (error: any) {
+    } catch (error: unknown) { // Đã thay any bằng unknown
       console.error("Lỗi xếp/đổi chỗ:", error);
-      const backendMessage = error.response?.data?.message || "Xếp chỗ thất bại do lỗi không xác định!";
+      
+      let backendMessage = "Xếp chỗ thất bại do lỗi không xác định!";
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        backendMessage = error.response.data.message;
+      } else if (error instanceof Error) {
+        backendMessage = error.message;
+      }
+
       alert(`❌ Lỗi Xếp Chỗ:\n${backendMessage}`);
       return false; 
     }
@@ -109,9 +122,15 @@ export const useClassDiagram = (classId: string, mode: "view" | "attendance" | "
     try {
       await classDiagramAPI.updateAttendance(classId, groupId, studentId, nextStatus[currentStatus] || "present");
       await fetchDiagram();
-    } catch (error: any) {
+    } catch (error: unknown) { // Đã thay any bằng unknown
       console.error("Lỗi điểm danh:", error);
-      alert(`❌ Điểm danh thất bại: ${error.response?.data?.message || "Lỗi máy chủ!"}`);
+      
+      let backendMessage = "Lỗi máy chủ!";
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        backendMessage = error.response.data.message;
+      }
+
+      alert(`❌ Điểm danh thất bại: ${backendMessage}`);
     }
   };
 
@@ -122,14 +141,14 @@ export const useClassDiagram = (classId: string, mode: "view" | "attendance" | "
       await classDiagramAPI.shuffleSeats(classId);
       await fetchDiagram(); 
       await fetchUnseatedMembers(); // Cập nhật lại khay chờ
-    } catch (error) {
+    } catch {
       alert("Xếp tự động thất bại!");
       setIsLoading(false);
     }
   };
 
   return { 
-    data, isLoading, canEdit, unseatedMembers, // Xuất thêm state ra UI
+    data, isLoading, canEdit, unseatedMembers, 
     refresh: fetchDiagram, shuffle: shuffleDiagram, assignSeat: assignOrUpdateSeat, markAttendance 
   };
 };

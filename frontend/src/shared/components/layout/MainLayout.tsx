@@ -3,12 +3,19 @@ import { Header } from '@shared/components/layout/Header';
 import { Sidebar } from '@shared/components/layout/Sidebar';
 import { useUIStore } from '@app/store';
 
+// Định nghĩa Type cho UI Store
+interface UIStoreState {
+  isSidebarOpen: boolean;
+  setSidebarOpen: (isOpen: boolean) => void;
+}
+
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
-  const { isSidebarOpen, setSidebarOpen } = useUIStore();
+  // const isSidebarOpen = useUIStore((state: UIStoreState) => state.isSidebarOpen);
+  const setSidebarOpen = useUIStore((state: UIStoreState) => state.setSidebarOpen);
 
   useEffect(() => {
     const handleResize = () => {
@@ -19,24 +26,19 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
       }
     };
 
+    // Chạy thử 1 lần lúc mới load để check kích thước màn hình
+    handleResize();
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [setSidebarOpen]);
 
   return (
-    <div className="h-screen flex flex-col bg-paper overflow-hidden">
+    <div className="h-screen flex flex-col bg-[var(--bg-paper)] overflow-hidden transition-colors duration-300">
       <Header />
       
       <div className="flex flex-1 overflow-hidden relative">
         <Sidebar />
-        
-        {isSidebarOpen && (
-          <div 
-            className="md:hidden fixed inset-0 top-16 bg-black/50 z-10"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
         <main className="flex-1 overflow-y-auto p-0 transition-all duration-300 ease-in-out relative">
           {children}
         </main>

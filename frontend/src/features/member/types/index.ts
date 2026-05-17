@@ -13,3 +13,12 @@ export interface Member {
 export interface UpdateRoleRequest {
   role: MemberRole;
 }
+
+export type ClassInfo = {
+  id: number | string;
+  name: string;
+  code: string;
+  type?: string;
+  privacy?: string;
+  owner_user_id?: number | string;
+};

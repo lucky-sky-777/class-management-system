@@ -1,4 +1,4 @@
-import type { ClassItems, ClassResponse, ClassIdResponse, ClassMember } from "@features/home/types";
+import type { ClassItems, ClassResponse, ClassIdResponse, ClassMember, JoinClassResult } from "@features/home/types";
 import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
 
@@ -44,7 +44,7 @@ export const homeAPI = {
     });
   },
 
-  joinClass: async (code: string): Promise<ResponseDTO<string>> => {
+  joinClass: async (code: string): Promise<ResponseDTO<JoinClassResult>> => {
     const authStorage = localStorage.getItem("auth-storage");
     let token = null;
 
@@ -57,7 +57,7 @@ export const homeAPI = {
       }
     }
 
-    return apiClient.post<ResponseDTO<string>>(
+    return apiClient.post<ResponseDTO<JoinClassResult>>(
       `/classes/join`,
       { class_code: code },
       {
