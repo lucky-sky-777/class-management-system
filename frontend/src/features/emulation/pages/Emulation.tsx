@@ -136,7 +136,7 @@ export const Emulation = () => {
         <div className="lg:col-span-1">
           <GroupSidebar
             classId={classId!}
-            groups={groups}
+            groups={[...groups].sort((a, b) => a.id - b.id)}
             selectedTeam={selectedTeam}
             setSelectedTeam={setSelectedTeam}
             canEdit={canEdit}
