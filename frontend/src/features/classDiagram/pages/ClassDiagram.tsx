@@ -20,6 +20,7 @@ export const ClassDiagram = () => {
     data,
     canEdit,
     unseatedMembers,
+    isLoading,
     shuffle,
     assignSeat,
     markAttendance,
@@ -39,13 +40,18 @@ export const ClassDiagram = () => {
     return columns;
   }, [currentGroups]);
 
-  if (!data)
+  if (isLoading || !data) {
     return (
-      <div className="p-10 text-center animate-pulse text-[var(--ink-3)] font-medium">
-        Đang tải dữ liệu...
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="animate-in fade-in duration-300 flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--warm-400)]"></div>
+          <p className="text-ink-2 text-sm font-medium">
+            Đang tải sơ đồ lớp học...
+          </p>
+        </div>
       </div>
     );
-
+  }
   const handleSeatClick = async (
     groupId: number,
     deskId: number,

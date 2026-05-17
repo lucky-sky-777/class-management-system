@@ -45,8 +45,13 @@ export const Emulation = () => {
   // Early Return kiểm tra đang tải dữ liệu
   if (isLoading || !data) {
     return (
-      <div className="p-10 text-center text-[var(--ink-3)] text-sm font-medium animate-pulse">
-        Đang tải dữ liệu thi đua...
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="animate-in fade-in duration-300 flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--warm-400)]"></div>
+          <p className="text-ink-2 text-sm font-medium">
+            Đang tải thi đua...
+          </p>
+        </div>
       </div>
     );
   }
