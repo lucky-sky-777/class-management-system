@@ -7,6 +7,7 @@ import {
   Plus,
   QrCode,
   Search,
+  Trash2,
   Calendar,
   ArrowUpRight,
   ArrowDownLeft,
@@ -14,12 +15,11 @@ import {
   Building2,
   Upload,
   ShieldCheck,
-  Trash2,
 } from "lucide-react";
 import { useFund } from "../hooks/useFund";
 import { FundFormModal } from "../components/FundFormModal";
-import { FundQrModal } from "../components/FundQrModal";
 import { BankConfigModal } from "../components/BankConfigModal";
+import { BankQrModal } from "../components/BankQrModal";
 import { SubmitPaymentModal } from "../components/SubmitPaymentModal";
 import { FundPaymentList } from "../components/FundPaymentList";
 import { useAuth } from "@features/auth";
@@ -49,12 +49,13 @@ export const FundPage: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [isBankConfigOpen, setIsBankConfigOpen] = useState(false);
-  const [submitPaymentFundId, setSubmitPaymentFundId] = useState<ID | null>(
-    null,
-  );
+  const [submitPaymentFundId, setSubmitPaymentFundId] = useState<ID | null>(null);
   const [viewPaymentsFundId, setViewPaymentsFundId] = useState<ID | null>(null);
   const [selectedFundTitle, setSelectedFundTitle] = useState("");
+  const [selectedFundDescription, setselectedFundDescription] = useState("");
+
   const [selectedFundAmount, setSelectedFundAmount] = useState(0);
+  const [selectedFundQrUrl, setSelectedFundQrUrl] = useState<string | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"INCOME" | "EXPENSE">("INCOME");
 
@@ -373,6 +374,7 @@ export const FundPage: React.FC = () => {
                                 onClick={() => {
                                   setViewPaymentsFundId(fund.id);
                                   setSelectedFundTitle(fund.title);
+                                  setselectedFundDescription(fund.description || "")
                                 }}
                                 className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
                                 title="Xem và duyệt minh chứng"
@@ -384,7 +386,9 @@ export const FundPage: React.FC = () => {
                                 onClick={() => {
                                   setSubmitPaymentFundId(fund.id);
                                   setSelectedFundTitle(fund.title);
+                                  setselectedFundDescription(fund.description || "")
                                   setSelectedFundAmount(fund.amount);
+                                  setSelectedFundQrUrl(fund.qr_code_url);
                                 }}
                                 className="p-1.5 text-ink-3 hover:text-[var(--green-text)] hover:bg-[var(--green-fill)] border border-transparent hover:border-[var(--green-border)] rounded-lg transition-all"
                                 title="Nộp minh chứng thanh toán"
@@ -429,10 +433,10 @@ export const FundPage: React.FC = () => {
         defaultType={activeTab}
       />
 
-      <FundQrModal
+      <BankQrModal
         isOpen={isQrOpen}
         onClose={() => setIsQrOpen(false)}
-        initialConfig={bankConfig}
+        bankConfig={bankConfig}
       />
 
       {isAdminOrOwner && (
@@ -451,8 +455,9 @@ export const FundPage: React.FC = () => {
           fundId={submitPaymentFundId}
           classId={numericClassId}
           fundTitle={selectedFundTitle}
+          fundDescription={selectedFundDescription}
           fundAmount={selectedFundAmount}
-          bankConfig={bankConfig}
+          qrCodeUrl={selectedFundQrUrl}
         />
       )}
 
@@ -463,6 +468,7 @@ export const FundPage: React.FC = () => {
           fundId={viewPaymentsFundId}
           classId={numericClassId}
           fundTitle={selectedFundTitle}
+          fundDescription={selectedFundDescription}
         />
       )}
     </div>

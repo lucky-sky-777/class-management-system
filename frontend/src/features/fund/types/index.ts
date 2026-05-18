@@ -9,6 +9,7 @@ export interface FundResponseDto {
     description: string;
     created_at: Timestamp;
     creator_user_id: ID;
+    qr_code_url?: string; 
 }
 
 export interface FundSummaryResponseDto {
@@ -76,4 +77,23 @@ export interface BankConfig {
     bank_code: string;
     account_number: string;
     account_name: string;
+}
+
+export interface CreateOrUpdatePaymentAccountRequest {
+    bank_code: string;
+    number: string;
+    name: string;
+}
+
+export interface PaymentAccountResponse {
+    "id": ID,
+    "class_id": ID,
+    "bank_code": string,
+    "number": string,
+    "name": string,
+    "qr_code_url": string,
+    "creator_user_id": string,
+    "creator_display_name": string,
+    "creator_avatar_url": string,
+    "created_at": Timestamp
 }

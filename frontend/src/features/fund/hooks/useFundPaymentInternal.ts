@@ -48,7 +48,7 @@ export const useFundPaymentInternal = (classId: ID) => {
     const approvePayment = async (fundId: ID, paymentId: ID) => {
         setIsLoading(true);
         try {
-            const res = await fundAPI.approveFundPayment(classId, paymentId);
+            const res = await fundAPI.approveFundPayment(classId, fundId, paymentId);
             if (res.success) {
                 await fetchPayments(fundId);
                 return true;
@@ -67,7 +67,7 @@ export const useFundPaymentInternal = (classId: ID) => {
     const rejectPayment = async (fundId: ID, paymentId: ID) => {
         setIsLoading(true);
         try {
-            const res = await fundAPI.rejectFundPayment(classId, paymentId);
+            const res = await fundAPI.rejectFundPayment(classId, fundId, paymentId);
             if (res.success) {
                 await fetchPayments(fundId);
                 return true;
@@ -86,7 +86,7 @@ export const useFundPaymentInternal = (classId: ID) => {
     const cancelPayment = async (fundId: ID, paymentId: ID) => {
         setIsLoading(true);
         try {
-            const res = await fundAPI.cancelFundPayment(classId, paymentId);
+            const res = await fundAPI.cancelFundPayment(classId, fundId, paymentId);
             if (res.success) {
                 await fetchPayments(fundId);
                 return true;

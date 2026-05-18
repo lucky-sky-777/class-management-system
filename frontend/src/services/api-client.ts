@@ -139,6 +139,29 @@ export const apiClient = {
     }
   },
 
+  async put<T>(
+    endpoint: string,
+    body: any,
+    options: RequestInit = {},
+  ): Promise<T> {
+    const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
+    tempHeaders = {};
+    try {
+      const response = await axiosInstance.put<T>(endpoint, body, {
+        headers: currentHeaders,
+        signal: options.signal as any,
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        throw new Error(
+          `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim(),
+        );
+      }
+      throw error;
+    }
+  },
+
   async delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
     tempHeaders = {};
