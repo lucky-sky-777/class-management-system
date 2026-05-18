@@ -52,6 +52,8 @@ export const FundPage: React.FC = () => {
   const [submitPaymentFundId, setSubmitPaymentFundId] = useState<ID | null>(null);
   const [viewPaymentsFundId, setViewPaymentsFundId] = useState<ID | null>(null);
   const [selectedFundTitle, setSelectedFundTitle] = useState("");
+  const [selectedFundDescription, setselectedFundDescription] = useState("");
+
   const [selectedFundAmount, setSelectedFundAmount] = useState(0);
   const [selectedFundQrUrl, setSelectedFundQrUrl] = useState<string | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
@@ -372,6 +374,7 @@ export const FundPage: React.FC = () => {
                                 onClick={() => {
                                   setViewPaymentsFundId(fund.id);
                                   setSelectedFundTitle(fund.title);
+                                  setselectedFundDescription(fund.description || "")
                                 }}
                                 className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
                                 title="Xem và duyệt minh chứng"
@@ -383,6 +386,7 @@ export const FundPage: React.FC = () => {
                                 onClick={() => {
                                   setSubmitPaymentFundId(fund.id);
                                   setSelectedFundTitle(fund.title);
+                                  setselectedFundDescription(fund.description || "")
                                   setSelectedFundAmount(fund.amount);
                                   setSelectedFundQrUrl(fund.qr_code_url);
                                 }}
@@ -451,6 +455,7 @@ export const FundPage: React.FC = () => {
           fundId={submitPaymentFundId}
           classId={numericClassId}
           fundTitle={selectedFundTitle}
+          fundDescription={selectedFundDescription}
           fundAmount={selectedFundAmount}
           qrCodeUrl={selectedFundQrUrl}
         />
@@ -463,6 +468,7 @@ export const FundPage: React.FC = () => {
           fundId={viewPaymentsFundId}
           classId={numericClassId}
           fundTitle={selectedFundTitle}
+          fundDescription={selectedFundDescription}
         />
       )}
     </div>

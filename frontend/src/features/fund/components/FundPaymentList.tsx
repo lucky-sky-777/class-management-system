@@ -11,10 +11,11 @@ interface FundPaymentListProps {
     fundId: ID;
     classId: ID;
     fundTitle: string;
+    fundDescription: string;
 }
 
 export const FundPaymentList: React.FC<FundPaymentListProps> = ({
-    isOpen, onClose, fundId, classId, fundTitle
+    isOpen, onClose, fundId, classId, fundTitle, fundDescription
 }) => {
     const { payments, fetchPayments, approvePayment, rejectPayment, isLoading } = useFundPayment(classId);
     
@@ -55,6 +56,10 @@ export const FundPaymentList: React.FC<FundPaymentListProps> = ({
                 <div className="p-3 bg-surface-2 rounded-xl mb-4">
                     <p className="text-sm font-medium text-ink-2">Khoản thu:</p>
                     <p className="text-base font-bold text-ink-1">{fundTitle}</p>
+                </div>
+                <div className="p-3 bg-surface-2 rounded-xl mb-4">
+                    <p className="text-sm font-medium text-ink-2">Mô tả:</p>
+                    <p className="text-base font-bold text-ink-1">{fundDescription}</p>
                 </div>
 
                 {isLoading && fundPayments.length === 0 ? (

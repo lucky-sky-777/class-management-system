@@ -10,7 +10,6 @@ import type {
     FundPaymentResponseDto,
     CreateFundPaymentRequestDto,
     PaymentAccountResponse,
-    BankConfig,
     CreateOrUpdatePaymentAccountRequest
 } from "../types";
 
@@ -32,23 +31,23 @@ export const fundAPI = {
     },
 
     getFundPayments: async (classId: ID, fundId: ID): Promise<ApiResponse<FundPaymentResponseDto[]>> => {
-        return await apiClient.get(`/classes/${classId}/fund-payments/funds/${fundId}`);
+        return await apiClient.get(`/classes/${classId}/funds/${fundId}/fund-payments`);
     },
 
     createFundPayment: async (classId: ID, fundId: ID, data: CreateFundPaymentRequestDto): Promise<ApiResponse<FundPaymentResponseDto>> => {
-        return await apiClient.post(`/classes/${classId}/fund-payments/funds/${fundId}`, data);
+        return await apiClient.post(`/classes/${classId}/funds/${fundId}/fund-payments`, data);
     },
 
-    approveFundPayment: async (classId: ID, fundPaymentId: ID): Promise<ApiResponse<{ fund_payment_id: ID }>> => {
-        return await apiClient.patch(`/classes/${classId}/fund-payments/${fundPaymentId}/approve`, {});
+    approveFundPayment: async (classId: ID, fundId: ID, fundPaymentId: ID): Promise<ApiResponse<{ fund_payment_id: ID }>> => {
+        return await apiClient.patch(`/classes/${classId}/funds/${fundId}/fund-payments/${fundPaymentId}/approve`, {});
     },
 
-    rejectFundPayment: async (classId: ID, fundPaymentId: ID): Promise<ApiResponse<{ fund_payment_id: ID }>> => {
-        return await apiClient.patch(`/classes/${classId}/fund-payments/${fundPaymentId}/reject`, {});
+    rejectFundPayment: async (classId: ID, fundId: ID, fundPaymentId: ID): Promise<ApiResponse<{ fund_payment_id: ID }>> => {
+        return await apiClient.patch(`/classes/${classId}/funds/${fundId}/fund-payments/${fundPaymentId}/reject`, {});
     },
 
-    cancelFundPayment: async (classId: ID, fundPaymentId: ID): Promise<ApiResponse<{ fund_payment_id: ID }>> => {
-        return await apiClient.patch(`/classes/${classId}/fund-payments/${fundPaymentId}/cancel`, {});
+    cancelFundPayment: async (classId: ID, fundId: ID, fundPaymentId: ID): Promise<ApiResponse<{ fund_payment_id: ID }>> => {
+        return await apiClient.patch(`/classes/${classId}/funds/${fundId}/fund-payments/${fundPaymentId}/cancel`, {});
     },
 
     getBanks: async (): Promise<ApiResponse<VietQrBankResponseDto[]>> => {
