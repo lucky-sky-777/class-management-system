@@ -5,7 +5,12 @@ import { memberAPI } from "@features/member/api";
 import type { Member, MemberRole } from "@features/member/types";
 
 interface MemberItemProps {
-  member: any;
+  member: Member & {
+    user_display_name?: string;
+    avatar_url?: string;
+    user_avatar?: string;
+    joined_at?: string;
+  };
   myRole: MemberRole | "OWNER";
   onUpdateRole?: (userId: number, currentRole: MemberRole) => void;
   onKick?: (userId: number) => void;
@@ -21,18 +26,24 @@ export const MemberItem = ({
   isPending,
   onRefresh,
 }: MemberItemProps) => {
-  const { classId } = useParams();
+  const { classId } = useParams<{ classId: string }>();
 
-  const name = member.user_display_name || member.displayName || "Thành viên";
-  // 👉 FALLBACK AVATAR VỚI MÀU WARM GLOBAL
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e2e8f0&color=475569&bold=true`;
+  // Xử lý fallback an toàn
+  const name = member.displayName || member.user_display_name || "Thành viên";
+  const avatarSrc = member.avatarUrl || member.avatar_url || member.user_avatar;
+  const joinedDate = member.joinedAt || member.joined_at;
+
+  // Avatar mặc định với màu Warm Global
+  const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name
+  )}&background=e2e8f0&color=475569&bold=true`;
 
   const handleApprove = async () => {
     if (!member.requestId) return alert("Thiếu Request ID!");
     try {
       await memberAPI.approveRequest(classId!, member.requestId);
       onRefresh?.(true);
-    } catch (error) {
+    } catch {
       alert("Không thể duyệt thành viên này.");
     }
   };
@@ -43,7 +54,7 @@ export const MemberItem = ({
       try {
         await memberAPI.rejectRequest(classId!, member.requestId);
         onRefresh?.(true);
-      } catch (error) {
+      } catch {
         alert("Có lỗi xảy ra khi từ chối.");
       }
     }
@@ -56,7 +67,7 @@ export const MemberItem = ({
         <div className="relative shrink-0">
           <div className="w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 border-[var(--bg-paper)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--rule-md)]">
             <img
-              src={member.avatar_url || member.user_avatar || avatarUrl}
+              src={avatarSrc || fallbackAvatarUrl}
               alt={name}
               className="w-full h-full object-cover"
             />
@@ -71,8 +82,7 @@ export const MemberItem = ({
           </p>
           <div className="flex items-center gap-2 mt-1 overflow-hidden text-[9px]">
             <span className="text-[var(--ink-3)] font-medium truncate tracking-tighter">
-              {isPending ? "Yêu cầu vào:" : "Tham gia:"}{" "}
-              {member.joined_at || member.joinedAt}
+              {isPending ? "Yêu cầu vào:" : "Tham gia:"} {joinedDate}
             </span>
           </div>
         </div>

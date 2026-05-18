@@ -75,10 +75,11 @@ public class FundPaymentService {
 	@Transactional
 	public FundPaymentIdResponseDto approve(
 			Long classId,
+			Long fundId,
 			Long actorUserId,
 			Long fundPaymentId
 	) {
-		FundPayment currentFundPayment = findByClassIdAndFundPaymentIdOrThrow(classId, fundPaymentId);
+		FundPayment currentFundPayment = findByClassIdAndFundIdAndFundPaymentIdOrThrow(classId, fundId, fundPaymentId);
 
 		User actor = User.builder()
 				.id(actorUserId)
@@ -98,10 +99,11 @@ public class FundPaymentService {
 	@Transactional
 	public FundPaymentIdResponseDto reject(
 			Long classId,
+			Long fundId,
 			Long actorUserId,
 			Long fundPaymentId
 	) {
-		FundPayment currentFundPayment = findByClassIdAndFundPaymentIdOrThrow(classId, fundPaymentId);
+		FundPayment currentFundPayment = findByClassIdAndFundIdAndFundPaymentIdOrThrow(classId, fundId, fundPaymentId);
 
 		User actor = User.builder()
 				.id(actorUserId)
@@ -121,10 +123,11 @@ public class FundPaymentService {
 	@Transactional
 	public FundPaymentIdResponseDto cancel(
 			Long classId,
+			Long fundId,
 			Long creatorUserId,
 			Long fundPaymentId
 	) {
-		FundPayment currentFundPayment = findByClassIdAndCreatorUserIdAndFundPaymentIdOrThrow(classId, creatorUserId, fundPaymentId);
+		FundPayment currentFundPayment = findByClassIdAndFundIdAndCreatorUserIdAndFundPaymentIdOrThrow(classId, fundId, creatorUserId, fundPaymentId);
 
 		User creator = User.builder()
 				.id(creatorUserId)
@@ -165,12 +168,13 @@ public class FundPaymentService {
 	 */
 
 	@Transactional(readOnly = true)
-	public FundPayment findByClassIdAndFundPaymentIdOrThrow(
+	public FundPayment findByClassIdAndFundIdAndFundPaymentIdOrThrow(
 			Long classId,
+			Long fundId,
 			Long fundPaymentId
 	) {
 		List<FundPayment> fundPaymentList = fundPaymentRepository
-				.findByClazz_IdAndId(classId, fundPaymentId);
+				.findByClazz_IdAndFund_IdAndId(classId, fundId, fundPaymentId);
 
 		FundPayment fundPayment = fundPaymentList.getFirst();
 		throwIfNotPending(fundPayment);
@@ -179,13 +183,14 @@ public class FundPaymentService {
 	}
 
 	@Transactional(readOnly = true)
-	public FundPayment findByClassIdAndCreatorUserIdAndFundPaymentIdOrThrow(
+	public FundPayment findByClassIdAndFundIdAndCreatorUserIdAndFundPaymentIdOrThrow(
 			Long classId,
+			Long fundId,
 			Long creatorUserId,
 			Long fundPaymentId
 	) {
 		List<FundPayment> fundPaymentList = fundPaymentRepository
-				.findByClazz_IdAndCreator_IdAndId(classId, creatorUserId, fundPaymentId);
+				.findByClazz_IdAndFund_IdAndCreator_IdAndId(classId, fundId, creatorUserId, fundPaymentId);
 		throwIfEmptyList(fundPaymentList);
 
 		FundPayment fundPayment = fundPaymentList.getFirst();

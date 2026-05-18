@@ -42,3 +42,9 @@ export interface ClassMemberResponse {
   message: string;
   data: ClassMember[];
 }
+
+export interface JoinClassResult {
+  name: string;
+  type?: 'REQUESTED' | 'JOINED';
+  userJoinStatus?: 'joined' | 'pending';
+}

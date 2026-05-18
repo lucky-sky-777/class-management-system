@@ -1,23 +1,7 @@
 import { useState } from "react";
 import { Plus, Minus, Pencil, Check, X, Users, Trash2 } from "lucide-react";
 import { Modal } from "@shared/components/ui/Modal";
-
-interface GroupSidebarProps {
-  classId: string;
-  groups: any[];
-  selectedTeam: number;
-  setSelectedTeam: (id: number) => void;
-  canEdit: boolean;
-  addGroup: () => void;
-  editGroup: (id: number, name: string) => Promise<boolean>;
-  setShowDeleteModal: (show: boolean) => void;
-
-  // 👉 4 Props lấy data từ Hook (Không gọi API trực tiếp nữa)
-  fetchGroupMembers: (groupId: number) => Promise<any[]>;
-  fetchUngroupedMembers: () => Promise<any[]>;
-  addMemberToGroup: (groupId: number, userId: string) => Promise<boolean>;
-  removeMemberFromGroup: (groupId: number, userId: string) => Promise<boolean>;
-}
+import type { GroupItem, GroupMember } from "@features/emulation/types";
 
 export const GroupSidebar = ({
   groups,
@@ -31,25 +15,53 @@ export const GroupSidebar = ({
   fetchUngroupedMembers,
   addMemberToGroup,
   removeMemberFromGroup,
-}: GroupSidebarProps) => {
+}: {
+  classId: string;
+  groups: GroupItem[];
+  selectedTeam: number;
+  setSelectedTeam: (id: number) => void;
+  canEdit: boolean;
+  addGroup: () => void;
+  editGroup: (id: number, name: string) => Promise<boolean>;
+  setShowDeleteModal: (show: boolean) => void;
+  fetchGroupMembers: (groupId: number) => Promise<GroupMember[]>;
+  fetchUngroupedMembers: () => Promise<GroupMember[]>;
+  addMemberToGroup: (groupId: number, userId: string) => Promise<boolean>;
+  removeMemberFromGroup: (groupId: number, userId: string) => Promise<boolean>;
+}) => {
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
   const [editGroupName, setEditGroupName] = useState("");
 
   // --- STATE QUẢN LÝ THÀNH VIÊN ---
   const [showMemberModal, setShowMemberModal] = useState(false);
-  const [activeGroup, setActiveGroup] = useState<any>(null);
-  const [members, setMembers] = useState<any[]>([]);
-  const [availableMembers, setAvailableMembers] = useState<any[]>([]); // Chứa học sinh chưa có tổ
+  const [activeGroup, setActiveGroup] = useState<GroupItem | null>(null);
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [availableMembers, setAvailableMembers] = useState<GroupMember[]>([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [newUserId, setNewUserId] = useState("");
 
+  const handleSaveGroupName = async (id: number) => {
+    if (!editGroupName.trim()) return alert("Tên tổ không được để trống!");
+
+    try {
+      const isSuccess = await editGroup(id, editGroupName.trim());
+      if (isSuccess) {
+        setEditingGroupId(null); // Tắt chế độ chỉnh sửa
+      } else {
+        alert("Không thể cập nhật tên tổ!");
+      }
+    } catch {
+      alert("Đã có lỗi xảy ra khi chỉnh sửa!");
+    }
+  };
+
   // 1. Mở Modal và Load danh sách
-  const handleOpenMembers = async (group: any) => {
+  const handleOpenMembers = async (group: GroupItem) => {
     setActiveGroup(group);
     setShowMemberModal(true);
     setIsLoadingMembers(true);
     try {
-      // Gọi qua Hook để lấy 2 danh sách song song
+      // Chạy song song 2 API lấy data bằng Promise.all cực tối ưu
       const [groupMembers, ungrouped] = await Promise.all([
         fetchGroupMembers(group.id),
         fetchUngroupedMembers(),
@@ -65,12 +77,14 @@ export const GroupSidebar = ({
 
   // 2. Thêm thành viên
   const handleAddMember = async () => {
+    if (!activeGroup?.id) return alert("Không tìm thấy thông tin tổ hiện tại!");
     if (!newUserId) return alert("Vui lòng chọn một học sinh!");
+
     try {
       const isSuccess = await addMemberToGroup(activeGroup.id, newUserId);
       if (isSuccess) {
         setNewUserId("");
-        // Reload lại cả 2 danh sách
+        // Load lại danh sách mới nhất sau khi thêm thành công
         const [groupMembers, ungrouped] = await Promise.all([
           fetchGroupMembers(activeGroup.id),
           fetchUngroupedMembers(),
@@ -80,29 +94,31 @@ export const GroupSidebar = ({
       } else {
         alert("Lỗi thêm thành viên!");
       }
-    } catch (error) {
-      alert("Đã có lỗi xảy ra!");
+    } catch {
+      alert("Đã có lỗi xảy ra khi thêm thành viên!");
     }
   };
 
   // 3. Xóa thành viên
   const handleRemoveMember = async (userId: string) => {
+    if (!activeGroup?.id) return alert("Không tìm thấy thông tin tổ hiện tại!");
     if (!confirm("Bạn có chắc muốn xóa học sinh này khỏi tổ?")) return;
+
     try {
       const isSuccess = await removeMemberFromGroup(activeGroup.id, userId);
       if (isSuccess) {
-        // Cập nhật lại UI lập tức
+        // Cập nhật UI local lập tức bằng cách filter mảng hiện tại (App chạy mượt, không đợi API)
         setMembers(
           members.filter((m) => String(m.user_id || m.id) !== String(userId)),
         );
-        // Load lại danh sách khay chờ để học sinh vừa xóa hiện lên lại
+        // Load lại khay chờ để học sinh vừa xóa quay trở về danh sách chưa có tổ
         const ungrouped = await fetchUngroupedMembers();
         setAvailableMembers(ungrouped);
       } else {
         alert("Lỗi khi xóa thành viên!");
       }
-    } catch (error) {
-      alert("Đã có lỗi xảy ra!");
+    } catch {
+      alert("Đã có lỗi xảy ra khi xóa thành viên!");
     }
   };
 
@@ -119,7 +135,7 @@ export const GroupSidebar = ({
               onClick={() => setShowDeleteModal(true)}
               className="p-1 hover:text-[var(--red-text)] transition-colors"
             >
-              <Minus size={12} /> {/* Tăng nhẹ size icon cho mobile dễ bấm */}
+              <Minus size={12} />
             </button>
             <div className="w-[1px] bg-[var(--rule)] mx-0.5" />
             <button
@@ -132,7 +148,7 @@ export const GroupSidebar = ({
         )}
       </div>
 
-      {/* DANH SÁCH TỔ - Tối ưu click area cho mobile */}
+      {/* DANH SÁCH TỔ */}
       <nav className="grid grid-cols-1 sm:flex sm:flex-col gap-1.5">
         {groups.map((group) => (
           <div
@@ -155,18 +171,34 @@ export const GroupSidebar = ({
 
               {editingGroupId === group.id ? (
                 <div
-                  className="flex items-center gap-2 w-full"
-                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1.5 w-full mr-2"
+                  onClick={(e) => e.stopPropagation()} // Không cho kích hoạt setSelectedTeam khi bấm vào vùng ô input
                 >
                   <input
                     autoFocus
-                    className="w-full bg-white border border-[var(--rule)] rounded text-xs px-2 py-1 outline-none text-black"
+                    className="w-full bg-surface border border-[var(--rule-md)] rounded-lg text-xs px-2 py-1 outline-none text-ink-1 font-bold focus:border-[var(--warm-400)]"
                     value={editGroupName}
                     onChange={(e) => setEditGroupName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSaveGroupName(group.id); // Gõ Enter tự động lưu
+                      if (e.key === "Escape") setEditingGroupId(null); // Gõ nút Esc để hủy chỉnh sửa nhanh
+                    }}
                   />
-                  {/* Nút lưu nhanh cho mobile */}
-                  <button className="text-green-600">
-                    <Check size={16} />
+                  {/* Nút Check xác nhận lưu */}
+                  <button
+                    onClick={() => handleSaveGroupName(group.id)}
+                    className="text-green-600 hover:bg-green-50 p-1 rounded-md transition-colors shrink-0"
+                    title="Lưu thay đổi"
+                  >
+                    <Check size={14} />
+                  </button>
+                  {/* Nút X để hủy bỏ lệnh sửa */}
+                  <button
+                    onClick={() => setEditingGroupId(null)}
+                    className="text-red-500 hover:bg-red-50 p-1 rounded-md transition-colors shrink-0"
+                    title="Hủy bỏ"
+                  >
+                    <X size={14} />
                   </button>
                 </div>
               ) : (
@@ -176,42 +208,46 @@ export const GroupSidebar = ({
               )}
             </div>
 
-            {/* Điều khiển: Trên mobile luôn hiện nhẹ, trên desktop hiện khi hover */}
-            <div className="flex items-center gap-1 ml-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenMembers(group);
-                }}
-                className="p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] bg-[var(--bg-surface)] md:bg-transparent rounded-md border md:border-0"
-              >
-                <Users size={14} />
-              </button>
-              {canEdit && (
+            {/* Điều khiển tác vụ */}
+            {editingGroupId !== group.id && (
+              <div className="flex items-center gap-1 ml-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setEditingGroupId(group.id);
-                    setEditGroupName(group.name);
+                    handleOpenMembers(group);
                   }}
-                  className="p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] bg-[var(--bg-surface)] md:bg-transparent rounded-md border md:border-0"
+                  className="p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] bg-[var(--bg-surface)] md:bg-transparent rounded-md border md:border-0 shadow-sm md:shadow-none"
+                  title="Thành viên tổ"
                 >
-                  <Pencil size={14} />
+                  <Users size={14} />
                 </button>
-              )}
-            </div>
+                {canEdit && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingGroupId(group.id);
+                      setEditGroupName(group.name);
+                    }}
+                    className="p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] bg-[var(--bg-surface)] md:bg-transparent rounded-md border md:border-0 shadow-sm md:shadow-none"
+                    title="Đổi tên tổ"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </nav>
 
-      {/* --- MODAL QUẢN LÝ THÀNH VIÊN - TỐI ƯU MOBILE --- */}
+      {/* --- MODAL QUẢN LÝ THÀNH VIÊN --- */}
       <Modal
         isOpen={showMemberModal}
         onClose={() => setShowMemberModal(false)}
         title={`Tổ ${activeGroup?.name || ""}`}
       >
         <div className="p-0 sm:p-1 space-y-4">
-          {/* BOX THÊM THÀNH VIÊN - Stack dọc trên mobile cực nhỏ */}
+          {/* BOX THÊM THÀNH VIÊN */}
           {canEdit && (
             <div className="flex flex-col xs:flex-row gap-2 bg-[var(--bg-surface-2)] p-2 rounded-xl border border-[var(--rule)]">
               <select
@@ -238,7 +274,7 @@ export const GroupSidebar = ({
             </div>
           )}
 
-          {/* DANH SÁCH THÀNH VIÊN - Row gọn gàng */}
+          {/* DANH SÁCH THÀNH VIÊN */}
           <div className="space-y-2 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
             {isLoadingMembers ? (
               <div className="py-10 text-center text-[var(--ink-3)] text-xs animate-pulse">
@@ -266,7 +302,6 @@ export const GroupSidebar = ({
                         <div className="w-9 h-9 rounded-full bg-[var(--warm-fill)] text-[var(--warm-text)] border border-[var(--warm-border)] font-black flex items-center justify-center text-xs shadow-inner">
                           {avatarChar}
                         </div>
-                        {/* Status dot */}
                         <div
                           className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
                             m.attendance_status === "PRESENT"
@@ -288,7 +323,9 @@ export const GroupSidebar = ({
 
                     {canEdit && (
                       <button
-                        onClick={() => handleRemoveMember(m.user_id || m.id)}
+                        onClick={() =>
+                          handleRemoveMember(String(m.user_id || m.id || ""))
+                        }
                         className="p-2 text-[var(--ink-3)] hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] rounded-lg transition-colors border border-transparent"
                       >
                         <Trash2 size={16} />

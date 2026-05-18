@@ -1,4 +1,3 @@
-import React from "react";
 import type { CompetitionHistory } from "@features/emulation/types";
 
 interface EmulationHistoryProps {

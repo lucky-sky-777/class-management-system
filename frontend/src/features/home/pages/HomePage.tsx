@@ -1,3 +1,5 @@
+// src/features/home/pages/HomePage.tsx
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHome } from "@features/home/hooks/useHome";
 import {
@@ -12,7 +14,6 @@ import {
 } from "lucide-react";
 import { ClassPrivacy } from "@shared/domain/enums";
 import { useAuth } from "@features/auth";
-import React, { useState, useEffect } from "react";
 import type { ClassItems } from "@features/home/types";
 
 export const HomePage = () => {
@@ -31,8 +32,6 @@ export const HomePage = () => {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   useEffect(() => {
-    refresh();
-
     const handleRefresh = () => {
       refresh();
     };
@@ -41,7 +40,7 @@ export const HomePage = () => {
     return () => {
       window.removeEventListener("refreshHomeClasses", handleRefresh);
     };
-  }, []);
+  }, [refresh]);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -57,6 +56,21 @@ export const HomePage = () => {
   }>({ isOpen: false, classId: null, name: "", description: "" });
 
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const menuContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        openMenuId &&
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(event.target as Node)
+      ) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [openMenuId]);
 
   const handleToggleMenu = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
@@ -88,7 +102,6 @@ export const HomePage = () => {
         name: editModal.name,
         description: editModal.description,
       });
-      alert("✅ Cập nhật lớp thành công!");
       setEditModal({ isOpen: false, classId: null, name: "", description: "" });
     } catch (err: unknown) {
       alert("❌ Lỗi khi cập nhật lớp: " + err);
@@ -128,13 +141,12 @@ export const HomePage = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-6">
+    <div className="w-full max-w-7xl mx-auto px-4 py-6" ref={menuContainerRef}>
       {/* 1. Trạng thái đang tải (Loading) */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-32">
-          {/* Sử dụng màu xanh --warm-400 có sẵn của Hào */}
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--warm-400)]"></div>
-          <p className="mt-4 text-ink-2 text-sm italic font-medium">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--primary)]"></div>
+          <p className="mt-4 text-[var(--ink-2)] text-sm italic font-medium">
             Đang đồng bộ dữ liệu lớp học...
           </p>
         </div>
@@ -153,13 +165,13 @@ export const HomePage = () => {
               <div
                 key={item.id}
                 onClick={() => navigate(`/class/${item.id}/diagram`)}
-                className="group bg-surface border border-rule rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col h-[260px]"
+                className="group bg-[var(--bg-surface)] border border-[var(--rule)] rounded-[var(--r-xl)] overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] transition-all duration-300 cursor-pointer flex flex-col h-[260px]"
               >
-                {/* Banner lớp học - Gradient Xanh Biển --warm cho Public, Đen xám cho Private */}
+                {/* Banner lớp học */}
                 <div
-                  className={`relative h-[100px] p-4 ${
+                  className={`relative h-[100px] p-4 transition-colors duration-300 ${
                     item.privacy === ClassPrivacy.PUBLIC
-                      ? "bg-gradient-to-br from-[var(--warm-400)] to-[var(--warm-600)]"
+                      ? "bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)]"
                       : "bg-gradient-to-br from-[var(--ink-1)] to-[var(--ink-3)]"
                   }`}
                 >
@@ -179,12 +191,12 @@ export const HomePage = () => {
 
                       {/* DROPDOWN MENU */}
                       {openMenuId === item.id && (
-                        <div className="absolute right-0 mt-2 w-40 bg-surface border border-rule rounded-lg shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                        <div className="absolute right-0 mt-2 w-40 bg-[var(--bg-surface)] border border-[var(--rule)] rounded-[var(--r-md)] shadow-[var(--shadow-xl)] py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
                           {isAdmin ? (
                             <>
                               <button
                                 onClick={(e) => handleEdit(e, item)}
-                                className="flex items-center gap-2 w-full px-4 py-2 text-sm font-medium text-ink-1 hover:bg-surface-2 transition-colors text-left"
+                                className="flex items-center gap-2 w-full px-4 py-2 text-sm font-medium text-[var(--ink-1)] hover:bg-[var(--bg-surface-2)] transition-colors text-left"
                               >
                                 <Edit2 size={15} /> Chỉnh sửa
                               </button>
@@ -211,23 +223,22 @@ export const HomePage = () => {
                     {item.owner_display_name || "Giáo viên"}
                   </p>
 
-                  {/* Avatar chủ sở hữu - Đồng bộ tone Xanh Biển từ hệ thống */}
-                  <div className="absolute -bottom-6 right-4 w-12 h-12 rounded-full bg-surface shadow-md flex items-center justify-center border-4 border-surface overflow-hidden">
-                    <div className="w-full h-full bg-[var(--warm-fill)] flex items-center justify-center text-[var(--warm-text)] font-bold text-sm">
+                  {/* Avatar viết tắt chủ phòng */}
+                  <div className="absolute -bottom-6 right-4 w-12 h-12 rounded-full bg-[var(--bg-surface)] shadow-[var(--shadow-md)] flex items-center justify-center border-4 border-[var(--bg-surface)] overflow-hidden">
+                    <div className="w-full h-full bg-[var(--primary-fill)] flex items-center justify-center text-[var(--primary-text)] font-bold text-sm">
                       {item.owner_user_id
-                        ? String(item.owner_user_id).charAt(0)
+                        ? String(item.owner_user_id).charAt(0).toUpperCase()
                         : "G"}
                     </div>
                   </div>
                 </div>
 
                 {/* Nội dung bên dưới banner */}
-                <div className="p-4 pt-8 flex-1 flex flex-col justify-between">
+                <div className="p-4 pt-8 flex-1 flex flex-col justify-between bg-[var(--bg-surface)]">
                   <div className="space-y-3">
-                    {/* Badge Trạng thái dùng Semantic Colors (Xanh lá & Vàng Cam) */}
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[10px] px-2.5 py-0.5 rounded-md font-extrabold uppercase tracking-wider ${
+                        className={`text-[10px] px-2.5 py-0.5 rounded-[var(--r-sm)] font-extrabold uppercase tracking-wider ${
                           item.privacy === ClassPrivacy.PUBLIC
                             ? "bg-[var(--green-fill)] text-[var(--green-text)] border border-[var(--green-border)]"
                             : "bg-[var(--amber-fill)] text-[var(--amber-text)] border border-[var(--amber-border)]"
@@ -249,9 +260,9 @@ export const HomePage = () => {
                     </div>
                   </div>
 
-                  {/* Nút vào lớp chân thẻ đổi sang màu Xanh Biển thương hiệu */}
-                  <div className="pt-3 border-t border-rule flex justify-end">
-                    <span className="text-xs font-bold text-[var(--warm-400)] group-hover:text-[var(--warm-600)] flex items-center gap-1 group-hover:translate-x-1 transition-all">
+                  {/* Nút vào lớp chân thẻ */}
+                  <div className="pt-3 border-t border-[var(--rule)] flex justify-end">
+                    <span className="text-xs font-bold text-[var(--primary)] group-hover:text-[var(--primary-hover)] flex items-center gap-1 group-hover:translate-x-1 transition-all">
                       VÀO LỚP <ArrowRight size={14} />
                     </span>
                   </div>
@@ -266,17 +277,17 @@ export const HomePage = () => {
       {!isLoading && myClasses.length === 0 && !error && (
         <div className="w-full flex flex-col items-center justify-center py-24">
           <div className="relative mb-8">
-            <div className="w-32 h-32 bg-[var(--warm-fill)] rounded-full flex items-center justify-center">
+            <div className="w-32 h-32 bg-[var(--primary-fill)] rounded-full flex items-center justify-center">
               <span className="text-6xl">🏫</span>
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-surface p-2 rounded-full shadow-lg border border-rule">
-              <Plus className="text-[var(--warm-text)]" size={24} />
+            <div className="absolute -bottom-2 -right-2 bg-[var(--bg-surface)] p-2 rounded-full shadow-[var(--shadow-lg)] border border-[var(--rule)]">
+              <Plus className="text-[var(--primary-text)]" size={24} />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-ink-1">
+          <h2 className="text-2xl font-bold text-[var(--ink-1)]">
             Bắt đầu hành trình học tập
           </h2>
-          <p className="text-ink-2 mt-2 text-center max-w-sm font-medium">
+          <p className="text-[var(--ink-2)] mt-2 text-center max-w-sm font-medium">
             Bạn chưa tham gia lớp học nào. Hãy sử dụng tính năng trên Header để
             tham gia hoặc tạo lớp mới.
           </p>
@@ -285,11 +296,11 @@ export const HomePage = () => {
 
       {/* 4. Trạng thái lỗi (Error) */}
       {error && (
-        <div className="text-center py-20 bg-[var(--red-fill)] rounded-2xl border border-[var(--red-border)] mx-4">
+        <div className="text-center py-20 bg-[var(--red-fill)] rounded-[var(--r-xl)] border border-[var(--red-border)] mx-4">
           <p className="text-[var(--red-text)] font-bold text-lg">⚠️ {error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-2 bg-surface border border-[var(--red-border)] text-[var(--red-text)] rounded-lg hover:bg-[var(--red-fill)] transition-colors shadow-sm text-sm font-bold"
+            className="mt-4 px-6 py-2 bg-[var(--bg-surface)] border border-[var(--red-border)] text-[var(--red-text)] rounded-[var(--r-md)] hover:bg-[var(--red-fill)] transition-colors shadow-[var(--shadow-sm)] text-sm font-bold"
           >
             THỬ LẠI
           </button>
@@ -299,14 +310,13 @@ export const HomePage = () => {
       {/* FORM XÁC NHẬN (CONFIRM MODAL) */}
       {confirmModal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-1/40 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={(e) => {
-            e.stopPropagation();
-            setConfirmModal({ isOpen: false, type: null, classId: null });
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() =>
+            setConfirmModal({ isOpen: false, type: null, classId: null })
+          }
         >
           <div
-            className="bg-surface w-full max-w-sm rounded-2xl shadow-xl border border-rule overflow-hidden animate-in zoom-in-95 duration-200"
+            className="bg-[var(--bg-surface)] w-full max-w-sm rounded-[var(--r-xl)] shadow-[var(--shadow-lg)] border border-[var(--rule)] overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6">
@@ -320,26 +330,26 @@ export const HomePage = () => {
                 <AlertTriangle size={24} />
               </div>
 
-              <h3 className="text-lg font-bold text-ink-1 mb-2">
+              <h3 className="text-lg font-bold text-[var(--ink-1)] mb-2">
                 {confirmModal.type === "delete"
                   ? "Xóa lớp học"
                   : "Rời khỏi lớp học"}
               </h3>
 
-              <p className="text-ink-2 text-sm">
+              <p className="text-[var(--ink-2)] text-sm">
                 {confirmModal.type === "delete"
                   ? "Bạn có chắc chắn muốn xóa lớp học này không? Toàn bộ dữ liệu của lớp sẽ bị xóa vĩnh viễn và không thể khôi phục."
                   : "Bạn có chắc chắn muốn rời khỏi lớp học này? Bạn sẽ không thể xem tài liệu của lớp trừ khi tham gia lại."}
               </p>
             </div>
 
-            <div className="px-6 py-4 bg-surface-2 flex items-center justify-end gap-3 border-t border-rule">
+            <div className="px-6 py-4 bg-[var(--bg-surface-2)] flex items-center justify-end gap-3 border-t border-[var(--rule)]">
               <button
                 onClick={() =>
                   setConfirmModal({ isOpen: false, type: null, classId: null })
                 }
                 disabled={isProcessing}
-                className="px-4 py-2 text-sm font-bold text-ink-2 hover:bg-surface border border-rule rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-bold text-[var(--ink-2)] hover:bg-[var(--bg-surface)] border border-[var(--rule)] rounded-[var(--r-md)] transition-colors disabled:opacity-50"
               >
                 Hủy bỏ
               </button>
@@ -347,7 +357,7 @@ export const HomePage = () => {
               <button
                 onClick={handleConfirmAction}
                 disabled={isProcessing}
-                className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-colors shadow-sm flex items-center gap-2 ${
+                className={`px-4 py-2 text-sm font-bold text-white rounded-[var(--r-md)] transition-colors shadow-[var(--shadow-sm)] flex items-center gap-2 ${
                   confirmModal.type === "delete"
                     ? "bg-[var(--red-text)] hover:opacity-90"
                     : "bg-[var(--amber-text)] hover:opacity-90"
@@ -366,28 +376,25 @@ export const HomePage = () => {
       {/*FORM CHỈNH SỬA LỚP HỌC (EDIT MODAL) */}
       {editModal.isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-1/40 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditModal({ ...editModal, isOpen: false });
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setEditModal({ ...editModal, isOpen: false })}
         >
           <div
-            className="bg-surface w-full max-w-md rounded-2xl shadow-xl border border-rule overflow-hidden animate-in zoom-in-95 duration-200"
+            className="bg-[var(--bg-surface)] w-full max-w-md rounded-[var(--r-xl)] shadow-[var(--shadow-lg)] border border-[var(--rule)] overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b border-rule flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[var(--warm-fill)] flex items-center justify-center text-[var(--warm-text)]">
+            <div className="px-6 py-4 border-b border-[var(--rule)] flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-[var(--primary-fill)] flex items-center justify-center text-[var(--primary-text)]">
                 <Edit2 size={16} />
               </div>
-              <h3 className="text-lg font-bold text-ink-1">
+              <h3 className="text-lg font-bold text-[var(--ink-1)]">
                 Chỉnh sửa lớp học
               </h3>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-ink-1 mb-1">
+                <label className="block text-sm font-bold text-[var(--ink-1)] mb-1">
                   Tên lớp <span className="text-[var(--red-text)]">*</span>
                 </label>
                 <input
@@ -396,13 +403,13 @@ export const HomePage = () => {
                   onChange={(e) =>
                     setEditModal({ ...editModal, name: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-rule-md rounded-lg focus:ring-2 focus:ring-[var(--warm-400)] focus:border-[var(--warm-400)] outline-none transition-all bg-surface text-ink-1"
+                  className="w-full px-3 py-2 border border-[var(--rule-md)] rounded-[var(--r-md)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition-all bg-[var(--bg-surface)] text-[var(--ink-1)]"
                   placeholder="Nhập tên lớp..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-ink-1 mb-1">
+                <label className="block text-sm font-bold text-[var(--ink-1)] mb-1">
                   Mô tả
                 </label>
                 <textarea
@@ -410,18 +417,18 @@ export const HomePage = () => {
                   onChange={(e) =>
                     setEditModal({ ...editModal, description: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-rule-md rounded-lg focus:ring-2 focus:ring-[var(--warm-400)] focus:border-[var(--warm-400)] outline-none transition-all bg-surface text-ink-1"
+                  className="w-full px-3 py-2 border border-[var(--rule-md)] rounded-[var(--r-md)] focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] outline-none transition-all bg-[var(--bg-surface)] text-[var(--ink-1)]"
                   rows={3}
                   placeholder="Thêm mô tả cho lớp học..."
                 ></textarea>
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-surface-2 flex items-center justify-end gap-3 border-t border-rule">
+            <div className="px-6 py-4 bg-[var(--bg-surface-2)] flex items-center justify-end gap-3 border-t border-[var(--rule)]">
               <button
                 onClick={() => setEditModal({ ...editModal, isOpen: false })}
                 disabled={isProcessing}
-                className="px-4 py-2 text-sm font-bold text-ink-2 hover:bg-surface border border-rule rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-bold text-[var(--ink-2)] hover:bg-[var(--bg-surface)] border border-[var(--rule)] rounded-[var(--r-md)] transition-colors disabled:opacity-50"
               >
                 Hủy bỏ
               </button>
@@ -429,7 +436,7 @@ export const HomePage = () => {
               <button
                 onClick={handleSaveEdit}
                 disabled={isProcessing}
-                className="px-4 py-2 text-sm font-bold text-white bg-[var(--warm-400)] hover:bg-[var(--warm-600)] rounded-lg transition-colors shadow-sm flex items-center gap-2 disabled:opacity-70"
+                className="px-4 py-2 text-sm font-bold text-white bg-[var(--primary)] hover:bg-[var(--primary-hover)] rounded-[var(--r-md)] transition-colors shadow-[var(--shadow-sm)] flex items-center gap-2 disabled:opacity-70"
               >
                 {isProcessing && (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

@@ -36,11 +36,11 @@ public interface FundPaymentRepository extends JpaRepository<FundPayment, Long> 
 	join fundPayment.clazz class
 	join fundPayment.fund fund
 	join fundPayment.creator creator
-	join fundPayment.actor actor
+	left join fundPayment.actor actor
 	where class.id = :classId and fund.id = :fundId
 	""")
 	List<FundPaymentResponseDto> getByClazz_IdAndFund_Id(Long classId, Long fundId);
 
-	List<FundPayment> findByClazz_IdAndId(Long classId, Long fundPaymentId);
-	List<FundPayment> findByClazz_IdAndCreator_IdAndId(Long classId, Long creatorUserId, Long fundPaymentId);
+	List<FundPayment> findByClazz_IdAndFund_IdAndId(Long classId, Long fundId, Long fundPaymentId);
+	List<FundPayment> findByClazz_IdAndFund_IdAndCreator_IdAndId(Long classId, Long fundId, Long creatorUserId, Long fundPaymentId);
 }
