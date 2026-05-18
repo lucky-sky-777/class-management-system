@@ -97,18 +97,18 @@ public class FundService {
 		PaymentAccount paymentAccount = paymentAccountService.findByClassIdOrNew(classId);
 		fundResponseDtoList.stream()
 				.filter(item -> item.getType() == Fund.Type.INCOME)
-				.forEach(item ->
-						item.setQrCodeUrl(
-								BankQrCodeUrlGenerator.generate(
-										BankQrCodeUrlGenerator.ImageType.FULL_INFO,
-										paymentAccount.getBankCode(),
-										paymentAccount.getNumber(),
-										paymentAccount.getName(),
-										item.getAmount(),
-										item.getDescription()
-								)
-						)
-				);
+				.forEach(item -> {
+					item.setQrCodeUrl(
+							BankQrCodeUrlGenerator.generate(
+									BankQrCodeUrlGenerator.ImageType.FULL_INFO,
+									paymentAccount.getBankCode(),
+									paymentAccount.getNumber(),
+									paymentAccount.getName(),
+									item.getAmount(),
+									item.getDescription()
+							)
+					);
+				});
 		return fundResponseDtoList;
 	}
 

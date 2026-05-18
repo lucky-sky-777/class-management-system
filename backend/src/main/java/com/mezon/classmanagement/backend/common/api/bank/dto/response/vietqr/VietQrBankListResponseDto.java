@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.common.api.bank.dto;
+package com.mezon.classmanagement.backend.common.api.bank.dto.response.vietqr;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

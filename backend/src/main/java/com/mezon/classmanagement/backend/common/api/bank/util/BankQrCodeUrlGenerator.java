@@ -1,6 +1,5 @@
 package com.mezon.classmanagement.backend.common.api.bank.util;
 
-import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.util.EnumUtils;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,9 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
-@SuppressWarnings({WarningConstant.UNUSED})
 public final class BankQrCodeUrlGenerator {
 
 	private static final String BASE_URL = "https://img.vietqr.io/image";
@@ -50,7 +47,7 @@ public final class BankQrCodeUrlGenerator {
 	private static final String IMAGE_EXTENSION = "png";
 
 	private static final String INFO_AMOUNT = "amount";
-	private static final String INFO_NOTES = "addInfo";
+	private static final String INFO_NOTE = "addInfo";
 	private static final String INFO_ACCOUNT_NAME = "accountName";
 
 	public static boolean isValidImageType(String imageTypeName) {
@@ -65,13 +62,6 @@ public final class BankQrCodeUrlGenerator {
 	}
 
 	public static String generate(ImageType imageType, String bankCode, String accountNumber, String accountName, Long amount, String notes) {
-//		if (bankCode == null) {
-//			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Bank code cannot be null");
-//		}
-//		if (accountNumber == null) {
-//			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Account number cannot be null");
-//		}
-
 		if (bankCode == null || accountNumber == null) {
 			return "";
 		}
@@ -82,8 +72,6 @@ public final class BankQrCodeUrlGenerator {
 		stringBuilder.append("-").append(accountNumber);
 		stringBuilder.append("-").append(
 				imageType.getSuffix()
-				//(accountName == null || amount == null)
-				//? GENERATE_WITHOUT_INFO_SUFFIX : GENERATE_WITH_INFO_SUFFIX
 		);
 		stringBuilder.append(".").append(IMAGE_EXTENSION);
 
@@ -96,7 +84,7 @@ public final class BankQrCodeUrlGenerator {
 			queryParams.add(INFO_AMOUNT + "=" + amount);
 		}
 		if (notes != null) {
-			queryParams.add(INFO_NOTES + "=" + URLEncoder.encode(notes, StandardCharsets.UTF_8));
+			queryParams.add(INFO_NOTE + "=" + URLEncoder.encode(notes, StandardCharsets.UTF_8));
 		}
 
 		if (!queryParams.isEmpty()) {

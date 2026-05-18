@@ -1,8 +1,8 @@
 package com.mezon.classmanagement.backend.common.api.bank.controller;
 
-import com.mezon.classmanagement.backend.common.api.bank.dto.BankQrCodeUrlResponseDto;
-import com.mezon.classmanagement.backend.common.api.bank.dto.GetQrCodeRequestDto;
-import com.mezon.classmanagement.backend.common.api.bank.dto.VietQrBankResponseDto;
+import com.mezon.classmanagement.backend.common.api.bank.dto.request.GetBankQrCodeRequestDto;
+import com.mezon.classmanagement.backend.common.api.bank.dto.response.BankQrCodeUrlResponseDto;
+import com.mezon.classmanagement.backend.common.api.bank.dto.response.vietqr.VietQrBankResponseDto;
 import com.mezon.classmanagement.backend.common.api.bank.service.BankService;
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import lombok.AccessLevel;
@@ -31,8 +31,8 @@ public class BankController {
 	RestTemplate restTemplate;
 
 	@GetMapping
-	public ResponseDTO<List<VietQrBankResponseDto>> getBanks() {
-		List<VietQrBankResponseDto> response = bankService.getBanks();
+	public ResponseDTO<List<VietQrBankResponseDto>> getBankList() {
+		List<VietQrBankResponseDto> response = bankService.getBankList();
 
 		return ResponseDTO.<List<VietQrBankResponseDto>>builder()
 				.success(true)
@@ -43,7 +43,7 @@ public class BankController {
 
 	@GetMapping("/qrcode-url")
 	public ResponseDTO<BankQrCodeUrlResponseDto> getQrCodeUrl(
-			@RequestBody GetQrCodeRequestDto request
+			@RequestBody GetBankQrCodeRequestDto request
 	) {
 		BankQrCodeUrlResponseDto response = bankService.getQrCodeUrl("full-info", request);
 
@@ -63,17 +63,17 @@ public class BankController {
 			@RequestParam(required = false) Long amount,
 			@RequestParam(required = false) String notes
 	) {
-		GetQrCodeRequestDto request = GetQrCodeRequestDto.builder()
+		GetBankQrCodeRequestDto request = GetBankQrCodeRequestDto.builder()
 				.bankCode(bankCode)
-				.accountNumber(accountNumber)
-				.accountName(accountName)
-				.amount(amount)
-				.notes(notes)
+				.bankAccountNumber(accountNumber)
+				.bankAccountName(accountName)
+				.transferAmount(amount)
+				.transferNote(notes)
 				.build();
 
 		BankQrCodeUrlResponseDto bankQrCodeUrlResponseDto = bankService.getQrCodeUrl(imageTypeName, request);
 
-		String url = bankQrCodeUrlResponseDto.getQrCodeUrl();
+		String url = bankQrCodeUrlResponseDto.getBankQrCodeUrl();
 
 		ResponseEntity<byte[]> response = restTemplate.exchange(
 				url,
@@ -89,11 +89,11 @@ public class BankController {
 
 	@GetMapping(value = "/qrcode-image2", produces = MediaType.IMAGE_PNG_VALUE)
 	public ResponseEntity<byte[]> getQrCodeImage(
-			@RequestBody GetQrCodeRequestDto request
+			@RequestBody GetBankQrCodeRequestDto request
 	) {
 		BankQrCodeUrlResponseDto bankQrCodeUrlResponseDto = bankService.getQrCodeUrl("full-info", request);
 
-		String url = bankQrCodeUrlResponseDto.getQrCodeUrl();
+		String url = bankQrCodeUrlResponseDto.getBankQrCodeUrl();
 
 		ResponseEntity<byte[]> response = restTemplate.exchange(
 				url,

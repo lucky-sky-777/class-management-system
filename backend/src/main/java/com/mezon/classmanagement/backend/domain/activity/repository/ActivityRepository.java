@@ -11,7 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
-	List<Activity> findByClazz_Id(Long classId);
+
+	Optional<Activity> findByClazz_IdAndId(Long classId, Long activityId);
 
 	@Query(value = """
 	select new com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityResponseDto(
@@ -34,5 +35,4 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	""")
 	List<ActivityResponseDto> getByClazz_Id(Long classId);
 
-	Optional<Activity> findByClazz_IdAndId(Long classId, Long activityId);
 }

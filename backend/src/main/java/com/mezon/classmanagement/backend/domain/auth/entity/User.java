@@ -44,6 +44,7 @@ import java.util.List;
 		}
 )
 public class User implements UserDetails {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false)
@@ -119,6 +120,12 @@ public class User implements UserDetails {
 	@Override
 	public boolean isEnabled() {
 		return UserDetails.super.isEnabled();
+	}
+
+	public static User create(Long id) {
+		return User.builder()
+				.id(id)
+				.build();
 	}
 
 }

@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.common.api.bank.dto;
+package com.mezon.classmanagement.backend.common.api.bank.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,7 +13,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @JsonPropertyOrder(value = {
-		"qr_code_url"
+		"bank_qr_code_url"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -25,7 +25,7 @@ import lombok.experimental.FieldDefaults;
 @DTO
 public final class BankQrCodeUrlResponseDto {
 
-	@JsonProperty(value = "qr_code_url")
-	String qrCodeUrl;
+	@JsonProperty(value = "bank_qr_code_url")
+	String bankQrCodeUrl;
 
 }

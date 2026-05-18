@@ -5,8 +5,9 @@ import com.mezon.classmanagement.backend.domain.absencerequest.dto.response.Abse
 import com.mezon.classmanagement.backend.domain.absencerequest.entity.AbsenceRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface AbsenceRequestMapper {
 
     AbsenceRequest toAbsenceRequest(CreateAbsenceRequestRequestDto createAbsenceRequestRequestDto);

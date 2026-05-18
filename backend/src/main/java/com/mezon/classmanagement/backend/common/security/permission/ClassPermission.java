@@ -83,7 +83,7 @@ public class ClassPermission {
 		return classUserService.existsByClassIdAndUserId(classId, userId);
 	}
 
-	public boolean hasClassAccess(Long classId, Permission permission) {
+	private boolean hasClassAccess(Long classId, Permission permission) {
 		classService.throwIfNotExistsById(classId);
 
 		Authentication authentication = authService.getAuthentication();

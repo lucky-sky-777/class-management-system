@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.clazz.entity;
 
-import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.common.util.CodeGenerator;
+import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,6 +39,7 @@ import java.time.Instant;
 		}
 )
 public class Class {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false)
@@ -84,4 +85,11 @@ public class Class {
 			privacy = Privacy.PRIVATE;
 		}
 	}
+
+	public static Class create(Long id) {
+		return Class.builder()
+				.id(id)
+				.build();
+	}
+
 }

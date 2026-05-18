@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.common.api.bank.dto;
+package com.mezon.classmanagement.backend.common.api.bank.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
@@ -17,21 +17,21 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class GetQrCodeRequestDto {
+public final class GetBankQrCodeRequestDto {
 
 	@JsonProperty(value = "bank_code")
 	String bankCode;
 
-	@JsonProperty(value = "account_number")
-	String accountNumber;
+	@JsonProperty(value = "bank_account_number")
+	String bankAccountNumber;
 
-	@JsonProperty(value = "account_name")
-	String accountName;
+	@JsonProperty(value = "bank_account_name")
+	String bankAccountName;
 
-	@JsonProperty(value = "amount")
-	Long amount;
+	@JsonProperty(value = "transfer_amount")
+	Long transferAmount;
 
-	@JsonProperty(value = "notes")
-	String notes;
+	@JsonProperty(value = "transfer_note")
+	String transferNote;
 
 }

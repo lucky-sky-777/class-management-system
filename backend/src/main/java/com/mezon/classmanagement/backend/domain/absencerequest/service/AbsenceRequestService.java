@@ -44,12 +44,8 @@ public class AbsenceRequestService {
     ) {
         throwIfExistsByClassIdAndUserIdAndStatus(classId, userId, AbsenceRequest.Status.PENDING);
 
-        Class clazz = Class.builder()
-                .id(classId)
-                .build();
-        User user = User.builder()
-                .id(userId)
-                .build();
+        Class clazz = Class.create(classId);
+        User user = User.create(userId);
 
         AbsenceRequest newAbsenceRequest = absenceRequestMapper.toAbsenceRequest(request);
         newAbsenceRequest.setClazz(clazz);
@@ -72,9 +68,9 @@ public class AbsenceRequestService {
 
         AbsenceRequest responseAbsenceRequest = save(currentAbsenceRequest);
 
-        return AbsenceRequestIdResponseDto.builder()
-                .absenceRequestId(responseAbsenceRequest.getId())
-                .build();
+        return new AbsenceRequestIdResponseDto(
+                responseAbsenceRequest.getId()
+        );
     }
 
     @RequireClassPermission
@@ -89,9 +85,9 @@ public class AbsenceRequestService {
 
         AbsenceRequest responseAbsenceRequest = save(currentAbsenceRequest);
 
-        return AbsenceRequestIdResponseDto.builder()
-                .absenceRequestId(responseAbsenceRequest.getId())
-                .build();
+        return new AbsenceRequestIdResponseDto(
+                responseAbsenceRequest.getId()
+        );
     }
 
     @RequireClassPermission
@@ -107,25 +103,26 @@ public class AbsenceRequestService {
 
         AbsenceRequest responseAbsenceRequest = save(currentAbsenceRequest);
 
-        return AbsenceRequestIdResponseDto.builder()
-                .absenceRequestId(responseAbsenceRequest.getId())
-                .build();
+        return new AbsenceRequestIdResponseDto(
+                responseAbsenceRequest.getId()
+        );
     }
 
     @RequireClassPermission
     @Transactional(readOnly = true)
-    public List<AbsenceRequestResponseDto> getByClass(Long classId) {
-        return getByClasId(classId);
+    public List<AbsenceRequestResponseDto> getByClass(
+            Long classId
+    ) {
+        return getByClassId(classId);
     }
 
     @RequireClassPermission
     @Transactional(readOnly = true)
-    public List<AbsenceRequestResponseDto> getByUser(Long userId) {
-        List<AbsenceRequest> response = findByUserId(userId);
-
-        return response.stream()
-                .map(absenceRequestMapper::toAbsenceRequestResponseDto)
-                .toList();
+    public List<AbsenceRequestResponseDto> getByClassAndUser(
+            Long classId,
+            Long userId
+    ) {
+        return getByClassIdAndUserId(classId, userId);
     }
 
     /**
@@ -142,20 +139,15 @@ public class AbsenceRequestService {
      */
 
     @Transactional(readOnly = true)
-    public List<AbsenceRequest> findByClassId(Long classId) {
+    public List<AbsenceRequestResponseDto> getByClassId(Long classId) {
         return absenceRequestRepository
-                .findByClazz_IdOrderByCreatedAtDesc(classId);
+                .getByClazz_IdOrderByCreatedAtDesc(classId);
     }
 
     @Transactional(readOnly = true)
-    public List<AbsenceRequestResponseDto> getByClasId(Long classId) {
-        return absenceRequestRepository.getByClazz_Id(classId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<AbsenceRequest> findByUserId(Long userId) {
+    public List<AbsenceRequestResponseDto> getByClassIdAndUserId(Long classId, Long userId) {
         return absenceRequestRepository
-                .findByUser_IdOrderByCreatedAtDesc(userId);
+                .getByClazz_IdAndUser_IdOrderByCreatedAtDesc(classId, userId);
     }
 
     @Transactional(readOnly = true)
