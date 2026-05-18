@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @Repository
 public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
-	long countByClazz_Id(Long classId);
 
 	boolean existsByClazz_IdAndGroup_IdAndUser_Id(Long classId, Long groupId, Long userId);
 	boolean existsByClazz_IdAndGroup_IdAndDeskAndDeskPosition(Long classId, Long groupId, Short desk, Short deskPosition);
@@ -32,6 +31,7 @@ public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
 		group.name,
 		user.id,
 		user.displayName,
+		user.avatarUrl,
 		groupUser.role,
 		groupUser.desk,
 		groupUser.deskPosition,
@@ -48,4 +48,28 @@ public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
 	order by group.id asc, groupUser.desk asc, groupUser.deskPosition asc
 	""")
 	List<GroupUserResponseDto> getByClazz_IdOrderByGroup_IdAscDeskAscDeskPositionAsc(Long classId);
+
+	@Query(value = """
+	select new com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto(
+		groupUser.id,
+		clazz.id,
+		group.id,
+		group.name,
+		user.id,
+		user.displayName,
+		user.avatarUrl,
+		groupUser.role,
+		groupUser.desk,
+		groupUser.deskPosition,
+		groupUser.attendanceStatus,
+		groupUser.joinedAt
+	)
+	from GroupUser groupUser
+	join groupUser.clazz clazz
+	join groupUser.group group
+	join groupUser.user user
+	where clazz.id = :classId and group.id = :groupId
+	order by group.id asc, user.displayName asc
+	""")
+	List<GroupUserResponseDto> getByClazz_IdAndGroup_IdOrderByGroup_IdAscUser_DisplayNameAsc(Long classId, Long groupId);
 }

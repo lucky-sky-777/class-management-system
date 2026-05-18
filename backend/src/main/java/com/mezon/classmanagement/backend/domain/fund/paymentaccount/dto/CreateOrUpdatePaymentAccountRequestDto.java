@@ -1,8 +1,6 @@
-package com.mezon.classmanagement.backend.common.api.bank.dto;
+package com.mezon.classmanagement.backend.domain.fund.paymentaccount.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,10 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-@JsonPropertyOrder(value = {
-		"qr_code_url"
-})
-@JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
 @Getter
@@ -23,9 +17,15 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class BankQrCodeUrlResponseDto {
+public final class CreateOrUpdatePaymentAccountRequestDto {
 
-	@JsonProperty(value = "qr_code_url")
-	String qrCodeUrl;
+	@JsonProperty(value = "bank_code")
+	String bankCode;
+
+	@JsonProperty(value = "number")
+	String number;
+
+	@JsonProperty(value = "name")
+	String name;
 
 }

@@ -5,6 +5,7 @@ import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -23,6 +24,15 @@ public class GlobalExceptionController {
 
 	@ExceptionHandler(value = DataIntegrityViolationException.class)
 	public ResponseDTO<Void> handleDataIntegrityViolationException(DataIntegrityViolationException dataIntegrityViolationException) {
+		return ResponseDTO.<Void>builder()
+				.success(false)
+				.code(GlobalException.Type.INVALID_REQUEST.getCode())
+				.message("Invalid request")
+				.build();
+	}
+
+	@ExceptionHandler(value = MissingServletRequestParameterException.class)
+	public ResponseDTO<Void> handleMissingServletRequestParameterException(MissingServletRequestParameterException missingServletRequestParameterException) {
 		return ResponseDTO.<Void>builder()
 				.success(false)
 				.code(GlobalException.Type.INVALID_REQUEST.getCode())

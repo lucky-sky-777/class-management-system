@@ -1,55 +1,30 @@
 // src/features/member/pages/MemberPage.tsx
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useMembers } from "@features/member/hooks/useMembers";
 import { useAuth } from "@features/auth";
 import { memberAPI } from "@features/member/api";
-import { apiClient } from "@services/api-client";
 import { UserCheck } from "lucide-react";
-import { GroupSection } from "./GroupSection"; // Kiểm tra lại đường dẫn import
+import { GroupSection } from "./GroupSection";
 import type { MemberRole } from "@features/member/types";
 
 export const MemberPage = () => {
-  // --- 1. TẤT CẢ HOOKS PHẢI NẰM Ở ĐÂY (TRÊN CÙNG) ---
-  const { classId } = useParams();
+  const { classId } = useParams<{ classId: string }>();
   const { user } = useAuth();
-  const [classInfo, setClassInfo] = useState<any>(null);
   const [showPending, setShowPending] = useState(false);
-
-  // Gọi useMembers ngay từ đầu, truyền classInfo?.owner_user_id vào
-  // Hook này sẽ tự lo việc map role "OWNER" cực chuẩn
-  const { members, isLoading, myRole, refresh } = useMembers(
+  const { classInfo, members, isLoading, myRole, refresh } = useMembers(
     classId!,
     user?.id,
-    // classInfo?.owner_user_id,
   );
 
-  // --- 2. EFFECT LẤY THÔNG TIN LỚP ---
-  useEffect(() => {
-    const fetchClassInfo = async () => {
-      try {
-        const res: any = await apiClient.get("/classes");
-        const classes = res.data?.data || res.data || [];
-        const foundClass = classes.find(
-          (c: any) => String(c.id) === String(classId),
-        );
-        if (foundClass) setClassInfo(foundClass);
-      } catch (err) {
-        console.error("Lỗi fetch thông tin lớp:", err);
-      }
-    };
-    if (classId) fetchClassInfo();
-  }, [classId]);
-
-  // --- 3. CÁC HÀM XỬ LÝ (LOGIC) ---
+  // --- CÁC HÀM XỬ LÝ TƯƠNG TÁC ---
   const handleUpdateRole = async (userId: number, currentRole: MemberRole) => {
     try {
       const newRole: MemberRole =
         currentRole === "CLASS_ADMIN" ? "CLASS_MEMBER" : "CLASS_ADMIN";
       await memberAPI.updateRole(classId!, userId, newRole);
-      // refresh(true) để load ngầm, không gây giật lag UI
       refresh(true);
-    } catch (error) {
+    } catch {
       alert("Lỗi khi cập nhật quyền hạn");
     }
   };
@@ -59,25 +34,27 @@ export const MemberPage = () => {
       try {
         await memberAPI.kickMember(classId!, userId);
         refresh(true);
-      } catch (error) {
+      } catch {
         alert("Lỗi khi xóa thành viên");
       }
     }
   };
 
-  // --- 4. KIỂM TRA ĐIỀU KIỆN RENDER (SAU KHI ĐÃ GỌI HOOKS) ---
+  // --- KIỂM TRA ĐIỀU KIỆN RENDER ---
   if (!classInfo || isLoading) {
     return (
-      <div className="p-10 text-center text-[var(--ink-3)] animate-pulse font-medium bg-[var(--bg-paper)] min-h-screen">
-        Đang chuẩn bị dữ liệu...
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="animate-in fade-in duration-300 flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--warm-400)]"></div>
+          <p className="text-ink-2 text-sm font-medium">
+            Đang tải danh sách thành viên...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Logic lọc dữ liệu
-  const pendingMembers = members.filter(
-    (m) => (m.role as string) === "PENDING",
-  );
+  const pendingMembers = members.filter((m) => m.role === "PENDING");
   const isPrivateClass =
     classInfo.type === "PRIVATE" || classInfo.privacy === "PRIVATE";
 

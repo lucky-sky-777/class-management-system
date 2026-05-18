@@ -1,13 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ID } from "@shared/utils/common";
 import { fundAPI } from "../api";
-import type { FundResponseDto, FundSummaryResponseDto, CreateFundRequestDto } from "../types";
+import type { FundResponseDto, FundSummaryResponseDto, CreateFundRequestDto, BankConfig } from "../types";
 
 export const useFundInternal = (classId: ID) => {
     const [summary, setSummary] = useState<FundSummaryResponseDto | null>(null);
     const [funds, setFunds] = useState<FundResponseDto[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [bankConfig, setBankConfig] = useState<BankConfig | null>(() => {
+        try {
+            const saved = localStorage.getItem(`class_${classId}_bank_config`);
+            return saved ? JSON.parse(saved) : null;
+        } catch {
+            return null;
+        }
+    });
+
+    const updateBankConfig = useCallback(async (config: BankConfig) => {
+        setBankConfig(config);
+        try {
+            const res = await fundAPI.updatePaymentAccount(classId, {
+                bank_code: config.bank_code,
+                number: config.account_number,
+                name: config.account_name
+            });
+            if (res.success == false) {
+                setError("Cập nhật thông tin tài khoản thất bại");
+                console.error("Failed to update payment account:");
+                console.error(res);
+            }
+        } catch (err) {
+            setError("Lỗi kết nối khi cập nhật thông tin tài khoản");
+            console.error("Failed to update payment account:", err);
+        }
+    }, [classId]);
+
 
     const fetchData = useCallback(async () => {
         if (!classId) return;
@@ -81,6 +110,8 @@ export const useFundInternal = (classId: ID) => {
         error,
         refresh: fetchData,
         createFund,
-        deleteFund
+        deleteFund,
+        bankConfig,
+        updateBankConfig
     };
 };

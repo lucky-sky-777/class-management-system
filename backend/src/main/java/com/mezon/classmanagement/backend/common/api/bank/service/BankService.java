@@ -1,9 +1,9 @@
 package com.mezon.classmanagement.backend.common.api.bank.service;
 
-import com.mezon.classmanagement.backend.common.api.bank.dto.BankQrCodeUrlResponseDto;
-import com.mezon.classmanagement.backend.common.api.bank.dto.GetQrCodeRequestDto;
-import com.mezon.classmanagement.backend.common.api.bank.dto.VietQrBankListResponseDto;
-import com.mezon.classmanagement.backend.common.api.bank.dto.VietQrBankResponseDto;
+import com.mezon.classmanagement.backend.common.api.bank.dto.request.GetBankQrCodeRequestDto;
+import com.mezon.classmanagement.backend.common.api.bank.dto.response.BankQrCodeUrlResponseDto;
+import com.mezon.classmanagement.backend.common.api.bank.dto.response.vietqr.VietQrBankListResponseDto;
+import com.mezon.classmanagement.backend.common.api.bank.dto.response.vietqr.VietQrBankResponseDto;
 import com.mezon.classmanagement.backend.common.api.bank.util.BankQrCodeUrlGenerator;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import lombok.AccessLevel;
@@ -21,7 +21,7 @@ public class BankService {
 
 	WebClient vietQrWebClient;
 
-	public List<VietQrBankResponseDto> getBanks() {
+	public List<VietQrBankResponseDto> getBankList() {
 		VietQrBankListResponseDto response = vietQrWebClient
 				.get()
 				.uri("/v2/banks")
@@ -36,15 +36,26 @@ public class BankService {
 		return response.getData();
 	}
 
-	public BankQrCodeUrlResponseDto getQrCodeUrl(GetQrCodeRequestDto request) {
+	public BankQrCodeUrlResponseDto getQrCodeUrl(String imageTypeName, GetBankQrCodeRequestDto request) {
+		if (!BankQrCodeUrlGenerator.isValidImageType(imageTypeName)) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid image type");
+		}
+		if (request.getBankCode() == null) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Bank code cannot be null");
+		}
+		if (request.getBankAccountNumber() == null) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Account number cannot be null");
+		}
+
 		return BankQrCodeUrlResponseDto.builder()
-				.qrCodeUrl(
+				.bankQrCodeUrl(
 						BankQrCodeUrlGenerator.generate(
+								BankQrCodeUrlGenerator.imageTypeMap.get(BankQrCodeUrlGenerator.normalizeImageTypeName(imageTypeName)),
 								request.getBankCode(),
-								request.getAccountNumber(),
-								request.getAccountName(),
-								request.getAmount(),
-								request.getNotes()
+								request.getBankAccountNumber(),
+								request.getBankAccountName(),
+								request.getTransferAmount(),
+								request.getTransferNote()
 						)
 				)
 				.build();

@@ -36,10 +36,11 @@ public class ActivityService {
 
 	@RequireClassPermission
 	@Transactional
-	public ActivityResponseDto create(Long classId, CreateAndUpdateActivityRequestDto request) {
-		Class clazz = Class.builder()
-				.id(classId)
-				.build();
+	public ActivityResponseDto create(
+			Long classId,
+			CreateAndUpdateActivityRequestDto request
+	) {
+		Class clazz = Class.create(classId);
 
 		Activity newActivity = activityMapper.toActivity(request);
 		newActivity.setClazz(clazz);
@@ -51,7 +52,11 @@ public class ActivityService {
 
 	@RequireClassPermission
 	@Transactional
-	public ActivityResponseDto update(Long classId, Long activityId, CreateAndUpdateActivityRequestDto request) {
+	public ActivityResponseDto update(
+			Long classId,
+			Long activityId,
+			CreateAndUpdateActivityRequestDto request
+	) {
 		Activity currentActivity = findByClassIdAndActivityIdOrThrow(classId, activityId);
 
 		activityMapper.updateActivityFromRequestDto(request, currentActivity);
@@ -63,14 +68,17 @@ public class ActivityService {
 
 	@RequireClassPermission
 	@Transactional
-	public ActivityIdResponseDto delete(Long classId, Long activityId) {
+	public ActivityIdResponseDto delete(
+			Long classId,
+			Long activityId
+	) {
 		Activity currentActivity = findByClassIdAndActivityIdOrThrow(classId, activityId);
 
 		delete(currentActivity);
 
-		return ActivityIdResponseDto.builder()
-				.activityId(currentActivity.getId())
-				.build();
+		return new ActivityIdResponseDto(
+				currentActivity.getId()
+		);
 	}
 
 	@RequireClassPermission
@@ -96,12 +104,6 @@ public class ActivityService {
 	/**
 	 * Find
 	 */
-
-	@Transactional(readOnly = true)
-	public List<Activity> findByClassId(Long classId) {
-		return activityRepository
-				.findByClazz_Id(classId);
-	}
 
 	@Transactional(readOnly = true)
 	public List<ActivityResponseDto> getByClassId(Long classId) {

@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain.fund.service;
 
+import com.mezon.classmanagement.backend.common.api.bank.util.BankQrCodeUrlGenerator;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
@@ -10,6 +11,8 @@ import com.mezon.classmanagement.backend.domain.fund.dto.FundResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.dto.FundSummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
 import com.mezon.classmanagement.backend.domain.fund.mapper.FundMapper;
+import com.mezon.classmanagement.backend.domain.fund.paymentaccount.entity.PaymentAccount;
+import com.mezon.classmanagement.backend.domain.fund.paymentaccount.service.PaymentAccountService;
 import com.mezon.classmanagement.backend.domain.fund.repository.FundRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,12 @@ public class FundService {
 
 	FundMapper fundMapper;
 
+	/**
+	 * Other services
+	 */
+
+	PaymentAccountService paymentAccountService;
+
 	@RequireClassPermission
 	@Transactional
 	public FundResponseDto create(
@@ -60,6 +69,10 @@ public class FundService {
 		newFund.setClazz(clazz);
 		newFund.setCreator(creator);
 
+		if (newFund.getDescription() != null) {
+			newFund.setDescription(newFund.getDescription().replaceAll("[^a-zA-Z0-9]", ""));
+		}
+
 		Fund responseFund = save(newFund);
 
 		return fundMapper.toFundResponseDto(responseFund);
@@ -80,7 +93,23 @@ public class FundService {
 	@RequireClassPermission
 	@Transactional(readOnly = true)
 	public List<FundResponseDto> getByClass(Long classId) {
-		return getByClassId(classId);
+		List<FundResponseDto> fundResponseDtoList = getByClassId(classId);
+		PaymentAccount paymentAccount = paymentAccountService.findByClassIdOrNew(classId);
+		fundResponseDtoList.stream()
+				.filter(item -> item.getType() == Fund.Type.INCOME)
+				.forEach(item -> {
+					item.setQrCodeUrl(
+							BankQrCodeUrlGenerator.generate(
+									BankQrCodeUrlGenerator.ImageType.FULL_INFO,
+									paymentAccount.getBankCode(),
+									paymentAccount.getNumber(),
+									paymentAccount.getName(),
+									item.getAmount(),
+									item.getDescription()
+							)
+					);
+				});
+		return fundResponseDtoList;
 	}
 
 	@RequireClassPermission

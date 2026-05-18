@@ -2,14 +2,20 @@
  * EduAdmin — tailwind.config.js
  * Design System: Modern Editorial × Humanist
  *
- * PHONG CÁCH: Tạp chí hiện đại pha chất Humanist — ấm áp, rõ chữ, có hồn.
- * Không dùng màu xanh/tím sặc sỡ làm tone chủ đạo.
- * Ink-on-paper: nền kem nhẹ, chữ warm-black, accent xanh chuyên nghiệp.
+ * PHONG CÁCH: Học thuật chuyên nghiệp — xanh dương là màu chủ đạo.
+ * Tông màu nhất quán với môi trường giáo dục:
+ *   Blue    → primary action, navigation, trạng thái "đang học"
+ *   Emerald → thành công, đạt, hoàn thành, điểm cao
+ *   Amber   → cảnh báo, hạn chót, cần cải thiện
+ *   Red     → nguy hiểm, không đạt, trượt, lỗi
+ *   Violet  → xuất sắc, học bổng, đặc biệt
+ *   Sky     → info, thông báo hệ thống, hướng dẫn
+ *   Slate   → neutral UI, text, border, background
  *
  * DARK MODE: class strategy — thêm class "dark" lên <html>
  *
  * FONT STACK (phải import trong globals.css):
- *   Lora        → serif, display & heading
+ *   Lora              → serif, display & heading
  *   Plus Jakarta Sans → sans, body & UI
  *   JetBrains Mono    → mono, code & data
  *
@@ -27,9 +33,6 @@ module.exports = {
   darkMode: "class",
 
   theme: {
-    // ─────────────────────────────────────────────────────────
-    // OVERRIDE toàn bộ screens (bỏ default của Tailwind)
-    // ─────────────────────────────────────────────────────────
     screens: {
       xs: "480px",
       sm: "640px",
@@ -40,279 +43,324 @@ module.exports = {
     },
 
     extend: {
-      // ───────────────────────────────────────────────────────
-      // COLORS
-      // Quy ước đặt tên: {semantic}-{role}
-      //   paper     → nền trang (kem nhẹ)
-      //   ink       → chữ (warm-black scale)
-      //   surface   → card / panel background
-      //   warm      → accent chính (đất nung / terracotta)
-      //   ink-blue  → semantic info (xanh navy học thuật)
-      //   ink-green → semantic success
-      //   ink-amber → semantic warning
-      //   ink-red   → semantic danger
-      //   ink-sage  → semantic special / xuất sắc
-      //   sidebar   → sidebar dark shell
-      // ───────────────────────────────────────────────────────
       colors: {
-        // ── Paper (nền) ──────────────────────────────────────
+        // ── Paper / Background ───────────────────────────────
         paper: {
-          DEFAULT: "#FAFAF8", // nền trang chính
-          dark: "#141210", // dark mode tương đương
+          DEFAULT: "#F8FAFC", // nền trang chính — slate-50 (sáng, học thuật)
+          dark: "#0F172A",    // dark mode — slate-900
         },
 
         // ── Surface (cards, panels) ──────────────────────────
         surface: {
-          DEFAULT: "#FFFFFF", // card / panel chính
-          2: "#F5F4F1", // hover row, thead bg
-          3: "#EDEBE6", // sunken / disabled bg
-          "dark-1": "#1E1B18", // card dark
-          "dark-2": "#252220", // hover row dark
-          "dark-3": "#2E2A27", // sunken dark
+          DEFAULT: "#FFFFFF",
+          2: "#F1F5F9",        // hover row, thead bg — slate-100
+          3: "#E2E8F0",        // sunken / disabled bg — slate-200
+          "dark-1": "#1E293B", // card dark — slate-800
+          "dark-2": "#263345", // hover row dark
+          "dark-3": "#2D3F55", // sunken dark
         },
 
-        // ── Ink (chữ) ────────────────────────────────────────
+        // ── Ink / Text ───────────────────────────────────────
         ink: {
-          1: "#1C1917", // primary text — warm black (không lạnh)
-          2: "#57534E", // secondary text
-          3: "#A8A29E", // tertiary / placeholder
-          4: "#D6D3D1", // disabled / decorative
-          // dark equivalents
-          d1: "#F5F4F1",
-          d2: "#A8A29E",
-          d3: "#57534E",
-          d4: "#2C2927",
+          1: "#0F172A", // primary text — slate-900 (lạnh, học thuật)
+          2: "#475569", // secondary text — slate-600
+          3: "#94A3B8", // tertiary / placeholder — slate-400
+          4: "#CBD5E1", // disabled / decorative — slate-300
+          d1: "#F1F5F9",
+          d2: "#94A3B8",
+          d3: "#475569",
+          d4: "#1E293B",
         },
 
-        // ── Rule (border) ────────────────────────────────────
-        // Dùng qua CSS var để có alpha channel — xem globals.css
+        // ── Rule / Border ────────────────────────────────────
         rule: {
-          DEFAULT: "rgba(0,0,0,0.08)",
-          md: "rgba(0,0,0,0.13)",
-          dark: "rgba(255,255,255,0.07)",
-          "dark-md": "rgba(255,255,255,0.12)",
+          DEFAULT: "rgba(15,23,42,0.08)",
+          md: "rgba(15,23,42,0.13)",
+          dark: "rgba(241,245,249,0.07)",
+          "dark-md": "rgba(241,245,249,0.12)",
         },
 
-        // ── Blue accent — MÀU accent chính của EduAdmin (đã đổi từ warm cũ) ───────
-        warm: {
-          50: "#EFF6FF",
-          100: "#DBEAFE",
-          200: "#BFDBFE",
-          400: "#2563EB", // DEFAULT accent (Blue 600)
-          600: "#1D4ED8", // hover state (Blue 700)
-          800: "#1E40AF",
-          900: "#1E3A8A",
-          fill: "#EFF6FF", // pill / badge background
-          text: "#1E40AF", // pill / badge text
-          border: "#BFDBFE", // pill / badge border
-          // dark
-          "dark-fill": "#1E293B",
-          "dark-text": "#60A5FA",
-          "dark-border": "#334155",
+        // ── Primary Blue — màu chủ đạo EduAdmin ─────────────
+        // Dùng cho: nút primary, active nav, link, focus ring
+        primary: {
+          50:     "#EFF6FF",
+          100:    "#DBEAFE",
+          200:    "#BFDBFE",
+          300:    "#93C5FD",
+          400:    "#60A5FA",
+          500:    "#3B82F6",
+          DEFAULT: "#2563EB", // Blue-600 ← accent chính
+          600:    "#2563EB",
+          700:    "#1D4ED8",
+          800:    "#1E40AF",
+          900:    "#1E3A8A",
+          fill:   "#EFF6FF",
+          text:   "#1E40AF",
+          border: "#BFDBFE",
+          "dark-fill":   "#1E293B",
+          "dark-text":   "#60A5FA",
+          "dark-border": "#1E3A8A",
         },
 
-        // ── Ink-blue — info / primary action ─────────────────
-        "ink-blue": {
-          fill: "#EEF4FE",
-          text: "#1E4FA8",
-          border: "#C5D8F8",
-          "dark-fill": "#1A2845",
-          "dark-text": "#93C5FD",
-          "dark-border": "#1E3A6E",
+        // ── Emerald — thành công, đạt, hoàn thành ───────────
+        // Dùng cho: điểm cao, nộp đúng hạn, trạng thái active
+        success: {
+          fill:   "#ECFDF5",
+          text:   "#065F46",
+          border: "#A7F3D0",
+          DEFAULT: "#059669",
+          "dark-fill":   "#022C22",
+          "dark-text":   "#6EE7B7",
+          "dark-border": "#065F46",
         },
 
-        // ── Ink-green — success ───────────────────────────────
-        "ink-green": {
-          fill: "#EDFAF3",
-          text: "#166534",
-          border: "#BBF0D6",
-          "dark-fill": "#0F2A1A",
-          "dark-text": "#6EE7B7",
-          "dark-border": "#134E2A",
-        },
-
-        // ── Ink-amber — warning ───────────────────────────────
-        "ink-amber": {
-          fill: "#FFFBEB",
-          text: "#92400E",
+        // ── Amber — cảnh báo, hạn chót, cần cải thiện ───────
+        // Dùng cho: sắp hết hạn, điểm trung bình, pending
+        warning: {
+          fill:   "#FFFBEB",
+          text:   "#92400E",
           border: "#FDE68A",
-          "dark-fill": "#271D08",
-          "dark-text": "#FCD34D",
-          "dark-border": "#4A3208",
+          DEFAULT: "#D97706",
+          "dark-fill":   "#27180A",
+          "dark-text":   "#FCD34D",
+          "dark-border": "#92400E",
         },
 
-        // ── Ink-red — danger ──────────────────────────────────
-        "ink-red": {
-          fill: "#FEF2F2",
-          text: "#991B1B",
+        // ── Red — nguy hiểm, không đạt, lỗi ─────────────────
+        // Dùng cho: trượt môn, quá hạn, xóa dữ liệu
+        danger: {
+          fill:   "#FEF2F2",
+          text:   "#991B1B",
           border: "#FECACA",
-          "dark-fill": "#2A1010",
-          "dark-text": "#FCA5A5",
-          "dark-border": "#4A1A1A",
+          DEFAULT: "#DC2626",
+          "dark-fill":   "#2A1010",
+          "dark-text":   "#FCA5A5",
+          "dark-border": "#7F1D1D",
         },
 
-        // ── Ink-sage — xuất sắc / special ────────────────────
+        // ── Violet — xuất sắc, học bổng, đặc biệt ───────────
+        // Dùng cho: thành tích nổi bật, huy chương, admin role
+        honor: {
+          fill:   "#F5F3FF",
+          text:   "#4C1D95",
+          border: "#DDD6FE",
+          DEFAULT: "#7C3AED",
+          "dark-fill":   "#1C1035",
+          "dark-text":   "#C4B5FD",
+          "dark-border": "#4C1D95",
+        },
+
+        // ── Sky — info, thông báo hệ thống ───────────────────
+        // Dùng cho: tooltip, hướng dẫn, thông báo trung tính
+        info: {
+          fill:   "#F0F9FF",
+          text:   "#0C4A6E",
+          border: "#BAE6FD",
+          DEFAULT: "#0284C7",
+          "dark-fill":   "#082F49",
+          "dark-text":   "#7DD3FC",
+          "dark-border": "#0C4A6E",
+        },
+
+        // ── Warm (alias cho primary — backward compat) ───────
+        // Giữ lại để không break code cũ, trỏ sang blue
+        warm: {
+          50:    "#EFF6FF",
+          100:   "#DBEAFE",
+          200:   "#BFDBFE",
+          400:   "#2563EB",
+          600:   "#1D4ED8",
+          800:   "#1E40AF",
+          900:   "#1E3A8A",
+          fill:   "#EFF6FF",
+          text:   "#1E40AF",
+          border: "#BFDBFE",
+          "dark-fill":   "#1E293B",
+          "dark-text":   "#60A5FA",
+          "dark-border": "#1E3A8A",
+        },
+
+        // ── ink-blue / ink-green / ink-amber / ink-red / ink-sage
+        // (backward compat — ánh xạ sang semantic mới)
+        "ink-blue": {
+          fill:   "#EFF6FF",
+          text:   "#1E40AF",
+          border: "#BFDBFE",
+          "dark-fill":   "#1E293B",
+          "dark-text":   "#60A5FA",
+          "dark-border": "#1E3A8A",
+        },
+        "ink-green": {
+          fill:   "#ECFDF5",
+          text:   "#065F46",
+          border: "#A7F3D0",
+          "dark-fill":   "#022C22",
+          "dark-text":   "#6EE7B7",
+          "dark-border": "#065F46",
+        },
+        "ink-amber": {
+          fill:   "#FFFBEB",
+          text:   "#92400E",
+          border: "#FDE68A",
+          "dark-fill":   "#27180A",
+          "dark-text":   "#FCD34D",
+          "dark-border": "#92400E",
+        },
+        "ink-red": {
+          fill:   "#FEF2F2",
+          text:   "#991B1B",
+          border: "#FECACA",
+          "dark-fill":   "#2A1010",
+          "dark-text":   "#FCA5A5",
+          "dark-border": "#7F1D1D",
+        },
         "ink-sage": {
-          fill: "#F0F4EE",
-          text: "#3A5C36",
-          border: "#C5DCC0",
-          "dark-fill": "#162010",
-          "dark-text": "#A7D9A2",
-          "dark-border": "#1E3A18",
+          fill:   "#F5F3FF",
+          text:   "#4C1D95",
+          border: "#DDD6FE",
+          "dark-fill":   "#1C1035",
+          "dark-text":   "#C4B5FD",
+          "dark-border": "#4C1D95",
         },
 
         // ── Sidebar ───────────────────────────────────────────
-        // Trong tailwind.config.js
-sidebar: {
-  bg: "#F3F4F6",            // Giữ nền xám gray-100 của Hào
-  text: "#4B5563",          // Chữ xám đậm khi chưa chọn
-  "text-active": "#2563EB", // Đã đổi sang Blue-600
-  active: "#E5E7EB",        // Nền xám đậm hơn một chút khi chọn (gray-200)
-  border: "#D1D5DB",        // Màu đường kẻ
-  accent: "#2563EB",        // Màu nhấn Blue-600
-  "dark-bg": "#0E0C0A",
-  "dark-text": "#57534E",
-  "dark-accent": "#60A5FA",
-},
+        sidebar: {
+          bg:           "#F8FAFC", // slate-50
+          text:         "#475569", // slate-600
+          "text-active":"#1D4ED8", // blue-700
+          active:       "#E0EAFB", // blue-50 tinted
+          border:       "#CBD5E1", // slate-300
+          accent:       "#2563EB", // blue-600
+          "dark-bg":    "#0F172A",
+          "dark-text":  "#64748B",
+          "dark-active":"#1E293B",
+          "dark-accent":"#60A5FA",
+        },
       },
 
       // ───────────────────────────────────────────────────────
       // TYPOGRAPHY
       // ───────────────────────────────────────────────────────
       fontFamily: {
-        serif: ["'Lora'", "Georgia", "serif"],
-        sans: ["'Plus Jakarta Sans'", "'Helvetica Neue'", "sans-serif"],
-        mono: ["'JetBrains Mono'", "'Fira Code'", "monospace"],
-        display: ["'Lora'", "Georgia", "serif"], // alias rõ nghĩa hơn cho heading lớn
+        serif:   ["'Lora'", "Georgia", "serif"],
+        sans:    ["'Plus Jakarta Sans'", "'Helvetica Neue'", "sans-serif"],
+        mono:    ["'JetBrains Mono'", "'Fira Code'", "monospace"],
+        display: ["'Lora'", "Georgia", "serif"],
       },
 
       fontSize: {
-        // format: [size, { lineHeight, letterSpacing? }]
-        "2xs": ["0.65rem", { lineHeight: "1rem" }],
-        xs: ["0.75rem", { lineHeight: "1.125rem" }],
-        sm: ["0.875rem", { lineHeight: "1.25rem" }],
-        base: ["1rem", { lineHeight: "1.5rem" }],
-        md: ["1.0625rem", { lineHeight: "1.6rem" }],
-        lg: ["1.125rem", { lineHeight: "1.75rem" }],
-        xl: ["1.25rem", { lineHeight: "1.75rem" }],
-        "2xl": ["1.5rem", { lineHeight: "2rem" }],
-        "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
-        "4xl": ["2.25rem", { lineHeight: "2.5rem" }],
-        "5xl": ["3rem", { lineHeight: "1" }],
-        "display-sm": [
-          "2.25rem",
-          { lineHeight: "2.5rem", letterSpacing: "-0.03em" },
-        ],
-        "display-md": ["3rem", { lineHeight: "1", letterSpacing: "-0.035em" }],
-        "display-lg": [
-          "3.75rem",
-          { lineHeight: "1", letterSpacing: "-0.04em" },
-        ],
+        "2xs":       ["0.65rem", { lineHeight: "1rem" }],
+        xs:          ["0.75rem", { lineHeight: "1.125rem" }],
+        sm:          ["0.875rem", { lineHeight: "1.25rem" }],
+        base:        ["1rem", { lineHeight: "1.5rem" }],
+        md:          ["1.0625rem", { lineHeight: "1.6rem" }],
+        lg:          ["1.125rem", { lineHeight: "1.75rem" }],
+        xl:          ["1.25rem", { lineHeight: "1.75rem" }],
+        "2xl":       ["1.5rem", { lineHeight: "2rem" }],
+        "3xl":       ["1.875rem", { lineHeight: "2.25rem" }],
+        "4xl":       ["2.25rem", { lineHeight: "2.5rem" }],
+        "5xl":       ["3rem", { lineHeight: "1" }],
+        "display-sm":["2.25rem", { lineHeight: "2.5rem", letterSpacing: "-0.03em" }],
+        "display-md":["3rem", { lineHeight: "1", letterSpacing: "-0.035em" }],
+        "display-lg":["3.75rem", { lineHeight: "1", letterSpacing: "-0.04em" }],
       },
 
       fontWeight: {
-        light: "300",
-        regular: "400",
-        medium: "500",
+        light:    "300",
+        regular:  "400",
+        medium:   "500",
         semibold: "600",
-        bold: "700",
+        bold:     "700",
       },
 
       lineHeight: {
         tightest: "1.1",
-        tight: "1.25",
-        snug: "1.4",
-        normal: "1.6",
-        relaxed: "1.65",
-        loose: "1.8",
+        tight:    "1.25",
+        snug:     "1.4",
+        normal:   "1.6",
+        relaxed:  "1.65",
+        loose:    "1.8",
       },
 
       letterSpacing: {
         tightest: "-0.04em",
-        tighter: "-0.03em",
-        tight: "-0.02em",
-        snug: "-0.01em",
-        normal: "0em",
-        wide: "0.03em",
-        wider: "0.07em",
-        widest: "0.1em",
-        label: "0.1em", // dùng cho uppercase label
+        tighter:  "-0.03em",
+        tight:    "-0.02em",
+        snug:     "-0.01em",
+        normal:   "0em",
+        wide:     "0.03em",
+        wider:    "0.07em",
+        widest:   "0.1em",
+        label:    "0.1em",
       },
 
       // ───────────────────────────────────────────────────────
-      // SPACING — base unit = 4px
+      // SPACING
       // ───────────────────────────────────────────────────────
       spacing: {
-        px: "1px",
-        0: "0px",
-        0.5: "2px",
-        1: "4px",
-        1.5: "6px",
-        2: "8px",
-        2.5: "10px",
-        3: "12px",
-        3.5: "14px",
-        4: "16px",
-        5: "20px",
-        6: "24px",
-        7: "28px",
-        8: "32px",
-        9: "36px",
-        10: "40px",
-        11: "44px",
-        12: "48px",
-        14: "56px",
-        16: "64px",
-        18: "72px",
-        20: "80px",
-        24: "96px",
-        28: "112px",
-        32: "128px",
-        // Layout cố định
+        px:   "1px",
+        0:    "0px",
+        0.5:  "2px",
+        1:    "4px",
+        1.5:  "6px",
+        2:    "8px",
+        2.5:  "10px",
+        3:    "12px",
+        3.5:  "14px",
+        4:    "16px",
+        5:    "20px",
+        6:    "24px",
+        7:    "28px",
+        8:    "32px",
+        9:    "36px",
+        10:   "40px",
+        11:   "44px",
+        12:   "48px",
+        14:   "56px",
+        16:   "64px",
+        18:   "72px",
+        20:   "80px",
+        24:   "96px",
+        28:   "112px",
+        32:   "128px",
         "sidebar-w": "208px",
-        "topbar-h": "52px",
-        "panel-px": "16px",
-        "panel-py": "14px",
-        "card-gap": "10px",
+        "topbar-h":  "52px",
+        "panel-px":  "16px",
+        "panel-py":  "14px",
+        "card-gap":  "10px",
       },
 
       // ───────────────────────────────────────────────────────
       // BORDER RADIUS
-      // Humanist: ưa góc bo vừa phải — không quá sharp, không pill toàn bộ
       // ───────────────────────────────────────────────────────
       borderRadius: {
-        none: "0px",
-        xs: "2px", // chip nhỏ, inline code
-        sm: "4px", // tag, badge khi không dùng pill
-        DEFAULT: "8px", // nút, input, card nhỏ
-        md: "8px",
-        lg: "10px", // card, panel
-        xl: "14px", // modal, sheet
-        "2xl": "20px", // container lớn
-        "3xl": "28px",
-        full: "9999px", // pill / avatar
+        none:    "0px",
+        xs:      "2px",
+        sm:      "4px",
+        DEFAULT: "8px",
+        md:      "8px",
+        lg:      "10px",
+        xl:      "14px",
+        "2xl":   "20px",
+        "3xl":   "28px",
+        full:    "9999px",
       },
 
       // ───────────────────────────────────────────────────────
-      // BOX SHADOW — flat + functional, không decorative
-      // Quy tắc: không dùng drop-shadow màu, chỉ black/alpha
+      // BOX SHADOW
       // ───────────────────────────────────────────────────────
       boxShadow: {
         none: "none",
-        xs: "0 1px 2px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04)",
-        sm: "0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)",
-        md: "0 4px 12px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06)",
-        lg: "0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06)",
-        xl: "0 16px 40px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.07)",
-        // focus ring — dùng cho input focus, không phải glow
-        "focus-blue": "0 0 0 3px rgba(37,99,235,0.18)",
-        "focus-warm": "0 0 0 3px rgba(37,99,235,0.18)",
-        "focus-red": "0 0 0 3px rgba(153,27,27,0.15)",
-        // dark equivalents
-        "dark-xs":
-          "0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04)",
-        "dark-sm":
-          "0 1px 4px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)",
+        xs:   "0 1px 2px rgba(15,23,42,0.06), 0 0 0 1px rgba(15,23,42,0.04)",
+        sm:   "0 1px 4px rgba(15,23,42,0.08), 0 0 0 1px rgba(15,23,42,0.04)",
+        md:   "0 4px 12px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.06)",
+        lg:   "0 8px 24px rgba(15,23,42,0.12), 0 2px 6px rgba(15,23,42,0.06)",
+        xl:   "0 16px 40px rgba(15,23,42,0.14), 0 4px 10px rgba(15,23,42,0.07)",
+        "focus-blue": "0 0 0 3px rgba(37,99,235,0.20)",
+        "focus-warm": "0 0 0 3px rgba(37,99,235,0.20)",
+        "focus-red":  "0 0 0 3px rgba(220,38,38,0.18)",
+        "dark-xs": "0 1px 2px rgba(0,0,0,0.35), 0 0 0 1px rgba(241,245,249,0.04)",
+        "dark-sm": "0 1px 4px rgba(0,0,0,0.45), 0 0 0 1px rgba(241,245,249,0.04)",
         "dark-md": "0 4px 12px rgba(0,0,0,0.55), 0 1px 3px rgba(0,0,0,0.30)",
         "dark-lg": "0 8px 24px rgba(0,0,0,0.65), 0 2px 6px rgba(0,0,0,0.35)",
       },
@@ -321,8 +369,8 @@ sidebar: {
       // TRANSITION
       // ───────────────────────────────────────────────────────
       transitionDuration: {
-        75: "75ms",
-        100: "100ms",
+        75:   "75ms",
+        100:  "100ms",
         fast: "120ms",
         base: "200ms",
         slow: "300ms",
@@ -332,22 +380,22 @@ sidebar: {
       transitionTimingFunction: {
         smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
         bounce: "cubic-bezier(0.34, 1.56, 0.64, 1)",
-        in: "cubic-bezier(0.4, 0, 1, 1)",
-        out: "cubic-bezier(0, 0, 0.2, 1)",
+        in:     "cubic-bezier(0.4, 0, 1, 1)",
+        out:    "cubic-bezier(0, 0, 0.2, 1)",
       },
 
       // ───────────────────────────────────────────────────────
-      // Z-INDEX — thứ tự layer rõ ràng, không conflict
+      // Z-INDEX
       // ───────────────────────────────────────────────────────
       zIndex: {
-        base: "0",
-        raised: "10",
+        base:     "0",
+        raised:   "10",
         dropdown: "200",
-        sticky: "300",
-        overlay: "400",
-        modal: "500",
-        toast: "600",
-        tooltip: "700",
+        sticky:   "300",
+        overlay:  "400",
+        modal:    "500",
+        toast:    "600",
+        tooltip:  "700",
       },
 
       // ───────────────────────────────────────────────────────
@@ -356,47 +404,42 @@ sidebar: {
       keyframes: {
         "fade-up": {
           from: { opacity: "0", transform: "translateY(8px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
+          to:   { opacity: "1", transform: "translateY(0)" },
         },
         "fade-in": {
           from: { opacity: "0" },
-          to: { opacity: "1" },
+          to:   { opacity: "1" },
         },
         "scale-in": {
           from: { opacity: "0", transform: "scale(0.96)" },
-          to: { opacity: "1", transform: "scale(1)" },
+          to:   { opacity: "1", transform: "scale(1)" },
         },
         "slide-right": {
           from: { opacity: "0", transform: "translateX(-12px)" },
-          to: { opacity: "1", transform: "translateX(0)" },
+          to:   { opacity: "1", transform: "translateX(0)" },
         },
         shimmer: {
           from: { backgroundPosition: "-200% 0" },
-          to: { backgroundPosition: "200% 0" },
+          to:   { backgroundPosition: "200% 0" },
         },
         "pulse-dot": {
           "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.35" },
+          "50%":       { opacity: "0.35" },
         },
       },
 
       animation: {
-        "fade-up": "fade-up 0.2s cubic-bezier(0.4,0,0.2,1) forwards",
-        "fade-in": "fade-in 0.15s ease forwards",
-        "scale-in": "scale-in 0.15s cubic-bezier(0.34,1.56,0.64,1) forwards",
-        "slide-right": "slide-right 0.2s ease forwards",
-        shimmer: "shimmer 1.8s linear infinite",
-        "pulse-dot": "pulse-dot 2s ease-in-out infinite",
+        "fade-up":    "fade-up 0.2s cubic-bezier(0.4,0,0.2,1) forwards",
+        "fade-in":    "fade-in 0.15s ease forwards",
+        "scale-in":   "scale-in 0.15s cubic-bezier(0.34,1.56,0.64,1) forwards",
+        "slide-right":"slide-right 0.2s ease forwards",
+        shimmer:      "shimmer 1.8s linear infinite",
+        "pulse-dot":  "pulse-dot 2s ease-in-out infinite",
       },
 
-      // ───────────────────────────────────────────────────────
-      // BACKGROUND IMAGE
-      // ───────────────────────────────────────────────────────
       backgroundImage: {
-        "shimmer-light":
-          "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)",
-        "shimmer-dark":
-          "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%)",
+        "shimmer-light": "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)",
+        "shimmer-dark":  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%)",
       },
     },
   },
@@ -406,434 +449,463 @@ sidebar: {
   // ─────────────────────────────────────────────────────────
   plugins: [
     function ({ addBase, addComponents, addUtilities, theme }) {
-      // ── Base resets ──────────────────────────────────────
+
       addBase({
         "*, *::before, *::after": { boxSizing: "border-box" },
         html: { scrollBehavior: "smooth" },
         "::selection": {
-          background: theme("colors.warm.fill"),
-          color: theme("colors.warm.text"),
+          background: theme("colors.primary.fill"),
+          color:      theme("colors.primary.text"),
         },
         ":focus-visible": {
-          outline: `2px solid ${theme("colors.warm.400")}`,
-          outlineOffset: "2px",
+          outline:      `2px solid ${theme("colors.primary.DEFAULT")}`,
+          outlineOffset:"2px",
           borderRadius: theme("borderRadius.xs"),
         },
-        "::-webkit-scrollbar": { width: "5px", height: "5px" },
+        "::-webkit-scrollbar":       { width: "5px", height: "5px" },
         "::-webkit-scrollbar-track": { background: theme("colors.surface.2") },
         "::-webkit-scrollbar-thumb": {
-          background: theme("colors.ink.4"),
-          borderRadius: theme("borderRadius.full"),
+          background:    theme("colors.ink.4"),
+          borderRadius:  theme("borderRadius.full"),
         },
       });
 
-      // ── Component classes ─────────────────────────────────
       addComponents({
         // BUTTON BASE
         ".btn": {
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "6px",
-          fontFamily: `var(--font-sans)`,
-          fontSize: theme("fontSize.base[0]"),
-          fontWeight: theme("fontWeight.medium"),
+          display:       "inline-flex",
+          alignItems:    "center",
+          justifyContent:"center",
+          gap:           "6px",
+          fontFamily:    "var(--font-sans)",
+          fontSize:      theme("fontSize.base[0]"),
+          fontWeight:    theme("fontWeight.medium"),
           letterSpacing: "0.01em",
-          lineHeight: "1",
-          padding: "8px 16px",
-          borderRadius: theme("borderRadius.DEFAULT"),
-          border: "1px solid transparent",
-          cursor: "pointer",
-          transition: "all 120ms ease",
-          userSelect: "none",
-          whiteSpace: "nowrap",
+          lineHeight:    "1",
+          padding:       "8px 16px",
+          borderRadius:  theme("borderRadius.DEFAULT"),
+          border:        "1px solid transparent",
+          cursor:        "pointer",
+          transition:    "all 120ms ease",
+          userSelect:    "none",
+          whiteSpace:    "nowrap",
         },
-
         ".btn-primary": {
-          background: theme("colors.warm.400"),
-          color: "#fff",
-          borderColor: theme("colors.warm.400"),
-          "&:hover": { background: theme("colors.warm.600") },
+          background:  theme("colors.primary.DEFAULT"),
+          color:       "#fff",
+          borderColor: theme("colors.primary.DEFAULT"),
+          "&:hover":  { background: theme("colors.primary.700") },
           "&:active": { transform: "scale(0.98)" },
         },
         ".btn-secondary": {
-          background: theme("colors.surface.DEFAULT"),
-          color: theme("colors.ink.1"),
+          background:  theme("colors.surface.DEFAULT"),
+          color:       theme("colors.ink.1"),
           borderColor: theme("colors.rule.DEFAULT"),
-          "&:hover": { background: theme("colors.surface.2") },
+          "&:hover":  { background: theme("colors.surface.2") },
           "&:active": { transform: "scale(0.98)" },
         },
         ".btn-ghost": {
           background: "transparent",
-          color: theme("colors.ink.2"),
-          "&:hover": {
+          color:      theme("colors.ink.2"),
+          "&:hover":  {
             background: theme("colors.surface.3"),
-            color: theme("colors.ink.1"),
+            color:      theme("colors.ink.1"),
           },
           "&:active": { transform: "scale(0.98)" },
         },
         ".btn-warm": {
-          background: theme("colors.warm.400"),
-          color: "#fff",
-          borderColor: theme("colors.warm.400"),
-          "&:hover": { background: theme("colors.warm.600") },
+          background:  theme("colors.primary.DEFAULT"),
+          color:       "#fff",
+          borderColor: theme("colors.primary.DEFAULT"),
+          "&:hover":  { background: theme("colors.primary.700") },
           "&:active": { transform: "scale(0.98)" },
         },
         ".btn-danger": {
-          background: theme("colors.ink-red.fill"),
-          color: theme("colors.ink-red.text"),
-          borderColor: theme("colors.ink-red.border"),
-          "&:hover": { opacity: "0.85" },
+          background:  theme("colors.danger.fill"),
+          color:       theme("colors.danger.text"),
+          borderColor: theme("colors.danger.border"),
+          "&:hover":  { opacity: "0.85" },
           "&:active": { transform: "scale(0.98)" },
         },
         ".btn-sm": {
-          padding: "5px 12px",
-          fontSize: theme("fontSize.xs[0]"),
+          padding:      "5px 12px",
+          fontSize:     theme("fontSize.xs[0]"),
           borderRadius: theme("borderRadius.sm"),
         },
         ".btn-lg": {
-          padding: "11px 22px",
-          fontSize: theme("fontSize.lg[0]"),
+          padding:      "11px 22px",
+          fontSize:     theme("fontSize.lg[0]"),
           borderRadius: theme("borderRadius.lg"),
         },
         ".btn-icon": { padding: "8px" },
 
         // PILL / BADGE
         ".pill": {
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "4px",
-          padding: "3px 9px",
-          borderRadius: theme("borderRadius.full"),
-          fontSize: theme("fontSize.xs[0]"),
-          fontWeight: theme("fontWeight.semibold"),
+          display:       "inline-flex",
+          alignItems:    "center",
+          gap:           "4px",
+          padding:       "3px 9px",
+          borderRadius:  theme("borderRadius.full"),
+          fontSize:      theme("fontSize.xs[0]"),
+          fontWeight:    theme("fontWeight.semibold"),
           letterSpacing: theme("letterSpacing.wide"),
-          fontFamily: `var(--font-sans)`,
-          border: "1px solid transparent",
+          fontFamily:    "var(--font-sans)",
+          border:        "1px solid transparent",
         },
         ".pill-dot": {
-          width: "5px",
-          height: "5px",
+          width:        "5px",
+          height:       "5px",
           borderRadius: theme("borderRadius.full"),
-          background: "currentColor",
-          flexShrink: "0",
+          background:   "currentColor",
+          flexShrink:   "0",
         },
+        // pill-blue → đang học / primary state
         ".pill-blue": {
-          background: theme("colors.warm.fill"),
-          color: theme("colors.warm.text"),
-          borderColor: theme("colors.warm.border"),
+          background:  theme("colors.primary.fill"),
+          color:       theme("colors.primary.text"),
+          borderColor: theme("colors.primary.border"),
         },
+        // pill-green → đạt / thành công
         ".pill-green": {
-          background: theme("colors.ink-green.fill"),
-          color: theme("colors.ink-green.text"),
-          borderColor: theme("colors.ink-green.border"),
+          background:  theme("colors.success.fill"),
+          color:       theme("colors.success.text"),
+          borderColor: theme("colors.success.border"),
         },
+        // pill-amber → cảnh báo / hạn chót
         ".pill-amber": {
-          background: theme("colors.ink-amber.fill"),
-          color: theme("colors.ink-amber.text"),
-          borderColor: theme("colors.ink-amber.border"),
+          background:  theme("colors.warning.fill"),
+          color:       theme("colors.warning.text"),
+          borderColor: theme("colors.warning.border"),
         },
+        // pill-red → không đạt / nguy hiểm
         ".pill-red": {
-          background: theme("colors.ink-red.fill"),
-          color: theme("colors.ink-red.text"),
-          borderColor: theme("colors.ink-red.border"),
+          background:  theme("colors.danger.fill"),
+          color:       theme("colors.danger.text"),
+          borderColor: theme("colors.danger.border"),
         },
+        // pill-sage → xuất sắc (dùng violet)
         ".pill-sage": {
-          background: theme("colors.ink-sage.fill"),
-          color: theme("colors.ink-sage.text"),
-          borderColor: theme("colors.ink-sage.border"),
+          background:  theme("colors.honor.fill"),
+          color:       theme("colors.honor.text"),
+          borderColor: theme("colors.honor.border"),
         },
+        // pill-warm → alias cho pill-blue (backward compat)
         ".pill-warm": {
-          background: theme("colors.warm.fill"),
-          color: theme("colors.warm.text"),
-          borderColor: theme("colors.warm.border"),
+          background:  theme("colors.primary.fill"),
+          color:       theme("colors.primary.text"),
+          borderColor: theme("colors.primary.border"),
+        },
+        // pill-violet → xuất sắc / học bổng
+        ".pill-violet": {
+          background:  theme("colors.honor.fill"),
+          color:       theme("colors.honor.text"),
+          borderColor: theme("colors.honor.border"),
+        },
+        // pill-info → thông báo hệ thống
+        ".pill-info": {
+          background:  theme("colors.info.fill"),
+          color:       theme("colors.info.text"),
+          borderColor: theme("colors.info.border"),
         },
 
         // INPUT
         ".input-field": {
-          display: "flex",
+          display:    "flex",
           alignItems: "center",
-          gap: "8px",
+          gap:        "8px",
           background: theme("colors.surface.DEFAULT"),
-          border: `1px solid ${theme("colors.rule.md")}`,
+          border:     `1px solid ${theme("colors.rule.md")}`,
           borderRadius: theme("borderRadius.DEFAULT"),
-          padding: "0 12px",
+          padding:    "0 12px",
           transition: "border 120ms ease, box-shadow 120ms ease",
           "&:focus-within": {
-            borderColor: theme("colors.warm.400"),
-            boxShadow: theme("boxShadow.focus-warm"),
+            borderColor: theme("colors.primary.DEFAULT"),
+            boxShadow:   theme("boxShadow.focus-blue"),
           },
         },
         ".input-field input, .input-field textarea, .input-field select": {
-          width: "100%",
-          minWidth: "0",
-          border: "none",
-          outline: "none",
+          width:      "100%",
+          minWidth:   "0",
+          border:     "none",
+          outline:    "none",
           background: "transparent",
-          fontFamily: `var(--font-sans)`,
-          fontSize: theme("fontSize.base[0]"),
-          color: theme("colors.ink.1"),
-          padding: "9px 0",
+          fontFamily: "var(--font-sans)",
+          fontSize:   theme("fontSize.base[0]"),
+          color:      theme("colors.ink.1"),
+          padding:    "9px 0",
           "&::placeholder": { color: theme("colors.ink.4") },
         },
         '.input-field input[type="datetime-local"]': {
           paddingRight: "12px",
         },
         ".input-error .input-field": {
-          borderColor: theme("colors.ink-red.text"),
+          borderColor: theme("colors.danger.DEFAULT"),
           "&:focus-within": { boxShadow: theme("boxShadow.focus-red") },
         },
         ".input-label": {
-          fontSize: theme("fontSize.2xs[0]"),
-          fontWeight: theme("fontWeight.semibold"),
+          fontSize:      theme("fontSize.2xs[0]"),
+          fontWeight:    theme("fontWeight.semibold"),
           letterSpacing: theme("letterSpacing.label"),
           textTransform: "uppercase",
-          color: theme("colors.ink.3"),
+          color:         theme("colors.ink.3"),
         },
         ".input-helper": {
           fontSize: theme("fontSize.xs[0]"),
-          color: theme("colors.ink.3"),
+          color:    theme("colors.ink.3"),
         },
         ".input-error-msg": {
           fontSize: theme("fontSize.xs[0]"),
-          color: theme("colors.ink-red.text"),
+          color:    theme("colors.danger.text"),
         },
 
-        // STAT CARD — Editorial Humanist
+        // STAT CARD
         ".stat-card": {
-          background: theme("colors.surface.DEFAULT"),
-          border: `1px solid ${theme("colors.rule.DEFAULT")}`,
+          background:   theme("colors.surface.DEFAULT"),
+          border:       `1px solid ${theme("colors.rule.DEFAULT")}`,
           borderRadius: theme("borderRadius.lg"),
-          padding: "16px 16px 14px",
+          padding:      "16px 16px 14px",
         },
         ".stat-label": {
-          fontSize: theme("fontSize.2xs[0]"),
-          fontWeight: theme("fontWeight.semibold"),
+          fontSize:      theme("fontSize.2xs[0]"),
+          fontWeight:    theme("fontWeight.semibold"),
           letterSpacing: theme("letterSpacing.label"),
           textTransform: "uppercase",
-          color: theme("colors.ink.3"),
-          marginBottom: "10px",
+          color:         theme("colors.ink.3"),
+          marginBottom:  "10px",
         },
         ".stat-value": {
-          fontFamily: `var(--font-serif)`,
-          fontSize: "28px",
-          fontWeight: theme("fontWeight.semibold"),
-          color: theme("colors.ink.1"),
+          fontFamily:    "var(--font-serif)",
+          fontSize:      "28px",
+          fontWeight:    theme("fontWeight.semibold"),
+          color:         theme("colors.ink.1"),
           letterSpacing: theme("letterSpacing.tightest"),
-          lineHeight: "1",
-          marginBottom: "8px",
+          lineHeight:    "1",
+          marginBottom:  "8px",
         },
         ".stat-unit": {
-          fontSize: "14px",
-          opacity: "0.45",
-          fontFamily: `var(--font-sans)`,
+          fontSize:   "14px",
+          opacity:    "0.45",
+          fontFamily: "var(--font-sans)",
           fontWeight: theme("fontWeight.regular"),
         },
 
         // CARD / PANEL
         ".card": {
-          background: theme("colors.surface.DEFAULT"),
-          border: `1px solid ${theme("colors.rule.DEFAULT")}`,
+          background:   theme("colors.surface.DEFAULT"),
+          border:       `1px solid ${theme("colors.rule.DEFAULT")}`,
           borderRadius: theme("borderRadius.lg"),
-          overflow: "hidden",
+          overflow:     "hidden",
         },
         ".card-header": {
-          display: "flex",
-          alignItems: "flex-start",
+          display:        "flex",
+          alignItems:     "flex-start",
           justifyContent: "space-between",
-          padding: "14px 16px 12px",
-          borderBottom: `1px solid ${theme("colors.rule.DEFAULT")}`,
+          padding:        "14px 16px 12px",
+          borderBottom:   `1px solid ${theme("colors.rule.DEFAULT")}`,
         },
         ".card-title": {
-          fontFamily: `var(--font-serif)`,
-          fontSize: theme("fontSize.base[0]"),
-          fontWeight: theme("fontWeight.semibold"),
-          color: theme("colors.ink.1"),
+          fontFamily:    "var(--font-serif)",
+          fontSize:      theme("fontSize.base[0]"),
+          fontWeight:    theme("fontWeight.semibold"),
+          color:         theme("colors.ink.1"),
           letterSpacing: theme("letterSpacing.tight"),
         },
         ".card-subtitle": {
-          fontSize: theme("fontSize.xs[0]"),
-          color: theme("colors.ink.3"),
-          marginTop: "2px",
+          fontSize:    theme("fontSize.xs[0]"),
+          color:       theme("colors.ink.3"),
+          marginTop:   "2px",
         },
-        ".card-body": { padding: "16px" },
+        ".card-body":   { padding: "16px" },
         ".card-footer": {
-          display: "flex",
-          alignItems: "center",
+          display:        "flex",
+          alignItems:     "center",
           justifyContent: "flex-end",
-          gap: "8px",
-          padding: "12px 16px",
-          borderTop: `1px solid ${theme("colors.rule.DEFAULT")}`,
-          background: theme("colors.surface.2"),
+          gap:            "8px",
+          padding:        "12px 16px",
+          borderTop:      `1px solid ${theme("colors.rule.DEFAULT")}`,
+          background:     theme("colors.surface.2"),
         },
 
         // DATA TABLE
         ".data-table": { width: "100%", borderCollapse: "collapse" },
         ".data-table thead th": {
-          fontSize: theme("fontSize.2xs[0]"),
-          fontWeight: theme("fontWeight.semibold"),
+          fontSize:      theme("fontSize.2xs[0]"),
+          fontWeight:    theme("fontWeight.semibold"),
           letterSpacing: theme("letterSpacing.label"),
           textTransform: "uppercase",
-          color: theme("colors.ink.3"),
-          padding: "9px 16px",
-          textAlign: "left",
-          background: theme("colors.surface.2"),
-          borderBottom: `1px solid ${theme("colors.rule.DEFAULT")}`,
+          color:         theme("colors.ink.3"),
+          padding:       "9px 16px",
+          textAlign:     "left",
+          background:    theme("colors.surface.2"),
+          borderBottom:  `1px solid ${theme("colors.rule.DEFAULT")}`,
         },
         ".data-table tbody tr": {
           borderBottom: `1px solid ${theme("colors.rule.DEFAULT")}`,
-          transition: "background 100ms ease",
+          transition:   "background 100ms ease",
         },
         ".data-table tbody tr:last-child": { borderBottom: "none" },
         ".data-table tbody tr:hover td": {
           background: theme("colors.surface.2"),
         },
         ".data-table tbody td": {
-          padding: "9px 16px",
-          fontSize: theme("fontSize.sm[0]"),
-          color: theme("colors.ink.2"),
+          padding:       "9px 16px",
+          fontSize:      theme("fontSize.sm[0]"),
+          color:         theme("colors.ink.2"),
           verticalAlign: "middle",
         },
         ".data-table tbody td:first-child": {
-          color: theme("colors.ink.1"),
+          color:      theme("colors.ink.1"),
           fontWeight: theme("fontWeight.medium"),
         },
 
         // SIDEBAR
         ".sidebar": {
-          width: "208px",
-          background: theme("colors.sidebar.bg"),
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: "0",
+          width:       "208px",
+          background:  theme("colors.sidebar.bg"),
+          display:     "flex",
+          flexDirection:"column",
+          flexShrink:  "0",
           borderRight: `1px solid ${theme("colors.sidebar.border")}`,
         },
         ".sidebar-item": {
-          display: "flex",
-          alignItems: "center",
-          gap: "9px",
-          padding: "8px 10px",
+          display:      "flex",
+          alignItems:   "center",
+          gap:          "9px",
+          padding:      "8px 10px",
           borderRadius: theme("borderRadius.DEFAULT"),
-          cursor: "pointer",
-          color: theme("colors.sidebar.text"),
-          fontSize: theme("fontSize.sm[0]"),
-          fontWeight: theme("fontWeight.regular"),
+          cursor:       "pointer",
+          color:        theme("colors.sidebar.text"),
+          fontSize:     theme("fontSize.sm[0]"),
+          fontWeight:   theme("fontWeight.regular"),
           marginBottom: "1px",
-          transition: "all 150ms ease",
-          "&:hover": { 
-            background: theme("colors.sidebar.active"), 
-            color: theme("colors.sidebar.text-active") 
+          transition:   "all 150ms ease",
+          "&:hover": {
+            background: theme("colors.sidebar.active"),
+            color:      theme("colors.sidebar.text-active"),
           },
         },
         ".sidebar-item.active": {
-          background: theme("colors.sidebar.active"), 
-          color: theme("colors.sidebar.text-active"), 
-          fontWeight: theme("fontWeight.medium"),
-          borderLeft: `3px solid ${theme("colors.sidebar.accent")}`,
-          borderTopLeftRadius: "0",
+          background:             theme("colors.sidebar.active"),
+          color:                  theme("colors.sidebar.text-active"),
+          fontWeight:             theme("fontWeight.medium"),
+          borderLeft:             `3px solid ${theme("colors.sidebar.accent")}`,
+          borderTopLeftRadius:    "0",
           borderBottomLeftRadius: "0",
         },
 
         // TOGGLE SWITCH
         ".toggle-track": {
-          width: "38px",
-          height: "20px",
+          width:        "38px",
+          height:       "20px",
           borderRadius: theme("borderRadius.full"),
-          background: theme("colors.ink.4"),
-          position: "relative",
-          cursor: "pointer",
-          flexShrink: "0",
-          transition: "background 200ms ease",
-          "&.on": { background: theme("colors.warm.400") },
+          background:   theme("colors.ink.4"),
+          position:     "relative",
+          cursor:       "pointer",
+          flexShrink:   "0",
+          transition:   "background 200ms ease",
+          "&.on":       { background: theme("colors.primary.DEFAULT") },
         },
         ".toggle-thumb": {
-          position: "absolute",
-          top: "2px",
-          left: "2px",
-          width: "16px",
-          height: "16px",
+          position:     "absolute",
+          top:          "2px",
+          left:         "2px",
+          width:        "16px",
+          height:       "16px",
           borderRadius: theme("borderRadius.full"),
-          background: "#fff",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-          transition: "left 200ms cubic-bezier(0.34,1.56,0.64,1)",
-          ".on &": { left: "20px" },
+          background:   "#fff",
+          boxShadow:    "0 1px 3px rgba(0,0,0,0.2)",
+          transition:   "left 200ms cubic-bezier(0.34,1.56,0.64,1)",
+          ".on &":      { left: "20px" },
         },
 
         // SKELETON LOADING
         ".skeleton": {
-          backgroundSize: "200% 100%",
-          animation: "shimmer 1.8s linear infinite",
-          borderRadius: theme("borderRadius.DEFAULT"),
-          backgroundImage:
-            "linear-gradient(90deg, #F5F4F1 0%, #EDEBE6 50%, #F5F4F1 100%)",
+          backgroundSize:  "200% 100%",
+          animation:       "shimmer 1.8s linear infinite",
+          borderRadius:    theme("borderRadius.DEFAULT"),
+          backgroundImage: "linear-gradient(90deg, #F1F5F9 0%, #E2E8F0 50%, #F1F5F9 100%)",
         },
 
         // DIVIDER
         ".divider": {
-          height: "1px",
-          background: "rgba(0,0,0,0.08)",
-          border: "none",
-          margin: "0",
+          height:     "1px",
+          background: "rgba(15,23,42,0.08)",
+          border:     "none",
+          margin:     "0",
         },
 
-        // EDITORIAL PULL QUOTE (humanist touch)
+        // EDITORIAL PULL QUOTE
         ".pull-quote": {
-          fontFamily: `var(--font-serif)`,
-          fontStyle: "italic",
-          fontSize: theme("fontSize.md[0]"),
-          color: theme("colors.ink.2"),
-          lineHeight: theme("lineHeight.relaxed"),
-          borderLeft: `2px solid ${theme("colors.warm.400")}`,
-          paddingLeft: "16px",
-          background: theme("colors.surface.2"),
+          fontFamily:   "var(--font-serif)",
+          fontStyle:    "italic",
+          fontSize:     theme("fontSize.md[0]"),
+          color:        theme("colors.ink.2"),
+          lineHeight:   theme("lineHeight.relaxed"),
+          borderLeft:   `2px solid ${theme("colors.primary.DEFAULT")}`,
+          paddingLeft:  "16px",
+          background:   theme("colors.surface.2"),
           borderRadius: "0 8px 8px 0",
-          padding: "14px 16px",
+          padding:      "14px 16px",
         },
+
+        // GRADE BADGE — đặc trưng cho giáo dục
+        ".grade-badge": {
+          display:       "inline-flex",
+          alignItems:    "center",
+          justifyContent:"center",
+          width:         "32px",
+          height:        "32px",
+          borderRadius:  theme("borderRadius.DEFAULT"),
+          fontFamily:    "var(--font-mono)",
+          fontSize:      theme("fontSize.sm[0]"),
+          fontWeight:    theme("fontWeight.bold"),
+          letterSpacing: theme("letterSpacing.tight"),
+        },
+        ".grade-a":  { background: "#ECFDF5", color: "#065F46" },
+        ".grade-b":  { background: "#EFF6FF", color: "#1E40AF" },
+        ".grade-c":  { background: "#FFFBEB", color: "#92400E" },
+        ".grade-d":  { background: "#FEF2F2", color: "#991B1B" },
+        ".grade-f":  { background: "#FEF2F2", color: "#7F1D1D", fontWeight: "700" },
+        ".grade-xa": { background: "#F5F3FF", color: "#4C1D95" }, // xuất sắc
       });
 
-      // ── Utility overrides ─────────────────────────────────
       addUtilities({
-        // Semantic bg shortcuts (dùng qua CSS var ở dark mode)
-        ".bg-paper": { background: "var(--bg-paper, #FAFAF8)" },
-        ".bg-surface": { background: "var(--bg-surface, #FFFFFF)" },
-        ".bg-surface-2": { background: "var(--bg-surface-2, #F5F4F1)" },
-        ".bg-surface-3": { background: "var(--bg-surface-3, #EDEBE6)" },
+        ".bg-paper":    { background: "var(--bg-paper, #F8FAFC)" },
+        ".bg-surface":  { background: "var(--bg-surface, #FFFFFF)" },
+        ".bg-surface-2":{ background: "var(--bg-surface-2, #F1F5F9)" },
+        ".bg-surface-3":{ background: "var(--bg-surface-3, #E2E8F0)" },
 
-        // Text shortcuts
-        ".text-ink-1": { color: "var(--ink-1, #1C1917)" },
-        ".text-ink-2": { color: "var(--ink-2, #57534E)" },
-        ".text-ink-3": { color: "var(--ink-3, #A8A29E)" },
+        ".text-ink-1": { color: "var(--ink-1, #0F172A)" },
+        ".text-ink-2": { color: "var(--ink-2, #475569)" },
+        ".text-ink-3": { color: "var(--ink-3, #94A3B8)" },
 
-        // Border shortcut (alpha-based)
-        ".border-rule": { borderColor: "rgba(0,0,0,0.08)" },
-        ".border-rule-md": { borderColor: "rgba(0,0,0,0.13)" },
+        ".border-rule":    { borderColor: "rgba(15,23,42,0.08)" },
+        ".border-rule-md": { borderColor: "rgba(15,23,42,0.13)" },
 
-        // Typography utilities
         ".text-display": {
-          fontFamily: "var(--font-serif, 'Lora', serif)",
-          fontWeight: "600",
+          fontFamily:    "var(--font-serif, 'Lora', serif)",
+          fontWeight:    "600",
           letterSpacing: "-0.03em",
-          lineHeight: "1.2",
+          lineHeight:    "1.2",
         },
         ".text-label": {
-          fontSize: "0.6rem",
-          fontWeight: "600",
+          fontSize:      "0.6rem",
+          fontWeight:    "600",
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          color: "var(--ink-3, #A8A29E)",
+          color:         "var(--ink-3, #94A3B8)",
         },
         ".text-mono": {
           fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)",
-          fontSize: "0.75rem",
+          fontSize:   "0.75rem",
         },
 
-        // Scrollbar
         ".scrollbar-thin": {
           "scrollbar-width": "thin",
-          "&::-webkit-scrollbar": { width: "5px", height: "5px" },
+          "&::-webkit-scrollbar":       { width: "5px", height: "5px" },
           "&::-webkit-scrollbar-thumb": {
-            background: "#D6D3D1",
-            borderRadius: "9999px",
+            background:    "#CBD5E1",
+            borderRadius:  "9999px",
           },
         },
         ".scrollbar-none": {
@@ -841,16 +913,12 @@ sidebar: {
           "&::-webkit-scrollbar": { display: "none" },
         },
 
-        // Transition shortcuts
         ".transition-fast": { transition: "all 120ms ease" },
         ".transition-base": { transition: "all 200ms ease" },
-        ".transition-slow": {
-          transition: "all 300ms cubic-bezier(0.4,0,0.2,1)",
-        },
+        ".transition-slow": { transition: "all 300ms cubic-bezier(0.4,0,0.2,1)" },
 
-        // Safe area padding (mobile)
         ".safe-bottom": { paddingBottom: "env(safe-area-inset-bottom)" },
-        ".safe-top": { paddingTop: "env(safe-area-inset-top)" },
+        ".safe-top":    { paddingTop:    "env(safe-area-inset-top)" },
       });
     },
   ],

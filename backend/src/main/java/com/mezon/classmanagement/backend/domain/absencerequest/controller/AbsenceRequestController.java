@@ -113,7 +113,7 @@ public class AbsenceRequestController {
         return ResponseDTO.<List<AbsenceRequestResponseDto>>builder()
                 .success(true)
                 .message("Get list successful")
-                .data(absenceRequestService.getByUser(userId))
+                .data(absenceRequestService.getByClassAndUser(1L, userId))
                 .build();
     }
 

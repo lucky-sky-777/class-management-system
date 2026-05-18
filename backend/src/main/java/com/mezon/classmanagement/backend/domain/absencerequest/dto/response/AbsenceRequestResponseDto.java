@@ -1,10 +1,18 @@
 package com.mezon.classmanagement.backend.domain.absencerequest.dto.response;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
 import com.mezon.classmanagement.backend.domain.absencerequest.entity.AbsenceRequest;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
@@ -44,7 +52,7 @@ public final class AbsenceRequestResponseDto {
     @JsonProperty(value = "user_display_name")
     String userDisplayName;
 
-    @JsonProperty(value = "user_avatar_url;")
+    @JsonProperty(value = "user_avatar_url")
     String userAvatarUrl;
 
     @JsonProperty(value = "reason")

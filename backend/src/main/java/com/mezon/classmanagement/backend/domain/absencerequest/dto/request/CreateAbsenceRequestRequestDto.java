@@ -2,8 +2,6 @@ package com.mezon.classmanagement.backend.domain.absencerequest.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.FutureOrPresent;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,11 +24,9 @@ public final class CreateAbsenceRequestRequestDto {
     @JsonProperty(value = "reason")
     String reason;
 
-    //@FutureOrPresent
     @JsonProperty(value = "from")
     Instant from;
 
-    //@Future
     @JsonProperty(value = "to")
     Instant to;
 

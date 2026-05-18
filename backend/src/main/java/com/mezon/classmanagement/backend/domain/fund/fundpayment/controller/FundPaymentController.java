@@ -24,7 +24,7 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RequestMapping("/api/classes/{classId}/fund-payments")
+@RequestMapping("/api/classes/{classId}/funds/{fundId}/fund-payments")
 @RestController
 public class FundPaymentController {
 
@@ -33,7 +33,7 @@ public class FundPaymentController {
 
 	FundPaymentService fundPaymentService;
 
-	@PostMapping("/funds/{fundId}")
+	@PostMapping
 	public ResponseDTO<FundPaymentResponseDto> create(
 			@PathVariable Long classId,
 			@PathVariable Long fundId,
@@ -59,12 +59,13 @@ public class FundPaymentController {
 	@PatchMapping("/{fundPaymentId}/approve")
 	public ResponseDTO<FundPaymentIdResponseDto> approve(
 			@PathVariable Long classId,
+			@PathVariable Long fundId,
 			@PathVariable Long fundPaymentId
 	) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		FundPaymentIdResponseDto response = fundPaymentService.approve(classId, userId, fundPaymentId);
+		FundPaymentIdResponseDto response = fundPaymentService.approve(classId, fundId, userId, fundPaymentId);
 
 		return ResponseDTO.<FundPaymentIdResponseDto>builder()
 				.success(true)
@@ -76,12 +77,13 @@ public class FundPaymentController {
 	@PatchMapping("/{fundPaymentId}/reject")
 	public ResponseDTO<FundPaymentIdResponseDto> reject(
 			@PathVariable Long classId,
+			@PathVariable Long fundId,
 			@PathVariable Long fundPaymentId
 	) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		FundPaymentIdResponseDto response = fundPaymentService.reject(classId, userId, fundPaymentId);
+		FundPaymentIdResponseDto response = fundPaymentService.reject(classId, fundId, userId, fundPaymentId);
 
 		return ResponseDTO.<FundPaymentIdResponseDto>builder()
 				.success(true)
@@ -93,12 +95,13 @@ public class FundPaymentController {
 	@PatchMapping("/{fundPaymentId}/cancel")
 	public ResponseDTO<FundPaymentIdResponseDto> cancel(
 			@PathVariable Long classId,
+			@PathVariable Long fundId,
 			@PathVariable Long fundPaymentId
 	) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		FundPaymentIdResponseDto response = fundPaymentService.cancel(classId, userId, fundPaymentId);
+		FundPaymentIdResponseDto response = fundPaymentService.cancel(classId, fundId, userId, fundPaymentId);
 
 		return ResponseDTO.<FundPaymentIdResponseDto>builder()
 				.success(true)
@@ -108,7 +111,7 @@ public class FundPaymentController {
 	}
 
 	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
-	@GetMapping("/funds/{fundId}")
+	@GetMapping
 	public ResponseDTO<List<FundPaymentResponseDto>> getByClassAndFund(
 			@PathVariable Long classId,
 			@PathVariable Long fundId

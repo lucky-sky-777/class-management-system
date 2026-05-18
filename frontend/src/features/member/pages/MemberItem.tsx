@@ -5,7 +5,12 @@ import { memberAPI } from "@features/member/api";
 import type { Member, MemberRole } from "@features/member/types";
 
 interface MemberItemProps {
-  member: Member;
+  member: Member & {
+    user_display_name?: string;
+    avatar_url?: string;
+    user_avatar?: string;
+    joined_at?: string;
+  };
   myRole: MemberRole | "OWNER";
   onUpdateRole?: (userId: number, currentRole: MemberRole) => void;
   onKick?: (userId: number) => void;
@@ -13,98 +18,118 @@ interface MemberItemProps {
   onRefresh?: (silent?: boolean) => void;
 }
 
-export const MemberItem = ({ 
-  member, 
-  myRole, 
-  onUpdateRole, 
-  onKick, 
-  isPending, 
-  onRefresh 
+export const MemberItem = ({
+  member,
+  myRole,
+  onUpdateRole,
+  onKick,
+  isPending,
+  onRefresh,
 }: MemberItemProps) => {
-  const { classId } = useParams();
-  const name = member.displayName || "Thành viên";
-  const firstChar = name.trim().charAt(0).toUpperCase();
+  const { classId } = useParams<{ classId: string }>();
 
-  // Xử lý Duyệt yêu cầu (Dành cho danh sách chờ)
+  // Xử lý fallback an toàn
+  const name = member.displayName || member.user_display_name || "Thành viên";
+  const avatarSrc = member.avatarUrl || member.avatar_url || member.user_avatar;
+  const joinedDate = member.joinedAt || member.joined_at;
+
+  // Avatar mặc định với màu Warm Global
+  const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    name
+  )}&background=e2e8f0&color=475569&bold=true`;
+
   const handleApprove = async () => {
-    console.log("Bắt đầu duyệt requestId:", member.requestId);
-    if (!member.requestId) return alert("Thiếu Request ID để duyệt!");
+    if (!member.requestId) return alert("Thiếu Request ID!");
     try {
       await memberAPI.approveRequest(classId!, member.requestId);
-      onRefresh?.(true); // Load lại danh sách ngầm (silent)
-    } catch (error) {
-      console.error("Lỗi duyệt:", error);
+      onRefresh?.(true);
+    } catch {
       alert("Không thể duyệt thành viên này.");
     }
   };
 
-  // Xử lý Từ chối yêu cầu (Dành cho danh sách chờ)
   const handleReject = async () => {
-    if (!member.requestId) return alert("Thiếu Request ID để từ chối!");
-    if (window.confirm(`Bạn có chắc muốn từ chối yêu cầu của ${name}?`)) {
+    if (!member.requestId) return alert("Thiếu Request ID!");
+    if (window.confirm(`Từ chối yêu cầu của ${name}?`)) {
       try {
         await memberAPI.rejectRequest(classId!, member.requestId);
         onRefresh?.(true);
-      } catch (error) {
-        console.error("Lỗi từ chối:", error);
-        alert("Có lỗi xảy ra khi từ chối yêu cầu.");
+      } catch {
+        alert("Có lỗi xảy ra khi từ chối.");
       }
     }
   };
 
   return (
-    <div className="group flex items-center justify-between py-3 px-2 hover:bg-[var(--bg-surface-2)] rounded-xl transition-all border-b border-[var(--rule-lg)] last:border-0">
-      <div className="flex items-center gap-4">
-        {/* Avatar với Gradient xịn xò */}
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--warm-500)] to-[var(--warm-700)] flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-[var(--bg-paper)]">
-          {firstChar}
+    <div className="group flex items-center justify-between py-3.5 px-3 hover:bg-[var(--bg-surface-2)] rounded-2xl transition-all duration-300 border-b border-[var(--rule)] last:border-0 mb-1">
+      <div className="flex items-center gap-4 min-w-0">
+        {/* AVATAR DÙNG BORDER & SHADOW GLOBAL */}
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 md:w-11 md:h-11 rounded-full overflow-hidden border-2 border-[var(--bg-paper)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--rule-md)]">
+            <img
+              src={avatarSrc || fallbackAvatarUrl}
+              alt={name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Chấm trạng thái dùng màu GREEN của hệ thống */}
+          <div className="absolute bottom-0 right-0 w-3 h-3 bg-[var(--green-text)] border-2 border-[var(--bg-paper)] rounded-full"></div>
         </div>
-        
-        <div>
-          <p className="text-sm font-bold text-[var(--ink-1)] leading-tight">{name}</p>
-          <p className="text-[10px] text-[var(--ink-3)] font-medium mt-0.5">
-            {member.username} Ngày tham gia:  {member.joinedAt}
+
+        <div className="min-w-0">
+          <p className="text-sm font-black text-[var(--ink-1)] leading-tight truncate tracking-tight">
+            {name}
           </p>
+          <div className="flex items-center gap-2 mt-1 overflow-hidden text-[9px]">
+            <span className="text-[var(--ink-3)] font-medium truncate tracking-tighter">
+              {isPending ? "Yêu cầu vào:" : "Tham gia:"} {joinedDate}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {/* CASE 1: Đang chờ duyệt (Hiện nút Tích xanh/X đỏ) */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* CASE 1: ĐANG CHỜ DUYỆT - DÙNG SOFT COLOR GLOBAL */}
         {isPending ? (
-          <div className="flex gap-2">
-            <button 
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <button
               onClick={handleApprove}
-              className="p-2 bg-[var(--green-fill)] text-[var(--green-text)] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm"
-              title="Chấp nhận"
+              className="flex items-center gap-1.5 px-3 py-2 bg-[var(--green-fill)] text-[var(--green-text)] rounded-xl hover:bg-[var(--green-text)] hover:text-white transition-all duration-300 shadow-[var(--shadow-sm)] active:scale-95"
             >
-              <Check size={18} strokeWidth={3} />
+              <Check size={16} strokeWidth={4} />
+              <span className="text-[10px] font-black hidden sm:block">
+                Duyệt
+              </span>
             </button>
-            <button 
+
+            <button
               onClick={handleReject}
-              className="p-2 bg-[var(--red-fill)] text-[var(--red-text)] rounded-xl hover:scale-105 active:scale-95 transition-all shadow-sm"
-              title="Từ chối"
+              className="flex items-center gap-1.5 p-2 bg-[var(--red-fill)] text-[var(--red-text)] rounded-xl hover:bg-[var(--red-text)] hover:text-white transition-all duration-300 shadow-[var(--shadow-sm)] active:scale-95"
             >
-              <X size={18} strokeWidth={3} />
+              <X size={16} strokeWidth={4} />
+              <span className="text-[10px] font-black hidden sm:block">
+                Từ chối
+              </span>
             </button>
           </div>
         ) : (
-          /* CASE 2: Đã là thành viên (Hiện nút quản lý khi hover) */
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-2 group-hover:translate-x-0">
-            
-            {/* Quyền của OWNER đối với Admin/Member */}
+          /* CASE 2: ĐÃ LÀ THÀNH VIÊN - HIỆN KHI HOVER */
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
             {myRole === "OWNER" && member.role !== "OWNER" && (
               <>
                 <button
                   onClick={() => onUpdateRole?.(member.userId, member.role)}
-                  className="p-2 hover:bg-[var(--warm-fill)] rounded-lg text-[var(--warm-600)] transition-colors"
-                  title={member.role === "CLASS_ADMIN" ? "Hạ cấp xuống thành viên" : "Thăng cấp lên quản trị viên"}
+                  className="p-2 text-[var(--ink-3)] hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] rounded-xl transition-all"
                 >
-                  {member.role === "CLASS_ADMIN" ? <ShieldMinus size={18}/> : <ShieldPlus size={18}/>}
+                  {member.role === "CLASS_ADMIN" ? (
+                    <ShieldMinus size={18} />
+                  ) : (
+                    <ShieldPlus size={18} />
+                  )}
                 </button>
                 <button
                   onClick={() => onKick?.(member.userId)}
-                  className="p-2 hover:bg-[var(--red-fill)] rounded-lg text-[var(--red-text)] transition-colors"
-                  title="Xóa khỏi lớp học"
+                  className="p-2 text-[var(--ink-3)] hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] rounded-xl transition-all"
                 >
                   <CircleX size={18} />
                 </button>
@@ -115,8 +140,7 @@ export const MemberItem = ({
             {myRole === "CLASS_ADMIN" && member.role === "CLASS_MEMBER" && (
               <button
                 onClick={() => onKick?.(member.userId)}
-                className="p-2 hover:bg-[var(--red-fill)] rounded-lg text-[var(--red-text)] transition-colors"
-                title="Khai trừ thành viên"
+                className="p-2 text-[var(--ink-3)] hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] rounded-xl transition-all"
               >
                 <CircleX size={18} />
               </button>

@@ -1,42 +1,44 @@
-import { useState, useEffect } from "react";
+// src/features/home/hooks/useHome.ts
+import { useState, useEffect, useCallback } from "react";
 import { homeAPI } from "@features/home/api";
-import type { ClassItems, ClassResponse } from "@features/home/types";
+import { useClassStore } from "@app/store";
+import type { ClassResponse, JoinClassResult } from "@features/home/types";
 import { useAuth } from "@features/auth";
 import { ClassPrivacy } from "@shared/domain/enums";
 
 export const useHome = () => {
-  const { user } = useAuth();
-  const [classes, setClasses] = useState<ClassItems[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated } = useAuth();
+
+  // Lôi trực tiếp State dùng chung từ Zustand ra
+  const {
+    classes,
+    isLoading,
+    error,
+    fetchClasses,
+    forceRefresh,
+    clearClasses,
+  } = useClassStore();
+
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isJoining, setIsJoining] = useState(false);
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const data = await homeAPI.getClasses();
-      setClasses(data);
-    } catch {
-      setError("Không thể tải danh sách lớp học");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // TỰ ĐỘNG TRIGGER FETCH CHUẨN ZUSTAND:
+  // Tất cả component Header, Sidebar, HomePage đều dùng chung 1 State nên sẽ đồng loạt nhận được data!
   useEffect(() => {
-    loadData();
+    if (!isAuthenticated || !user || !user.id) {
+      clearClasses();
+      return;
+    }
 
-    // Lắng nghe sự kiện để đồng bộ state giữa các component dùng chung hook này (ví dụ Header và HomePage)
-    const handleRefresh = () => {
-      loadData();
-    };
-    window.addEventListener("refreshHomeClasses", handleRefresh);
+    fetchClasses(user.id, isAuthenticated);
+  }, [isAuthenticated, user, fetchClasses, clearClasses]);
 
-    return () => {
-      window.removeEventListener("refreshHomeClasses", handleRefresh);
-    };
-  }, []);
+  // Hàm ép đồng bộ thủ công khi có biến động
+  const loadData = useCallback(async () => {
+    if (user?.id) {
+      await forceRefresh(isAuthenticated, user.id);
+    }
+  }, [isAuthenticated, user?.id, forceRefresh]);
 
   const createClassMutation = async (formData: {
     className: string;
@@ -45,61 +47,54 @@ export const useHome = () => {
   }) => {
     try {
       setIsCreating(true);
-      const payload : Omit<ClassResponse, "id"> = {
+      const payload: Omit<ClassResponse, "id"> = {
         name: formData.className,
         description: formData.description,
         privacy: formData.status as ClassPrivacy,
         owner_username: user?.username || "alice",
         avatar_url: "",
       };
-      console.log("Dữ liệu thực tế bọc lên Frontend:", payload);
       const res = await homeAPI.createClass(payload);
 
       if (res.success) {
-        console.log("Tạo lớp thành công!");
         window.dispatchEvent(new Event("refreshHomeClasses"));
       } else {
         throw new Error(res.message || "Tạo lớp thất bại");
       }
     } catch (err) {
       console.error("Lỗi khi tạo lớp:", err);
-      throw err; 
+      throw err;
     } finally {
       setIsCreating(false);
     }
   };
 
-  //goi API join class
-  const joinClassMutation = async (code: string) => {
+  const joinClassMutation = async (
+    code: string,
+  ): Promise<JoinClassResult | undefined> => {
     try {
       setIsJoining(true);
-      setError(null);
-      
       const res = await homeAPI.joinClass(code);
 
       if (res.success) {
-        console.log("Tham gia lớp thành công!");
-        window.dispatchEvent(new Event("refreshHomeClasses")); // Đồng bộ danh sách lớp mới
-        return res.data;  // Trả về data (JoinClassDto) để Component dùng nếu cần
+        window.dispatchEvent(new Event("refreshHomeClasses"));
+        return res.data as JoinClassResult;
       } else {
         throw new Error(res.message || "Không thể tham gia lớp học");
       }
     } catch (err: unknown) {
       console.error("Lỗi khi tham gia lớp:", err);
-      // Ném lỗi ra để Modal/Component hứng và hiển thị cho người dùng
-      throw err; 
+      throw err;
     } finally {
       setIsJoining(false);
     }
   };
 
-// Hàm Xóa lớp
   const deleteClassMutation = async (classId: number) => {
     try {
       const res = await homeAPI.deleteClass(classId);
       if (res.success) {
-        console.log("Xóa lớp thành công!");
-        window.dispatchEvent(new Event("refreshHomeClasses")); // Đồng bộ danh sách sau khi xóa
+        window.dispatchEvent(new Event("refreshHomeClasses"));
       } else {
         throw new Error(res.message || "Không thể xóa lớp");
       }
@@ -109,13 +104,11 @@ export const useHome = () => {
     }
   };
 
-  // Hàm Rời lớp
   const leaveClassMutation = async (classId: number) => {
     try {
       const res = await homeAPI.leaveClass(classId);
       if (res.success) {
-        console.log("Rời lớp thành công!");
-        window.dispatchEvent(new Event("refreshHomeClasses")); // Đồng bộ danh sách, lớp đó sẽ tự biến mất
+        window.dispatchEvent(new Event("refreshHomeClasses"));
       } else {
         throw new Error(res.message || "Không thể rời lớp");
       }
@@ -125,13 +118,14 @@ export const useHome = () => {
     }
   };
 
-  // Hàm Sửa lớp
-  const updateClassMutation = async (classId: number, updateData: Partial<ClassResponse>) => {
+  const updateClassMutation = async (
+    classId: number,
+    updateData: Partial<ClassResponse>,
+  ) => {
     try {
       const res = await homeAPI.updateClass(classId, updateData);
       if (res.success) {
-        console.log("Cập nhật lớp thành công!");
-        window.dispatchEvent(new Event("refreshHomeClasses")); 
+        window.dispatchEvent(new Event("refreshHomeClasses"));
       } else {
         throw new Error(res.message || "Cập nhật thất bại");
       }

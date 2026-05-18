@@ -67,7 +67,7 @@ public class FundController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	//@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<FundResponseDto>> getByClass(
 			@PathVariable Long classId
