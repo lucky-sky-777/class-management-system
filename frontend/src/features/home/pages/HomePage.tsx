@@ -12,7 +12,7 @@ import {
   Plus,
   AlertTriangle,
 } from "lucide-react";
-import { ClassPrivacy } from "@shared/domain/enums";
+import { ClassPrivacy, ClassStatus } from "@shared/domain/enums";
 import { useAuth } from "@features/auth";
 import type { ClassItems } from "@features/home/types";
 
@@ -140,8 +140,17 @@ export const HomePage = () => {
     }
   };
 
+  const handleClassClick = (item: ClassItems) => {
+    if (item.status === ClassStatus.JOINED) {
+      navigate(`/class/${item.id}/diagram`);
+      return;
+    }
+
+    alert("Yêu cầu tham gia lớp này chưa được duyệt...");
+  };
+
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-6" ref={menuContainerRef}>
+    <div className="w-full max-w-7xl px-6 py-6" ref={menuContainerRef}>
       {/* 1. Trạng thái đang tải (Loading) */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-32">
@@ -164,7 +173,7 @@ export const HomePage = () => {
             return (
               <div
                 key={item.id}
-                onClick={() => navigate(`/class/${item.id}/diagram`)}
+                onClick={() => handleClassClick(item)}
                 className="group bg-[var(--bg-surface)] border border-[var(--rule)] rounded-[var(--r-xl)] overflow-hidden shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] transition-all duration-300 cursor-pointer flex flex-col h-[260px]"
               >
                 {/* Banner lớp học */}
@@ -176,9 +185,15 @@ export const HomePage = () => {
                   }`}
                 >
                   <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-lg leading-tight truncate pr-6 group-hover:underline text-white">
-                      {item.name}
-                    </h3>
+                    <div className="flex items-center min-w-0">
+                      <h3 className="font-bold text-lg leading-tight truncate pr-2 group-hover:underline text-white min-w-0">
+                        {item.name}
+                      </h3>
+
+                      <span className="text-[12px] font-bold uppercase px-2 py-0.5 rounded-full bg-white/15 text-white/80 border border-white/10">
+                        {item.code}
+                      </span>
+                    </div>
 
                     {/* KHU VỰC MENU 3 CHẤM */}
                     <div className="relative">
@@ -225,10 +240,23 @@ export const HomePage = () => {
 
                   {/* Avatar viết tắt chủ phòng */}
                   <div className="absolute -bottom-6 right-4 w-12 h-12 rounded-full bg-[var(--bg-surface)] shadow-[var(--shadow-md)] flex items-center justify-center border-4 border-[var(--bg-surface)] overflow-hidden">
-                    <div className="w-full h-full bg-[var(--primary-fill)] flex items-center justify-center text-[var(--primary-text)] font-bold text-sm">
-                      {item.owner_user_id
-                        ? String(item.owner_user_id).charAt(0).toUpperCase()
-                        : "G"}
+                    <div className="w-full h-full bg-[var(--primary-fill)] flex items-center justify-center text-[var(--primary-text)] font-bold text-sm overflow-hidden">
+                      {item.owner_avatar_url ? (
+                          <img
+                              src={item.owner_avatar_url}
+                              alt={item.owner_display_name}
+                              className="w-full h-full object-cover rounded-full"
+                          />
+                      ) : item.owner_display_name ? (
+                          item.owner_display_name
+                              .trim()
+                              .split(" ")
+                              .pop()
+                              ?.charAt(0)
+                              ?.toUpperCase()
+                      ) : (
+                          "G"
+                      )}
                     </div>
                   </div>
                 </div>
@@ -245,13 +273,13 @@ export const HomePage = () => {
                         }`}
                       >
                         {item.privacy === ClassPrivacy.PUBLIC
-                          ? "Cộng đồng"
-                          : "Nhóm kín"}
+                          ? "Cộng khai"
+                          : "Riêng tư"}
                       </span>
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      {item.privacy === ClassPrivacy.PRIVATE && (
+                      {item.status === ClassStatus.PENDING_REQUEST && (
                         <div className="flex items-center gap-2 text-xs text-[var(--amber-text)] font-medium">
                           <Lock size={14} />
                           <span>Chờ duyệt</span>

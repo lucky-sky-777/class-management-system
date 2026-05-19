@@ -21,6 +21,13 @@ export const ClassPrivacy = {
 } as const;
 export type ClassPrivacy = ValueOf<typeof ClassPrivacy>;
 
+// --- Class Status ---
+export const ClassStatus = {
+    JOINED: "JOINED",
+    PENDING_REQUEST: "PENDING_REQUEST",
+} as const;
+export type ClassStatus = ValueOf<typeof ClassStatus>;
+
 
 export const ClassRole = {
     CLASS_ADMIN: "CLASS_ADMIN",

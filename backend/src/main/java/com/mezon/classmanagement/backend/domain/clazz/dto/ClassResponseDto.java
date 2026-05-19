@@ -27,6 +27,7 @@ import java.time.Instant;
 		"code",
 		"avatar_url",
 		"privacy",
+		"status",
 		"created_at"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
@@ -65,6 +66,14 @@ public final class ClassResponseDto {
 
 	@JsonProperty(value = "privacy")
 	Class.Privacy privacy;
+
+	@JsonProperty(value = "status")
+	String status;
+
+//	public enum Status {
+//		JOINED,
+//		PENDING_REQUEST
+//	}
 
 	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")

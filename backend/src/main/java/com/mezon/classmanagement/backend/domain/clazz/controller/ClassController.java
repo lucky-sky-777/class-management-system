@@ -152,6 +152,7 @@ public class ClassController {
 			@PathVariable Long classId
 	) {
 		ClassResponseDto response = classService.getClassData(classId);
+		System.out.println("get class data");
 
 		return ResponseDTO.<ClassResponseDto>builder()
 				.success(true)
