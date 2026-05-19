@@ -1,22 +1,31 @@
 package com.mezon.classmanagement.backend.common.security.service;
 
+import com.mezon.classmanagement.backend.common.security.dto.PermissionResponseDto;
 import com.mezon.classmanagement.backend.common.security.permission.Permission;
+import com.mezon.classmanagement.backend.common.util.EnumUtils;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
 @Service
 public class PermissionService {
 
-	public List<Permission> getPermissions() {
-		return Arrays.asList(Permission.class.getEnumConstants());
+	public List<PermissionResponseDto> getPermissionList() {
+		return EnumUtils
+				.toList(Permission.class).stream()
+				.map(item ->
+						new PermissionResponseDto(
+								(long) item.ordinal() + 1,
+								item.name(),
+								item.getLabel()
+						)
+				)
+				.toList();
 	}
-
-	/* noinspection
-	private <E extends Enum<E>> List<E> toList(Class<E> enumClass) {
-		return Arrays.asList(enumClass.getEnumConstants());
-	}
-	*/
 
 }
