@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Plus, Minus, Pencil, Check, X, Users, Trash2 } from "lucide-react";
 import { Modal } from "@shared/components/ui/Modal";
 import type { GroupItem, GroupMember } from "@features/emulation/types";
+import { useToastStore } from "@app/store";
+import { ToastType } from "@shared/domain/enums";
 
 export const GroupSidebar = ({
   groups,
@@ -40,18 +42,32 @@ export const GroupSidebar = ({
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [newUserId, setNewUserId] = useState("");
 
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    userId: string | null;
+  }>({
+    isOpen: false,
+    userId: null,
+  });
+
+  const showToast = useToastStore((state) => state.showToast);
+
   const handleSaveGroupName = async (id: number) => {
-    if (!editGroupName.trim()) return alert("Tên tổ không được để trống!");
+    if (!editGroupName.trim()) {
+      showToast("Tên tổ không được để trống!", ToastType.WARNING);
+      return;
+    }
 
     try {
       const isSuccess = await editGroup(id, editGroupName.trim());
       if (isSuccess) {
+        showToast("Đã đổi tên tổ thành công!", ToastType.SUCCESS);
         setEditingGroupId(null); // Tắt chế độ chỉnh sửa
       } else {
-        alert("Không thể cập nhật tên tổ!");
+        showToast("Không thể cập nhật tên tổ!", ToastType.ERROR);
       }
     } catch {
-      alert("Đã có lỗi xảy ra khi chỉnh sửa!");
+      showToast("Đã có lỗi xảy ra!", ToastType.ERROR);
     }
   };
 
@@ -77,13 +93,20 @@ export const GroupSidebar = ({
 
   // 2. Thêm thành viên
   const handleAddMember = async () => {
-    if (!activeGroup?.id) return alert("Không tìm thấy thông tin tổ hiện tại!");
-    if (!newUserId) return alert("Vui lòng chọn một học sinh!");
+    if (!activeGroup?.id) {
+      showToast("Không tìm thấy thông tin tổ hiện tại!", ToastType.ERROR);
+      return;
+    }
 
+    if (!newUserId) {
+      showToast("Vui lòng chọn học sinh!", ToastType.WARNING);
+      return;
+    }
     try {
       const isSuccess = await addMemberToGroup(activeGroup.id, newUserId);
       if (isSuccess) {
         setNewUserId("");
+        showToast("Đã thêm thành viên vào tổ!", ToastType.SUCCESS);
         // Load lại danh sách mới nhất sau khi thêm thành công
         const [groupMembers, ungrouped] = await Promise.all([
           fetchGroupMembers(activeGroup.id),
@@ -92,33 +115,44 @@ export const GroupSidebar = ({
         setMembers(groupMembers);
         setAvailableMembers(ungrouped);
       } else {
-        alert("Lỗi thêm thành viên!");
+        showToast("Lỗi thêm thành viên!", ToastType.ERROR);
       }
     } catch {
-      alert("Đã có lỗi xảy ra khi thêm thành viên!");
+      showToast("Có lỗi xảy ra khi thêm!", ToastType.ERROR);
     }
   };
 
   // 3. Xóa thành viên
   const handleRemoveMember = async (userId: string) => {
-    if (!activeGroup?.id) return alert("Không tìm thấy thông tin tổ hiện tại!");
-    if (!confirm("Bạn có chắc muốn xóa học sinh này khỏi tổ?")) return;
+    setConfirmDelete({ isOpen: true, userId });
+  };
+
+  // thực hiện hành động sau khi người dùng bấm "Xác nhận"
+  const executeRemoveMember = async () => {
+    if (!confirmDelete.userId || !activeGroup?.id) return;
 
     try {
-      const isSuccess = await removeMemberFromGroup(activeGroup.id, userId);
+      const isSuccess = await removeMemberFromGroup(
+        activeGroup.id,
+        confirmDelete.userId,
+      );
       if (isSuccess) {
-        // Cập nhật UI local lập tức bằng cách filter mảng hiện tại (App chạy mượt, không đợi API)
+        showToast("Đã xóa thành viên thành công!", ToastType.SUCCESS);
+        // Cập nhật UI local
         setMembers(
-          members.filter((m) => String(m.user_id || m.id) !== String(userId)),
+          members.filter(
+            (m) => String(m.user_id || m.id) !== String(confirmDelete.userId),
+          ),
         );
-        // Load lại khay chờ để học sinh vừa xóa quay trở về danh sách chưa có tổ
         const ungrouped = await fetchUngroupedMembers();
         setAvailableMembers(ungrouped);
       } else {
-        alert("Lỗi khi xóa thành viên!");
+        showToast("Lỗi khi xóa thành viên!", ToastType.ERROR);
       }
     } catch {
-      alert("Đã có lỗi xảy ra khi xóa thành viên!");
+      showToast("Có lỗi xảy ra!", ToastType.ERROR);
+    } finally {
+      setConfirmDelete({ isOpen: false, userId: null });
     }
   };
 
@@ -335,6 +369,34 @@ export const GroupSidebar = ({
                 );
               })
             )}
+          </div>
+        </div>
+      </Modal>
+
+      {/* MODAL XÁC NHẬN XÓA THÀNH VIÊN */}
+      <Modal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, userId: null })}
+        title="Xác nhận xóa"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--ink-2)]">
+            Bạn có chắc chắn muốn xóa học sinh này khỏi tổ không? Hành động này
+            không thể hoàn tác.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmDelete({ isOpen: false, userId: null })}
+              className="flex-1 py-2 rounded-xl bg-[var(--bg-surface-2)] text-[var(--ink-2)] font-bold text-xs"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              onClick={executeRemoveMember}
+              className="flex-1 py-2 rounded-xl bg-[var(--red-text)] text-white font-bold text-xs shadow-sm hover:opacity-90"
+            >
+              Xác nhận xóa
+            </button>
           </div>
         </div>
       </Modal>

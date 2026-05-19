@@ -48,4 +48,5 @@ export interface JoinClassResult {
   name: string;
   type?: 'REQUESTED' | 'JOINED';
   userJoinStatus?: 'joined' | 'pending';
+  status?: 'PENDING_REQUEST' | 'JOINED' | string;
 }
