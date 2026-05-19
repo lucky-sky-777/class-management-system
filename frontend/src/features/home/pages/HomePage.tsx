@@ -12,9 +12,10 @@ import {
   Plus,
   AlertTriangle,
 } from "lucide-react";
-import { ClassPrivacy, ClassStatus } from "@shared/domain/enums";
+import { ClassPrivacy, ClassStatus, ToastType } from "@shared/domain/enums";
 import { useAuth } from "@features/auth";
 import type { ClassItems } from "@features/home/types";
+import { useToastStore } from "@app/store";
 
 export const HomePage = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export const HomePage = () => {
   const { user } = useAuth();
   const myClasses = classes || [];
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const showToast = useToastStore((state) => state.showToast);
 
   useEffect(() => {
     const handleRefresh = () => {
@@ -92,7 +94,7 @@ export const HomePage = () => {
     if (!editModal.classId) return;
 
     if (!editModal.name.trim()) {
-      alert("Tên lớp không được để trống!");
+      showToast("Tên lớp không được để trống!", ToastType.WARNING); //Gọi Toast
       return;
     }
 
@@ -103,8 +105,9 @@ export const HomePage = () => {
         description: editModal.description,
       });
       setEditModal({ isOpen: false, classId: null, name: "", description: "" });
+      showToast("Cập nhật thông tin lớp thành công!", ToastType.SUCCESS); // Gọi Toast
     } catch (err: unknown) {
-      alert("❌ Lỗi khi cập nhật lớp: " + err);
+      showToast("Lỗi khi cập nhật lớp: " + err, ToastType.ERROR); // Gọi Toast
     } finally {
       setIsProcessing(false);
     }
@@ -129,12 +132,14 @@ export const HomePage = () => {
     try {
       if (confirmModal.type === "delete") {
         await deleteClassMutation(confirmModal.classId);
+        showToast("Đã xóa lớp học!", ToastType.SUCCESS); // Gọi Toast
       } else if (confirmModal.type === "leave") {
         await leaveClassMutation(confirmModal.classId);
+        showToast("Đã rời khỏi lớp!", ToastType.SUCCESS); // Gọi Toast
       }
       setConfirmModal({ isOpen: false, type: null, classId: null });
     } catch (err: unknown) {
-      alert("❌ Có lỗi xảy ra: " + err);
+      showToast("Có lỗi xảy ra: " + err, ToastType.ERROR); // Gọi Toast
     } finally {
       setIsProcessing(false);
     }
@@ -145,8 +150,10 @@ export const HomePage = () => {
       navigate(`/class/${item.id}/diagram`);
       return;
     }
-
-    alert("Yêu cầu tham gia lớp này chưa được duyệt...");
+    showToast(
+      "Yêu cầu tham gia của bạn đang chờ chủ nhóm duyệt.",
+      ToastType.WARNING,
+    );
   };
 
   return (
@@ -242,20 +249,20 @@ export const HomePage = () => {
                   <div className="absolute -bottom-6 right-4 w-12 h-12 rounded-full bg-[var(--bg-surface)] shadow-[var(--shadow-md)] flex items-center justify-center border-4 border-[var(--bg-surface)] overflow-hidden">
                     <div className="w-full h-full bg-[var(--primary-fill)] flex items-center justify-center text-[var(--primary-text)] font-bold text-sm overflow-hidden">
                       {item.owner_avatar_url ? (
-                          <img
-                              src={item.owner_avatar_url}
-                              alt={item.owner_display_name}
-                              className="w-full h-full object-cover rounded-full"
-                          />
+                        <img
+                          src={item.owner_avatar_url}
+                          alt={item.owner_display_name}
+                          className="w-full h-full object-cover rounded-full"
+                        />
                       ) : item.owner_display_name ? (
-                          item.owner_display_name
-                              .trim()
-                              .split(" ")
-                              .pop()
-                              ?.charAt(0)
-                              ?.toUpperCase()
+                        item.owner_display_name
+                          .trim()
+                          .split(" ")
+                          .pop()
+                          ?.charAt(0)
+                          ?.toUpperCase()
                       ) : (
-                          "G"
+                        "G"
                       )}
                     </div>
                   </div>
@@ -273,7 +280,7 @@ export const HomePage = () => {
                         }`}
                       >
                         {item.privacy === ClassPrivacy.PUBLIC
-                          ? "Cộng khai"
+                          ? "Công khai"
                           : "Riêng tư"}
                       </span>
                     </div>
@@ -475,6 +482,7 @@ export const HomePage = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

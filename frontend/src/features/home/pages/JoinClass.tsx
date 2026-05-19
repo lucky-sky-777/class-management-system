@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { useHome } from "@features/home/hooks/useHome";
 import { Modal } from "@shared/components/ui/Modal";
 import type { JoinClassResult } from "@features/home/types";
+import { useToastStore } from "@app/store";
+import { ToastType } from "@shared/domain/enums";
 
 interface JoinClassModalProps {
   isOpen: boolean;
@@ -23,6 +25,8 @@ export const JoinClassModal = ({
 
   // Định kiểu dữ liệu cụ thể cho state foundClass thay vì object rỗng
   const [foundClass, setFoundClass] = useState<JoinClassResult | null>(null);
+
+  const showToast = useToastStore((state) => state.showToast);
 
   if (!isOpen) return null;
 
@@ -52,23 +56,77 @@ export const JoinClassModal = ({
       const parsedClass: JoinClassResult = classData || { name: `Mã: ${code}` };
       setFoundClass(parsedClass);
 
-      // Phân luồng bước tiếp theo dựa trên dữ liệu kiểu chuẩn
-      if (
+      // 1. Phân định rõ ràng điều kiện
+      const isPending =
         parsedClass.type === "REQUESTED" ||
-        parsedClass.userJoinStatus === "pending"
-      ) {
+        parsedClass.userJoinStatus === "pending" ||
+        parsedClass.status === "PENDING_REQUEST";
+
+      const isAlreadyJoined =
+        parsedClass.status === "JOINED" ||
+        parsedClass.userJoinStatus === "joined";
+
+      // 2. LOG CÁI NÀY ĐỂ XEM THỰC TẾ API TRẢ VỀ GÌ
+      console.log("DEBUG_STATUS:", { isPending, isAlreadyJoined, parsedClass });
+
+      // 3. Logic ưu tiên (Cực kỳ quan trọng: Phải check PENDING trước)
+      if (isPending) {
+        // Nếu đang chờ duyệt thì cho nó vào luồng PENDING, KHÔNG XÉT TIẾP
         setStep("PENDING");
-      } else {
+      } else if (isAlreadyJoined) {
+        // Chỉ khi không phải Pending thì mới xét tới Joined
         setStep("SUCCESS");
+        showToast("Bạn đã là thành viên của lớp học này rồi!", ToastType.INFO);
+        setTimeout(() => {
+          onSuccess();
+          handleClose();
+        }, 1000);
+      } else {
+        // Trường hợp còn lại: Tham gia mới thành công
+        setStep("SUCCESS");
+        showToast("Chào mừng bạn đã gia nhập lớp học!", ToastType.SUCCESS);
         setTimeout(() => {
           onSuccess();
           handleClose();
         }, 1500);
       }
     } catch (err: unknown) {
-      // Ép kiểu an toàn cho khối catch error
-      const apiError = err as { message?: string };
-      setError(apiError.message || "Lỗi: Không thể tham gia lớp lúc này");
+      const apiError = err as {
+        message?: string;
+        response?: { status?: number; data?: { message?: string } };
+      };
+
+      const status = apiError.response?.status;
+      const rawMessage = apiError.message || apiError.response?.data?.message || "";
+      const lowerMsg = rawMessage.toLowerCase();
+
+      // DEBUG: Thêm dòng này để nhìn tận mắt Backend gửi gì
+      console.log("DEBUG_ERROR_MESSAGE:", lowerMsg);
+
+      let vietnameseMessage = "Có lỗi xảy ra, vui lòng thử lại.";
+
+      // SỬA CHỖ NÀY: Thêm 'user exists' vào danh sách kiểm tra
+      if (lowerMsg.includes("not found") || lowerMsg.includes("404")) {
+        vietnameseMessage = "Mã lớp học không tồn tại.";
+      } else if (
+        lowerMsg.includes("already") ||
+        lowerMsg.includes("joined") ||
+        lowerMsg.includes("user exists") // <--- THÊM CỤM NÀY VÀO
+      ) {
+        vietnameseMessage = "Bạn đã là thành viên của lớp học này rồi.";
+      } else if (
+        status === 409 || 
+        lowerMsg.includes("request exists") || 
+        lowerMsg.includes("pending")
+      ) {
+        setStep("PENDING");
+        vietnameseMessage = "Bạn đã gửi yêu cầu tham gia lớp này trước đó rồi.";
+        showToast(vietnameseMessage, ToastType.INFO);
+        return; // Dừng lại ở đây, không hiện lỗi Error nữa
+      }
+
+      showToast(vietnameseMessage, ToastType.ERROR);
+      setError(vietnameseMessage);
     } finally {
       setLoading(false);
     }

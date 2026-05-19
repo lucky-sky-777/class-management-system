@@ -7,6 +7,8 @@ import { memberAPI } from "@features/member/api";
 import { UserCheck } from "lucide-react";
 import { GroupSection } from "./GroupSection";
 import type { MemberRole } from "@features/member/types";
+import { useToastStore } from "@app/store";
+import { ToastType } from "@shared/domain/enums";
 
 export const MemberPage = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -16,6 +18,7 @@ export const MemberPage = () => {
     classId!,
     user?.id,
   );
+  const showToast = useToastStore((state) => state.showToast);
 
   // --- CÁC HÀM XỬ LÝ TƯƠNG TÁC ---
   const handleUpdateRole = async (userId: number, currentRole: MemberRole) => {
@@ -23,9 +26,10 @@ export const MemberPage = () => {
       const newRole: MemberRole =
         currentRole === "CLASS_ADMIN" ? "CLASS_MEMBER" : "CLASS_ADMIN";
       await memberAPI.updateRole(classId!, userId, newRole);
+      showToast("Đã cập nhật quyền hạn thành viên!", ToastType.SUCCESS);
       refresh(true);
     } catch {
-      alert("Lỗi khi cập nhật quyền hạn");
+      showToast("Lỗi khi cập nhật quyền hạn", ToastType.ERROR);
     }
   };
 
@@ -33,9 +37,10 @@ export const MemberPage = () => {
     if (window.confirm("Xóa thành viên này khỏi lớp học?")) {
       try {
         await memberAPI.kickMember(classId!, userId);
+        showToast("Đã xóa thành viên khỏi lớp!", ToastType.SUCCESS);
         refresh(true);
       } catch {
-        alert("Lỗi khi xóa thành viên");
+        showToast("Lỗi khi xóa thành viên", ToastType.ERROR);
       }
     }
   };

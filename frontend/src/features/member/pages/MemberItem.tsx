@@ -3,6 +3,8 @@ import { ShieldPlus, ShieldMinus, CircleX, Check, X } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { memberAPI } from "@features/member/api";
 import type { Member, MemberRole } from "@features/member/types";
+import { useToastStore } from "@app/store";
+import { ToastType } from "@shared/domain/enums";
 
 interface MemberItemProps {
   member: Member & {
@@ -35,27 +37,31 @@ export const MemberItem = ({
 
   // Avatar mặc định với màu Warm Global
   const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    name
+    name,
   )}&background=e2e8f0&color=475569&bold=true`;
 
   const handleApprove = async () => {
     if (!member.requestId) return alert("Thiếu Request ID!");
     try {
       await memberAPI.approveRequest(classId!, member.requestId);
+      showToast("Đã duyệt thành viên thành công!", ToastType.SUCCESS);
       onRefresh?.(true);
     } catch {
-      alert("Không thể duyệt thành viên này.");
+      showToast("Không thể duyệt thành viên này.", ToastType.ERROR);
     }
   };
+  // state thong báo
+  const showToast = useToastStore((state) => state.showToast);
 
   const handleReject = async () => {
     if (!member.requestId) return alert("Thiếu Request ID!");
     if (window.confirm(`Từ chối yêu cầu của ${name}?`)) {
       try {
         await memberAPI.rejectRequest(classId!, member.requestId);
+        showToast(`Đã từ chối yêu cầu của ${name}.`, ToastType.INFO);
         onRefresh?.(true);
       } catch {
-        alert("Có lỗi xảy ra khi từ chối.");
+        showToast("Có lỗi xảy ra khi từ chối.", ToastType.ERROR);
       }
     }
   };

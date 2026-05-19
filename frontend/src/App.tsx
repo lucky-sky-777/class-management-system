@@ -1,5 +1,6 @@
 import { MainLayout } from '@shared/components/layout/MainLayout';
 import { Outlet } from 'react-router-dom';
+import { GlobalToast } from '@shared/components/ui/GlobalToast';
 
 function App() {
   return (
@@ -8,6 +9,7 @@ function App() {
     // </div>
     <MainLayout>
       <Outlet/>
+      <GlobalToast />
     </MainLayout>
   );
 }

@@ -65,3 +65,12 @@ export const PermissionCode = {
     APPROVE_LEAVE: "APPROVE_LEAVE",
 } as const;
 export type PermissionCode = ValueOf<typeof PermissionCode>;
+
+// --- Toast Type ---
+export const ToastType = {
+  SUCCESS: "success",
+  ERROR: "error",
+  WARNING: "warning",
+  INFO: "info",
+} as const;
+export type ToastType = ValueOf<typeof ToastType>;
