@@ -41,10 +41,10 @@ axiosInstance.interceptors.response.use(
         if (!error.response) {
             return Promise.reject(new Error("Network error: Unable to connect to the server"));
         }
-        if (error.response.status === 401 && error.response.data.code == "404") {
+        if (error.response.status === 404 || error.response.data.code == "404") {
             handler404()
         }
-        if (error.response.status === 403 && error.response.data.code == "403") {
+        if (error.response.status === 403 || error.response.data.code == "403") {
             handler403();
         }
         return Promise.reject(error);
