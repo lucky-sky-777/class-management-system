@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain.point.service;
 
 import com.mezon.classmanagement.backend.common.api.week.service.WeekService;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
@@ -47,7 +47,7 @@ public class PointService {
 
 	WeekService weekService;
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public PointResponseDto create(
 			Long classId,
@@ -75,7 +75,7 @@ public class PointService {
 		return pointMapper.toPointResponseDto(responsePoint);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public PointIdResponseDto delete(
 			Long classId,
@@ -90,7 +90,7 @@ public class PointService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByClass(Long classId, GetPointRequestDto request) {
 		if (request == null) {
@@ -102,7 +102,7 @@ public class PointService {
 		return getByClassId(classId, request.getStartAt(), request.getEndAt());
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<PointResponseDto> getByGroup(Long classId, Long groupId, GetPointRequestDto request) {
 		if (request == null) {
@@ -114,7 +114,7 @@ public class PointService {
 		return getByClassIdAndGroupId(classId, groupId, request.getStartAt(), request.getEndAt());
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<WeekPointRankingResponseDto> getWeekRanking(Long classId, GetPointRequestDto request) {
 		List<WeekPointRankingResponseDto> responseList;
@@ -142,7 +142,7 @@ public class PointService {
 		return responseList;
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<MonthPointRankingResponseDto> getMonthRanking(Long classId, GetPointRequestDto request) {
 		List<MonthPointRankingResponseDto> monthPointRankingList;

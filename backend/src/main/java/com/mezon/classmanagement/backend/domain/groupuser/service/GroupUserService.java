@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain.groupuser.service;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
@@ -34,7 +34,7 @@ public class GroupUserService {
 
 	GroupService groupService;
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public GroupUserResponseDto createGroupUser(Long classId, Long groupId, CreateGroupUserRequestDto request) {
 		throwIfExistsByClassIdAndGroupIdAndUserId(classId, groupId, request.getUserId());
@@ -60,7 +60,7 @@ public class GroupUserService {
 		return groupUserMapper.toGroupUserResponseDto(responseGroupUser);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public GroupUserResponseDto updateGroupUser(Long classId, Long groupId, Long userId, UpdateGroupUserRoleRequestDto request) {
 		GroupUser currentGroupUser = findByClassIdAndGroupIdAndUserIdOrThrow(classId, groupId, userId);
@@ -72,7 +72,7 @@ public class GroupUserService {
 		return groupUserMapper.toGroupUserResponseDto(responseGroupUser);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public GroupUserIdResponseDto deleteGroupUser(Long classId, Long groupId, Long userId) {
 		GroupUser currentGroupUser = findByClassIdAndGroupIdAndUserIdOrThrow(classId, groupId, userId);
@@ -84,7 +84,7 @@ public class GroupUserService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<GroupUserResponseDto> getByClassAndGroup(Long classId, Long groupId) {
 		return getByClassIdAndGroupId(classId, groupId);

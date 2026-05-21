@@ -22,7 +22,7 @@ public class AttendanceController {
 
 	AttendanceService attendanceService;
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@PostMapping
 	public ResponseDTO<ClassSeatResponseDto> attend(
 			@PathVariable Long classId,

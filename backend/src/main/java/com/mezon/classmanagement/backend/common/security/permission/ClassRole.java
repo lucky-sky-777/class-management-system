@@ -10,12 +10,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Getter
 @RequiredArgsConstructor
-public enum Permission {
-	MANAGE_ACTIVITY("Quản lý hoạt động"),
-	MANAGE_GROUP("Quản lý tổ"),
-	MANAGE_FUND("Quản lý thu chi"),
-	MANAGE_ABSENCE_REQUEST("Quản lý đơn xin nghỉ"),
-	MANAGE_POINT("Quản lý điểm thi đua");
+public enum ClassRole implements ClassRoleOrPermission {
+
+	CLASS_ADMIN("Quản trị viên"),
+	CLASS_MEMBER("Thành viên");
 
 	String label;
+
 }

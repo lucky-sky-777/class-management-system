@@ -25,7 +25,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public final class PermissionResponseDto {
+public final class ClassRoleOrPermissionResponseDto {
 
 	@JsonProperty(value = "id")
 	Long id;

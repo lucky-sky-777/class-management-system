@@ -32,7 +32,7 @@ public class ClassUserRequestController {
 
 	ClassUserRequestService classUserRequestService;
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@PatchMapping("/classes/{classId}/requests/{requestId}/approve")
 	public ResponseDTO<ClassUserRequestIdResponseDto> approve(
 			@PathVariable Long classId,
@@ -50,7 +50,7 @@ public class ClassUserRequestController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@PatchMapping("/classes/{classId}/requests/{requestId}/reject")
 	public ResponseDTO<ClassUserRequestIdResponseDto> reject(
 			@PathVariable Long classId,
@@ -65,7 +65,7 @@ public class ClassUserRequestController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.exceptAdmin(#classId)")
+	@PreAuthorize("@ClassSecurity.exceptAdmin(#classId)")
 	@PatchMapping("/classes/{classId}/requests/{requestId}/cancel")
 	public ResponseDTO<ClassUserRequestIdResponseDto> cancel(
 			@PathVariable Long classId,
@@ -83,7 +83,7 @@ public class ClassUserRequestController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@GetMapping("/{classId}")
 	public ResponseDTO<List<ClassUserRequestResponseDto>> getByClass(
 			@PathVariable Long classId

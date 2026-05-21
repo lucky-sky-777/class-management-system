@@ -110,7 +110,7 @@ public class FundPaymentController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<FundPaymentResponseDto>> getByClassAndFund(
 			@PathVariable Long classId,

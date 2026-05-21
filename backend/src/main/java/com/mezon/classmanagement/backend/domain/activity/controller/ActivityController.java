@@ -28,7 +28,7 @@ public class ActivityController {
 
 	ActivityService activityService;
 
-	@PreAuthorize("@ClassPermission.manageActivity(#classId)")
+	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@PostMapping
 	public ResponseDTO<ActivityResponseDto> createActivity(
 			@PathVariable Long classId,
@@ -43,7 +43,7 @@ public class ActivityController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.manageActivity(#classId)")
+	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@PatchMapping("/{activityId}")
 	public ResponseDTO<ActivityResponseDto> updateActivity(
 			@PathVariable Long classId,
@@ -59,7 +59,7 @@ public class ActivityController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.manageActivity(#classId)")
+	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@DeleteMapping("/{activityId}")
 	public ResponseDTO<ActivityIdResponseDto> deleteActivity(
 			@PathVariable Long classId,
@@ -74,7 +74,7 @@ public class ActivityController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<ActivityResponseDto>> getByClass(
 			@PathVariable Long classId

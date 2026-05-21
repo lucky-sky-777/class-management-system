@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain.group.service;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.group.dto.CreateAndUpdateGroupRequestDto;
 import com.mezon.classmanagement.backend.domain.group.dto.GroupIdResponseDto;
@@ -36,7 +36,7 @@ public class GroupService {
 
     GroupMapper groupMapper;
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public GroupResponseDto createGroup(Long classId, CreateAndUpdateGroupRequestDto request) {
         Class clazz = Class.builder()
@@ -51,7 +51,7 @@ public class GroupService {
         return groupMapper.toGroupResponseDto(responseGroup);
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public GroupResponseDto updateGroup(Long classId, Long groupId, CreateAndUpdateGroupRequestDto request) {
         Group currentGroup = findByClassIdAndGroupIdOrThrow(classId, groupId);
@@ -63,7 +63,7 @@ public class GroupService {
         return groupMapper.toGroupResponseDto(responseGroup);
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public GroupIdResponseDto deleteGroup(Long classId, Long groupId) {
         Group currentGroup = findByClassIdAndGroupIdOrThrow(classId, groupId);
@@ -75,7 +75,7 @@ public class GroupService {
                 .build();
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional(readOnly = true)
     public List<GroupResponseDto> getGroups(Long classId) {
         return findByClassId(classId).stream()

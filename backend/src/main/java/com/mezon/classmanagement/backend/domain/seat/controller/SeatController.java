@@ -53,7 +53,7 @@ public class SeatController {
 				.build();
 	}
 
-	//@PreAuthorize("@ClassPermission.manageGroup(#classId)")
+	//@PreAuthorize("@ClassSecurity.manageGroup(#classId)")
 	@PatchMapping
 	public ResponseDTO<ClassSeatResponseDto> update(
 			@PathVariable Long classId,

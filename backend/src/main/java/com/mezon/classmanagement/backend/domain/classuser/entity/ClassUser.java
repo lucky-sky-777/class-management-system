@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.classuser.entity;
 
-import com.mezon.classmanagement.backend.common.security.permission.Permission;
+import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
+import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import jakarta.persistence.Column;
@@ -53,24 +54,24 @@ public class ClassUser {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
-	Role role;
+	ClassRole role;
 
 	@JdbcTypeCode(SqlTypes.JSON)
 	@Column(name = "permission_codes", columnDefinition = "json", nullable = true)
-	List<Permission> permissionCodes;
+	List<ClassPermission> classPermissionCodes;
 
 	@Column(name = "joined_at", nullable = false, insertable = false, updatable = false)
 	Instant joinedAt;
 
-	public enum Role {
-		CLASS_ADMIN,
-		CLASS_MEMBER
-	}
+//	public enum Role {
+//		CLASS_ADMIN,
+//		CLASS_MEMBER
+//	}
 
 	@PrePersist
 	public void prePersist() {
 		if (role == null) {
-			role = Role.CLASS_MEMBER;
+			role = ClassRole.CLASS_MEMBER;
 		}
 	}
 }

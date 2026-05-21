@@ -1,13 +1,15 @@
 package com.mezon.classmanagement.backend.domain.classuser.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
-import com.mezon.classmanagement.backend.common.security.permission.Permission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
+import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
+import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserIdResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserPermissionsRequestDto;
+import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserRoleAndPermissionRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserRoleRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.classuser.mapper.ClassUserMapper;
@@ -38,9 +40,9 @@ public class ClassUserService {
 
 	ClassUserMapper classUserMapper;
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
-	public ClassUserResponseDto createClassUser(Long classId, CreateClassUserRequestDto request, ClassUser.Role role) {
+	public ClassUserResponseDto createClassUser(Long classId, CreateClassUserRequestDto request, ClassRole role) {
 		throwIfExistsByClassIdAndUserId(classId, request.getUserId());
 
 		Class clazz = Class.builder()
@@ -61,7 +63,19 @@ public class ClassUserService {
 		return classUserMapper.toClassUserResponseDto(responseClassUser);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
+	@Transactional
+	public ClassUserResponseDto updateClassUserRoleAndPermission(Long classId, Long userId, UpdateClassUserRoleAndPermissionRequestDto request) {
+		ClassUser currentClassUser = findByClassIdAndUserIdOrThrow(classId, userId);
+
+		classUserMapper.updateClassUserFromRoleAndPermissionRequestDto(request, currentClassUser);
+
+		ClassUser responseClassUser = save(currentClassUser);
+
+		return classUserMapper.toClassUserResponseDto(responseClassUser);
+	}
+
+	@RequireClassSecurity
 	@Transactional
 	public ClassUserResponseDto updateClassUserRole(Long classId, Long userId, UpdateClassUserRoleRequestDto request) {
 		ClassUser currentClassUser = findByClassIdAndUserIdOrThrow(classId, userId);
@@ -73,7 +87,7 @@ public class ClassUserService {
 		return classUserMapper.toClassUserResponseDto(responseClassUser);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public ClassUserResponseDto updateClassUserPermissions(Long classId, Long userId, UpdateClassUserPermissionsRequestDto request) {
 		ClassUser currentClassUser = findByClassIdAndUserIdOrThrow(classId, userId);
@@ -85,7 +99,7 @@ public class ClassUserService {
 		return classUserMapper.toClassUserResponseDto(responseClassUser);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public ClassUserIdResponseDto deleteClassUser(Long classId, Long userId) {
 		ClassUser currentClassUser = findByClassIdAndUserIdOrThrow(classId, userId);
@@ -97,21 +111,21 @@ public class ClassUserService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<ClassUserResponseDto> getClassUsers(Long classId) {
 
 		return classUserRepository.getClassUsers(classId);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<ClassUserResponseDto> getUngroupedClassUsers(Long classId) {
 
 		return classUserRepository.getUngroupedClassUsers(classId);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<ClassUserResponseDto> getUnseatedClassUsers(Long classId) {
 
@@ -180,15 +194,15 @@ public class ClassUserService {
 	 */
 
 	public boolean isAdmin(ClassUser classUser) {
-		return ClassUser.Role.CLASS_ADMIN.name().equals(classUser.getRole().name());
+		return ClassRole.CLASS_ADMIN.name().equals(classUser.getRole().name());
 	}
 
 	public boolean isMember(ClassUser classUser) {
-		return ClassUser.Role.CLASS_MEMBER.name().equals(classUser.getRole().name());
+		return ClassRole.CLASS_MEMBER.name().equals(classUser.getRole().name());
 	}
 
-	public boolean hasPermission(ClassUser classUser, Permission permission) {
-		return classUser.getPermissionCodes() != null && classUser.getPermissionCodes().contains(permission);
+	public boolean hasPermission(ClassUser classUser, ClassPermission classPermission) {
+		return classUser.getClassPermissionCodes() != null && classUser.getClassPermissionCodes().contains(classPermission);
 	}
 
 }

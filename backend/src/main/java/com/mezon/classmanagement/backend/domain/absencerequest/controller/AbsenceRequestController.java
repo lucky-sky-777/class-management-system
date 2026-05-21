@@ -33,7 +33,7 @@ public class AbsenceRequestController {
 
     AbsenceRequestService absenceRequestService;
 
-    @PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @PostMapping("/classes/{classId}")
     public ResponseDTO<AbsenceRequestResponseDto> create(
             @PathVariable Long classId,
@@ -51,7 +51,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageAbsenceRequest(#classId)")
+    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
     @PostMapping("/classes/{classId}/requests/{requestId}/approve")
     public ResponseDTO<AbsenceRequestIdResponseDto> approve(
             @PathVariable Long classId,
@@ -66,7 +66,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageAbsenceRequest(#classId)")
+    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
     @PostMapping("/classes/{classId}/requests/{requestId}/reject")
     public ResponseDTO<AbsenceRequestIdResponseDto> reject(
             @PathVariable Long classId,
@@ -81,7 +81,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.exceptAdmin(#classId)")
+    @PreAuthorize("@ClassSecurity.exceptAdmin(#classId)")
     @PatchMapping("/classes/{classId}/requests/{requestId}/cancel")
     public ResponseDTO<AbsenceRequestIdResponseDto> cancel(
             @PathVariable Long classId,

@@ -2,7 +2,8 @@ package com.mezon.classmanagement.backend.domain.clazz.service;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
+import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto.CreateClassUserRequestRequestDto;
@@ -76,7 +77,7 @@ public class ClassService {
                     CreateClassUserRequestDto.builder()
                             .userId(event.userId())
                             .build(),
-                    ClassUser.Role.CLASS_ADMIN
+                    ClassRole.CLASS_ADMIN
             );
         }
     }
@@ -104,7 +105,7 @@ public class ClassService {
         return classMapper.toClassResponseDto(responseClass);
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public ClassResponseDto updateClass(Long classId, CreateAndUpdateClassRequestDto request) {
         Class currentClass = findByIdOrThrow(classId);
@@ -116,7 +117,7 @@ public class ClassService {
         return classMapper.toClassResponseDto(responseClass);
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public ClassIdResponseDto deleteClass(Long classId) {
         Class currentClass = findByIdOrThrow(classId);
@@ -128,12 +129,12 @@ public class ClassService {
                 .build();
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public ClassUserResponseDto createClassUser(
             Long classId,
             CreateClassUserRequestDto request,
-            ClassUser.Role role
+            ClassRole role
     ) {
         Class currentClass = findByIdOrThrow(classId);
 
@@ -165,7 +166,7 @@ public class ClassService {
                     CreateClassUserRequestDto.builder()
                             .userId(clientUserId)
                             .build(),
-                    ClassUser.Role.CLASS_MEMBER
+                    ClassRole.CLASS_MEMBER
             );
 
             return CreateClassUserResponseDto.builder()
@@ -177,7 +178,7 @@ public class ClassService {
         throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public ClassIdResponseDto leaveClass(Long clientUserId, Long classId) {
         ClassUser currentClassUser = classUserService.findByClassIdAndUserIdOrThrow(classId, clientUserId);
@@ -196,7 +197,7 @@ public class ClassService {
         return classRepository.getJoinedClasses(clientUserId);
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public ClassResponseDto getClassData(Long classId) {
         Class clazz = findByIdOrThrow(classId);

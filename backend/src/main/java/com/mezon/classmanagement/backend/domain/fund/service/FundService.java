@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain.fund.service;
 
 import com.mezon.classmanagement.backend.common.api.bank.util.BankQrCodeUrlGenerator;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.fund.dto.CreateFundRequestDto;
@@ -45,7 +45,7 @@ public class FundService {
 
 	PaymentAccountService paymentAccountService;
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public FundResponseDto create(
 			Long classId,
@@ -78,7 +78,7 @@ public class FundService {
 		return fundMapper.toFundResponseDto(responseFund);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public FundIdResponseDto delete(Long classId, Long fundId) {
 		Fund currentFund = findByClassIdAndFundIdOrThrow(classId, fundId);
@@ -90,7 +90,7 @@ public class FundService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<FundResponseDto> getByClass(Long classId) {
 		List<FundResponseDto> fundResponseDtoList = getByClassId(classId);
@@ -112,7 +112,7 @@ public class FundService {
 		return fundResponseDtoList;
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public FundSummaryResponseDto getSummaryByClass(Long classId) {
 		return getSummaryByClassIdOrThrow(classId);

@@ -55,7 +55,7 @@ public class ClassController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@PatchMapping("/{classId}")
 	public ResponseDTO<ClassResponseDto> updateClass(
 			@PathVariable Long classId,
@@ -70,7 +70,7 @@ public class ClassController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@DeleteMapping("/{classId}")
 	public ResponseDTO<ClassIdResponseDto> deleteClass(
 			@PathVariable Long classId
@@ -84,7 +84,7 @@ public class ClassController {
 				.build();
 	}
 
-//	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+//	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 //	@PostMapping("/{classId}/members")
 //	public ResponseDTO<ClassUserResponseDto> addClassMember(
 //			@PathVariable Long classId,
@@ -115,7 +115,7 @@ public class ClassController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.exceptAdmin(#classId)")
+	@PreAuthorize("@ClassSecurity.exceptAdmin(#classId)")
 	@DeleteMapping("/{classId}/leave")
 	public ResponseDTO<ClassIdResponseDto> leaveClass(
 			@PathVariable Long classId
@@ -146,7 +146,7 @@ public class ClassController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/{classId}/data")
 	public ResponseDTO<ClassResponseDto> getClassData(
 			@PathVariable Long classId

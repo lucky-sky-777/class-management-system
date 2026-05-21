@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.fund.fundpayment.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
@@ -36,7 +36,7 @@ public class FundPaymentService {
 
 	FundPaymentMapper fundPaymentMapper;
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public FundPaymentResponseDto create(
 			Long classId,
@@ -71,7 +71,7 @@ public class FundPaymentService {
 		return fundPaymentMapper.toFundPaymentResponseDto(responseFundPayment);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public FundPaymentIdResponseDto approve(
 			Long classId,
@@ -95,7 +95,7 @@ public class FundPaymentService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public FundPaymentIdResponseDto reject(
 			Long classId,
@@ -119,7 +119,7 @@ public class FundPaymentService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public FundPaymentIdResponseDto cancel(
 			Long classId,
@@ -143,7 +143,7 @@ public class FundPaymentService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<FundPaymentResponseDto> getByClassAndFund(Long classId, Long fundId) {
 		return getByClassIdAndFundId(classId, fundId);

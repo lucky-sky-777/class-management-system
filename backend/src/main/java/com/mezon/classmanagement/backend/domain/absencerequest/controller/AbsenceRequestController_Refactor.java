@@ -33,7 +33,7 @@ public class AbsenceRequestController_Refactor {
 
     AbsenceRequestService absenceRequestService;
 
-    @PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @PostMapping
     public ResponseDTO<AbsenceRequestResponseDto> create(
             @PathVariable Long classId,
@@ -51,7 +51,7 @@ public class AbsenceRequestController_Refactor {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageAbsenceRequest(#classId)")
+    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
     @PatchMapping("/{absenceRequestId}/approve")
     public ResponseDTO<AbsenceRequestIdResponseDto> approve(
             @PathVariable Long classId,
@@ -66,7 +66,7 @@ public class AbsenceRequestController_Refactor {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageAbsenceRequest(#classId)")
+    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
     @PatchMapping("/{absenceRequestId}/reject")
     public ResponseDTO<AbsenceRequestIdResponseDto> reject(
             @PathVariable Long classId,
@@ -81,7 +81,7 @@ public class AbsenceRequestController_Refactor {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.exceptAdmin(#classId)")
+    @PreAuthorize("@ClassSecurity.exceptAdmin(#classId)")
     @PatchMapping("/{absenceRequestId}/cancel")
     public ResponseDTO<AbsenceRequestIdResponseDto> cancel(
             @PathVariable Long classId,

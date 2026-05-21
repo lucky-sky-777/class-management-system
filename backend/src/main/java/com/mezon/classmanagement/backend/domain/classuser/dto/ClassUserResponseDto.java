@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
-import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
+import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,13 +58,13 @@ public final class ClassUserResponseDto {
 	String userAvatarUrl;
 
 	@JsonProperty(value = "role")
-	ClassUser.Role role;
+	ClassRole role;
 
 	@JsonProperty(value = "is_owner")
 	Boolean isOwner;
 
 	//@JsonProperty(value = "permission_codes")
-	//List<String> permissionCodes;
+	//List<String> classPermissionCodes;
 
 	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "joined_at")
