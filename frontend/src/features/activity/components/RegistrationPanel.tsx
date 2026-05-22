@@ -44,7 +44,7 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
     onClose,
 }) => {
     const { registrations, isLoading, error, fetchRegistrations, approve, reject } =
-        useRegistrations();
+        useRegistrations(activity?.classId);
 
     useEffect(() => {
         if (isOpen && activity?.id != null) {

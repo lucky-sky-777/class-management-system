@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal } from "@shared/components/ui/Modal";
-import { QrCode, Building2, CreditCard, User, Download, ExternalLink, Smartphone } from "lucide-react";
+import { QrCode, Building2, CreditCard, User, Download, ExternalLink } from "lucide-react";
 import { fundAPI } from "../api";
 import type { BankConfig } from "../types";
 

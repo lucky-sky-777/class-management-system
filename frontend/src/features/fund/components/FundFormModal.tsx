@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Modal } from "@shared/components/ui/Modal";
 import { 
-    Tag, 
-    Type, 
+    Tag,
     CircleDollarSign, 
     AlignLeft, 
     ArrowUpCircle, 

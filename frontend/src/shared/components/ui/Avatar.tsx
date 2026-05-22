@@ -96,7 +96,6 @@ export function Avatar({
     const isClickable = !!onClick;
 
     const showImage = src && !imgError;
-    const showInitials = !showImage;
 
     return (
         <span
