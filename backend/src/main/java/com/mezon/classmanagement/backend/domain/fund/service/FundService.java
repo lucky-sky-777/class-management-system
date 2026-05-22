@@ -1,6 +1,6 @@
 package com.mezon.classmanagement.backend.domain.fund.service;
 
-import com.mezon.classmanagement.backend.common.api.bank.util.BankQrCodeUrlGenerator;
+import com.mezon.classmanagement.backend.domain_public.bank.util.BankQrCodeUrlGenerator;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;

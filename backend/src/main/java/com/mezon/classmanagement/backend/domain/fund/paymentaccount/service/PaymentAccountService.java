@@ -1,6 +1,6 @@
 package com.mezon.classmanagement.backend.domain.fund.paymentaccount.service;
 
-import com.mezon.classmanagement.backend.common.api.bank.util.BankQrCodeUrlGenerator;
+import com.mezon.classmanagement.backend.domain_public.bank.util.BankQrCodeUrlGenerator;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.fund.paymentaccount.dto.CreateOrUpdatePaymentAccountRequestDto;

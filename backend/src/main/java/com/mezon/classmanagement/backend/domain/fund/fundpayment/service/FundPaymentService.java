@@ -175,6 +175,7 @@ public class FundPaymentService {
 	) {
 		List<FundPayment> fundPaymentList = fundPaymentRepository
 				.findByClazz_IdAndFund_IdAndId(classId, fundId, fundPaymentId);
+		throwIfEmptyList(fundPaymentList);
 
 		FundPayment fundPayment = fundPaymentList.getFirst();
 		throwIfNotPending(fundPayment);
