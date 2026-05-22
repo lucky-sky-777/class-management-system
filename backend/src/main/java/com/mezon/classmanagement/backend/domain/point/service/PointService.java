@@ -1,6 +1,6 @@
 package com.mezon.classmanagement.backend.domain.point.service;
 
-import com.mezon.classmanagement.backend.common.api.week.service.WeekService;
+import com.mezon.classmanagement.backend.domain_public.week.service.WeekService;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
