@@ -1,57 +1,55 @@
 import axios from "axios";
-import { storage } from "@shared/storages";
-import { AUTH_STORAGE_KEY } from "@features/auth/types/keyStorage";
-import { jwtDecode } from "jwt-decode";
-import { useAuthStore } from "@features/auth/hooks/useAuthStore";
-import { handler403, handler404 } from "@services/api-client/handlers";
-import { configAxios } from "@services/api-client/config";
-
-const axiosInstance = axios.create(configAxios);
-
-axiosInstance.interceptors.request.use(
-    (config) => {
-        const token = storage.get<string>(AUTH_STORAGE_KEY.TOKEN);
-        if (token) {
-            try {
-                const decoded = jwtDecode(token);
-                const currentTime = Date.now() / 1000;
-                if (decoded.exp && decoded.exp < currentTime) {
-                    storage.remove(AUTH_STORAGE_KEY.TOKEN);
-                    storage.remove(AUTH_STORAGE_KEY.REFRESH);
-                    useAuthStore.getState().logout();
-                } else {
-                    config.headers.Authorization = `Bearer ${token}`;
-                }
-            } catch (error) {
-                storage.remove(AUTH_STORAGE_KEY.TOKEN);
-                storage.remove(AUTH_STORAGE_KEY.REFRESH);
-                useAuthStore.getState().logout();
-            }
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-axiosInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (!error.response) {
-            return Promise.reject(new Error("Network error: Unable to connect to the server"));
-        }
-        if (error.response.status === 404 || error.response.data.code == "404") {
-            handler404()
-        }
-        if (error.response.status === 403 || error.response.data.code == "403") {
-            handler403();
-        }
-        return Promise.reject(error);
-    }
-);
+import type { AxiosRequestConfig } from "axios";
+import { axiosInstance } from "./core";
+import type { ApiClientOptions } from "./config";
 
 let tempHeaders: Record<string, string> = {};
+
+/**
+ * Unified request executor that handles headers merging, parameters, timeouts, and error handling.
+ */
+async function runRequest<T>(
+    method: "get" | "post" | "put" | "patch" | "delete",
+    endpoint: string,
+    body?: unknown,
+    options: ApiClientOptions = {}
+): Promise<T> {
+    const { headers = {}, params, timeout, signal, axiosConfig = {} } = options;
+
+    // Merge permanent/temp/custom headers
+    const currentHeaders = {
+        ...tempHeaders,
+        ...headers,
+    };
+    // Clear temporary headers
+    tempHeaders = {};
+
+    try {
+        const config: AxiosRequestConfig = {
+            url: endpoint,
+            method,
+            headers: currentHeaders,
+            params,
+            timeout,
+            ...(signal ? { signal } : {}),
+            ...axiosConfig,
+        };
+
+        if (body !== undefined) {
+            config.data = body;
+        }
+
+        const response = await axiosInstance.request<T>(config);
+        return response.data;
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            throw new Error(
+                `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim()
+            );
+        }
+        throw error;
+    }
+}
 
 export const apiClient = {
     /**
@@ -68,111 +66,38 @@ export const apiClient = {
         }
     },
 
-    async get<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-        const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
-        tempHeaders = {};
-        try {
-            const response = await axiosInstance.get<T>(endpoint, {
-                headers: currentHeaders,
-                signal: options.signal as any,
-            });
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error(
-                    `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim(),
-                );
-            }
-            throw error;
-        }
+    async get<T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> {
+        return runRequest<T>("get", endpoint, undefined, options);
     },
 
     async post<T>(
         endpoint: string,
-        body: any,
-        options: RequestInit = {},
+        body: unknown,
+        options: ApiClientOptions = {}
     ): Promise<T> {
-        const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
-        tempHeaders = {};
-        try {
-            const response = await axiosInstance.post<T>(endpoint, body, {
-                headers: currentHeaders,
-                signal: options.signal as any,
-            });
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error(
-                    `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim(),
-                );
-            }
-            throw error;
-        }
+        return runRequest<T>("post", endpoint, body, options);
     },
 
     async patch<T>(
         endpoint: string,
-        body: any,
-        options: RequestInit = {},
+        body: unknown,
+        options: ApiClientOptions = {}
     ): Promise<T> {
-        const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
-        tempHeaders = {};
-        try {
-            const response = await axiosInstance.patch<T>(endpoint, body, {
-                headers: currentHeaders,
-                signal: options.signal as any,
-            });
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error(
-                    `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim(),
-                );
-            }
-            throw error;
-        }
+        return runRequest<T>("patch", endpoint, body, options);
     },
 
     async put<T>(
         endpoint: string,
-        body: any,
-        options: RequestInit = {},
+        body: unknown,
+        options: ApiClientOptions = {}
     ): Promise<T> {
-        const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
-        tempHeaders = {};
-        try {
-            const response = await axiosInstance.put<T>(endpoint, body, {
-                headers: currentHeaders,
-                signal: options.signal as any,
-            });
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error(
-                    `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim(),
-                );
-            }
-            throw error;
-        }
+        return runRequest<T>("put", endpoint, body, options);
     },
 
-    async delete<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-        const currentHeaders = { ...tempHeaders, ...(options.headers as any) };
-        tempHeaders = {};
-        try {
-            const response = await axiosInstance.delete<T>(endpoint, {
-                headers: currentHeaders,
-                signal: options.signal as any,
-            });
-            return response.data;
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response) {
-                throw new Error(
-                    `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim(),
-                );
-            }
-            throw error;
-        }
+    async delete<T>(endpoint: string, options: ApiClientOptions = {}): Promise<T> {
+        return runRequest<T>("delete", endpoint, undefined, options);
     },
 };
+
 export { BASE_URL } from "./config";
+export type { ApiClientOptions };
