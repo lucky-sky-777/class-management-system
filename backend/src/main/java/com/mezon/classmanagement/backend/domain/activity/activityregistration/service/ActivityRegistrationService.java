@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.domain.activity.activityregistration.s
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
+import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.request.UpdateActivityRegistrationRequestDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.response.ActivityRegistrationIdResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.response.ActivityRegistrationResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.entity.ActivityRegistration;
@@ -60,6 +61,30 @@ public class ActivityRegistrationService {
 				.build();
 
 		ActivityRegistration responseActivityRegistration = save(newActivityRegistration);
+
+		return activityRegistrationMapper.toActivityRegistrationResponseDto(responseActivityRegistration);
+	}
+
+	@RequireClassSecurity
+	@Transactional
+	public ActivityRegistrationResponseDto update(
+			Long classId,
+			Long activityId,
+			Long creatorUserId,
+			Long activityRegistrationId,
+			UpdateActivityRegistrationRequestDto request
+	) {
+		ActivityRegistration currentActivityRegistration = findByClassIdAndActivityIdAndCreatorUserIdAndActivityRegistrationIdOrThrow(
+				classId,
+				activityId,
+				creatorUserId,
+				activityRegistrationId
+		);
+		throwIfNotPending(currentActivityRegistration);
+
+		activityRegistrationMapper.updateActivityRegistrationFromRequestDto(request, currentActivityRegistration);
+
+		ActivityRegistration responseActivityRegistration = save(currentActivityRegistration);
 
 		return activityRegistrationMapper.toActivityRegistrationResponseDto(responseActivityRegistration);
 	}
