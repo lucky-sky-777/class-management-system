@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.domain.activity.activityregistration.c
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.request.UpdateActivityRegistrationRequestDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.response.ActivityRegistrationIdResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.response.ActivityRegistrationResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.service.ActivityRegistrationService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,6 +58,25 @@ public class ActivityRegistrationController {
 		return ResponseDTO.<List<ActivityRegistrationResponseDto>>builder()
 				.success(true)
 				.message("Get activity registrations successful")
+				.data(response)
+				.build();
+	}
+
+	@PatchMapping("/{activityRegistrationId}/proof")
+	public ResponseDTO<ActivityRegistrationResponseDto> proof(
+			@PathVariable Long classId,
+			@PathVariable Long activityId,
+			@PathVariable Long activityRegistrationId,
+			@RequestBody UpdateActivityRegistrationRequestDto request
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
+
+		ActivityRegistrationResponseDto response = activityRegistrationService.update(classId, activityId, userId, activityRegistrationId, request);
+
+		return ResponseDTO.<ActivityRegistrationResponseDto>builder()
+				.success(true)
+				.message("Proof activity registration successful")
 				.data(response)
 				.build();
 	}
