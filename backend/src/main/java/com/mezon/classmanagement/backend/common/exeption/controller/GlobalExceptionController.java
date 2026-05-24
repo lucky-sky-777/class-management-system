@@ -20,11 +20,10 @@ public class GlobalExceptionController {
 		return ResponseEntity
 				.status(globalException.getCode())
 				.body(
-						ResponseDTO.<Void>builder()
-								.success(false)
-								.code(globalException.getCode())
-								.message(globalException.getMessage())
-								.build()
+						ResponseDTO.fail(
+								globalException.getCode(),
+								globalException.getMessage()
+						)
 				);
 	}
 

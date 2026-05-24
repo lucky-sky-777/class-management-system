@@ -44,11 +44,10 @@ public class AbsenceRequestController_Refactor {
 
         AbsenceRequestResponseDto response = absenceRequestService.create(classId, userId, request);
 
-        return ResponseDTO.<AbsenceRequestResponseDto>builder()
-                .success(true)
-                .message("Create absence request successful")
-                .data(response)
-                .build();
+        return ResponseDTO.ok(
+                "Create absence request successful",
+                response
+        );
     }
 
     @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
@@ -59,11 +58,10 @@ public class AbsenceRequestController_Refactor {
     ) {
         AbsenceRequestIdResponseDto response = absenceRequestService.approve(classId, absenceRequestId);
 
-        return ResponseDTO.<AbsenceRequestIdResponseDto>builder()
-                .success(true)
-                .message("Approve absence request successful")
-                .data(response)
-                .build();
+        return ResponseDTO.ok(
+                "Approve absence request successful",
+                response
+        );
     }
 
     @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
@@ -74,14 +72,13 @@ public class AbsenceRequestController_Refactor {
     ) {
         AbsenceRequestIdResponseDto response = absenceRequestService.reject(classId, absenceRequestId);
 
-        return ResponseDTO.<AbsenceRequestIdResponseDto>builder()
-                .success(true)
-                .message("Reject absence request successful")
-                .data(response)
-                .build();
+        return ResponseDTO.ok(
+                "Reject absence request successful",
+                response
+        );
     }
 
-    @PreAuthorize("@ClassSecurity.exceptAdmin(#classId)")
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @PatchMapping("/{absenceRequestId}/cancel")
     public ResponseDTO<AbsenceRequestIdResponseDto> cancel(
             @PathVariable Long classId,
@@ -92,13 +89,13 @@ public class AbsenceRequestController_Refactor {
 
         AbsenceRequestIdResponseDto response = absenceRequestService.cancel(classId, userId, absenceRequestId);
 
-        return ResponseDTO.<AbsenceRequestIdResponseDto>builder()
-                .success(true)
-                .message("Cancel absence request successful")
-                .data(response)
-                .build();
+        return ResponseDTO.ok(
+                "Cancel absence request successful",
+                response
+        );
     }
 
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @GetMapping
     public ResponseDTO<List<AbsenceRequestResponseDto>> getByClass(
             @PathVariable Long classId
@@ -111,15 +108,16 @@ public class AbsenceRequestController_Refactor {
         );
     }
 
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @GetMapping("/users/{userId}")
-    public ResponseDTO<List<AbsenceRequestResponseDto>> getByUser(
+    public ResponseDTO<List<AbsenceRequestResponseDto>> getByClassAndUser(
             @PathVariable Long classId,
             @PathVariable Long userId
     ) {
         List<AbsenceRequestResponseDto> response = absenceRequestService.getByClassAndUser(classId, userId);
 
         return ResponseDTO.ok(
-                "Get absence requests by user successful",
+                "Get absence requests by class and user successful",
                 response
         );
     }

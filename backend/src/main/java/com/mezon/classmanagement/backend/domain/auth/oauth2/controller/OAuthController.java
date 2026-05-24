@@ -125,14 +125,14 @@ public class OAuthController {
 
 			clientRedirectUrl =
 					clientUrl
-							+ "oauth2-signin-redirect?access-token="
+							+ "/oauth2-signin-redirect?access-token="
 							+ signInResponseDto.getAccessToken()
 							+ "&refresh-token="
 							+ signInResponseDto.getRefreshToken();
 		} catch (Exception e) {
 			clientRedirectUrl =
 					clientUrl
-							+ "oauth2-signin-redirect?error-message="
+							+ "/oauth2-signin-redirect?error-message="
 							+ e.getMessage();
 		}
 

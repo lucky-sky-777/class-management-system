@@ -81,7 +81,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
-    @PreAuthorize("@ClassSecurity.exceptAdmin(#classId)")
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @PatchMapping("/classes/{classId}/requests/{requestId}/cancel")
     public ResponseDTO<AbsenceRequestIdResponseDto> cancel(
             @PathVariable Long classId,
@@ -99,6 +99,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @GetMapping("/classes/{classId}/requests")
     public ResponseDTO<List<AbsenceRequestResponseDto>> getByClass(@PathVariable Long classId) {
         return ResponseDTO.<List<AbsenceRequestResponseDto>>builder()
@@ -108,8 +109,13 @@ public class AbsenceRequestController {
                 .build();
     }
 
+    @Deprecated
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @GetMapping("/users/{userId}/requests")
-    public ResponseDTO<List<AbsenceRequestResponseDto>> getByUser(@PathVariable Long userId) {
+    public ResponseDTO<List<AbsenceRequestResponseDto>> getByUser(
+            @PathVariable Long classId,
+            @PathVariable Long userId
+    ) {
         return ResponseDTO.<List<AbsenceRequestResponseDto>>builder()
                 .success(true)
                 .message("Get list successful")

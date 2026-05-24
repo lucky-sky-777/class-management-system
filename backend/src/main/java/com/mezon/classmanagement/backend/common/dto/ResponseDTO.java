@@ -51,6 +51,14 @@ public final class ResponseDTO<Data> {
 	@JsonProperty(value = "time")
 	Instant timestamp = Instant.now();
 
+	public static <Data> ResponseDTO<Data> fail(Integer code, String message) {
+		return ResponseDTO.<Data>builder()
+				.success(false)
+				.code(code)
+				.message(message)
+				.build();
+	}
+
 	public static <Data> ResponseDTO<Data> ok(String message) {
 		return ResponseDTO.<Data>builder()
 				.success(true)

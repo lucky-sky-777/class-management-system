@@ -31,48 +31,45 @@ public class ActivityController {
 
 	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@PostMapping
-	public ResponseDTO<ActivityResponseDto> createActivity(
+	public ResponseDTO<ActivityResponseDto> create(
 			@PathVariable Long classId,
 			@RequestBody CreateAndUpdateActivityRequestDto request
 	) {
 		ActivityResponseDto response = activityService.create(classId, request);
 
-		return ResponseDTO.<ActivityResponseDto>builder()
-				.success(true)
-				.message("Create activity successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Create activity successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@PatchMapping("/{activityId}")
-	public ResponseDTO<ActivityResponseDto> updateActivity(
+	public ResponseDTO<ActivityResponseDto> update(
 			@PathVariable Long classId,
 			@PathVariable Long activityId,
 			@RequestBody CreateAndUpdateActivityRequestDto request
 	) {
 		ActivityResponseDto response = activityService.update(classId, activityId, request);
 
-		return ResponseDTO.<ActivityResponseDto>builder()
-				.success(true)
-				.message("Update activity successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Update activity successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@DeleteMapping("/{activityId}")
-	public ResponseDTO<ActivityIdResponseDto> deleteActivity(
+	public ResponseDTO<ActivityIdResponseDto> delete(
 			@PathVariable Long classId,
 			@PathVariable Long activityId
 	) {
 		ActivityIdResponseDto response = activityService.delete(classId, activityId);
 
-		return ResponseDTO.<ActivityIdResponseDto>builder()
-				.success(true)
-				.message("Delete activity successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Delete activity successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
@@ -82,11 +79,10 @@ public class ActivityController {
 	) {
 		List<ActivityResponseDto> response = activityService.getByClass(classId);
 
-		return ResponseDTO.<List<ActivityResponseDto>>builder()
-				.success(true)
-				.message("Get activities by class successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Get activities by class successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
@@ -96,11 +92,10 @@ public class ActivityController {
 	) {
 		List<ActivitySummaryResponseDto> response = activityService.getSummaries(classId);
 
-		return ResponseDTO.<List<ActivitySummaryResponseDto>>builder()
-				.success(true)
-				.message("Get activity summaries successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Get activity summaries successful",
+				response
+		);
 	}
 
 }
