@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { ID } from "@shared/utils/common";
 import { fundAPI } from "../api";
 import type { FundResponseDto, FundSummaryResponseDto, CreateFundRequestDto, BankConfig } from "../types";
+import { toast } from "react-toastify";
 
 export const useFundInternal = (classId: ID) => {
     const [summary, setSummary] = useState<FundSummaryResponseDto | null>(null);
@@ -31,6 +32,7 @@ export const useFundInternal = (classId: ID) => {
                 console.error("Failed to update payment account:");
                 console.error(res);
             }
+            toast.success("Cập nhật thông tin tài khoản thành công");
         } catch (err) {
             setError("Lỗi kết nối khi cập nhật thông tin tài khoản");
             console.error("Failed to update payment account:", err);
@@ -72,6 +74,7 @@ export const useFundInternal = (classId: ID) => {
                 setError(response.message);
                 return false;
             }
+            toast.success("Tạo giao dịch thành công");
         } catch (err) {
             setError("Lỗi kết nối khi tạo giao dịch");
             return false;
@@ -91,6 +94,7 @@ export const useFundInternal = (classId: ID) => {
                 setError(response.message);
                 return false;
             }
+            toast.success("Xóa giao dịch thành công");
         } catch (err) {
             setError("Lỗi kết nối khi xóa giao dịch");
             return false;
@@ -99,10 +103,18 @@ export const useFundInternal = (classId: ID) => {
         }
     };
 
+    // initial load
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
+    // display error toast
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+            console.error("Error:", error);
+        }
+    }, [error]);
     return {
         summary,
         funds,
