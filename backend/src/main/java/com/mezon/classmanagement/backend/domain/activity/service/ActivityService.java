@@ -5,6 +5,7 @@ import com.mezon.classmanagement.backend.common.security.annotation.RequireClass
 import com.mezon.classmanagement.backend.domain.activity.dto.request.CreateAndUpdateActivityRequestDto;
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityIdResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityResponseDto;
+import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivitySummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.entity.Activity;
 import com.mezon.classmanagement.backend.domain.activity.mapper.ActivityMapper;
 import com.mezon.classmanagement.backend.domain.activity.repository.ActivityRepository;
@@ -85,6 +86,16 @@ public class ActivityService {
 	@Transactional(readOnly = true)
 	public List<ActivityResponseDto> getByClass(Long classId) {
 		return getByClassId(classId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<ActivitySummaryResponseDto> getSummaries(Long classId) {
+		List<ActivitySummaryResponseDto> responseList = activityRepository.getSummaries(classId);
+		short rank = 1;
+		for (ActivitySummaryResponseDto response : responseList) {
+			response.setRank(rank++);
+		}
+		return responseList;
 	}
 
 	/**

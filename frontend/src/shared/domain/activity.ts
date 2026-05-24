@@ -41,44 +41,10 @@ export function canReject(reg: ActivityRegistration): boolean {
 // Derived data — tổng hợp điểm rèn luyện của 1 user trong 1 class
 // FE tự tính từ danh sách registrations đã APPROVED
 // Khi BE có endpoint riêng thì mapper sẽ map vào đây thay vì tính lại
-export interface UserActivitySummary {
+export interface ActivitySummary {
+    rank: number | null;
     userId: ID;
-    approvedCount: number;
+    userDisplayName: string;
+    userAvatarUrl?: string | null;
     totalPoint: number;
-    mandatoryApproved: number;
-    mandatoryTotal: number;
-}
-
-export function computeActivitySummary(
-    userId: ID,
-    registrations: ActivityRegistration[],
-    activitiesMap: Map<ID, Activity>
-): UserActivitySummary {
-    const approved = registrations.filter(
-        (r) =>
-            r.registeredUser.id === userId &&
-            r.status === ActivityRegistrationStatus.APPROVED
-    );
-
-    let totalPoint = 0;
-    let mandatoryApproved = 0;
-
-    for (const reg of approved) {
-        const act = activitiesMap.get(reg.activityId);
-        if (!act) continue;
-        totalPoint += act.point ?? 0;
-        if (act.isMandatory) mandatoryApproved++;
-    }
-
-    const mandatoryTotal = [...activitiesMap.values()].filter(
-        (a) => a.isMandatory
-    ).length;
-
-    return {
-        userId,
-        approvedCount: approved.length,
-        totalPoint,
-        mandatoryApproved,
-        mandatoryTotal,
-    };
 }

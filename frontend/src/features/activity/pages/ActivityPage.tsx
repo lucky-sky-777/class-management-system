@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useActivity } from "@features/activity/hooks/useActivity";
-import { useUserSummary } from "@features/activity/hooks/useUserSummary";
+import { useSummary } from "@features/activity/hooks/useSummary.ts";
 import { ActivityCard } from "@features/activity/components/ActivityCard";
 import { ActivityFormModal } from "@features/activity/components/ActivityFormModal";
 import { RegistrationPanel } from "@features/activity/components/RegistrationPanel";
 import { SummaryTable } from "@features/activity/components/SummaryTable";
 import type { Activity, CreateActivityDTO } from "@features/activity/types";
 import { Plus } from "lucide-react";
-import { classDiagramAPI } from "@features/classDiagram/api";
 import { useAuth } from "@features/auth";
 import { useMembers } from "@features/member/hooks/useMembers";
+
 
 type Tab = "ACTIVITIES" | "SUMMARY";
 const Tab = {
@@ -33,7 +33,7 @@ export const ActivityPage: React.FC = () => {
     const [isRegOpen, setIsRegOpen] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
 
-    const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
+    //const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
 
     // Hooks
     const { user } = useAuth();
@@ -41,18 +41,7 @@ export const ActivityPage: React.FC = () => {
     const isAdminOrOwner = myRole === "OWNER" || myRole === "CLASS_ADMIN";
 
     const { activities, isLoading: actLoading, error: actError, createActivity, updateActivity, deleteActivity } = useActivity(cid);
-    const { summaries, isLoading: sumLoading, error: sumError } = useUserSummary(cid);
-
-    // Fetch members to map name in summary table
-    useEffect(() => {
-        if (cid && activeTab === "SUMMARY") {
-            classDiagramAPI.getMembers(cid.toString()).then(data => {
-                setMembers(data);
-            });
-        }
-    }, [cid, activeTab]);
-
-    const userNames = new Map<number, string>(members.map(m => [Number(m.id), m.name]));
+    const { summaries, isLoading: sumLoading, error: sumError } = useSummary(cid);
 
     // Handlers
     const handleOpenCreate = () => {
@@ -167,7 +156,6 @@ export const ActivityPage: React.FC = () => {
                     <SummaryTable
                         summaries={summaries}
                         isLoading={sumLoading}
-                        userNames={userNames}
                     />
                 </div>
             )}
