@@ -8,13 +8,16 @@ import com.mezon.classmanagement.backend.domain.auth.oauth2.factory.OAuthFactory
 import com.mezon.classmanagement.backend.domain.auth.oauth2.service.GoogleOAuthService;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.service.MezonOAuthService;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.strategy.OAuthStrategy;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,9 +35,10 @@ public class OAuthController {
 	GoogleOAuthService googleOAuthService;
 	MezonOAuthService mezonOAuthService;
 
-	@GetMapping("/signin")
+	@PostMapping("/signin")
 	public void signin(
 			@PathVariable String provider,
+			HttpServletRequest request,
 			HttpServletResponse response,
 			HttpSession session
 	) throws IOException {
@@ -46,12 +50,13 @@ public class OAuthController {
 			String state = url.substring(url.lastIndexOf("&state=") + 7);
 			session.setAttribute("MEZON_OAUTH2_STATE", state);
 		}
+		session.setAttribute("origin", request.getHeader("Origin"));
 
 		response.sendRedirect(url);
 	}
 
-	@GetMapping("/callback")
-	public ResponseDTO<SignInResponseDto> callback(
+	@GetMapping("/callback2")
+	public ResponseDTO<SignInResponseDto> callback2(
 			@PathVariable String provider,
 			@RequestParam("code") String code,
 			@RequestParam(value = "state", required = false) String state,
@@ -83,4 +88,59 @@ public class OAuthController {
 				.data(signInResponseDto)
 				.build();
 	}
+
+	@GetMapping("/callback")
+	public void callback(
+			@PathVariable String provider,
+			@RequestParam("code") String code,
+			@RequestParam(value = "state", required = false) String state,
+			HttpSession session,
+			HttpServletResponse response
+	) {
+		OAuthStrategy strategy = oauthFactory.getStrategy(provider);
+
+		SignInResponseDto signInResponseDto = null;
+
+		String clientUrl = (String) session.getAttribute("origin");
+		String clientRedirectUrl = null;
+
+		try {
+			if (OAuthStrategy.MEZON.equals(strategy.getName())) {
+				String savedState = (String) session.getAttribute("MEZON_OAUTH2_STATE");
+				if (savedState == null || !savedState.equals(state)) {
+					throw new GlobalException(GlobalException.Type.OAUTH_ERROR, "Sign in with Mezon failed");
+				}
+				session.removeAttribute("MEZON_OAUTH2_STATE");
+
+				String accessToken = mezonOAuthService.exchangeCodeForToken(code, state);
+				signInResponseDto = strategy.auth(accessToken);
+			}
+
+			if (OAuthStrategy.GOOGLE.equals(strategy.getName())) {
+				String accessToken = googleOAuthService.exchangeCodeForToken(code);
+				signInResponseDto = strategy.auth(accessToken);
+			}
+
+			Assert.notNull(signInResponseDto, "Internal server error");
+
+			clientRedirectUrl =
+					clientUrl
+							+ "/oauth2-signin-redirect?access-token="
+							+ signInResponseDto.getAccessToken()
+							+ "&refresh-token="
+							+ signInResponseDto.getRefreshToken();
+		} catch (Exception e) {
+			clientRedirectUrl =
+					clientUrl
+							+ "/oauth2-signin-redirect?error-message="
+							+ e.getMessage();
+		}
+
+		try {
+			response.sendRedirect(clientRedirectUrl);
+		} catch (IOException ie) {
+			throw new RuntimeException();
+		}
+	}
+
 }

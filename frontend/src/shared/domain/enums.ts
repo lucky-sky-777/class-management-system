@@ -21,6 +21,13 @@ export const ClassPrivacy = {
 } as const;
 export type ClassPrivacy = ValueOf<typeof ClassPrivacy>;
 
+// --- Class Status ---
+export const ClassStatus = {
+    JOINED: "JOINED",
+    PENDING_REQUEST: "PENDING_REQUEST",
+} as const;
+export type ClassStatus = ValueOf<typeof ClassStatus>;
+
 
 export const ClassRole = {
     CLASS_ADMIN: "CLASS_ADMIN",
@@ -41,6 +48,7 @@ export const ActivityRegistrationStatus = {
     PENDING: "PENDING",
     APPROVED: "APPROVED",
     REJECTED: "REJECTED",
+    CANCELLED: "CANCELLED",
 } as const;
 export type ActivityRegistrationStatus = ValueOf<typeof ActivityRegistrationStatus>;
 
@@ -49,12 +57,19 @@ export type ActivityRegistrationStatus = ValueOf<typeof ActivityRegistrationStat
 // nếu không chuẩn hóa ở đây thì mỗi feature sẽ tự xử lý string khác nhau.
 // Khi BE thêm/đổi permission → chỉ sửa ở đây.
 export const PermissionCode = {
-    MANAGE_MEMBER: "MANAGE_MEMBER",
     MANAGE_ACTIVITY: "MANAGE_ACTIVITY",
-    APPROVE_ACTIVITY: "APPROVE_ACTIVITY",
-    MANAGE_ATTENDANCE: "MANAGE_ATTENDANCE",
-    MANAGE_FUND: "MANAGE_FUND",
     MANAGE_GROUP: "MANAGE_GROUP",
-    APPROVE_LEAVE: "APPROVE_LEAVE",
+    MANAGE_FUND: "MANAGE_FUND",
+    MANAGE_ABSENCE_REQUEST: "MANAGE_ABSENCE_REQUEST",
+    MANAGE_POINT: "MANAGE_POINT",
 } as const;
 export type PermissionCode = ValueOf<typeof PermissionCode>;
+
+// --- Toast Type ---
+export const ToastType = {
+  SUCCESS: "success",
+  ERROR: "error",
+  WARNING: "warning",
+  INFO: "info",
+} as const;
+export type ToastType = ValueOf<typeof ToastType>;

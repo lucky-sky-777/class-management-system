@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.absencerequest.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
 import com.mezon.classmanagement.backend.domain.absencerequest.dto.request.CreateAbsenceRequestRequestDto;
 import com.mezon.classmanagement.backend.domain.absencerequest.dto.response.AbsenceRequestIdResponseDto;
 import com.mezon.classmanagement.backend.domain.absencerequest.dto.response.AbsenceRequestResponseDto;
@@ -35,7 +35,7 @@ public class AbsenceRequestService {
 
     AbsenceRequestMapper absenceRequestMapper;
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public AbsenceRequestResponseDto create(
             Long classId,
@@ -56,7 +56,7 @@ public class AbsenceRequestService {
         return absenceRequestMapper.toAbsenceRequestResponseDto(responseAbsenceRequest);
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public AbsenceRequestIdResponseDto approve(
             Long classId,
@@ -73,7 +73,7 @@ public class AbsenceRequestService {
         );
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public AbsenceRequestIdResponseDto reject(
             Long classId,
@@ -90,7 +90,7 @@ public class AbsenceRequestService {
         );
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional
     public AbsenceRequestIdResponseDto cancel(
             Long classId,
@@ -108,7 +108,7 @@ public class AbsenceRequestService {
         );
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional(readOnly = true)
     public List<AbsenceRequestResponseDto> getByClass(
             Long classId
@@ -116,7 +116,7 @@ public class AbsenceRequestService {
         return getByClassId(classId);
     }
 
-    @RequireClassPermission
+    @RequireClassSecurity
     @Transactional(readOnly = true)
     public List<AbsenceRequestResponseDto> getByClassAndUser(
             Long classId,

@@ -1,8 +1,22 @@
 import { apiClient } from "@services/api-client";
-import type { Activity, ActivityRegistration, UserActivitySummary } from "@features/activity/types";
+import type { Activity, ActivityRegistration, ActivitySummary } from "@features/activity/types";
 import type { CreateActivityDTO, UpdateActivityDTO } from "@features/activity/types";
 import type { ID } from "@shared/utils/common";
 import type { ResponseDTO } from "@shared/types";
+
+const mapRegistration = (item: any): ActivityRegistration => ({
+    id: item.id,
+    activityId: item.activity_id || item.activityId,
+    registeredUser: {
+        id: item.creator_user_id || item.creatorUserId,
+        displayName: item.creator_display_name || item.creatorDisplayName || "Học sinh",
+        avatarUrl: item.creator_avatar_url || item.creatorAvatarUrl,
+        username: "",
+    } as any,
+    proofImageUrl: item.proof_url || item.proofUrl || null,
+    status: item.status,
+    registeredAt: item.created_at || item.createdAt || ""
+});
 
 export const activityAPI = {
     /** Lấy danh sách hoạt động theo lớp */
@@ -86,61 +100,59 @@ export const activityAPI = {
     },
 
     /** Lấy danh sách đăng ký của một hoạt động (Admin) */
-    getRegistrations: async (activityId: ID): Promise<ActivityRegistration[]> => {
-        const response = await apiClient.get<ResponseDTO<any[]>>(`/activities/${activityId}/registrations`);
+    getRegistrations: async (classId: ID, activityId: ID): Promise<ActivityRegistration[]> => {
+        const response = await apiClient.get<ResponseDTO<any[]>>(`/classes/${classId}/activities/${activityId}/registrations`);
         if (Array.isArray(response.data)) {
-            return response.data.map(item => ({
-                id: item.id,
-                activityId: item.activity_id || item.activityId,
-                registeredUser: item.registered_user || item.registeredUser,
-                proofImageUrl: item.proof_image_url || item.proofImageUrl,
-                status: item.status,
-                registeredAt: item.registered_at || item.registeredAt
-            })) as ActivityRegistration[];
+            return response.data.map(item => mapRegistration(item));
         }
-        return response.data as ActivityRegistration[];
+        return [];
+    },
+
+    /** Đăng ký tham gia hoạt động (Member) */
+    registerActivity: async (classId: ID, activityId: ID): Promise<ActivityRegistration> => {
+        const response = await apiClient.post<ResponseDTO<any>>(`/classes/${classId}/activities/${activityId}/registrations`, {});
+        return mapRegistration(response.data);
     },
 
     /** Duyệt đăng ký (Admin) */
-    approveRegistration: async (regId: ID): Promise<ActivityRegistration> => {
-        const response = await apiClient.post<ResponseDTO<any>>(`/activity-registrations/${regId}/approve`, {});
-        const item = response.data;
-        return {
-            id: item.id,
-            activityId: item.activity_id || item.activityId,
-            registeredUser: item.registered_user || item.registeredUser,
-            proofImageUrl: item.proof_image_url || item.proofImageUrl,
-            status: item.status,
-            registeredAt: item.registered_at || item.registeredAt
-        } as ActivityRegistration;
+    approveRegistration: async (classId: ID, activityId: ID, regId: ID): Promise<ActivityRegistration> => {
+        const response = await apiClient.patch<ResponseDTO<any>>(
+            `/classes/${classId}/activities/${activityId}/registrations/${regId}/approve`,
+            {}
+        );
+        return mapRegistration(response.data);
     },
 
     /** Từ chối đăng ký (Admin) */
-    rejectRegistration: async (regId: ID): Promise<ActivityRegistration> => {
-        const response = await apiClient.post<ResponseDTO<any>>(`/activity-registrations/${regId}/reject`, {});
-        const item = response.data;
-        return {
-            id: item.id,
-            activityId: item.activity_id || item.activityId,
-            registeredUser: item.registered_user || item.registeredUser,
-            proofImageUrl: item.proof_image_url || item.proofImageUrl,
-            status: item.status,
-            registeredAt: item.registered_at || item.registeredAt
-        } as ActivityRegistration;
+    rejectRegistration: async (classId: ID, activityId: ID, regId: ID): Promise<ActivityRegistration> => {
+        const response = await apiClient.patch<ResponseDTO<any>>(
+            `/classes/${classId}/activities/${activityId}/registrations/${regId}/reject`,
+            {}
+        );
+        return mapRegistration(response.data);
+    },
+
+    /** Hủy đăng ký (Member) */
+    cancelRegistration: async (classId: ID, activityId: ID, regId: ID): Promise<ActivityRegistration> => {
+        const response = await apiClient.patch<ResponseDTO<any>>(
+            `/classes/${classId}/activities/${activityId}/registrations/${regId}/cancel`,
+            {}
+        );
+        return mapRegistration(response.data);
     },
 
     /** Thống kê điểm rèn luyện tất cả members trong lớp */
-    getUserSummaries: async (classId: ID): Promise<UserActivitySummary[]> => {
+    getSummaries: async (classId: ID): Promise<ActivitySummary[]> => {
         const response = await apiClient.get<ResponseDTO<any[]>>(`/classes/${classId}/activities/summaries`);
         if (Array.isArray(response.data)) {
             return response.data.map(item => ({
+                rank: item.rank,
                 userId: item.user_id || item.userId,
-                approvedCount: item.approved_count || item.approvedCount,
-                totalPoint: item.total_point || item.totalPoint,
-                mandatoryApproved: item.mandatory_approved || item.mandatoryApproved,
-                mandatoryTotal: item.mandatory_total || item.mandatoryTotal
-            })) as UserActivitySummary[];
+                userDisplayName: item.user_display_name || item.userDisplayName,
+                userAvatarUrl: item.user_avatar_url || item.userAvatarUrl,
+                totalPoint: item.total_point ?? item.totalPoint
+            })) as ActivitySummary[];
         }
-        return response.data as UserActivitySummary[];
+        return response.data as ActivitySummary[];
     },
 };

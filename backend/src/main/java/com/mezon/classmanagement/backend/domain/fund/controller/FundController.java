@@ -34,7 +34,7 @@ public class FundController {
 
 	FundService fundService;
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@PostMapping
 	public ResponseDTO<FundResponseDto> create(
 			@PathVariable Long classId,
@@ -52,7 +52,7 @@ public class FundController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@DeleteMapping("/{fundId}")
 	public ResponseDTO<FundIdResponseDto> delete(
 			@PathVariable Long classId,
@@ -67,7 +67,7 @@ public class FundController {
 				.build();
 	}
 
-	//@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	//@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<FundResponseDto>> getByClass(
 			@PathVariable Long classId
@@ -81,7 +81,7 @@ public class FundController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/summary")
 	public ResponseDTO<FundSummaryResponseDto> getSummary(
 			@PathVariable Long classId

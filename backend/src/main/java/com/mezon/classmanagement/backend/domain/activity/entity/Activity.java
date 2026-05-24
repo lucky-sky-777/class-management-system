@@ -74,4 +74,10 @@ public class Activity {
 		}
 	}
 
+	public static Activity create(Long id) {
+		return Activity.builder()
+				.id(id)
+				.build();
+	}
+
 }

@@ -37,7 +37,7 @@ public class PointController {
 
 	PointService pointService;
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@PostMapping("/groups/{groupId}")
 	public ResponseDTO<PointResponseDto> create(
 			@PathVariable Long classId,
@@ -56,7 +56,7 @@ public class PointController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@DeleteMapping("/{pointId}")
 	public ResponseDTO<PointIdResponseDto> delete(
 			@PathVariable Long classId,
@@ -71,7 +71,7 @@ public class PointController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<PointResponseDto>> getByClass(
 			@PathVariable Long classId,
@@ -86,7 +86,7 @@ public class PointController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/groups/{groupId}")
 	public ResponseDTO<List<PointResponseDto>> getByGroup(
 			@PathVariable Long classId,
@@ -102,7 +102,7 @@ public class PointController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/week-ranking")
 	public ResponseDTO<List<WeekPointRankingResponseDto>> getWeekRanking(
 			@PathVariable Long classId,
@@ -117,7 +117,7 @@ public class PointController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/month-ranking")
 	public ResponseDTO<List<MonthPointRankingResponseDto>> getMonthRanking(
 			@PathVariable Long classId,

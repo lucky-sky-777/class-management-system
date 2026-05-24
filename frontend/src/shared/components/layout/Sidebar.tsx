@@ -11,7 +11,8 @@ import {
   Globe,
 } from "lucide-react";
 import { useHome } from "@features/home/hooks/useHome";
-import { useUIStore } from "@app/store";
+import { useUIStore, useToastStore } from "@app/store";
+import { ToastType } from "@shared/domain/enums";
 
 interface UIStoreState {
   isSidebarOpen: boolean;
@@ -30,6 +31,15 @@ export const Sidebar = () => {
   const setSidebarOpen = useUIStore(
     (state: UIStoreState) => state.setSidebarOpen || state.toggleSidebar,
   );
+
+  const showToast = useToastStore((state) => state.showToast);
+
+  const handlePendingClick = () => {
+    showToast(
+      "Yêu cầu tham gia của bạn đang chờ chủ nhóm duyệt.",
+      ToastType.WARNING,
+    );
+  };
 
   // Chỉ giữ lại lắng nghe sự kiện phát ra từ các modal (tạo/xóa lớp) để đồng bộ dữ liệu
   useEffect(() => {
@@ -98,21 +108,24 @@ export const Sidebar = () => {
 
             {isRegisteredOpen && (
               <ul className="mt-1 flex flex-col gap-0.5">
+                {/* DANH SÁCH LỚP HỌC TRONG SIDEBAR */}
                 {isLoading ? (
                   <li className="px-10 py-3">
                     <div className="skeleton h-4 w-full opacity-20 rounded-md"></div>
                   </li>
                 ) : myClasses.length > 0 ? (
-                  myClasses.map((item) => (
-                    <li key={item.id}>
-                      <NavLink to={`/class/${item.id}/diagram`}>
-                        {({ isActive }: { isActive: boolean }) => (
+                  myClasses.map((item) => {
+                    // 1. KIỂM TRA TRẠNG THÁI: Lớp này học sinh đã được duyệt chưa?
+                    const isPending = item.status !== "JOINED";
+
+                    return (
+                      <li key={item.id}>
+                        {isPending ? (
+                          // 2. NẾU CHƯA DUYỆT: Hiện thẻ div mờ nhạt, gắn sự kiện onClick mở Toast
                           <div
-                            className={`group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] transition-all ${
-                              isActive
-                                ? "bg-[var(--primary-fill)] text-[var(--primary-text)]"
-                                : "text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--ink-1)]"
-                            }`}
+                            onClick={handlePendingClick}
+                            className="group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] text-[var(--ink-3)] opacity-60 cursor-pointer hover:bg-[var(--bg-surface-2)] transition-all bg-[var(--bg-surface-2)]/50"
+                            title="Lớp đang chờ giáo viên duyệt"
                           >
                             <div className="flex items-center gap-3 truncate">
                               <Users size={18} className="shrink-0" />
@@ -120,39 +133,64 @@ export const Sidebar = () => {
                                 {item.name}
                               </span>
                             </div>
-
-                            <div
-                              title={
-                                item.privacy === "PUBLIC"
-                                  ? "Cộng đồng"
-                                  : "Nhóm kín"
-                              }
-                            >
-                              {item.privacy === "PUBLIC" ? (
-                                <Globe
-                                  size={12}
-                                  className={
-                                    isActive
-                                      ? "text-[var(--primary-text)] opacity-80"
-                                      : "text-[var(--green-text)] opacity-60"
-                                  }
-                                />
-                              ) : (
-                                <Lock
-                                  size={12}
-                                  className={
-                                    isActive
-                                      ? "text-[var(--primary-text)] opacity-80"
-                                      : "text-[var(--amber-text)] opacity-80"
-                                  }
-                                />
-                              )}
-                            </div>
+                            {/* Icon ổ khóa báo hiệu bị khóa */}
+                            <Lock
+                              size={12}
+                              className="text-[var(--amber-text)] opacity-80"
+                            />
                           </div>
+                        ) : (
+                          // 3. NẾU ĐÃ DUYỆT: Trả về NavLink bình thường
+                          <NavLink to={`/class/${item.id}/diagram`}>
+                            {({ isActive }: { isActive: boolean }) => (
+                              <div
+                                className={`group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] transition-all ${
+                                  isActive
+                                    ? "bg-[var(--primary-fill)] text-[var(--primary-text)]"
+                                    : "text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--ink-1)]"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3 truncate">
+                                  <Users size={18} className="shrink-0" />
+                                  <span className="text-sm font-medium truncate leading-tight">
+                                    {item.name}
+                                  </span>
+                                </div>
+
+                                <div
+                                  title={
+                                    item.privacy === "PUBLIC"
+                                      ? "Cộng đồng"
+                                      : "Nhóm kín"
+                                  }
+                                >
+                                  {item.privacy === "PUBLIC" ? (
+                                    <Globe
+                                      size={12}
+                                      className={
+                                        isActive
+                                          ? "text-[var(--primary-text)] opacity-80"
+                                          : "text-[var(--green-text)] opacity-60"
+                                      }
+                                    />
+                                  ) : (
+                                    <Lock
+                                      size={12}
+                                      className={
+                                        isActive
+                                          ? "text-[var(--primary-text)] opacity-80"
+                                          : "text-[var(--amber-text)] opacity-80"
+                                      }
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </NavLink>
                         )}
-                      </NavLink>
-                    </li>
-                  ))
+                      </li>
+                    );
+                  })
                 ) : (
                   <li className="px-10 py-4 text-xs text-[var(--ink-3)] opacity-80 italic">
                     Chưa tham gia lớp nào

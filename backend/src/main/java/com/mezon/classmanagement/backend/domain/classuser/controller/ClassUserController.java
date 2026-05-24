@@ -1,12 +1,12 @@
 package com.mezon.classmanagement.backend.domain.classuser.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
+import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserIdResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserPermissionsRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserRoleRequestDto;
-import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,13 +31,13 @@ public class ClassUserController {
 
 	ClassUserService classUserService;
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@PostMapping
 	public ResponseDTO<ClassUserResponseDto> createClassUser(
 			@PathVariable Long classId,
 			@RequestBody CreateClassUserRequestDto request
 	) {
-		ClassUserResponseDto response = classUserService.createClassUser(classId, request, ClassUser.Role.CLASS_MEMBER);
+		ClassUserResponseDto response = classUserService.createClassUser(classId, request, ClassRole.CLASS_MEMBER);
 
 		return ResponseDTO.<ClassUserResponseDto>builder()
 				.success(true)
@@ -46,7 +46,7 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@PatchMapping("/{userId}/role")
 	public ResponseDTO<ClassUserResponseDto> updateClassUserRole(
 			@PathVariable Long classId,
@@ -62,7 +62,7 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@PatchMapping("/{userId}/permissions")
 	public ResponseDTO<ClassUserResponseDto> updateClassUserPermissions(
 			@PathVariable Long classId,
@@ -78,7 +78,7 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.adminOnly(#classId)")
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@DeleteMapping("/{userId}")
 	public ResponseDTO<ClassUserIdResponseDto> deleteClassUser(
 			@PathVariable Long classId,
@@ -93,7 +93,7 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<ClassUserResponseDto>> getClassUsers(
 			@PathVariable Long classId
@@ -107,7 +107,7 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/ungrouped")
 	public ResponseDTO<List<ClassUserResponseDto>> getUngroupedClassUsers(
 			@PathVariable Long classId
@@ -121,7 +121,7 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/unseated")
 	public ResponseDTO<List<ClassUserResponseDto>> getUnseatedClassUsers(
 			@PathVariable Long classId

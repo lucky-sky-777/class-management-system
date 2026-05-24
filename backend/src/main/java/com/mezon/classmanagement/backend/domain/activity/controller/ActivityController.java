@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.activity.dto.request.CreateAndUpdateActivityRequestDto;
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityIdResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityResponseDto;
+import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivitySummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.service.ActivityService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,64 +29,73 @@ public class ActivityController {
 
 	ActivityService activityService;
 
-	@PreAuthorize("@ClassPermission.manageActivity(#classId)")
+	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@PostMapping
-	public ResponseDTO<ActivityResponseDto> createActivity(
+	public ResponseDTO<ActivityResponseDto> create(
 			@PathVariable Long classId,
 			@RequestBody CreateAndUpdateActivityRequestDto request
 	) {
 		ActivityResponseDto response = activityService.create(classId, request);
 
-		return ResponseDTO.<ActivityResponseDto>builder()
-				.success(true)
-				.message("Create activity successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Create activity successful",
+				response
+		);
 	}
 
-	@PreAuthorize("@ClassPermission.manageActivity(#classId)")
+	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@PatchMapping("/{activityId}")
-	public ResponseDTO<ActivityResponseDto> updateActivity(
+	public ResponseDTO<ActivityResponseDto> update(
 			@PathVariable Long classId,
 			@PathVariable Long activityId,
 			@RequestBody CreateAndUpdateActivityRequestDto request
 	) {
 		ActivityResponseDto response = activityService.update(classId, activityId, request);
 
-		return ResponseDTO.<ActivityResponseDto>builder()
-				.success(true)
-				.message("Update activity successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Update activity successful",
+				response
+		);
 	}
 
-	@PreAuthorize("@ClassPermission.manageActivity(#classId)")
+	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
 	@DeleteMapping("/{activityId}")
-	public ResponseDTO<ActivityIdResponseDto> deleteActivity(
+	public ResponseDTO<ActivityIdResponseDto> delete(
 			@PathVariable Long classId,
 			@PathVariable Long activityId
 	) {
 		ActivityIdResponseDto response = activityService.delete(classId, activityId);
 
-		return ResponseDTO.<ActivityIdResponseDto>builder()
-				.success(true)
-				.message("Delete activity successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Delete activity successful",
+				response
+		);
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<ActivityResponseDto>> getByClass(
 			@PathVariable Long classId
 	) {
 		List<ActivityResponseDto> response = activityService.getByClass(classId);
 
-		return ResponseDTO.<List<ActivityResponseDto>>builder()
-				.success(true)
-				.message("Get activities by class successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Get activities by class successful",
+				response
+		);
+	}
+
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@GetMapping("/summaries")
+	public ResponseDTO<List<ActivitySummaryResponseDto>> getSummaries(
+			@PathVariable Long classId
+	) {
+		List<ActivitySummaryResponseDto> response = activityService.getSummaries(classId);
+
+		return ResponseDTO.ok(
+				"Get activity summaries successful",
+				response
+		);
 	}
 
 }

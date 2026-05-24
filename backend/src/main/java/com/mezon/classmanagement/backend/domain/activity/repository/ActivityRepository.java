@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.activity.repository;
 
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityResponseDto;
+import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivitySummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.entity.Activity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -34,5 +35,26 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
 	order by activity.createdAt desc
 	""")
 	List<ActivityResponseDto> getByClazz_Id(Long classId);
+
+	@Query("""
+        SELECT new com.mezon.classmanagement.backend.domain.activity.dto.response.ActivitySummaryResponseDto(
+            null,
+            classUser.user.id,
+            classUser.user.displayName,
+            classUser.user.avatarUrl,
+            cast(COALESCE(SUM(activity.point), 0) as short)
+        )
+        FROM ClassUser classUser
+        LEFT JOIN ActivityRegistration activityRegistration
+            ON activityRegistration.creator.id = classUser.user.id
+            AND activityRegistration.clazz.id = classUser.clazz.id
+            AND activityRegistration.status = 'APPROVED'
+        LEFT JOIN Activity activity
+            ON activity.id = activityRegistration.activity.id
+        WHERE classUser.clazz.id = :classId
+        GROUP BY classUser.user.id, classUser.user.displayName, classUser.user.avatarUrl
+        ORDER BY COALESCE(SUM(activity.point), 0) DESC
+    """)
+	List<ActivitySummaryResponseDto> getSummaries(Long classId);
 
 }

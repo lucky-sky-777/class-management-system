@@ -33,7 +33,7 @@ public class AbsenceRequestController {
 
     AbsenceRequestService absenceRequestService;
 
-    @PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @PostMapping("/classes/{classId}")
     public ResponseDTO<AbsenceRequestResponseDto> create(
             @PathVariable Long classId,
@@ -51,7 +51,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageAbsenceRequest(#classId)")
+    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
     @PostMapping("/classes/{classId}/requests/{requestId}/approve")
     public ResponseDTO<AbsenceRequestIdResponseDto> approve(
             @PathVariable Long classId,
@@ -66,7 +66,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageAbsenceRequest(#classId)")
+    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
     @PostMapping("/classes/{classId}/requests/{requestId}/reject")
     public ResponseDTO<AbsenceRequestIdResponseDto> reject(
             @PathVariable Long classId,
@@ -81,7 +81,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.exceptAdmin(#classId)")
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @PatchMapping("/classes/{classId}/requests/{requestId}/cancel")
     public ResponseDTO<AbsenceRequestIdResponseDto> cancel(
             @PathVariable Long classId,
@@ -99,6 +99,7 @@ public class AbsenceRequestController {
                 .build();
     }
 
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @GetMapping("/classes/{classId}/requests")
     public ResponseDTO<List<AbsenceRequestResponseDto>> getByClass(@PathVariable Long classId) {
         return ResponseDTO.<List<AbsenceRequestResponseDto>>builder()
@@ -108,8 +109,13 @@ public class AbsenceRequestController {
                 .build();
     }
 
+    @Deprecated
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @GetMapping("/users/{userId}/requests")
-    public ResponseDTO<List<AbsenceRequestResponseDto>> getByUser(@PathVariable Long userId) {
+    public ResponseDTO<List<AbsenceRequestResponseDto>> getByUser(
+            @PathVariable Long classId,
+            @PathVariable Long userId
+    ) {
         return ResponseDTO.<List<AbsenceRequestResponseDto>>builder()
                 .success(true)
                 .message("Get list successful")

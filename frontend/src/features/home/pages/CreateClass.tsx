@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { useHome } from "@features/home/hooks/useHome";
 import { Modal } from "@shared/components/ui/Modal";
+import { useToastStore } from "@app/store";
+import { ToastType } from "@shared/domain/enums";
 
 interface CreateClassModalProps {
   isOpen: boolean;
@@ -17,6 +19,7 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
   const [status, setStatus] = useState("PUBLIC");
 
   const { createClassMutation, isCreating } = useHome();
+  const showToast = useToastStore((state) => state.showToast);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,12 +31,13 @@ export const CreateClassModal: React.FC<CreateClassModalProps> = ({
         description: description,
         status: status,
       });
-
+      showToast(`Đã tạo lớp "${className}" thành công!`, ToastType.SUCCESS);
       setClassName("");
       setDescription("");
       setStatus("PUBLIC");
       onClose();
     } catch (error) {
+      showToast("Có lỗi xảy ra khi tạo lớp.", ToastType.ERROR);
       console.error("Lỗi khi tạo lớp:", error);
     }
   };

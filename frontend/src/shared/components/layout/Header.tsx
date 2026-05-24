@@ -206,7 +206,7 @@ export const Header = () => {
             } rounded-full flex items-center justify-center overflow-hidden border cursor-pointer shrink-0 hover:ring-2 hover:ring-[var(--primary-border)] transition-all`}
           >
             {isAuthenticated && user ? (
-              <Avatar name={user.displayName ?? user.username} />
+              <Avatar src={user.avatarUrl ?? ""} name={user.displayName ?? user.username} />
             ) : (
               <User size={20} className="text-[var(--ink-3)]" />
             )}

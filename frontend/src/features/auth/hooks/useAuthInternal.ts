@@ -35,7 +35,7 @@ export const useAuthInternal = () => {
 
           const token = response.data;
 
-          const accessToken = jwtDecode<AccessTokenPayload>(token.access_token);
+          // const accessToken = jwtDecode<AccessTokenPayload>(token.access_token);
 
           //  luu token vào localStorage thông qua storage abstraction
           storage.set(AUTH_STORAGE_KEY.TOKEN, token.access_token);

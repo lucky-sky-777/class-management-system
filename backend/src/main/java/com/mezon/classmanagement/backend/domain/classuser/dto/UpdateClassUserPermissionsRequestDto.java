@@ -1,9 +1,8 @@
-
 package com.mezon.classmanagement.backend.domain.classuser.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
-import com.mezon.classmanagement.backend.common.security.permission.Permission;
+import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +22,7 @@ import java.util.List;
 @DTO
 public final class UpdateClassUserPermissionsRequestDto {
 
-	@JsonProperty(value = "permission_codes")
-	List<Permission> permissionCodes;
+	@JsonProperty(value = "permissions")
+	List<ClassPermission> permissions;
 
 }

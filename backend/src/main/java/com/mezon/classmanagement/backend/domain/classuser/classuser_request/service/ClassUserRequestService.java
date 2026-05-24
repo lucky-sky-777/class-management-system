@@ -1,7 +1,8 @@
 package com.mezon.classmanagement.backend.domain.classuser.classuser_request.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.annotation.RequireClassPermission;
+import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
+import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto.ClassUserRequestIdResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto.CreateClassUserRequestRequestDto;
@@ -10,7 +11,6 @@ import com.mezon.classmanagement.backend.domain.classuser.classuser_request.enti
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.mapper.ClassUserRequestMapper;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.repository.ClassUserRequestRepository;
 import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
-import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import lombok.AccessLevel;
@@ -67,7 +67,7 @@ public class ClassUserRequestService {
 					CreateClassUserRequestDto.builder()
 							.userId(event.userId())
 							.build(),
-					ClassUser.Role.CLASS_MEMBER
+					ClassRole.CLASS_MEMBER
 			);
 		}
 	}
@@ -94,7 +94,7 @@ public class ClassUserRequestService {
 		save(newClassUserRequest);
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public ClassUserRequestIdResponseDto approve(
 			Long classId,
@@ -125,7 +125,7 @@ public class ClassUserRequestService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional
 	public ClassUserRequestIdResponseDto reject(
 			Long classId,
@@ -159,7 +159,7 @@ public class ClassUserRequestService {
 				.build();
 	}
 
-	@RequireClassPermission
+	@RequireClassSecurity
 	@Transactional(readOnly = true)
 	public List<ClassUserRequestResponseDto> getByClass(Long classId) {
 		return getByClassId(classId);

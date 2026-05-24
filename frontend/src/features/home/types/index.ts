@@ -1,14 +1,15 @@
-import type { ClassPrivacy, ClassRole } from "@shared/domain/enums";
+import type { ClassPrivacy, ClassRole, ClassStatus } from "@shared/domain/enums";
 
 export interface ClassItems {
   id: number;
   name: string;
   owner_user_id: number;
+  owner_avatar_url: string;
   description: string;
   code: string;
   owner_display_name: string;
   privacy: ClassPrivacy;
-  userJoinStatus: "joined" | "pending"
+  status: ClassStatus;
 }
 
 export interface ClassResponse {
@@ -47,4 +48,5 @@ export interface JoinClassResult {
   name: string;
   type?: 'REQUESTED' | 'JOINED';
   userJoinStatus?: 'joined' | 'pending';
+  status?: 'PENDING_REQUEST' | 'JOINED' | string;
 }

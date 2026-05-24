@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain.classuser.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
-import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
+import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +21,6 @@ import lombok.experimental.FieldDefaults;
 public final class UpdateClassUserRoleRequestDto {
 
 	@JsonProperty(value = "role")
-	ClassUser.Role role;
+	ClassRole role;
 
 }

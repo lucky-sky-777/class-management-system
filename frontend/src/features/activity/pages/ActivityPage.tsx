@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useActivity } from "@features/activity/hooks/useActivity";
-import { useUserSummary } from "@features/activity/hooks/useUserSummary";
+import { useSummary } from "@features/activity/hooks/useSummary.ts";
 import { ActivityCard } from "@features/activity/components/ActivityCard";
 import { ActivityFormModal } from "@features/activity/components/ActivityFormModal";
 import { RegistrationPanel } from "@features/activity/components/RegistrationPanel";
 import { SummaryTable } from "@features/activity/components/SummaryTable";
 import type { Activity, CreateActivityDTO } from "@features/activity/types";
 import { Plus } from "lucide-react";
-import { classDiagramAPI } from "@features/classDiagram/api";
+import { useAuth } from "@features/auth";
+import { useMembers } from "@features/member/hooks/useMembers";
 
 
 type Tab = "ACTIVITIES" | "SUMMARY";
@@ -32,22 +33,15 @@ export const ActivityPage: React.FC = () => {
     const [isRegOpen, setIsRegOpen] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
 
-    const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
+    //const [members, setMembers] = useState<{ id: string; name: string }[]>([]);
 
     // Hooks
+    const { user } = useAuth();
+    const { myRole } = useMembers(classId!, user?.id);
+    const isAdminOrOwner = myRole === "OWNER" || myRole === "CLASS_ADMIN";
+
     const { activities, isLoading: actLoading, error: actError, createActivity, updateActivity, deleteActivity } = useActivity(cid);
-    const { summaries, isLoading: sumLoading, error: sumError } = useUserSummary(cid);
-
-    // Fetch members to map name in summary table
-    useEffect(() => {
-        if (cid && activeTab === "SUMMARY") {
-            classDiagramAPI.getMembers(cid.toString()).then(data => {
-                setMembers(data);
-            });
-        }
-    }, [cid, activeTab]);
-
-    const userNames = new Map<number, string>(members.map(m => [Number(m.id), m.name]));
+    const { summaries, isLoading: sumLoading, error: sumError } = useSummary(cid);
 
     // Handlers
     const handleOpenCreate = () => {
@@ -88,26 +82,28 @@ export const ActivityPage: React.FC = () => {
             <div className="flex items-center gap-6 border-b border-rule pb-2">
                 <button
                     onClick={() => setActiveTab("ACTIVITIES")}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-all px-2 ${activeTab === "ACTIVITIES"
-                        ? "border-warm-400 text-warm-600"
-                        : "border-transparent text-ink-3 hover:text-ink-1"
-                        }`}
+                    className={`pb-3 text-sm font-bold border-b-2 transition-all px-2 ${
+                        activeTab === "ACTIVITIES"
+                            ? "border-warm-400 text-warm-600"
+                            : "border-transparent text-ink-3 hover:text-ink-1"
+                    }`}
                 >
                     Danh sách hoạt động
                 </button>
                 <button
                     onClick={() => setActiveTab("SUMMARY")}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-all px-2 ${activeTab === "SUMMARY"
-                        ? "border-warm-400 text-warm-600"
-                        : "border-transparent text-ink-3 hover:text-ink-1"
-                        }`}
+                    className={`pb-3 text-sm font-bold border-b-2 transition-all px-2 ${
+                        activeTab === "SUMMARY"
+                            ? "border-warm-400 text-warm-600"
+                            : "border-transparent text-ink-3 hover:text-ink-1"
+                    }`}
                 >
                     Thống kê rèn luyện
                 </button>
             </div>
 
             {/* Error alerts */}
-            {((actError && activeTab == Tab.ACTIVITIES ) || (sumError && activeTab == Tab.SUMMARY)) && (
+            {((actError && activeTab == Tab.ACTIVITIES) || (sumError && activeTab == Tab.SUMMARY)) && (
                 <div className="p-4 bg-ink-red-fill border border-ink-red-border text-ink-red-text rounded-lg text-sm font-medium">
                     {actError || sumError}
                 </div>
@@ -125,11 +121,17 @@ export const ActivityPage: React.FC = () => {
                             <p className="text-4xl text-ink-4">◉</p>
                             <div>
                                 <p className="font-serif font-bold text-lg text-ink-1">Chưa có hoạt động nào</p>
-                                <p className="text-sm text-ink-3">Tạo hoạt động mới để các thành viên đăng ký.</p>
+                                <p className="text-sm text-ink-3">
+                                    {isAdminOrOwner
+                                        ? "Tạo hoạt động mới để các thành viên đăng ký."
+                                        : "Hiện chưa có hoạt động nào diễn ra."}
+                                </p>
                             </div>
-                            <button onClick={handleOpenCreate} className="btn btn-warm btn-sm mt-2">
-                                + Tạo hoạt động
-                            </button>
+                            {isAdminOrOwner && (
+                                <button onClick={handleOpenCreate} className="btn btn-warm btn-sm mt-2">
+                                    + Tạo hoạt động
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -137,6 +139,7 @@ export const ActivityPage: React.FC = () => {
                                 <ActivityCard
                                     key={act.id}
                                     activity={act}
+                                    myRole={myRole || "CLASS_MEMBER"}
                                     onEdit={handleOpenEdit}
                                     onDelete={handleDelete}
                                     onViewRegistrations={handleViewRegistrations}
@@ -153,13 +156,12 @@ export const ActivityPage: React.FC = () => {
                     <SummaryTable
                         summaries={summaries}
                         isLoading={sumLoading}
-                        userNames={userNames}
                     />
                 </div>
             )}
 
             {/* Floating Action Button (for ACTIVITIES tab) */}
-            {activeTab === "ACTIVITIES" && (
+            {activeTab === "ACTIVITIES" && isAdminOrOwner && (
                 <div className="fixed bottom-8 right-6 md:right-10 z-raised">
                     <button
                         onClick={handleOpenCreate}

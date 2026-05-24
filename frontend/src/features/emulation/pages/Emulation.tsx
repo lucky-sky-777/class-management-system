@@ -6,6 +6,8 @@ import { HistoryTable } from "@features/emulation/pages/HistoryTable";
 import { GroupSidebar } from "@features/emulation/pages/GroupSidebar";
 import { Modal } from "@shared/components/ui/Modal";
 import type { WeekItem } from "@features/emulation/types";
+import { useToastStore } from "@app/store";
+import { ToastType } from "@shared/domain/enums";
 
 export const Emulation = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -41,6 +43,7 @@ export const Emulation = () => {
   // State quản lý xóa tổ
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
+  const showToast = useToastStore((state) => state.showToast);
 
   // Early Return kiểm tra đang tải dữ liệu
   if (isLoading || !data) {
@@ -57,9 +60,13 @@ export const Emulation = () => {
   // Hàm xử lý ghi điểm
   const handleSubmitPoint = async () => {
     const pointsToSubmit = Number(pointForm.points);
-    if (!pointForm.content.trim()) return alert("Vui lòng nhập nội dung!");
+    if (!pointForm.content.trim()) {
+      showToast("Vui lòng nhập nội dung!", ToastType.WARNING);
+      return;
+    }
     if (isNaN(pointsToSubmit) || pointsToSubmit === 0) {
-      return alert("Số điểm không hợp lệ!");
+      showToast("Số điểm không hợp lệ!", ToastType.ERROR);
+      return;
     }
 
     try {
@@ -74,13 +81,16 @@ export const Emulation = () => {
       if (result.success) {
         setShowPointModal(false);
         setPointForm({ content: "", points: 0 });
-        console.log(`Đã cập nhật điểm cho Tổ ${selectedTeam}`);
+        showToast(
+          `Đã ghi ${pointsToSubmit} điểm cho Tổ ${selectedTeam}!`,
+          ToastType.SUCCESS,
+        );
       } else {
-        alert("Ghi điểm thất bại. Vui lòng kiểm tra lại kết nối!");
+        showToast("Ghi điểm thất bại. Vui lòng thử lại!", ToastType.ERROR);
       }
     } catch (error) {
       console.error("Lỗi nhập điểm:", error);
-      alert("Đã có lỗi xảy ra khi ghi điểm!");
+      showToast("Đã có lỗi xảy ra khi ghi điểm!", ToastType.ERROR);
     } finally {
       setIsSubmitting(false);
     }
@@ -294,15 +304,25 @@ export const Emulation = () => {
             </button>
             <button
               disabled={!groupToDelete}
+              // Trong Modal Xóa Tổ, tại nút "XÁC NHẬN XÓA":
               onClick={async () => {
                 if (!groupToDelete) return;
+
+                const showToast = useToastStore.getState().showToast;
                 const isSuccess = await removeGroup(groupToDelete);
+
                 if (isSuccess) {
+                  showToast("Đã xóa tổ thành công!", ToastType.SUCCESS);
                   setShowDeleteModal(false);
                   setGroupToDelete(null);
                   if (selectedTeam === groupToDelete) {
                     setSelectedTeam(groups[0]?.id || 1);
                   }
+                } else {
+                  showToast(
+                    "Xóa tổ thất bại, vui lòng thử lại.",
+                    ToastType.ERROR,
+                  );
                 }
               }}
               className="flex-1 py-2.5 bg-[var(--red-text)] text-white rounded-xl font-bold text-xs shadow-xs hover:opacity-90 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"

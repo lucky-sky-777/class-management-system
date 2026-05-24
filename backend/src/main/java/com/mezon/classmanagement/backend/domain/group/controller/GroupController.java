@@ -28,7 +28,7 @@ public class GroupController {
 
     GroupService groupService;
 
-    @PreAuthorize("@ClassPermission.manageGroup(#classId)")
+    @PreAuthorize("@ClassSecurity.manageGroup(#classId)")
     @PostMapping
     public ResponseDTO<GroupResponseDto> createGroup(
             @PathVariable Long classId,
@@ -43,7 +43,7 @@ public class GroupController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageGroupData(#classId, #groupId)")
+    @PreAuthorize("@ClassSecurity.manageGroupData(#classId, #groupId)")
     @PatchMapping("/{groupId}")
     public ResponseDTO<GroupResponseDto> updateGroup(
             @PathVariable Long classId,
@@ -59,7 +59,7 @@ public class GroupController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.manageGroupData(#classId, #groupId)")
+    @PreAuthorize("@ClassSecurity.manageGroupData(#classId, #groupId)")
     @DeleteMapping("/{groupId}")
     public ResponseDTO<GroupIdResponseDto> deleteGroup(
             @PathVariable Long classId,
@@ -74,7 +74,7 @@ public class GroupController {
                 .build();
     }
 
-    @PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
     @GetMapping
     public ResponseDTO<List<GroupResponseDto>> getGroups(
             @PathVariable Long classId

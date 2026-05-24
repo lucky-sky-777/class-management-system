@@ -29,7 +29,7 @@ public class GroupUserController {
 
 	GroupUserService groupUserService;
 
-	@PreAuthorize("@ClassPermission.manageGroupData(#classId, #groupId)")
+	@PreAuthorize("@ClassSecurity.manageGroupData(#classId, #groupId)")
 	@PostMapping
 	public ResponseDTO<GroupUserResponseDto> createGroupUser(
 			@PathVariable Long classId,
@@ -45,7 +45,7 @@ public class GroupUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.manageGroup(#classId)")
+	@PreAuthorize("@ClassSecurity.manageGroup(#classId)")
 	@PatchMapping("/{userId}/role")
 	public ResponseDTO<GroupUserResponseDto> updateGroupUser(
 			@PathVariable Long classId,
@@ -62,7 +62,7 @@ public class GroupUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.manageGroupData(#classId, #groupId)")
+	@PreAuthorize("@ClassSecurity.manageGroupData(#classId, #groupId)")
 	@DeleteMapping("/{userId}")
 	public ResponseDTO<GroupUserIdResponseDto> deleteGroupUser(
 			@PathVariable Long classId,
@@ -78,7 +78,7 @@ public class GroupUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassPermission.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<GroupUserResponseDto>> getGroupUsers(
 			@PathVariable Long classId,
