@@ -5,7 +5,6 @@ import {
   TrendingUp,
   TrendingDown,
   Plus,
-  QrCode,
   Search,
   Trash2,
   Calendar,
@@ -233,14 +232,6 @@ export const FundPage: React.FC = () => {
                   >
                     <Building2 className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">Cài đặt Bank</span>
-                  </button>
-                  <button
-                    onClick={() => setIsQrOpen(true)}
-                    className="flex items-center justify-center p-2.5 sm:px-4 sm:py-2 text-xs font-bold text-ink-2 bg-surface border border-[var(--rule-md)] hover:bg-[var(--bg-surface-2)] rounded-xl transition-all active:scale-95 shadow-2xs"
-                    title="Mã QR lớp học"
-                  >
-                    <QrCode className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Mã QR Quỹ</span>
                   </button>
                 </>
               )}

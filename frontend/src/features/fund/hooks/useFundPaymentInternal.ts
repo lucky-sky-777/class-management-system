@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, use, useEffect } from "react";
 import type { ID } from "@shared/utils/common";
 import { fundAPI } from "../api";
 import type { FundPaymentResponseDto, CreateFundPaymentRequestDto } from "../types";
+import { toast } from "react-toastify";
 
 export const useFundPaymentInternal = (classId: ID) => {
     const [payments, setPayments] = useState<Record<ID, FundPaymentResponseDto[]>>({});
@@ -32,6 +33,7 @@ export const useFundPaymentInternal = (classId: ID) => {
             const res = await fundAPI.createFundPayment(classId, fundId, data);
             if (res.success) {
                 await fetchPayments(fundId);
+                toast.success("Tạo giao dịch thành công");
                 return true;
             } else {
                 setError(res.message);
@@ -70,6 +72,7 @@ export const useFundPaymentInternal = (classId: ID) => {
             const res = await fundAPI.rejectFundPayment(classId, fundId, paymentId);
             if (res.success) {
                 await fetchPayments(fundId);
+                toast.success("Đã từ chối minh chứng");
                 return true;
             } else {
                 setError(res.message);
@@ -89,6 +92,7 @@ export const useFundPaymentInternal = (classId: ID) => {
             const res = await fundAPI.cancelFundPayment(classId, fundId, paymentId);
             if (res.success) {
                 await fetchPayments(fundId);
+                toast.success("Hủy minh chứng thành công");
                 return true;
             } else {
                 setError(res.message);
@@ -101,6 +105,14 @@ export const useFundPaymentInternal = (classId: ID) => {
             setIsLoading(false);
         }
     };
+
+    // display error toast
+    useEffect(() => {
+        if (error) {
+            toast.error(error);
+            console.error("Error:", error);
+        }
+    }, [error]);
 
     return {
         payments,

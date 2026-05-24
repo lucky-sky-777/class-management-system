@@ -3,9 +3,10 @@
 // ============================================================
 
 // Map đúng với ResponseDTO<Data> của backend:
-// { success, message, data, time }
+// { success, code, message, data, time }
 export interface ApiResponse<T> {
     success: boolean;
+    code: number;
     message: string;
     data: T;
     time: string; // ISO string (backend format: DateTimeConstant.PATTERN)
