@@ -24,9 +24,12 @@ export const LoginPage = () => {
         }
     };
 
-    const handleGoogleLogin = () => {
-        // Chuyển hướng trình duyệt tới endpoint của Backend để bắt đầu luồng OAuth2
-        window.location.href = `${BASE_URL}/auth/google/signin`;
+    const handleOAuthLogin = (provider: 'google' | 'mezon') => {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `${BASE_URL}/auth/${provider}/signin`;
+        document.body.appendChild(form);
+        form.submit();
     };
 
     return (
@@ -48,7 +51,7 @@ export const LoginPage = () => {
                     <div className="grid grid-cols-2 gap-3">
                         <button 
                             type="button"
-                            onClick={handleGoogleLogin}
+                            onClick={() => handleOAuthLogin('google')}
                             disabled={isLoading}
                             className="btn btn-secondary flex items-center justify-center gap-2 py-2.5"
                         >
@@ -57,7 +60,12 @@ export const LoginPage = () => {
                             </span>
                             <span className="text-sm font-medium">Google</span>
                         </button>
-                        <button className="btn btn-secondary flex items-center justify-center gap-2 py-2.5">
+                        <button 
+                            type="button"
+                            onClick={() => handleOAuthLogin('mezon')}
+                            disabled={isLoading}
+                            className="btn btn-secondary flex items-center justify-center gap-2 py-2.5"
+                        >
                             <span className="text-lg leading-none mt-0.5">
                                 <MezonIcon/>
                             </span>

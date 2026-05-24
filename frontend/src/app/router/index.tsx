@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import { LoginPage } from "@features/auth/pages/LoginPage";
-import { RegisterPage } from "@features/auth/pages/RegisterPage";
+import { LoginPage, RegisterPage, OAuth2RedirectHandler } from "@features/auth";
 import { GoogleCallbackPage } from "@features/auth/pages/GoogleCallbackPage";
 import App from "@/App";
 import { HomePage } from "@features/home/pages/HomePage";
@@ -18,46 +17,50 @@ import { MemberPage } from "@features/member/pages/MemberPage";
  * Global application router configuration using React Router
  */
 export const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
-  {
-    path: "/google-callback",
-    element: <GoogleCallbackPage />,
-  },
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <App />
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        element: <HomePage />,
-      },
-      {
-        path: "class/:classId",
-        element: <ClassLayout />,
+    {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    {
+        path: "/register",
+        element: <RegisterPage />,
+    },
+    {
+        path: "/google-callback",
+        element: <GoogleCallbackPage />,
+    },
+    {
+        path: "/oauth2-signin-redirect",
+        element: <OAuth2RedirectHandler />,
+    },
+    {
+        path: "/",
+        element: (
+            <ProtectedRoute>
+                <App />
+            </ProtectedRoute>
+        ),
         children: [
-          { index: true, path: "diagram", element: <ClassDiagram /> },
-          { path: "absent", element: <LeavePage /> },
-          { path: "emulation", element: <Emulation /> },
-          { path: "fund", element: <FundPage /> },
-          { path: "activity", element: <ActivityPage /> },
-          { path: "members", element: <MemberPage /> },
+            {
+                index: true,
+                element: <HomePage />,
+            },
+            {
+                path: "class/:classId",
+                element: <ClassLayout />,
+                children: [
+                    { index: true, path: "diagram", element: <ClassDiagram /> },
+                    { path: "absent", element: <LeavePage /> },
+                    { path: "emulation", element: <Emulation /> },
+                    { path: "fund", element: <FundPage /> },
+                    { path: "activity", element: <ActivityPage /> },
+                    { path: "members", element: <MemberPage /> },
+                ],
+            },
         ],
-      },
-    ],
-  },
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
+    },
+    {
+        path: "*",
+        element: <NotFoundPage />,
+    },
 ]);
