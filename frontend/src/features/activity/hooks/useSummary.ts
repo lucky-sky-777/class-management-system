@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { activityAPI } from "@features/activity/api";
-import type { UserActivitySummary } from "@features/activity/types";
+import type { ActivitySummary } from "@features/activity/types";
 import type { ID } from "@shared/utils/common";
 
-export const useUserSummary = (classId: ID) => {
-    const [summaries, setSummaries] = useState<UserActivitySummary[]>([]);
+export const useSummary = (classId: ID) => {
+    const [summaries, setSummaries] = useState<ActivitySummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -12,7 +12,7 @@ export const useUserSummary = (classId: ID) => {
         try {
             setIsLoading(true);
             setError(null);
-            const data = await activityAPI.getUserSummaries(classId);
+            const data = await activityAPI.getSummaries(classId);
             setSummaries(data);
         } catch (err) {
             setError("Không thể tải dữ liệu thống kê.");

@@ -67,7 +67,26 @@ public class ActivityRegistrationService {
 
 	@RequireClassSecurity
 	@Transactional
-	public ActivityRegistrationResponseDto update(
+	public ActivityRegistrationResponseDto unproof(
+			Long classId,
+			Long activityId,
+			Long creatorUserId,
+			Long activityRegistrationId
+	) {
+		return proof(
+				classId,
+				activityId,
+				creatorUserId,
+				activityRegistrationId,
+				UpdateActivityRegistrationRequestDto.builder()
+						.proofUrl(null)
+						.build()
+		);
+	}
+
+	@RequireClassSecurity
+	@Transactional
+	public ActivityRegistrationResponseDto proof(
 			Long classId,
 			Long activityId,
 			Long creatorUserId,

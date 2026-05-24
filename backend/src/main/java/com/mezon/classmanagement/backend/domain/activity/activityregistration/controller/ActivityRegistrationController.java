@@ -72,11 +72,29 @@ public class ActivityRegistrationController {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		ActivityRegistrationResponseDto response = activityRegistrationService.update(classId, activityId, userId, activityRegistrationId, request);
+		ActivityRegistrationResponseDto response = activityRegistrationService.proof(classId, activityId, userId, activityRegistrationId, request);
 
 		return ResponseDTO.<ActivityRegistrationResponseDto>builder()
 				.success(true)
 				.message("Proof activity registration successful")
+				.data(response)
+				.build();
+	}
+
+	@PatchMapping("/{activityRegistrationId}/unproof")
+	public ResponseDTO<ActivityRegistrationResponseDto> unproof(
+			@PathVariable Long classId,
+			@PathVariable Long activityId,
+			@PathVariable Long activityRegistrationId
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
+
+		ActivityRegistrationResponseDto response = activityRegistrationService.unproof(classId, activityId, userId, activityRegistrationId);
+
+		return ResponseDTO.<ActivityRegistrationResponseDto>builder()
+				.success(true)
+				.message("Unproof activity registration successful")
 				.data(response)
 				.build();
 	}

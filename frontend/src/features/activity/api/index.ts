@@ -1,5 +1,5 @@
 import { apiClient } from "@services/api-client";
-import type { Activity, ActivityRegistration, UserActivitySummary } from "@features/activity/types";
+import type { Activity, ActivityRegistration, ActivitySummary } from "@features/activity/types";
 import type { CreateActivityDTO, UpdateActivityDTO } from "@features/activity/types";
 import type { ID } from "@shared/utils/common";
 import type { ResponseDTO } from "@shared/types";
@@ -130,17 +130,17 @@ export const activityAPI = {
     },
 
     /** Thống kê điểm rèn luyện tất cả members trong lớp */
-    getUserSummaries: async (classId: ID): Promise<UserActivitySummary[]> => {
+    getSummaries: async (classId: ID): Promise<ActivitySummary[]> => {
         const response = await apiClient.get<ResponseDTO<any[]>>(`/classes/${classId}/activities/summaries`);
         if (Array.isArray(response.data)) {
             return response.data.map(item => ({
+                rank: item.rank,
                 userId: item.user_id || item.userId,
-                approvedCount: item.approved_count || item.approvedCount,
-                totalPoint: item.total_point || item.totalPoint,
-                mandatoryApproved: item.mandatory_approved || item.mandatoryApproved,
-                mandatoryTotal: item.mandatory_total || item.mandatoryTotal
-            })) as UserActivitySummary[];
+                userDisplayName: item.user_display_name || item.userDisplayName,
+                userAvatarUrl: item.user_avatar_url || item.userAvatarUrl,
+                totalPoint: item.total_point ?? item.totalPoint
+            })) as ActivitySummary[];
         }
-        return response.data as UserActivitySummary[];
+        return response.data as ActivitySummary[];
     },
 };

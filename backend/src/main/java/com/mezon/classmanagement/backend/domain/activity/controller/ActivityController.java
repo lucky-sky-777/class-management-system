@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.activity.dto.request.CreateAndUpdateActivityRequestDto;
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityIdResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityResponseDto;
+import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivitySummaryResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.service.ActivityService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +85,20 @@ public class ActivityController {
 		return ResponseDTO.<List<ActivityResponseDto>>builder()
 				.success(true)
 				.message("Get activities by class successful")
+				.data(response)
+				.build();
+	}
+
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@GetMapping("/summaries")
+	public ResponseDTO<List<ActivitySummaryResponseDto>> getSummaries(
+			@PathVariable Long classId
+	) {
+		List<ActivitySummaryResponseDto> response = activityService.getSummaries(classId);
+
+		return ResponseDTO.<List<ActivitySummaryResponseDto>>builder()
+				.success(true)
+				.message("Get activity summaries successful")
 				.data(response)
 				.build();
 	}
