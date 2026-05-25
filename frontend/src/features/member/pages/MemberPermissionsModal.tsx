@@ -1,8 +1,9 @@
-// src/features/member/pages/MemberPermissionsModal.tsx
 import React, { useState, useEffect } from "react";
 import { X, Shield, Users, Check } from "lucide-react";
-import type { Member, MemberRole } from "@features/member/types";
+import { useParams } from "react-router-dom";
+import type { Member, MemberRole, ClassRoleOrPermission } from "@features/member/types";
 import { PermissionCode } from "@shared/domain/enums";
+import { memberAPI } from "@features/member/api"; 
 
 interface MemberPermissionsModalProps {
     isOpen: boolean;
@@ -12,33 +13,15 @@ interface MemberPermissionsModalProps {
     isSubmitting: boolean;
 }
 
-const ALL_PERMISSIONS = [
-    {
-        code: PermissionCode.MANAGE_ACTIVITY,
-        label: "Quản lý hoạt động",
-        description: "Tạo và phê duyệt đăng ký hoạt động, quản lý điểm rèn luyện.",
-    },
-    {
-        code: PermissionCode.MANAGE_GROUP,
-        label: "Quản lý tổ",
-        description: "Tạo, chỉnh sửa tổ và quản lý sơ đồ chỗ ngồi của lớp.",
-    },
-    {
-        code: PermissionCode.MANAGE_FUND,
-        label: "Quản lý thu chi",
-        description: "Quản lý quỹ lớp, tạo yêu cầu đóng góp và phê duyệt hóa đơn.",
-    },
-    {
-        code: PermissionCode.MANAGE_ABSENCE_REQUEST,
-        label: "Quản lý đơn xin nghỉ",
-        description: "Phê duyệt hoặc từ chối các đơn xin nghỉ học của thành viên.",
-    },
-    {
-        code: PermissionCode.MANAGE_POINT,
-        label: "Quản lý điểm thi đua",
-        description: "Ghi nhận điểm thi đua cho các cá nhân và tổ chức trong lớp.",
-    },
-];
+// 1. CHUYỂN ALL_PERMISSIONS THÀNH MỘT "TỪ ĐIỂN" (DICTIONARY)
+// Dùng để tra cứu description dựa vào PermissionCode
+const PERMISSION_DESCRIPTIONS: Record<string, string> = {
+    [PermissionCode.MANAGE_ACTIVITY]: "Tạo và phê duyệt đăng ký hoạt động, quản lý điểm rèn luyện.",
+    [PermissionCode.MANAGE_GROUP]: "Tạo, chỉnh sửa tổ và quản lý sơ đồ chỗ ngồi của lớp.",
+    [PermissionCode.MANAGE_FUND]: "Quản lý quỹ lớp, tạo yêu cầu đóng góp và phê duyệt hóa đơn.",
+    [PermissionCode.MANAGE_ABSENCE_REQUEST]: "Phê duyệt hoặc từ chối các đơn xin nghỉ học của thành viên.",
+    [PermissionCode.MANAGE_POINT]: "Ghi nhận điểm thi đua cho các cá nhân và tổ chức trong lớp.",
+};
 
 export const MemberPermissionsModal = ({
     isOpen,
@@ -47,9 +30,34 @@ export const MemberPermissionsModal = ({
     onSave,
     isSubmitting,
 }: MemberPermissionsModalProps) => {
+    const { classId } = useParams<{ classId: string }>();
+    
+    // State lưu danh sách quyền ĐỘNG TỪ BACKEND
+    const [availablePermissions, setAvailablePermissions] = useState<ClassRoleOrPermission[]>([]);
+    const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
+
     const [selectedRole, setSelectedRole] = useState<MemberRole>("CLASS_MEMBER");
     const [selectedPermissions, setSelectedPermissions] = useState<PermissionCode[]>([]);
 
+    // GỌI API LẤY DANH SÁCH QUYỀN
+    useEffect(() => {
+        const fetchPermissions = async () => {
+            if (isOpen && classId && availablePermissions.length === 0) {
+                setIsLoadingPermissions(true);
+                try {
+                    const response = await memberAPI.getClassRoleAndPermissionList(classId);
+                    setAvailablePermissions(response.permissions || []);
+                } catch (error) {
+                    console.error("Lỗi lấy danh mục quyền:", error);
+                } finally {
+                    setIsLoadingPermissions(false);
+                }
+            }
+        };
+        fetchPermissions();
+    }, [isOpen, classId, availablePermissions.length]);
+
+    // KHỞI TẠO STATE KHI CHỌN MEMBER
     useEffect(() => {
         if (member) {
             setSelectedRole(member.role === "OWNER" ? "CLASS_ADMIN" : member.role);
@@ -62,19 +70,18 @@ export const MemberPermissionsModal = ({
     const handleRoleChange = (role: MemberRole) => {
         setSelectedRole(role);
         if (role === "CLASS_ADMIN") {
-            // Admin has all permissions
-            setSelectedPermissions(ALL_PERMISSIONS.map(p => p.code));
+            // Check full quyền có sẵn từ Backend
+            setSelectedPermissions(availablePermissions.map(p => p.code as PermissionCode));
         } else {
-            // Member permissions default empty if not specified
             setSelectedPermissions([]);
         }
     };
 
-    const handlePermissionToggle = (code: PermissionCode) => {
-        if (selectedRole === "CLASS_ADMIN") return; // Admin has all, cannot modify
-
+    const handlePermissionToggle = (code: string) => {
+        if (selectedRole === "CLASS_ADMIN") return; 
+        const permCode = code as PermissionCode;
         setSelectedPermissions(prev =>
-            prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
+            prev.includes(permCode) ? prev.filter(c => c !== permCode) : [...prev, permCode]
         );
     };
 
@@ -104,7 +111,6 @@ export const MemberPermissionsModal = ({
                     </button>
                 </div>
 
-                {/* Body */}
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
                     {/* Role Selector */}
                     <div className="space-y-3">
@@ -164,44 +170,58 @@ export const MemberPermissionsModal = ({
                         </div>
 
                         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                            {ALL_PERMISSIONS.map(permission => {
-                                const isChecked = selectedPermissions.includes(permission.code);
-                                const isDisabled = selectedRole === "CLASS_ADMIN";
+                            {isLoadingPermissions ? (
+                                <div className="py-4 text-center text-sm text-[var(--ink-3)]">
+                                    Đang tải danh sách quyền...
+                                </div>
+                            ) : availablePermissions.length === 0 ? (
+                                <div className="py-4 text-center text-sm text-[var(--ink-3)]">
+                                    Không có quyền nào được định nghĩa.
+                                </div>
+                            ) : (
+                                /* MAP DỮ LIỆU TỪ BACKEND */
+                                availablePermissions.map(permission => {
+                                    const isChecked = selectedPermissions.includes(permission.code as PermissionCode);
+                                    const isDisabled = selectedRole === "CLASS_ADMIN";
+                                    
+                                    // TÌM DESCRIPTION TỪ TỪ ĐIỂN
+                                    const description = PERMISSION_DESCRIPTIONS[permission.code] || "Quyền hệ thống được cấp phát.";
 
-                                return (
-                                    <div
-                                        key={permission.code}
-                                        onClick={() => handlePermissionToggle(permission.code)}
-                                        className={`flex items-start gap-3 p-3.5 rounded-lg border transition-all cursor-pointer ${
-                                            isDisabled
-                                                ? "opacity-60 bg-stone-50 dark:bg-stone-800/40 border-[var(--rule)]"
-                                                : isChecked
-                                                ? "border-[#C2714F]/40 bg-[#FBF0EC]/30 dark:bg-[#2e1d16]/10"
-                                                : "border-[var(--rule)] hover:bg-[#FAFAF8] dark:hover:bg-stone-800/50"
-                                        }`}
-                                    >
-                                        <div className="flex items-center h-5 mt-0.5">
-                                            <div
-                                                className={`w-4.5 h-4.5 rounded flex items-center justify-center border transition-all ${
-                                                    isChecked
-                                                        ? "border-[#C2714F] bg-[#C2714F] text-white"
-                                                        : "border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800"
-                                                }`}
-                                            >
-                                                {isChecked && <Check className="w-3.5 h-3.5 stroke-[3px]" />}
+                                    return (
+                                        <div
+                                            key={permission.code}
+                                            onClick={() => handlePermissionToggle(permission.code)}
+                                            className={`flex items-start gap-3 p-3.5 rounded-lg border transition-all cursor-pointer ${
+                                                isDisabled
+                                                    ? "opacity-60 bg-stone-50 dark:bg-stone-800/40 border-[var(--rule)]"
+                                                    : isChecked
+                                                    ? "border-[#C2714F]/40 bg-[#FBF0EC]/30 dark:bg-[#2e1d16]/10"
+                                                    : "border-[var(--rule)] hover:bg-[#FAFAF8] dark:hover:bg-stone-800/50"
+                                            }`}
+                                        >
+                                            <div className="flex items-center h-5 mt-0.5">
+                                                <div
+                                                    className={`w-4.5 h-4.5 rounded flex items-center justify-center border transition-all ${
+                                                        isChecked
+                                                            ? "border-[#C2714F] bg-[#C2714F] text-white"
+                                                            : "border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800"
+                                                    }`}
+                                                >
+                                                    {isChecked && <Check className="w-3.5 h-3.5 stroke-[3px]" />}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="font-sans font-semibold text-xs text-[#1C1917] dark:text-[#FAFAF8]">
+                                                    {permission.label}
+                                                </div>
+                                                <div className="font-sans text-2xs text-[#57534E] dark:text-[#A8A29E] mt-0.5">
+                                                    {description}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div className="font-sans font-semibold text-xs text-[#1C1917] dark:text-[#FAFAF8]">
-                                                {permission.label}
-                                            </div>
-                                            <div className="font-sans text-2xs text-[#57534E] dark:text-[#A8A29E] mt-0.5">
-                                                {permission.description}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            )}
                         </div>
                     </div>
                 </form>
