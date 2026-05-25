@@ -149,7 +149,7 @@
         </div>
 
         <div class="overflow-x-auto scrollbar w-full">
-            <table class="w-max min-w-full text-sm border-collapse">
+            <table class="min-w-full text-sm table-auto border-collapse">
                 <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
                     <th data-column="method" class="text-left px-5 py-4 font-semibold text-slate-600 align-top whitespace-nowrap whitespace-nowrap">Method</th>
@@ -375,12 +375,16 @@
         document.querySelectorAll('[data-column]').forEach(el => {
             const key = el.getAttribute('data-column');
 
+            el.style.minWidth = '';
+            el.style.width = '';
+            el.style.maxWidth = '';
+
+            if (!visibleColumns.has(key)) {
+                return;
+            }
+
             if (limitedWidths[key]) {
-                el.style.width = limitedWidths[key];
-                el.style.maxWidth = limitedWidths[key];
-            } else {
-                el.style.width = 'auto';
-                el.style.maxWidth = 'none';
+                el.style.minWidth = limitedWidths[key];
             }
         });
     }
@@ -390,6 +394,8 @@
             const key = el.getAttribute('data-column');
             el.style.display = visibleColumns.has(key) ? '' : 'none';
         });
+
+        applyColumnWidths();
     }
 
     function renderContextOptions(contextNames) {
@@ -527,6 +533,8 @@
         });
 
         renderTable(filtered);
+        applyColumnWidths();
+        updateColumnVisibility();
     }
 
     function escapeHtml(value) {
