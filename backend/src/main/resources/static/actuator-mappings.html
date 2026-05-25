@@ -422,6 +422,14 @@
             grouped[controller].push(row);
         });
 
+        Object.values(grouped).forEach(controllerRows => {
+            controllerRows.sort((a, b) => {
+                const pa = (a.pattern || '').toLowerCase();
+                const pb = (b.pattern || '').toLowerCase();
+                return pa.localeCompare(pb);
+            });
+        });
+
         body.innerHTML = Object.entries(grouped).map(([controller, controllerRows]) => {
             const controllerHeader = `
           <tr class="bg-slate-900 text-white sticky top-0">
@@ -577,6 +585,8 @@
                     rows.push(...normalizeMapping(item, contextName));
                 });
             }
+
+            // sort sẽ được xử lý riêng trong từng controller group
 
             allRows = rows;
             renderContextOptions(contexts.map(([name]) => name));
