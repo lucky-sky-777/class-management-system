@@ -61,9 +61,11 @@ public class SecurityConfig {
 				)
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(HttpMethod.POST, "/api/auth/state").authenticated()
-						.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/auth/user").authenticated()
+						.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/auth/**").permitAll()
+
 						.requestMatchers(HttpMethod.GET, "/api/seats/**").permitAll()
 						.requestMatchers(HttpMethod.PATCH, "/api/seats/**").permitAll()
 						.requestMatchers("/api/public/**").permitAll()

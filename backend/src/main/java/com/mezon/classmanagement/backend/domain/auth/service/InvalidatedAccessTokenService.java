@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.auth.service;
 
-import com.mezon.classmanagement.backend.domain.auth.entity.InvalidatedToken;
-import com.mezon.classmanagement.backend.domain.auth.repository.InvalidatedTokenRepository;
+import com.mezon.classmanagement.backend.domain.auth.entity.InvalidatedAccessToken;
+import com.mezon.classmanagement.backend.domain.auth.repository.InvalidatedAccessTokenRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -11,13 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
-public class InvalidatedTokenService {
+public class InvalidatedAccessTokenService {
 
 	/**
 	 * Repository
 	 */
 
-	InvalidatedTokenRepository invalidatedTokenRepository;
+	InvalidatedAccessTokenRepository invalidatedAccessTokenRepository;
 
 	@Transactional(readOnly = true)
 	public boolean isInvalidated(String jti) {
@@ -29,8 +29,8 @@ public class InvalidatedTokenService {
 	 */
 
 	@Transactional
-	public InvalidatedToken save(InvalidatedToken invalidatedToken) {
-		return invalidatedTokenRepository.save(invalidatedToken);
+	public InvalidatedAccessToken save(InvalidatedAccessToken invalidatedAccessToken) {
+		return invalidatedAccessTokenRepository.save(invalidatedAccessToken);
 	}
 
 	/**
@@ -39,7 +39,7 @@ public class InvalidatedTokenService {
 
 	@Transactional(readOnly = true)
 	public boolean existsByJti(String jti) {
-		return invalidatedTokenRepository.existsByJti(jti);
+		return invalidatedAccessTokenRepository.existsByJti(jti);
 	}
 
 }

@@ -25,12 +25,14 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-        name = "invalidated_tokens",
+        name = "invalidated_access_tokens",
         indexes = {
-                @Index(name = "index_invalidated_tokens_expiry_date", columnList = "expiry_date")
+                @Index(name = "index_invalidated_access_tokens_jti", columnList = "jti"),
+                @Index(name = "index_invalidated_access_tokens_expiry_date", columnList = "expiry_date")
         }
 )
-public class InvalidatedToken {
+public class InvalidatedAccessToken {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -41,4 +43,5 @@ public class InvalidatedToken {
 
     @Column(name = "expiry_date", nullable = false)
     Instant expiryDate;
+
 }
