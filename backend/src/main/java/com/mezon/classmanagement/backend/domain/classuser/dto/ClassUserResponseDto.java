@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
+import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
 import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.Instant;
+import java.util.List;
 
 @JsonPropertyOrder(value = {
 		"id",
@@ -25,9 +27,9 @@ import java.time.Instant;
 		"user_display_name",
 		"user_avatar_url",
 		"role",
+		"permissions",
 		"is_owner",
 		"joined_at"
-		//"permission_codes"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -60,11 +62,11 @@ public final class ClassUserResponseDto {
 	@JsonProperty(value = "role")
 	ClassRole role;
 
+	@JsonProperty(value = "permissions")
+	List<ClassPermission> permissions;
+
 	@JsonProperty(value = "is_owner")
 	Boolean isOwner;
-
-	//@JsonProperty(value = "permission_codes")
-	//List<String> classPermissionCodes;
 
 	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "joined_at")

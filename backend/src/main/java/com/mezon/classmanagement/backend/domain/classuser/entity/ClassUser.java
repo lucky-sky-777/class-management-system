@@ -57,8 +57,8 @@ public class ClassUser {
 	ClassRole role;
 
 	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(name = "permission_codes", columnDefinition = "json", nullable = true)
-	List<ClassPermission> classPermissionCodes;
+	@Column(name = "permissions", columnDefinition = "json", nullable = true)
+	List<ClassPermission> permissions;
 
 	@Column(name = "joined_at", nullable = false, insertable = false, updatable = false)
 	Instant joinedAt;
