@@ -20,7 +20,6 @@ export const GroupSection = ({
     borderColor,
     textColor,
     myRole,
-    onUpdateRole,
     onKick,
     onManagePermissions,
     isPendingSection,
@@ -42,7 +41,6 @@ export const GroupSection = ({
                         key={m.requestId || m.userId}
                         member={m}
                         myRole={myRole}
-                        onUpdateRole={onUpdateRole}
                         onKick={onKick}
                         onManagePermissions={onManagePermissions}
                         isPending={isPendingSection}

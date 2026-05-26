@@ -9,7 +9,7 @@ import { GroupSection } from "./GroupSection";
 import type { Member, MemberRole } from "@features/member/types";
 import { useToastStore } from "@app/store";
 import { ToastType, PermissionCode } from "@shared/domain/enums";
-import { MemberPermissionsModal } from "./MemberPermissionsModal";
+import { MemberPermissionsModal } from "@features/member/pages/MemberPermissionsModal";
 
 export const MemberPage = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -19,25 +19,13 @@ export const MemberPage = () => {
     classId!,
     user?.id,
   );
+
   const showToast = useToastStore((state) => state.showToast);
 
   // State quản lý Modal phân quyền
   const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isSubmittingPermissions, setIsSubmittingPermissions] = useState(false);
-
-  // --- CÁC HÀM XỬ LÝ TƯƠNG TÁC ---
-  const handleUpdateRole = async (userId: number, currentRole: MemberRole) => {
-    try {
-      const newRole: MemberRole =
-        currentRole === "CLASS_ADMIN" ? "CLASS_MEMBER" : "CLASS_ADMIN";
-      await memberAPI.updateRole(classId!, userId, newRole);
-      showToast("Đã cập nhật quyền hạn thành viên!", ToastType.SUCCESS);
-      refresh(true);
-    } catch {
-      showToast("Lỗi khi cập nhật quyền hạn", ToastType.ERROR);
-    }
-  };
 
   const handleKick = async (userId: number) => {
     if (window.confirm("Xóa thành viên này khỏi lớp học?")) {
@@ -73,7 +61,7 @@ export const MemberPage = () => {
         permissions,
       );
       showToast(
-        `Đã phân quyền thành công cho ${selectedMember.displayName}!`,
+        `Đã phân quyền thành công cho ${selectedMember.displayName}`,
         ToastType.SUCCESS,
       );
       setIsPermissionsModalOpen(false);
@@ -85,6 +73,22 @@ export const MemberPage = () => {
       setIsSubmittingPermissions(false);
     }
   };
+
+  // 1. Định nghĩa logic xác định xem ai là "Quản trị viên"
+const isAdminOrHasPermissions = (m: Member) => {
+    // 1. Kiểm tra role cứng
+    if (m.role === "CLASS_ADMIN" || m.role === "OWNER") return true;
+    
+    // 2. Kiểm tra permissions an toàn:
+    // Dùng optional chaining (?.) để lấy length. 
+    // Nếu không có permissions thì nó trả về undefined, so sánh với > 0 sẽ là false.
+    return (m.permissions?.length ?? 0) > 0;
+};
+
+// 2. Chia lại danh sách thành viên
+const ownerMembers = members.filter((m) => m.role === "OWNER");
+const adminMembers = members.filter((m) => m.role !== "OWNER" && isAdminOrHasPermissions(m));
+const regularMembers = members.filter((m) => m.role !== "OWNER" && !isAdminOrHasPermissions(m));
 
   // --- KIỂM TRA ĐIỀU KIỆN RENDER ---
   if (!classInfo || isLoading) {
@@ -158,11 +162,10 @@ export const MemberPage = () => {
       {/* Nhóm 1: Chủ sở hữu */}
       <GroupSection
         title="Chủ sở hữu"
-        data={members.filter((m) => m.role === "OWNER")}
+        data={ownerMembers}
         borderColor="var(--red-border)"
         textColor="var(--red-text)"
         myRole={myRole}
-        onUpdateRole={handleUpdateRole}
         onKick={handleKick}
         onManagePermissions={handleManagePermissionsClick}
         onRefresh={refresh}
@@ -171,11 +174,10 @@ export const MemberPage = () => {
       {/* Nhóm 2: Quản trị viên */}
       <GroupSection
         title="Quản trị viên"
-        data={members.filter((m) => m.role === "CLASS_ADMIN")}
+        data={adminMembers}
         borderColor="var(--warm-border)"
         textColor="var(--warm-600)"
         myRole={myRole}
-        onUpdateRole={handleUpdateRole}
         onKick={handleKick}
         onManagePermissions={handleManagePermissionsClick}
         onRefresh={refresh}
@@ -184,11 +186,10 @@ export const MemberPage = () => {
       {/* Nhóm 3: Thành viên thường */}
       <GroupSection
         title="Thành viên"
-        data={members.filter((m) => m.role === "CLASS_MEMBER")}
+        data={regularMembers}
         borderColor="var(--green-border)"
         textColor="var(--green-text)"
         myRole={myRole}
-        onUpdateRole={handleUpdateRole}
         onKick={handleKick}
         onManagePermissions={handleManagePermissionsClick}
         onRefresh={refresh}
