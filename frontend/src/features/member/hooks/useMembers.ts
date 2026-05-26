@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { memberAPI } from "@features/member/api";
 import { apiClient } from "@services/api-client";
-import type { Member, ClassInfo } from "@features/member/types";
+import type { Member, ClassInfo, MemberRole } from "@features/member/types";
+import { PermissionCode } from "@shared/domain/enums";
 
 export const useMembers = (
   classId: string,
@@ -90,6 +91,22 @@ export const useMembers = (
     [fetchData],
   );
 
+    const updatePermissions = async (
+    userId: number,
+    role: MemberRole,
+    permissions: PermissionCode[]
+  ) => {
+    try {
+      await memberAPI.updateMemberAuthorities(classId, userId, role, permissions);
+      // Gọi lại danh sách một cách im lặng (không hiện loading che màn hình)
+      await handleRefresh(true); 
+      return true;
+    } catch (error) {
+      console.error("Lỗi cập nhật phân quyền chi tiết:", error);
+      throw error;
+    }
+  };
+
   const currentUser = members.find(
     (m) => String(m.userId) === String(currentUserId),
   );
@@ -100,5 +117,6 @@ export const useMembers = (
     isLoading,
     myRole: currentUser?.role || "CLASS_MEMBER",
     refresh: handleRefresh, // Trả về hàm refresh an toàn đã được bọc lại
+    updatePermissions,
   };
 };

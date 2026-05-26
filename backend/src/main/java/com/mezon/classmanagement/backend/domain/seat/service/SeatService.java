@@ -342,6 +342,7 @@ public class SeatService {
 						seatDto = DeskPositionSeatResponseDto.builder()
 								.userId(user.getUserId())
 								.userDisplayName(user.getUserDisplayName())
+								.userAvatarUrl(user.getUserAvatarUrl())
 								.attendanceStatus(user.getAttendanceStatus())
 								.build();
 					}

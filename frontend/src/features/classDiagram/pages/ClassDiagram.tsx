@@ -18,7 +18,6 @@ export const ClassDiagram = () => {
 
   const {
     data,
-    canEdit,
     unseatedMembers,
     isLoading,
     shuffle,
@@ -119,7 +118,7 @@ export const ClassDiagram = () => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
-          {canEdit && (
+          {
             <div className="flex bg-[var(--bg-surface-2)] p-1 rounded-lg w-full sm:w-auto border border-[var(--rule)]">
               {(["view", "attendance", "setup"] as const).map((m) => (
                 <button
@@ -148,7 +147,7 @@ export const ClassDiagram = () => {
                 </button>
               ))}
             </div>
-          )}
+          }
 
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 no-scrollbar justify-start sm:justify-end">
             <Badge theme="neutral" label="Sĩ số" val={data.totalStudents} />

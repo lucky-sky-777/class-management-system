@@ -1,40 +1,37 @@
 // src/features/classDiagram/hooks/useClassDiagram.ts
-import { useState, useEffect, useCallback } from 'react';
-import { classDiagramAPI } from '@features/classDiagram/api';
-import { homeAPI } from '@features/home/api';
-import { useAuth } from '@features/auth';
-import { ClassRole } from '@shared/domain/enums';
-import type { ClassDiagramData, AttendanceStatus } from '@features/classDiagram/types';
-import axios from 'axios'; // Dùng để ép kiểu bắt lỗi an toàn
+import { useState, useEffect, useCallback } from "react";
+import { classDiagramAPI } from "@features/classDiagram/api";
+import type {
+  ClassDiagramData,
+  AttendanceStatus,
+} from "@features/classDiagram/types";
 
-// Interface hỗ trợ nội bộ cho Member
-interface MemberItem {
-  user_id: string | number;
-  role: ClassRole;
-}
-
-export const useClassDiagram = (classId: string, mode: "view" | "attendance" | "setup") => {
-  const { user } = useAuth();
+export const useClassDiagram = (
+  classId: string,
+  mode: "view" | "attendance" | "setup",
+) => {
   const [data, setData] = useState<ClassDiagramData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [canEdit, setCanEdit] = useState(false);
-  const [unseatedMembers, setUnseatedMembers] = useState<{ id: string; name: string }[]>([]);
+  const [unseatedMembers, setUnseatedMembers] = useState<
+    { id: string; name: string }[]
+  >([]);
 
-  // 1. TẢI SƠ ĐỒ LỚP
-  const fetchDiagram = useCallback(async () => {
-    if (!classId) return;
-    try {
-      setIsLoading(true);
-      const result = await classDiagramAPI.getDiagram(classId);
-      setData(result);
-    } catch (error) {
-      console.error("Lỗi tải sơ đồ:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [classId]);
+  const fetchDiagram = useCallback(
+    async (showLoading = false) => {
+      if (!classId) return;
+      if (showLoading) setIsLoading(true);
+      try {
+        const result = await classDiagramAPI.getDiagram(classId);
+        setData(result);
+      } catch (error) {
+        console.error("Lỗi tải sơ đồ:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [classId],
+  );
 
-  // 2. TẢI HỌC SINH CHƯA CÓ CHỖ
   const fetchUnseatedMembers = useCallback(async () => {
     if (!classId) return;
     try {
@@ -45,110 +42,105 @@ export const useClassDiagram = (classId: string, mode: "view" | "attendance" | "
     }
   }, [classId]);
 
-  // EFFECT 1: Kiểm tra quyền Admin khi vào trang
   useEffect(() => {
-    const checkPermission = async () => {
-      if (!classId || !user?.id) return;
-      try {
-        const res = await homeAPI.getClassMembers(Number(classId));
-        if (res.success) {
-          const currentMember = res.data.find((m: MemberItem) => String(m.user_id) === String(user.id));
-          setCanEdit(currentMember?.role === ClassRole.CLASS_ADMIN);
-        }
-      } catch (error) {
-        console.error("Lỗi kiểm tra quyền:", error);
-      }
-    };
-    checkPermission();
-  }, [classId, user?.id]);
-
-  // EFFECT 2: Tải danh sách chưa có chỗ NẾU đang ở chế độ "Xếp chỗ"
-  useEffect(() => {
-    if (mode === "setup" && classId) {
-      fetchUnseatedMembers();
-    } else {
-      setUnseatedMembers([]); // Xóa list nếu thoát chế độ xếp chỗ
-    }
+    if (mode === "setup" && classId) fetchUnseatedMembers();
+    else setUnseatedMembers([]);
   }, [mode, classId, fetchUnseatedMembers]);
 
-  // EFFECT 3: Tải sơ đồ lần đầu
   useEffect(() => {
-    fetchDiagram();
+    fetchDiagram(true); // Chỉ hiện loading ở lần load đầu tiên
   }, [fetchDiagram]);
 
-  // HÀM XẾP CHỖ / ĐỔI CHỖ
   const assignOrUpdateSeat = async (
-    studentId: string, targetGroupId: number, targetDeskId: number, targetPositionId: number,
-    sourceGroupId: number | null, sourceDeskId: number | null, sourcePositionId: number | null
+    studentId: string,
+    targetGroupId: number,
+    targetDeskId: number,
+    targetPositionId: number,
+    sourceGroupId: number | null,
+    sourceDeskId: number | null,
+    sourcePositionId: number | null,
   ) => {
     try {
-      if (sourceGroupId !== null && sourceDeskId !== null && sourcePositionId !== null) {
+      if (
+        sourceGroupId !== null &&
+        sourceDeskId !== null &&
+        sourcePositionId !== null
+      ) {
         await classDiagramAPI.updateSeat(
-          studentId, targetGroupId, targetDeskId, targetPositionId,
-          classId, sourceGroupId, sourceDeskId, sourcePositionId
+          studentId,
+          targetGroupId,
+          targetDeskId,
+          targetPositionId,
+          classId,
+          sourceGroupId,
+          sourceDeskId,
+          sourcePositionId,
         );
       } else {
         await classDiagramAPI.assignSeat(
-          studentId, targetGroupId, targetDeskId, targetPositionId,
-          classId, null, null, null
+          studentId,
+          targetGroupId,
+          targetDeskId,
+          targetPositionId,
+          classId,
+          null,
+          null,
+          null,
         );
       }
-      
-      await fetchDiagram();
-      if (mode === "setup") await fetchUnseatedMembers(); 
-      return true; 
-    } catch (error: unknown) { // Đã thay any bằng unknown
+      // Không hiện loading, chỉ cập nhật data
+      await fetchDiagram(false);
+      if (mode === "setup") await fetchUnseatedMembers();
+      return true;
+    } catch (error) {
       console.error("Lỗi xếp/đổi chỗ:", error);
-      
-      let backendMessage = "Xếp chỗ thất bại do lỗi không xác định!";
-      if (axios.isAxiosError(error) && error.response?.data?.message) {
-        backendMessage = error.response.data.message;
-      } else if (error instanceof Error) {
-        backendMessage = error.message;
-      }
-
-      alert(`❌ Lỗi Xếp Chỗ:\n${backendMessage}`);
-      return false; 
+      return false;
     }
   };
 
-  // HÀM ĐIỂM DANH
-  const markAttendance = async (groupId: number, studentId: string, currentStatus: string) => {
+  // Tương tự, hàm markAttendance và shuffleDiagram cũng nên dùng fetchDiagram(false)
+  const markAttendance = async (
+    groupId: number,
+    studentId: string,
+    currentStatus: string,
+  ) => {
     const nextStatus: Record<string, AttendanceStatus> = {
       present: "absent_excused",
       absent_excused: "absent_unexcused",
       absent_unexcused: "present",
     };
     try {
-      await classDiagramAPI.updateAttendance(classId, groupId, studentId, nextStatus[currentStatus] || "present");
-      await fetchDiagram();
-    } catch (error: unknown) { // Đã thay any bằng unknown
+      await classDiagramAPI.updateAttendance(
+        classId,
+        groupId,
+        studentId,
+        nextStatus[currentStatus] || "present",
+      );
+      await fetchDiagram(false);
+    } catch (error) {
       console.error("Lỗi điểm danh:", error);
-      
-      let backendMessage = "Lỗi máy chủ!";
-      if (axios.isAxiosError(error) && error.response?.data?.message) {
-        backendMessage = error.response.data.message;
-      }
-
-      alert(`❌ Điểm danh thất bại: ${backendMessage}`);
     }
   };
 
-  // HÀM XẾP TỰ ĐỘNG
   const shuffleDiagram = async () => {
     try {
-      setIsLoading(true);
       await classDiagramAPI.shuffleSeats(classId);
-      await fetchDiagram(); 
-      await fetchUnseatedMembers(); // Cập nhật lại khay chờ
-    } catch {
-      alert("Xếp tự động thất bại!");
-      setIsLoading(false);
+
+      // Load lại dữ liệu ngầm mà không làm UI bị giật
+      await fetchDiagram(false);
+      await fetchUnseatedMembers();
+    } catch (error) {
+      console.error("Xếp tự động thất bại:", error);
     }
   };
 
-  return { 
-    data, isLoading, canEdit, unseatedMembers, 
-    refresh: fetchDiagram, shuffle: shuffleDiagram, assignSeat: assignOrUpdateSeat, markAttendance 
+  return {
+    data,
+    isLoading,
+    unseatedMembers,
+    refresh: fetchDiagram,
+    shuffle: shuffleDiagram,
+    assignSeat: assignOrUpdateSeat,
+    markAttendance,
   };
 };

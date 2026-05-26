@@ -1,8 +1,9 @@
 package com.mezon.classmanagement.backend.domain_public.week.controller;
 
+import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
+import com.mezon.classmanagement.backend.common.security.annotation.Public;
 import com.mezon.classmanagement.backend.domain_public.week.dto.WeekResponseDto;
 import com.mezon.classmanagement.backend.domain_public.week.service.WeekService;
-import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
+@Public
 @RequestMapping("/api/public/weeks")
 @RestController
 public class WeekController {

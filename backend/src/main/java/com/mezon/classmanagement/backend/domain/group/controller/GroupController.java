@@ -59,7 +59,7 @@ public class GroupController {
                 .build();
     }
 
-    @PreAuthorize("@ClassSecurity.manageGroupData(#classId, #groupId)")
+    @PreAuthorize("@ClassSecurity.manageGroup(#classId)")
     @DeleteMapping("/{groupId}")
     public ResponseDTO<GroupIdResponseDto> deleteGroup(
             @PathVariable Long classId,

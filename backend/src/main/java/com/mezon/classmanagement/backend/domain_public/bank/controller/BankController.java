@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain_public.bank.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
+import com.mezon.classmanagement.backend.common.security.annotation.Public;
 import com.mezon.classmanagement.backend.domain_public.bank.dto.request.GetBankQrCodeRequestDto;
 import com.mezon.classmanagement.backend.domain_public.bank.dto.response.BankQrCodeUrlResponseDto;
 import com.mezon.classmanagement.backend.domain_public.bank.dto.response.vietqr.VietQrBankResponseDto;
@@ -23,6 +24,7 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
+@Public
 @RequestMapping("/api/public/banks")
 @RestController
 public class BankController {

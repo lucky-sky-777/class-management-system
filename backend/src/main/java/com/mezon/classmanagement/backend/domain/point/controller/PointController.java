@@ -37,7 +37,7 @@ public class PointController {
 
 	PointService pointService;
 
-	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.managePoint(#classId)")
 	@PostMapping("/groups/{groupId}")
 	public ResponseDTO<PointResponseDto> create(
 			@PathVariable Long classId,
@@ -56,7 +56,7 @@ public class PointController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.managePoint(#classId)")
 	@DeleteMapping("/{pointId}")
 	public ResponseDTO<PointIdResponseDto> delete(
 			@PathVariable Long classId,

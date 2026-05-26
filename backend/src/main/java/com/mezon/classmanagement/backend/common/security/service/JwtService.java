@@ -79,6 +79,10 @@ public class JwtService {
 		return ((JwtAuthenticationToken) authentication).getToken();
 	}
 
+	public String extractToken(Jwt jwt) {
+		return jwt == null ? null : jwt.getTokenValue();
+	}
+
 //	public Long extractUserId(Authentication authentication) {
 //		Jwt jwt = getJwt(authentication);
 //		return Long.valueOf(jwt.getClaim("user_id").toString());
@@ -106,7 +110,17 @@ public class JwtService {
 
 	public String extractJti(String rawToken) {
 		Jwt jwt = jwtDecoder.decode(rawToken);
-		return jwt.getId();
+		return extractJti(jwt);
+	}
+
+	public Long extractUserId(String rawToken) {
+		Jwt jwt = jwtDecoder.decode(rawToken);
+		return extractUserId(jwt);
+	}
+
+	public String extractUsername(String rawToken) {
+		Jwt jwt = jwtDecoder.decode(rawToken);
+		return extractUsername(jwt);
 	}
 
 	public Instant extractExpiry(String rawToken) {
@@ -114,17 +128,26 @@ public class JwtService {
 		return jwt.getExpiresAt();
 	}
 
-	public Jwt parseAndValidate(String rawToken) {
-		return jwtDecoder.decode(rawToken);  // Spring tự validate signature + expiry
+	public Jwt parse(String rawToken) {
+		return jwtDecoder.decode(rawToken);
 	}
 
-	// Overload: nhận Jwt, trả về userId
+	// From JWT
+
+	public String extractJti(Jwt jwt) {
+		return jwt.getId();
+	}
+
+	public Instant extractExpiry(Jwt jwt) {
+		return jwt.getExpiresAt();
+	}
+
 	public Long extractUserId(Jwt jwt) {
 		return Long.valueOf(jwt.getSubject());
 	}
 
-	// Overload: nhận Jwt, trả về username
 	public String extractUsername(Jwt jwt) {
 		return jwt.getClaim("username").toString();
 	}
+
 }

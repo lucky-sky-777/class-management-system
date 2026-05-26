@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.clazz.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
+import com.mezon.classmanagement.backend.common.security.annotation.Public;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
@@ -39,6 +40,7 @@ public class ClassController {
 	AuthService authService;
 	JwtService jwtService;
 
+	@Public
 	@PostMapping
 	public ResponseDTO<ClassResponseDto> createClass(
 			@RequestBody CreateAndUpdateClassRequestDto request
@@ -99,6 +101,7 @@ public class ClassController {
 //				.build();
 //	}
 
+	@Public
 	@PostMapping("/join")
 	public ResponseDTO<CreateClassUserResponseDto> joinClass(
 			@RequestBody JoinClassRequestDto request
@@ -132,6 +135,7 @@ public class ClassController {
 				.build();
 	}
 
+	@Public
 	@GetMapping
 	public ResponseDTO<List<ClassResponseDto>> getJoinedClasses() {
 		Authentication authentication = authService.getAuthentication();
@@ -161,17 +165,17 @@ public class ClassController {
 				.build();
 	}
 
-	@GetMapping("/{classId}/privacy")
-	public ResponseDTO<ClassPrivacyResponseDto> getClassPrivacy(
-			@PathVariable Long classId
-	) {
-		ClassPrivacyResponseDto response = classService.getPrivacy(classId);
-
-		return ResponseDTO.<ClassPrivacyResponseDto>builder()
-				.success(true)
-				.message("Get class privacy successful")
-				.data(response)
-				.build();
-	}
+//	@GetMapping("/{classId}/privacy")
+//	public ResponseDTO<ClassPrivacyResponseDto> getClassPrivacy(
+//			@PathVariable Long classId
+//	) {
+//		ClassPrivacyResponseDto response = classService.getPrivacy(classId);
+//
+//		return ResponseDTO.<ClassPrivacyResponseDto>builder()
+//				.success(true)
+//				.message("Get class privacy successful")
+//				.data(response)
+//				.build();
+//	}
 
 }

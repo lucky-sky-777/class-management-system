@@ -28,4 +28,7 @@ public final class SignOutResponseDto {
     @JsonProperty(value = "signed_out_access_token")
     String signedOutAccessToken;
 
+    @JsonProperty(value = "signed_out_refresh_token")
+    String signedOutRefreshToken;
+
 }

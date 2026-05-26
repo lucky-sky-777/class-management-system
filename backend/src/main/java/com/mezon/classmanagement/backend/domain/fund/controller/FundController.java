@@ -34,12 +34,12 @@ public class FundController {
 
 	FundService fundService;
 
-	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.manageFund(#classId)")
 	@PostMapping
 	public ResponseDTO<FundResponseDto> create(
 			@PathVariable Long classId,
 			@RequestBody CreateFundRequestDto request
-			) {
+	) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
@@ -52,7 +52,7 @@ public class FundController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.manageFund(#classId)")
 	@DeleteMapping("/{fundId}")
 	public ResponseDTO<FundIdResponseDto> delete(
 			@PathVariable Long classId,
@@ -67,7 +67,7 @@ public class FundController {
 				.build();
 	}
 
-	//@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<List<FundResponseDto>> getByClass(
 			@PathVariable Long classId

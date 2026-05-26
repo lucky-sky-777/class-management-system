@@ -20,6 +20,7 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 			user.displayName,
 			user.avatarUrl,
 			classUser.role,
+			classUser.permissions,
 			(class.owner.id = user.id),
 			classUser.joinedAt
 		)
@@ -38,6 +39,7 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 		user.displayName,
 		user.avatarUrl,
 		classUser.role,
+		classUser.permissions,
 		(class.owner.id = user.id),
 		classUser.joinedAt
 	)
@@ -60,6 +62,7 @@ public interface ClassUserRepository extends JpaRepository<ClassUser, Long> {
 		user.displayName,
 		user.avatarUrl,
 		classUser.role,
+		classUser.permissions,
 		(class.owner.id = user.id),
 		classUser.joinedAt
 	)

@@ -10,7 +10,7 @@ import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponse
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
-import com.mezon.classmanagement.backend.domain.auth.entity.InvalidatedToken;
+import com.mezon.classmanagement.backend.domain.auth.entity.InvalidatedAccessToken;
 import com.mezon.classmanagement.backend.domain.auth.entity.RefreshToken;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
@@ -38,7 +38,7 @@ public class AuthService {
 	UserService userService;
 	UserMapper userMapper;
 	JwtService jwtService;
-	InvalidatedTokenService invalidatedTokenService;
+	InvalidatedAccessTokenService invalidatedAccessTokenService;
 	RefreshTokenService refreshTokenService;
 
 	public SignInResponseDto signInInternal(SignInRequestDto request) {
@@ -54,7 +54,6 @@ public class AuthService {
 		refreshTokenService.save(RefreshToken.builder()
 				.jti(jwtService.extractJti(refreshToken))
 				.expiryDate(jwtService.extractExpiry(refreshToken))
-				.revoked(false)
 				.build());
 
 		return SignInResponseDto.builder()
@@ -82,7 +81,6 @@ public class AuthService {
 		refreshTokenService.save(RefreshToken.builder()
 				.jti(jwtService.extractJti(refreshToken))
 				.expiryDate(jwtService.extractExpiry(refreshToken))
-				.revoked(false)
 				.build());
 
 		return SignInResponseDto.builder()
@@ -110,7 +108,6 @@ public class AuthService {
 		refreshTokenService.save(RefreshToken.builder()
 				.jti(jwtService.extractJti(refreshToken))
 				.expiryDate(jwtService.extractExpiry(refreshToken))
-				.revoked(false)
 				.build());
 
 		return SignInResponseDto.builder()
@@ -148,21 +145,23 @@ public class AuthService {
 
 	public SignOutResponseDto signOut(Authentication authentication, String rawRefreshToken) {
 		try {
-			Jwt jwt = jwtService.getJwt(authentication);
-
-			InvalidatedToken newInvalidatedToken = InvalidatedToken.builder()
-					.jti(jwt.getId())
-					.expiryDate(jwt.getExpiresAt())
-					.build();
-			invalidatedTokenService.save(newInvalidatedToken);
-
+			Jwt refreshTokenJwt = null;
 			if (rawRefreshToken != null && !rawRefreshToken.isEmpty()) {
-				Jwt refreshJwt = jwtService.parseAndValidate(rawRefreshToken);
-				refreshTokenService.revokeByJti(refreshJwt.getId());
+				refreshTokenJwt = jwtService.parse(rawRefreshToken);
+				refreshTokenService.revokeByJti(jwtService.extractJti(refreshTokenJwt));
 			}
 
+			Jwt accessTokenJwt = jwtService.getJwt(authentication);
+
+			InvalidatedAccessToken newInvalidatedAccessToken = InvalidatedAccessToken.builder()
+					.jti(jwtService.extractJti(accessTokenJwt))
+					.expiryDate(jwtService.extractExpiry(accessTokenJwt))
+					.build();
+			invalidatedAccessTokenService.save(newInvalidatedAccessToken);
+
 			return SignOutResponseDto.builder()
-					.signedOutAccessToken(jwt.getTokenValue())
+					.signedOutAccessToken(jwtService.extractToken(accessTokenJwt))
+					.signedOutRefreshToken(jwtService.extractToken(refreshTokenJwt))
 					.build();
 		} catch (Exception e) {
 			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error");
@@ -188,9 +187,9 @@ public class AuthService {
 
 
 	@Transactional
-	public SignInResponseDto refresh(String rawRefreshToken) {
+	public SignInResponseDto refresh2(String rawRefreshToken) {
 		// Parse và validate refresh token
-		Jwt jwt = jwtService.parseAndValidate(rawRefreshToken);
+		Jwt jwt = jwtService.parse(rawRefreshToken);
 		String jti = jwt.getId();
 
 		// Kiểm tra token đã bị revoke chưa
@@ -221,6 +220,33 @@ public class AuthService {
 				.refreshToken(newRefreshToken)
 				.build();
 	}
+
+	@Transactional
+	public SignInResponseDto refresh(String rawRefreshToken) {
+		String jti = jwtService.extractJti(rawRefreshToken);
+
+		refreshTokenService.throwIfIsRevoked(jti);
+
+		refreshTokenService.revokeByJti(jti);
+
+		Long userId = jwtService.extractUserId(rawRefreshToken);
+		String username = jwtService.extractUsername(rawRefreshToken);
+
+		String newAccessToken = jwtService.generateAccessToken(userId, username);
+		String newRefreshToken = jwtService.generateRefreshToken(userId, username);
+
+		RefreshToken refreshToken = RefreshToken.builder()
+				.jti(jwtService.extractJti(newRefreshToken))
+				.expiryDate(jwtService.extractExpiry(newRefreshToken))
+				.build();
+
+		refreshTokenService.save(refreshToken);
+
+		return SignInResponseDto.builder()
+				.accessToken(newAccessToken)
+				.refreshToken(newRefreshToken)
+				.build();
+	}
 	/*
 	no
 	@Deprecated
@@ -231,11 +257,11 @@ public class AuthService {
 			String jti = signedJWT.getJWTClaimsSet().getJWTID();
 			Date expiryDate = signedJWT.getJWTClaimsSet().getExpirationTime();
 
-			InvalidatedToken newInvalidatedToken = InvalidatedToken.builder()
+			InvalidatedAccessToken newInvalidatedToken = InvalidatedAccessToken.builder()
 					.jti(jti)
 					.expiryDate(expiryDate.toInstant())
 					.build();
-			InvalidatedToken responseInvalidatedToken = invalidatedTokenService.save(newInvalidatedToken);
+			InvalidatedAccessToken responseInvalidatedToken = invalidatedTokenService.save(newInvalidatedToken);
 
 			return SignOutResponseDto.builder()
 					.invalidatedToken(request.getAccessToken())
