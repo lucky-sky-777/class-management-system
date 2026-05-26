@@ -125,10 +125,11 @@ export const emulationAPI = {
       query.append("end_at", endDate);
     }
     const queryString = query.toString() ? `?${query.toString()}` : "";
-    
+
     const response = await apiClient.get(
       `/classes/${classId}/points/groups/${groupId}${queryString}`,
     );
+
     return extractList<CompetitionHistory>(response);
   },
 
@@ -140,10 +141,9 @@ export const emulationAPI = {
 
   // 8. TẠO TỔ MỚI
   createGroup: async (classId: string, name: string): Promise<GroupItem> => {
-    const response = await apiClient.post(
-      `/classes/${classId}/groups`,
-      { name }, 
-    );
+    const response = await apiClient.post(`/classes/${classId}/groups`, {
+      name,
+    });
     return extractData<GroupItem>(response);
   },
 
@@ -224,7 +224,7 @@ export const emulationAPI = {
       return extractList<GroupMember>(response);
     } catch (error) {
       console.error("Lỗi lấy danh sách chưa có tổ:", error);
-      return []; 
+      return [];
     }
   },
 };
