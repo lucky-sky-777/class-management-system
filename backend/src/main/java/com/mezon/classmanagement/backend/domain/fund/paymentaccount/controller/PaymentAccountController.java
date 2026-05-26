@@ -10,6 +10,7 @@ import com.mezon.classmanagement.backend.domain.fund.paymentaccount.service.Paym
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +30,7 @@ public class PaymentAccountController {
 
 	PaymentAccountService paymentAccountService;
 
+	@PreAuthorize("@ClassSecurity.manageFund(#classId)")
 	@PutMapping
 	public ResponseDTO<PaymentAccountResponseDto> createOrUpdate(
 			@PathVariable Long classId,
@@ -50,8 +52,9 @@ public class PaymentAccountController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
-	public ResponseDTO<PaymentAccountResponseDto> createOrUpdate(
+	public ResponseDTO<PaymentAccountResponseDto> get(
 			@PathVariable Long classId
 	) {
 		PaymentAccountResponseDto response = paymentAccountService.getByClass(

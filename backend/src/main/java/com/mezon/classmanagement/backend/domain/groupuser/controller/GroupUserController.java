@@ -45,7 +45,7 @@ public class GroupUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassSecurity.manageGroup(#classId)")
+	@PreAuthorize("@ClassSecurity.manageGroupData(#classId, #groupId)")
 	@PatchMapping("/{userId}/role")
 	public ResponseDTO<GroupUserResponseDto> updateGroupUser(
 			@PathVariable Long classId,

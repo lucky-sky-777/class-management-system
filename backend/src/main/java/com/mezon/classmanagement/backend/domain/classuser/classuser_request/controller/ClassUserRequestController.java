@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.domain.classuser.classuser_request.con
 
 import java.util.List;
 
+import com.mezon.classmanagement.backend.common.security.annotation.Public;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,7 +66,7 @@ public class ClassUserRequestController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassSecurity.exceptAdmin(#classId)")
+	@Public
 	@PatchMapping("/classes/{classId}/requests/{requestId}/cancel")
 	public ResponseDTO<ClassUserRequestIdResponseDto> cancel(
 			@PathVariable Long classId,
@@ -97,6 +98,7 @@ public class ClassUserRequestController {
 				.build();
 	}
 
+	@Public
 	@GetMapping
 	public ResponseDTO<List<ClassUserRequestResponseDto>> getByUser() {
 		Authentication authentication = authService.getAuthentication();
