@@ -33,6 +33,7 @@ public class FundPaymentController {
 
 	FundPaymentService fundPaymentService;
 
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@PostMapping
 	public ResponseDTO<FundPaymentResponseDto> create(
 			@PathVariable Long classId,
@@ -56,6 +57,7 @@ public class FundPaymentController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassSecurity.manageFund(#classId)")
 	@PatchMapping("/{fundPaymentId}/approve")
 	public ResponseDTO<FundPaymentIdResponseDto> approve(
 			@PathVariable Long classId,
@@ -74,6 +76,7 @@ public class FundPaymentController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassSecurity.manageFund(#classId)")
 	@PatchMapping("/{fundPaymentId}/reject")
 	public ResponseDTO<FundPaymentIdResponseDto> reject(
 			@PathVariable Long classId,
@@ -92,6 +95,7 @@ public class FundPaymentController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@PatchMapping("/{fundPaymentId}/cancel")
 	public ResponseDTO<FundPaymentIdResponseDto> cancel(
 			@PathVariable Long classId,

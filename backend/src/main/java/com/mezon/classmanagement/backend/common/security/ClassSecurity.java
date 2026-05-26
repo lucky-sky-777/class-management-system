@@ -14,10 +14,15 @@ import com.mezon.classmanagement.backend.domain.groupuser.service.GroupUserServi
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-@SuppressWarnings({WarningConstant.UNUSED})
+@SuppressWarnings({
+		WarningConstant.UNUSED,
+		WarningConstant.SPELL_CHECKING_INSPECTION,
+		WarningConstant.BOOLEAN_METHOD_IS_ALWAYS_INVERTED
+})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Component("ClassSecurity")
@@ -37,51 +42,97 @@ public class ClassSecurity {
 
 		ClassUser classUser = classUserService.findByClassIdAndUserIdOrThrow(classId, userId);
 
-		return classUserService.isAdmin(classUser);
+		if (!classUserService.isAdmin(classUser)) {
+			throw new AccessDeniedException("Chỉ Admin được phép làm việc này");
+		}
+
+		return true;
 	}
 
 	public boolean exceptAdmin(Long classId) {
-		return !adminOnly(classId);
+		try {
+			if (adminOnly(classId)) {
+				throw new AccessDeniedException("Admin không được phép làm việc này");
+			}
+		} catch (AccessDeniedException ignored) {}
+
+		return true;
 	}
 
 	public boolean manageActivity(Long classId) {
-		return hasClassAccess(classId, ClassPermission.MANAGE_ACTIVITY);
+		if (!hasClassAccess(classId, ClassPermission.MANAGE_ACTIVITY)) {
+			throw new AccessDeniedException("Yêu cầu quyền: " + ClassPermission.MANAGE_ACTIVITY.getLabel());
+		}
+
+		return true;
 	}
 
 	public boolean manageGroupData(Long classId, Long groupId) {
-		return manageGroup(classId) || hasGroupAccess(classId, groupId);
+		if (!(manageGroup(classId) || hasGroupAccess(classId, groupId))) {
+			throw new AccessDeniedException("Yêu cầu quyền: "
+					+ ClassPermission.MANAGE_ACTIVITY.getLabel()
+					+ " hoặc "
+					+ GroupUser.Role.GROUP_LEADER.name()
+			);
+		}
+
+		return true;
 	}
 
 	public boolean manageGroup(Long classId) {
-		return hasClassAccess(classId, ClassPermission.MANAGE_GROUP);
+		if (!hasClassAccess(classId, ClassPermission.MANAGE_GROUP)) {
+			throw new AccessDeniedException("Yêu cầu quyền: " + ClassPermission.MANAGE_GROUP.getLabel());
+		}
+
+		return true;
 	}
 
 	public boolean manageFund(Long classId) {
-		return hasClassAccess(classId, ClassPermission.MANAGE_FUND);
+		if (!hasClassAccess(classId, ClassPermission.MANAGE_FUND)) {
+			throw new AccessDeniedException("Yêu cầu quyền: " + ClassPermission.MANAGE_FUND.getLabel());
+		}
+
+		return true;
 	}
 
 	public boolean manageAbsenceRequest(Long classId) {
-		return hasClassAccess(classId, ClassPermission.MANAGE_ABSENCE_REQUEST);
+		if (!hasClassAccess(classId, ClassPermission.MANAGE_ABSENCE_REQUEST)) {
+			throw new AccessDeniedException("Yêu cầu quyền: " + ClassPermission.MANAGE_ABSENCE_REQUEST.getLabel());
+		}
+
+		return true;
 	}
 
 	public boolean managePoint(Long classId) {
-		return hasClassAccess(classId, ClassPermission.MANAGE_POINT);
-	}
+		if (!hasClassAccess(classId, ClassPermission.MANAGE_POINT)) {
+			throw new AccessDeniedException("Yêu cầu quyền: " + ClassPermission.MANAGE_POINT.getLabel());
+		}
 
-	public boolean hasGroupAccess(Long classId, Long groupId) {
-		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
-
-		GroupUser groupUser = groupUserService.findByClassIdAndGroupIdAndUserIdOrThrow(classId, groupId, userId);
-
-		return groupUserService.isLeader(groupUser);
+		return true;
 	}
 
 	public boolean everyoneInClass(Long classId) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		return classUserService.existsByClassIdAndUserId(classId, userId);
+		if (!classUserService.existsByClassIdAndUserId(classId, userId)) {
+			throw new AccessDeniedException("Chỉ thành viên lớp được phép làm việc này");
+		}
+
+		return true;
+	}
+
+	/**
+	 * Private
+	 */
+
+	private boolean hasGroupAccess(Long classId, Long groupId) {
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
+
+		GroupUser groupUser = groupUserService.findByClassIdAndGroupIdAndUserIdOrThrow(classId, groupId, userId);
+
+		return groupUserService.isLeader(groupUser);
 	}
 
 	private boolean hasClassAccess(Long classId, ClassPermission classPermission) {

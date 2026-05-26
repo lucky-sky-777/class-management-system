@@ -27,12 +27,13 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 				.build();
 
 		httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
-		httpServletResponse.setContentType("application/json");
+		httpServletResponse.setContentType("application/json;charset=UTF-8");
+		httpServletResponse.setCharacterEncoding("UTF-8");
 
 		ResponseDTO<?> responseDTO = ResponseDTO.builder()
 				.success(false)
 				.code(httpServletResponse.getStatus())
-				.message("Forbidden")
+				.message(accessDeniedException.getMessage())
 				.build();
 
 		httpServletResponse.getWriter().write(objectMapper.writeValueAsString(responseDTO));

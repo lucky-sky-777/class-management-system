@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.domain.seat.controller;
 
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.CreateGroupUserSeatRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserSeatRequestDto;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +27,7 @@ public class SeatController {
 
 	SeatService seatService;
 
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping
 	public ResponseDTO<ClassSeatResponseDto> get(
 			@PathVariable Long classId
@@ -39,6 +41,7 @@ public class SeatController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassSecurity.manageGroup(#classId)")
 	@PatchMapping("/seating")
 	public ResponseDTO<ClassSeatResponseDto> create(
 			@PathVariable Long classId,
@@ -53,7 +56,7 @@ public class SeatController {
 				.build();
 	}
 
-	//@PreAuthorize("@ClassSecurity.manageGroup(#classId)")
+	@PreAuthorize("@ClassSecurity.manageGroup(#classId)")
 	@PatchMapping
 	public ResponseDTO<ClassSeatResponseDto> update(
 			@PathVariable Long classId,
@@ -68,6 +71,7 @@ public class SeatController {
 				.build();
 	}
 
+	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@GetMapping("/shuffle")
 	public ResponseDTO<ClassSeatResponseDto> shuffle(
 			@PathVariable Long classId

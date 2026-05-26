@@ -46,37 +46,37 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
-	@PatchMapping("/{userId}/role")
-	public ResponseDTO<ClassUserResponseDto> updateClassUserRole(
-			@PathVariable Long classId,
-			@PathVariable Long userId,
-			@RequestBody UpdateClassUserRoleRequestDto request
-	) {
-		ClassUserResponseDto response = classUserService.updateClassUserRole(classId, userId, request);
-
-		return ResponseDTO.<ClassUserResponseDto>builder()
-				.success(true)
-				.message("Update class user role successful")
-				.data(response)
-				.build();
-	}
-
-	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
-	@PatchMapping("/{userId}/permissions")
-	public ResponseDTO<ClassUserResponseDto> updateClassUserPermissions(
-			@PathVariable Long classId,
-			@PathVariable Long userId,
-			@RequestBody UpdateClassUserPermissionsRequestDto request
-	) {
-		ClassUserResponseDto response = classUserService.updateClassUserPermissions(classId, userId, request);
-
-		return ResponseDTO.<ClassUserResponseDto>builder()
-				.success(true)
-				.message("Update class user permissions successful")
-				.data(response)
-				.build();
-	}
+//	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
+//	@PatchMapping("/{userId}/role")
+//	public ResponseDTO<ClassUserResponseDto> updateClassUserRole(
+//			@PathVariable Long classId,
+//			@PathVariable Long userId,
+//			@RequestBody UpdateClassUserRoleRequestDto request
+//	) {
+//		ClassUserResponseDto response = classUserService.updateClassUserRole(classId, userId, request);
+//
+//		return ResponseDTO.<ClassUserResponseDto>builder()
+//				.success(true)
+//				.message("Update class user role successful")
+//				.data(response)
+//				.build();
+//	}
+//
+//	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
+//	@PatchMapping("/{userId}/permissions")
+//	public ResponseDTO<ClassUserResponseDto> updateClassUserPermissions(
+//			@PathVariable Long classId,
+//			@PathVariable Long userId,
+//			@RequestBody UpdateClassUserPermissionsRequestDto request
+//	) {
+//		ClassUserResponseDto response = classUserService.updateClassUserPermissions(classId, userId, request);
+//
+//		return ResponseDTO.<ClassUserResponseDto>builder()
+//				.success(true)
+//				.message("Update class user permissions successful")
+//				.data(response)
+//				.build();
+//	}
 
 	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
 	@DeleteMapping("/{userId}")
@@ -107,19 +107,19 @@ public class ClassUserController {
 				.build();
 	}
 
-	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
-	@GetMapping("/ungrouped")
-	public ResponseDTO<List<ClassUserResponseDto>> getUngroupedClassUsers(
-			@PathVariable Long classId
-	) {
-		List<ClassUserResponseDto> response = classUserService.getUngroupedClassUsers(classId);
-
-		return ResponseDTO.<List<ClassUserResponseDto>>builder()
-				.success(true)
-				.message("Get ungrouped class users successful")
-				.data(response)
-				.build();
-	}
+//	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+//	@GetMapping("/ungrouped")
+//	public ResponseDTO<List<ClassUserResponseDto>> getUngroupedClassUsers(
+//			@PathVariable Long classId
+//	) {
+//		List<ClassUserResponseDto> response = classUserService.getUngroupedClassUsers(classId);
+//
+//		return ResponseDTO.<List<ClassUserResponseDto>>builder()
+//				.success(true)
+//				.message("Get ungrouped class users successful")
+//				.data(response)
+//				.build();
+//	}
 
 	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
 	@GetMapping("/unseated")

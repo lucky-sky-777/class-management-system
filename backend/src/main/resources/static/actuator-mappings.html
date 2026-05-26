@@ -138,8 +138,13 @@
                             Focus Mode
                         </button>
 
+                        <button id="refactorModeBtn"
+                                class="px-3 py-2 rounded-xl border border-amber-400 bg-amber-50 text-amber-800 text-sm hover:bg-amber-100 transition">
+                            Refactor Mode
+                        </button>
+
                         <span class="text-xs text-slate-500 self-center">
-                Focus Mode = Method + Pattern + Method Name
+                Focus Mode = Method + Pattern + Method Name &nbsp;|&nbsp; Refactor Mode = chỉ hiện controller <code class="font-mono bg-slate-100 px-1 rounded">_Refactor</code> và controller gốc
               </span>
                     </div>
 
@@ -292,6 +297,7 @@
 
     let rawData = null;
     let allRows = [];
+    let refactorMode = false;
 
     const columns = [
         { key: 'method', label: 'Method' },
@@ -535,11 +541,15 @@
             controllerRows.sort((a, b) => {
                 const pa = (a.pattern || '').toLowerCase();
                 const pb = (b.pattern || '').toLowerCase();
-                return pa.localeCompare(pb);
+                const patternCmp = pa.localeCompare(pb);
+                if (patternCmp !== 0) return patternCmp;
+                const mna = (a.methodName || '').toLowerCase();
+                const mnb = (b.methodName || '').toLowerCase();
+                return mna.localeCompare(mnb);
             });
         });
 
-        body.innerHTML = Object.entries(grouped).map(([controller, controllerRows]) => {
+        body.innerHTML = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([controller, controllerRows]) => {
             const controllerHeader = `
           <tr class="bg-slate-900 text-white sticky top-0">
             <td colspan="12" class="px-5 py-4  overflow-hidden">
@@ -638,7 +648,7 @@
         const method = document.getElementById('methodFilter').value;
         const context = document.getElementById('contextFilter').value;
 
-        const filtered = allRows.filter(row => {
+        let filtered = allRows.filter(row => {
             const haystack = [row.method, row.pattern, row.handler, row.predicate, row.className, row.methodName, row.descriptor, row.consumes, row.produces, row.params, row.headers, row.contextName]
                 .join(' | ')
                 .toLowerCase();
@@ -648,6 +658,24 @@
             const okContext = !context || row.contextName === context;
             return okKeyword && okMethod && okContext;
         });
+
+        if (refactorMode) {
+            const allControllerNames = new Set(allRows.map(r =>
+                r.className && r.className !== '-' ? r.className.split('.').pop() : 'UnknownController'
+            ));
+            const refactorControllers = [...allControllerNames].filter(c => c.endsWith('_Refactor'));
+            const refactorSet = new Set(refactorControllers);
+            refactorControllers.forEach(c => {
+                const base = c.slice(0, -'_Refactor'.length);
+                if (allControllerNames.has(base)) refactorSet.add(base);
+            });
+            filtered = filtered.filter(row => {
+                const controller = row.className && row.className !== '-'
+                    ? row.className.split('.').pop()
+                    : 'UnknownController';
+                return refactorSet.has(controller);
+            });
+        }
 
         renderTable(filtered);
         applyColumnWidths();
@@ -981,6 +1009,19 @@
         visibleColumns = new Set(['method', 'pattern', 'methodName']);
         renderColumnCheckboxes();
         updateColumnVisibility();
+    });
+
+    document.getElementById('refactorModeBtn').addEventListener('click', () => {
+        refactorMode = !refactorMode;
+        const btn = document.getElementById('refactorModeBtn');
+        if (refactorMode) {
+            btn.classList.remove('border-amber-400', 'bg-amber-50', 'text-amber-800', 'hover:bg-amber-100');
+            btn.classList.add('bg-amber-500', 'text-white', 'border-amber-500', 'hover:bg-amber-600');
+        } else {
+            btn.classList.remove('bg-amber-500', 'text-white', 'border-amber-500', 'hover:bg-amber-600');
+            btn.classList.add('border-amber-400', 'bg-amber-50', 'text-amber-800', 'hover:bg-amber-100');
+        }
+        applyFilters();
     });
 
     document.addEventListener('click', event => {
