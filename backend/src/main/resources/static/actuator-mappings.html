@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spring Boot Actuator Mappings Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        .scrollbar::-webkit-scrollbar { height: 10px; width: 10px; }
+        .scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+<div class="max-w-[1600px] mx-auto p-4 md:p-6 space-y-6">
+    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-3">
+                    Spring Boot /actuator/mappings
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold tracking-tight">Actuator Mappings Explorer</h1>
+                <p class="mt-2 text-slate-500 max-w-3xl">
+                    Trang này đọc được toàn bộ cấu trúc mappings: servlet filters, servlets, dispatcher servlet mappings, handler method, predicate và request mapping conditions.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 sm:items-center w-full lg:w-auto">
+                <input id="searchInput" type="text" placeholder="Tìm theo path, handler, class, method..."
+                       class="w-full sm:w-96 px-4 py-3 rounded-2xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" />
+                <button onclick="loadMappings()"
+                        class="px-5 py-3 rounded-2xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition">
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div id="errorBox" class="hidden mt-4 p-4 rounded-2xl border border-red-200 bg-red-50 text-red-700 text-sm"></div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <div class="text-sm text-slate-500">Contexts</div>
+            <div id="statContexts" class="text-3xl font-bold mt-2">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <div class="text-sm text-slate-500">Filters</div>
+            <div id="statFilters" class="text-3xl font-bold mt-2">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <div class="text-sm text-slate-500">Servlets</div>
+            <div id="statServlets" class="text-3xl font-bold mt-2">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <div class="text-sm text-slate-500">Mappings</div>
+            <div id="statMappings" class="text-3xl font-bold mt-2">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <div class="text-sm text-slate-500">Endpoints with method</div>
+            <div id="statEndpointWithMethod" class="text-3xl font-bold mt-2">0</div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <div class="text-sm text-slate-500">Without details</div>
+            <div id="statNoDetails" class="text-3xl font-bold mt-2">0</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div>
+            <div class="flex items-center justify-between mb-2 px-1">
+                <div class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Servlet Filters</div>
+                <button id="toggleFiltersBtn"
+                        class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm hover:bg-slate-100 transition">
+                    Show
+                </button>
+            </div>
+
+            <section id="filtersSection" class="hidden bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+                <div id="filtersList" class="p-4 md:p-6 space-y-3"></div>
+            </section>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between mb-2 px-1">
+                <div class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Servlets</div>
+                <button id="toggleServletsBtn"
+                        class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm hover:bg-slate-100 transition">
+                    Show
+                </button>
+            </div>
+
+            <section id="servletsSection" class="hidden bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+                <div id="servletsList" class="p-4 md:p-6 space-y-3"></div>
+            </section>
+        </div>
+    </div>
+
+    <section class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden w-full">
+        <div class="px-6 py-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <h2 class="text-xl font-semibold">Dispatcher Servlet Mappings</h2>
+                <p class="text-sm text-slate-500">Danh sách handler methods, predicates và request mapping conditions</p>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <select id="methodFilter" class="px-4 py-3 rounded-2xl border border-slate-300 bg-slate-50">
+                        <option value="">All methods</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                    <select id="contextFilter" class="px-4 py-3 rounded-2xl border border-slate-300 bg-slate-50">
+                        <option value="">All contexts</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">
+                        Visible Columns
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <button id="selectAllColumnsBtn"
+                                class="px-3 py-2 rounded-xl bg-slate-900 text-white text-sm hover:bg-slate-800 transition">
+                            Select All
+                        </button>
+
+                        <button id="clearAllColumnsBtn"
+                                class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm hover:bg-slate-100 transition">
+                            Clear All
+                        </button>
+
+                        <button id="focusColumnsBtn"
+                                class="px-3 py-2 rounded-xl border border-slate-300 bg-white text-sm hover:bg-slate-100 transition">
+                            Focus Mode
+                        </button>
+
+                        <span class="text-xs text-slate-500 self-center">
+                Focus Mode = Method + Pattern + Method Name
+              </span>
+                    </div>
+
+                    <div id="columnCheckboxes" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto scrollbar w-full">
+            <table class="min-w-full text-sm table-auto border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                <tr>
+                    <th data-column="method" class="text-left px-5 py-4 font-semibold text-slate-600 align-top whitespace-nowrap whitespace-nowrap">Method</th>
+                    <th data-column="pattern" class="text-left px-5 py-4 font-semibold text-slate-600 align-top whitespace-nowrap whitespace-nowrap">Pattern</th>
+                    <th data-column="handler" class="text-left px-5 py-4 font-semibold text-slate-600 w-[240px] align-top whitespace-nowrap">Handler</th>
+                    <th data-column="predicate" class="text-left px-5 py-4 font-semibold text-slate-600 w-[300px] align-top whitespace-nowrap">Predicate</th>
+                    <th data-column="className" class="text-left px-5 py-4 font-semibold text-slate-600 w-[220px] align-top whitespace-nowrap">Class</th>
+                    <th data-column="methodName" class="text-left px-5 py-4 font-semibold text-slate-600 align-top whitespace-nowrap whitespace-nowrap">Method name</th>
+                    <th data-column="descriptor" class="text-left px-5 py-4 font-semibold text-slate-600 w-[360px] align-top whitespace-nowrap">Descriptor</th>
+                    <th data-column="consumes" class="text-left px-5 py-4 font-semibold text-slate-600 w-[220px] align-top whitespace-nowrap">Consumes</th>
+                    <th data-column="produces" class="text-left px-5 py-4 font-semibold text-slate-600 w-[220px] align-top whitespace-nowrap">Produces</th>
+                    <th data-column="params" class="text-left px-5 py-4 font-semibold text-slate-600 w-[220px] align-top whitespace-nowrap">Params</th>
+                    <th data-column="headers" class="text-left px-5 py-4 font-semibold text-slate-600 w-[220px] align-top whitespace-nowrap">Headers</th>
+                    <th data-column="contextName" class="text-left px-5 py-4 font-semibold text-slate-600 w-[180px] align-top whitespace-nowrap">Context</th>
+                </tr>
+                </thead>
+                <tbody id="mappingBody" class="w-full"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- API Tester Dialog -->
+<div id="apiTesterOverlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);">
+    <div class="bg-white rounded-3xl shadow-2xl w-full flex flex-col" style="max-width:900px;max-height:92vh;height:92vh;">
+
+        <!-- Dialog Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <span id="apiDialogMethodBadge" class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold border bg-slate-100 text-slate-700 border-slate-200"></span>
+                <span class="font-semibold text-slate-700 text-sm mono" id="apiDialogEndpointLabel"></span>
+            </div>
+            <button onclick="closeApiTester()" class="p-2 rounded-xl hover:bg-slate-100 transition text-slate-500 hover:text-slate-800">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <!-- URL Bar -->
+        <div class="flex items-center gap-2 px-6 py-3 border-b border-slate-200 flex-shrink-0 bg-slate-50">
+            <div class="flex-1 flex items-center bg-white border border-slate-300 rounded-2xl px-4 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-400 flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <input id="apiUrlInput" type="text" class="flex-1 text-sm mono bg-transparent outline-none text-slate-800 min-w-0" placeholder="http://localhost:8080/api/..." />
+            </div>
+            <button id="apiSendBtn" onclick="sendApiRequest()" class="px-5 py-2.5 rounded-2xl bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition flex items-center gap-2 whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Send
+            </button>
+        </div>
+
+        <!-- Tabs + Body + Response (scrollable middle area) -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+
+            <!-- Tab bar -->
+            <div class="flex border-b border-slate-200 px-6 flex-shrink-0 bg-white gap-1">
+                <button class="api-tab-btn active-tab px-4 py-3 text-sm font-medium border-b-2 border-slate-900 text-slate-900" data-tab="pathvar">@PathVariable</button>
+                <button class="api-tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" data-tab="body">@RequestBody</button>
+                <button class="api-tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" data-tab="headers">@RequestHeader</button>
+                <button class="api-tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700" data-tab="auth">Authorization</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="flex-shrink-0" style="max-height:240px;overflow-y:auto;">
+
+                <!-- @PathVariable -->
+                <div id="tab-pathvar" class="api-tab-panel p-6">
+                    <div id="pathVarList" class="space-y-2"></div>
+                    <div id="pathVarEmpty" class="hidden text-slate-400 text-sm italic">Không có path variable trong endpoint này.</div>
+                </div>
+
+                <!-- @RequestBody -->
+                <div id="tab-body" class="api-tab-panel hidden p-6">
+                    <textarea id="requestBodyInput" rows="8"
+                              class="w-full mono text-sm bg-slate-50 border border-slate-200 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-slate-400 resize-none"
+                              placeholder='{"key": "value"}'></textarea>
+                </div>
+
+                <!-- @RequestHeader -->
+                <div id="tab-headers" class="api-tab-panel hidden p-6">
+                    <div id="headerList" class="space-y-2"></div>
+                    <button onclick="addHeaderRow()" class="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-300 bg-white text-sm hover:bg-slate-50 transition text-slate-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Thêm header
+                    </button>
+                </div>
+
+                <!-- Authorization -->
+                <div id="tab-auth" class="api-tab-panel hidden p-6">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 whitespace-nowrap flex-shrink-0">
+                            Bearer
+                        </div>
+                        <input id="authTokenInput" type="text"
+                               class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-sm mono outline-none focus:ring-2 focus:ring-slate-400"
+                               placeholder="Nhập token..." />
+                    </div>
+                    <p class="mt-2 text-xs text-slate-400">Token sẽ được gửi kèm header <span class="mono font-semibold">Authorization: Bearer &lt;token&gt;</span></p>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-slate-200 flex-shrink-0"></div>
+
+            <!-- Response Panel -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <div class="flex items-center justify-between px-6 py-3 bg-slate-50 border-b border-slate-200 flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Response</span>
+                        <span id="responseStatus" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold"></span>
+                        <span id="responseTime" class="hidden text-xs text-slate-400 mono"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div id="responseLoading" class="hidden flex items-center gap-2 text-xs text-slate-500">
+                            <svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            Đang gửi...
+                        </div>
+                        <button id="copyResponseBtn" onclick="copyResponse()" class="hidden px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs hover:bg-slate-50 transition text-slate-600">Copy</button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto p-6">
+                    <div id="responseEmpty" class="flex flex-col items-center justify-center h-full text-slate-300 gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span class="text-sm">Nhấn Send để gửi request</span>
+                    </div>
+                    <pre id="responseBody" class="hidden mono text-sm text-slate-800 bg-slate-50 rounded-2xl p-4 overflow-auto whitespace-pre-wrap break-all border border-slate-200"></pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    const methodClass = {
+        GET: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        POST: 'bg-sky-100 text-sky-700 border-sky-200',
+        PUT: 'bg-amber-100 text-amber-700 border-amber-200',
+        PATCH: 'bg-violet-100 text-violet-700 border-violet-200',
+        DELETE: 'bg-rose-100 text-rose-700 border-rose-200'
+    };
+
+    let rawData = null;
+    let allRows = [];
+
+    const columns = [
+        { key: 'method', label: 'Method' },
+        { key: 'pattern', label: 'Pattern' },
+        { key: 'handler', label: 'Handler' },
+        { key: 'predicate', label: 'Predicate' },
+        { key: 'className', label: 'Class' },
+        { key: 'methodName', label: 'Method Name' },
+        { key: 'descriptor', label: 'Descriptor' },
+        { key: 'consumes', label: 'Consumes' },
+        { key: 'produces', label: 'Produces' },
+        { key: 'params', label: 'Params' },
+        { key: 'headers', label: 'Headers' },
+        { key: 'contextName', label: 'Context' }
+    ];
+
+    let visibleColumns = new Set(['method', 'pattern', 'methodName']);
+
+    let filtersVisible = false;
+    let servletsVisible = false;
+
+    function showError(message) {
+        const el = document.getElementById('errorBox');
+        el.textContent = message;
+        el.classList.remove('hidden');
+    }
+
+    function hideError() {
+        const el = document.getElementById('errorBox');
+        el.classList.add('hidden');
+        el.textContent = '';
+    }
+
+    function joinArray(arr) {
+        if (!Array.isArray(arr) || arr.length === 0) return '-';
+        return arr.join(', ');
+    }
+
+    function joinProduces(produces) {
+        if (!Array.isArray(produces) || produces.length === 0) return '-';
+        return produces.map(p => p?.mediaType || JSON.stringify(p)).join(', ');
+    }
+
+    function normalizeMapping(item, contextName) {
+        const details = item.details || {};
+        const handlerMethod = details.handlerMethod || {};
+        const conditions = details.requestMappingConditions || {};
+        const methods = Array.isArray(conditions.methods) && conditions.methods.length ? conditions.methods : (item.predicate && item.predicate.includes('GET') ? ['GET'] : []);
+        const patterns = Array.isArray(conditions.patterns) ? conditions.patterns : [];
+
+        return patterns.length ? patterns.map(pattern => ({
+            contextName,
+            method: methods.length ? methods[0] : '-',
+            pattern,
+            handler: item.handler
+                ? item.handler.split('.').pop()
+                : '-',
+            predicate: item.predicate || '-',
+            className: handlerMethod.className
+                ? handlerMethod.className.split('.').pop()
+                : '-',
+            methodName: handlerMethod.name || '-',
+            descriptor: handlerMethod.descriptor || '-',
+            consumes: joinArray(conditions.consumes),
+            produces: joinProduces(conditions.produces),
+            params: joinArray(conditions.params),
+            headers: joinArray(conditions.headers),
+            hasDetails: Boolean(item.details)
+        })) : [{
+            contextName,
+            method: '-',
+            pattern: '-',
+            handler: item.handler || '-',
+            predicate: item.predicate || '-',
+            className: handlerMethod.className || '-',
+            methodName: handlerMethod.name || '-',
+            descriptor: handlerMethod.descriptor || '-',
+            consumes: joinArray(conditions.consumes),
+            produces: joinProduces(conditions.produces),
+            params: joinArray(conditions.params),
+            headers: joinArray(conditions.headers),
+            hasDetails: Boolean(item.details)
+        }];
+    }
+
+    function renderFilters(filters) {
+        const container = document.getElementById('filtersList');
+        if (!filters.length) {
+            container.innerHTML = '<div class="text-slate-500 text-sm">Không có filter.</div>';
+            return;
+        }
+
+        container.innerHTML = filters.map(f => `
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-1 rounded-xl bg-slate-900 text-white text-xs font-semibold mono">FILTER</span>
+              <span class="font-semibold">${escapeHtml(f.name || '-')}</span>
+            </div>
+            <div class="mono text-xs text-slate-600 break-all">${escapeHtml(f.className || '-')}</div>
+            <div class="text-sm text-slate-700">URL patterns: <span class="mono">${escapeHtml(joinArray(f.urlPatternMappings))}</span></div>
+            <div class="text-sm text-slate-700">Servlet mappings: <span class="mono">${escapeHtml(joinArray(f.servletNameMappings))}</span></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderServlets(servlets) {
+        const container = document.getElementById('servletsList');
+        if (!servlets.length) {
+            container.innerHTML = '<div class="text-slate-500 text-sm">Không có servlet.</div>';
+            return;
+        }
+
+        container.innerHTML = servlets.map(s => `
+        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-1 rounded-xl bg-slate-900 text-white text-xs font-semibold mono">SERVLET</span>
+              <span class="font-semibold">${escapeHtml(s.name || '-')}</span>
+            </div>
+            <div class="mono text-xs text-slate-600 break-all">${escapeHtml(s.className || '-')}</div>
+            <div class="text-sm text-slate-700">Mappings: <span class="mono">${escapeHtml(joinArray(s.mappings))}</span></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderColumnCheckboxes() {
+        const container = document.getElementById('columnCheckboxes');
+
+        container.innerHTML = columns.map(column => `
+        <label class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-sm cursor-pointer hover:bg-slate-100 transition">
+          <input
+            type="checkbox"
+            class="rounded border-slate-300"
+            value="${escapeAttr(column.key)}"
+            ${visibleColumns.has(column.key) ? 'checked' : ''}
+          />
+          <span>${escapeHtml(column.label)}</span>
+        </label>
+      `).join('');
+
+        container.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', () => {
+                const key = input.value;
+
+                if (input.checked) {
+                    visibleColumns.add(key);
+                } else {
+                    visibleColumns.delete(key);
+                }
+
+                updateColumnVisibility();
+            });
+        });
+    }
+
+    function updateSectionVisibility() {
+        const filtersSection = document.getElementById('filtersSection');
+        const servletsSection = document.getElementById('servletsSection');
+        const filtersBtn = document.getElementById('toggleFiltersBtn');
+        const servletsBtn = document.getElementById('toggleServletsBtn');
+
+        filtersSection.classList.toggle('hidden', !filtersVisible);
+        servletsSection.classList.toggle('hidden', !servletsVisible);
+
+        if (filtersBtn) {
+            filtersBtn.textContent = filtersVisible ? 'Hide' : 'Show';
+        }
+
+        if (servletsBtn) {
+            servletsBtn.textContent = servletsVisible ? 'Hide' : 'Show';
+        }
+    }
+
+    function applyColumnWidths() {
+        const limitedWidths = {
+            handler: '240px',
+            predicate: '300px',
+            className: '220px',
+            descriptor: '360px',
+            consumes: '220px',
+            produces: '220px',
+            params: '220px',
+            headers: '220px',
+            contextName: '180px'
+        };
+
+        document.querySelectorAll('[data-column]').forEach(el => {
+            const key = el.getAttribute('data-column');
+
+            el.style.minWidth = '';
+            el.style.width = '';
+            el.style.maxWidth = '';
+
+            if (!visibleColumns.has(key)) {
+                return;
+            }
+
+            if (limitedWidths[key]) {
+                el.style.minWidth = limitedWidths[key];
+            }
+        });
+    }
+
+    function updateColumnVisibility() {
+        document.querySelectorAll('[data-column]').forEach(el => {
+            const key = el.getAttribute('data-column');
+            el.style.display = visibleColumns.has(key) ? '' : 'none';
+        });
+
+        applyColumnWidths();
+    }
+
+    function renderContextOptions(contextNames) {
+        const select = document.getElementById('contextFilter');
+        const current = select.value;
+        select.innerHTML = '<option value="">All contexts</option>' + contextNames.map(name => `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>`).join('');
+        select.value = current;
+    }
+
+    function renderTable(rows) {
+        const body = document.getElementById('mappingBody');
+
+        const grouped = {};
+
+        rows.forEach(row => {
+            const controller = row.className && row.className !== '-'
+                ? row.className.split('.').pop()
+                : 'UnknownController';
+
+            if (!grouped[controller]) {
+                grouped[controller] = [];
+            }
+
+            grouped[controller].push(row);
+        });
+
+        Object.values(grouped).forEach(controllerRows => {
+            controllerRows.sort((a, b) => {
+                const pa = (a.pattern || '').toLowerCase();
+                const pb = (b.pattern || '').toLowerCase();
+                return pa.localeCompare(pb);
+            });
+        });
+
+        body.innerHTML = Object.entries(grouped).map(([controller, controllerRows]) => {
+            const controllerHeader = `
+          <tr class="bg-slate-900 text-white sticky top-0">
+            <td colspan="12" class="px-5 py-4  overflow-hidden">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <div class="text-lg font-bold">${escapeHtml(controller)}</div>
+                  <div class="text-xs text-slate-300 mono mt-1 break-all">
+                    ${escapeHtml(controllerRows[0].className || '-')}
+                  </div>
+                </div>
+
+                <div class="px-3 py-2 rounded-xl bg-white/10 text-sm font-semibold whitespace-nowrap">
+                  ${controllerRows.length} endpoint(s)
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
+
+            const endpointRows = controllerRows.map(row => {
+                const mc = methodClass[row.method] || 'bg-slate-100 text-slate-700 border-slate-200';
+                const tag = row.hasDetails
+                    ? ''
+                    : '<span class="ml-2 px-2 py-1 rounded-lg bg-slate-200 text-slate-700 text-[10px] font-bold">NO DETAILS</span>';
+
+                return `
+            <tr class="hover:bg-slate-50 align-top cursor-pointer transition" onclick='openApiTester(${JSON.stringify(JSON.stringify(row))})'>
+              <td data-column="method" class="px-5 py-4 text-left align-top whitespace-nowrap whitespace-nowrap">
+                <span class="inline-flex items-center px-3 py-1 rounded-xl text-xs font-semibold border ${mc}">
+                  ${escapeHtml(row.method)}${tag}
+                </span>
+              </td>
+
+              <td data-column="pattern" class="px-5 py-4 mono text-slate-800 text-left align-top whitespace-nowrap whitespace-nowrap">
+                ${escapeHtml(row.pattern)}
+              </td>
+
+              <td data-column="handler" class="px-5 py-4 text-slate-700  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.handler)}
+              </td>
+
+              <td data-column="predicate" class="px-5 py-4 mono text-slate-600  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.predicate)}
+              </td>
+
+              <td data-column="className" class="px-5 py-4 mono text-slate-700  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.className)}
+              </td>
+
+              <td data-column="methodName" class="px-5 py-4 mono text-slate-700 text-left align-top whitespace-nowrap whitespace-nowrap">
+                ${escapeHtml(row.methodName)}
+              </td>
+
+              <td data-column="descriptor" class="px-5 py-4 mono text-slate-600  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.descriptor)}
+              </td>
+
+              <td data-column="consumes" class="px-5 py-4 mono text-slate-600  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.consumes)}
+              </td>
+
+              <td data-column="produces" class="px-5 py-4 mono text-slate-600  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.produces)}
+              </td>
+
+              <td data-column="params" class="px-5 py-4 mono text-slate-600  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.params)}
+              </td>
+
+              <td data-column="headers" class="px-5 py-4 mono text-slate-600  text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.headers)}
+              </td>
+
+              <td data-column="contextName" class="px-5 py-4 text-slate-700 text-left align-top whitespace-nowrap">
+                ${escapeHtml(row.contextName)}
+              </td>
+            </tr>
+          `;
+            }).join('');
+
+            return controllerHeader + endpointRows;
+        }).join('');
+    }
+
+    function updateStats(contexts, filters, servlets, rows) {
+        document.getElementById('statContexts').innerText = contexts.length;
+        document.getElementById('statFilters').innerText = filters.length;
+        document.getElementById('statServlets').innerText = servlets.length;
+        document.getElementById('statMappings').innerText = rows.length;
+        document.getElementById('statEndpointWithMethod').innerText = rows.filter(r => r.method && r.method !== '-').length;
+        document.getElementById('statNoDetails').innerText = rows.filter(r => !r.hasDetails).length;
+    }
+
+    function applyFilters() {
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+        const method = document.getElementById('methodFilter').value;
+        const context = document.getElementById('contextFilter').value;
+
+        const filtered = allRows.filter(row => {
+            const haystack = [row.method, row.pattern, row.handler, row.predicate, row.className, row.methodName, row.descriptor, row.consumes, row.produces, row.params, row.headers, row.contextName]
+                .join(' | ')
+                .toLowerCase();
+
+            const okKeyword = !keyword || haystack.includes(keyword);
+            const okMethod = !method || row.method === method;
+            const okContext = !context || row.contextName === context;
+            return okKeyword && okMethod && okContext;
+        });
+
+        renderTable(filtered);
+        applyColumnWidths();
+        updateColumnVisibility();
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value).replaceAll('`', '&#96;');
+    }
+
+    async function loadMappings() {
+        hideError();
+        try {
+            const res = await fetch('/actuator/mappings');
+            if (!res.ok) {
+                throw new Error('HTTP ' + res.status);
+            }
+            rawData = await res.json();
+
+            const contexts = Object.entries(rawData?.contexts || {});
+            const filters = [];
+            const servlets = [];
+            const rows = [];
+
+            for (const [contextName, context] of contexts) {
+                const mappings = context?.mappings || {};
+                const servletFilters = Array.isArray(mappings.servletFilters) ? mappings.servletFilters : [];
+                const servletList = Array.isArray(mappings.servlets) ? mappings.servlets : [];
+                const dispatcher = mappings.dispatcherServlets?.dispatcherServlet || [];
+
+                filters.push(...servletFilters);
+                servlets.push(...servletList);
+
+                dispatcher.forEach(item => {
+                    rows.push(...normalizeMapping(item, contextName));
+                });
+            }
+
+            // sort sẽ được xử lý riêng trong từng controller group
+
+            allRows = rows;
+            renderContextOptions(contexts.map(([name]) => name));
+            renderFilters(filters);
+            renderServlets(servlets);
+            updateStats(contexts, filters, servlets, rows);
+            applyFilters();
+            updateColumnVisibility();
+        } catch (e) {
+            showError('Không đọc được /actuator/mappings. Hãy kiểm tra backend có bật actuator mappings và trang này được đặt đúng trong static resources. Chi tiết: ' + e.message);
+            console.error(e);
+        }
+    }
+
+    // ── API TESTER ────────────────────────────────────────────────────────────
+
+    let currentApiRow = null;
+    let lastResponseText = '';
+
+    /* Tab switching */
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.api-tab-btn');
+        if (!btn) return;
+        document.querySelectorAll('.api-tab-btn').forEach(b => {
+            b.classList.remove('active-tab', 'border-slate-900', 'text-slate-900');
+            b.classList.add('border-transparent', 'text-slate-500');
+        });
+        btn.classList.add('active-tab', 'border-slate-900', 'text-slate-900');
+        btn.classList.remove('border-transparent', 'text-slate-500');
+
+        const tabId = btn.getAttribute('data-tab');
+        document.querySelectorAll('.api-tab-panel').forEach(p => p.classList.add('hidden'));
+        document.getElementById('tab-' + tabId).classList.remove('hidden');
+    });
+
+    /* Close on overlay click */
+    document.getElementById('apiTesterOverlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('apiTesterOverlay')) closeApiTester();
+    });
+
+    /* ESC key */
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeApiTester();
+    });
+
+    function extractPathVars(pattern) {
+        const matches = [...(pattern || '').matchAll(/\{([^}]+)\}/g)];
+        return matches.map(m => m[1]);
+    }
+
+    function buildPathVarList(vars) {
+        const container = document.getElementById('pathVarList');
+        const empty = document.getElementById('pathVarEmpty');
+        container.innerHTML = '';
+        if (!vars.length) {
+            empty.classList.remove('hidden');
+            return;
+        }
+        empty.classList.add('hidden');
+        vars.forEach(v => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3';
+            row.innerHTML = `
+                <div class="flex-shrink-0 w-48 mono text-sm font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 truncate" title="${escapeHtml(v)}">
+                    {${escapeHtml(v)}}
+                </div>
+                <input type="text" data-pathvar="${escapeAttr(v)}"
+                    class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-slate-400"
+                    placeholder="Nhập giá trị cho ${escapeHtml(v)}..." />
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function addHeaderRow(key = '', value = '') {
+        const container = document.getElementById('headerList');
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 header-row';
+        row.innerHTML = `
+            <input type="text" placeholder="Header name" value="${escapeHtml(key)}"
+                class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-slate-400 header-key" />
+            <input type="text" placeholder="Value" value="${escapeHtml(value)}"
+                class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-sm outline-none focus:ring-2 focus:ring-slate-400 header-value" />
+            <button onclick="this.closest('.header-row').remove()"
+                class="p-2 rounded-xl hover:bg-red-50 hover:text-red-500 text-slate-400 transition flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        `;
+        container.appendChild(row);
+    }
+
+    function openApiTester(rowJson) {
+        const row = JSON.parse(rowJson);
+        currentApiRow = row;
+        lastResponseText = '';
+
+        const methodEl = document.getElementById('apiDialogMethodBadge');
+        const mc = methodClass[row.method] || 'bg-slate-100 text-slate-700 border-slate-200';
+        methodEl.className = `inline-flex items-center px-3 py-1 rounded-xl text-xs font-bold border ${mc}`;
+        methodEl.textContent = row.method !== '-' ? row.method : '?';
+
+        document.getElementById('apiDialogEndpointLabel').textContent = row.pattern !== '-' ? row.pattern : row.handler;
+
+        const base = window.location.origin;
+        const pattern = row.pattern !== '-' ? row.pattern : '';
+        document.getElementById('apiUrlInput').value = base + pattern;
+
+        // path vars
+        const vars = extractPathVars(pattern);
+        buildPathVarList(vars);
+
+        // reset body
+        document.getElementById('requestBodyInput').value = '';
+
+        // reset headers
+        document.getElementById('headerList').innerHTML = '';
+        addHeaderRow('Content-Type', 'application/json');
+
+        // reset auth
+        document.getElementById('authTokenInput').value = '';
+
+        // reset response
+        document.getElementById('responseEmpty').classList.remove('hidden');
+        document.getElementById('responseBody').classList.add('hidden');
+        document.getElementById('responseStatus').classList.add('hidden');
+        document.getElementById('responseTime').classList.add('hidden');
+        document.getElementById('copyResponseBtn').classList.add('hidden');
+        document.getElementById('responseLoading').classList.add('hidden');
+
+        // reset tabs
+        document.querySelectorAll('.api-tab-btn').forEach((b, i) => {
+            if (i === 0) {
+                b.classList.add('active-tab', 'border-slate-900', 'text-slate-900');
+                b.classList.remove('border-transparent', 'text-slate-500');
+            } else {
+                b.classList.remove('active-tab', 'border-slate-900', 'text-slate-900');
+                b.classList.add('border-transparent', 'text-slate-500');
+            }
+        });
+        document.querySelectorAll('.api-tab-panel').forEach((p, i) => {
+            p.classList.toggle('hidden', i !== 0);
+        });
+
+        document.getElementById('apiTesterOverlay').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeApiTester() {
+        document.getElementById('apiTesterOverlay').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function buildFinalUrl() {
+        let url = document.getElementById('apiUrlInput').value;
+        document.querySelectorAll('[data-pathvar]').forEach(input => {
+            const varName = input.getAttribute('data-pathvar');
+            const val = input.value.trim();
+            url = url.replace(`{${varName}}`, encodeURIComponent(val));
+        });
+        return url;
+    }
+
+    function formatJson(text) {
+        try {
+            return JSON.stringify(JSON.parse(text), null, 2);
+        } catch {
+            return text;
+        }
+    }
+
+    function colorizeJson(json) {
+        return json
+            .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+                let cls = 'color:#0f766e'; // number
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) cls = 'color:#1d4ed8'; // key
+                    else cls = 'color:#15803d'; // string
+                } else if (/true|false/.test(match)) cls = 'color:#9333ea';
+                else if (/null/.test(match)) cls = 'color:#dc2626';
+                return `<span style="${cls}">${escapeHtml(match)}</span>`;
+            });
+    }
+
+    async function sendApiRequest() {
+        const url = buildFinalUrl();
+        const method = currentApiRow?.method !== '-' ? currentApiRow.method : 'GET';
+        const bodyText = document.getElementById('requestBodyInput').value.trim();
+        const token = document.getElementById('authTokenInput').value.trim();
+
+        const headers = {};
+        document.querySelectorAll('.header-row').forEach(row => {
+            const k = row.querySelector('.header-key').value.trim();
+            const v = row.querySelector('.header-value').value.trim();
+            if (k) headers[k] = v;
+        });
+
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        const fetchOptions = { method, headers };
+        if (!['GET', 'HEAD', 'DELETE'].includes(method) && bodyText) {
+            fetchOptions.body = bodyText;
+        }
+
+        // Show loading
+        document.getElementById('responseLoading').classList.remove('hidden');
+        document.getElementById('responseEmpty').classList.add('hidden');
+        document.getElementById('responseBody').classList.add('hidden');
+        document.getElementById('responseStatus').classList.add('hidden');
+        document.getElementById('responseTime').classList.add('hidden');
+        document.getElementById('copyResponseBtn').classList.add('hidden');
+        document.getElementById('apiSendBtn').disabled = true;
+
+        const startTime = performance.now();
+
+        try {
+            const res = await fetch(url, fetchOptions);
+            const elapsed = Math.round(performance.now() - startTime);
+            const text = await res.text();
+            lastResponseText = text;
+
+            const statusEl = document.getElementById('responseStatus');
+            statusEl.textContent = res.status + ' ' + res.statusText;
+            statusEl.className = 'px-2.5 py-1 rounded-lg text-xs font-bold ' + (res.ok ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700');
+            statusEl.classList.remove('hidden');
+
+            document.getElementById('responseTime').textContent = elapsed + ' ms';
+            document.getElementById('responseTime').classList.remove('hidden');
+
+            const formatted = formatJson(text);
+            const bodyEl = document.getElementById('responseBody');
+            bodyEl.innerHTML = colorizeJson(formatted);
+            bodyEl.classList.remove('hidden');
+            document.getElementById('copyResponseBtn').classList.remove('hidden');
+
+        } catch (err) {
+            const statusEl = document.getElementById('responseStatus');
+            statusEl.textContent = 'Lỗi kết nối';
+            statusEl.className = 'px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700';
+            statusEl.classList.remove('hidden');
+
+            const bodyEl = document.getElementById('responseBody');
+            bodyEl.textContent = err.message;
+            bodyEl.classList.remove('hidden');
+            lastResponseText = err.message;
+        } finally {
+            document.getElementById('responseLoading').classList.add('hidden');
+            document.getElementById('apiSendBtn').disabled = false;
+        }
+    }
+
+    function copyResponse() {
+        navigator.clipboard.writeText(lastResponseText).then(() => {
+            const btn = document.getElementById('copyResponseBtn');
+            const orig = btn.textContent;
+            btn.textContent = 'Đã copy!';
+            setTimeout(() => btn.textContent = orig, 1500);
+        });
+    }
+
+    // ── END API TESTER ────────────────────────────────────────────────────────
+
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('methodFilter').addEventListener('change', applyFilters);
+    document.getElementById('contextFilter').addEventListener('change', applyFilters);
+
+    renderColumnCheckboxes();
+    applyColumnWidths();
+    updateColumnVisibility();
+
+    document.getElementById('selectAllColumnsBtn').addEventListener('click', () => {
+        visibleColumns = new Set(columns.map(c => c.key));
+        renderColumnCheckboxes();
+        updateColumnVisibility();
+    });
+
+    document.getElementById('clearAllColumnsBtn').addEventListener('click', () => {
+        visibleColumns.clear();
+        renderColumnCheckboxes();
+        updateColumnVisibility();
+    });
+
+    document.getElementById('focusColumnsBtn').addEventListener('click', () => {
+        visibleColumns = new Set(['method', 'pattern', 'methodName']);
+        renderColumnCheckboxes();
+        updateColumnVisibility();
+    });
+
+    document.addEventListener('click', event => {
+        if (event.target?.id === 'toggleFiltersBtn') {
+            filtersVisible = !filtersVisible;
+            updateSectionVisibility();
+        }
+
+        if (event.target?.id === 'toggleServletsBtn') {
+            servletsVisible = !servletsVisible;
+            updateSectionVisibility();
+        }
+    });
+
+    updateSectionVisibility();
+
+    loadMappings();
+</script>
+</body>
+</html>

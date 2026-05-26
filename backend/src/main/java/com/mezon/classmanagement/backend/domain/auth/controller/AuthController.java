@@ -4,14 +4,13 @@ import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
-import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
-import com.mezon.classmanagement.backend.domain.auth.service.InvalidatedTokenService;
+import com.mezon.classmanagement.backend.domain.auth.service.InvalidatedAccessTokenService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -27,7 +26,7 @@ public class AuthController {
 
 	AuthService authService;
 	JwtService jwtService;
-	InvalidatedTokenService invalidatedTokenService;
+	InvalidatedAccessTokenService invalidatedAccessTokenService;
 
 	@PostMapping("/signin")
 	public ResponseDTO<SignInResponseDto> signIn(@RequestBody SignInRequestDto request){
@@ -55,9 +54,11 @@ public class AuthController {
 	}
 
 	@PostMapping("/signout")
-	public ResponseDTO<SignOutResponseDto> signOut(  @RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken) {
+	public ResponseDTO<SignOutResponseDto> signOut(
+			@RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken
+	) {
 		Authentication authentication = authService.getAuthentication();
-		SignOutResponseDto signOutResponseDto = authService.signOut(authentication,refreshToken);
+		SignOutResponseDto signOutResponseDto = authService.signOut(authentication, refreshToken);
 
 		return ResponseDTO.<SignOutResponseDto>builder()
 				.success(true)
@@ -83,7 +84,7 @@ public class AuthController {
 		Authentication authentication = authService.getAuthentication();
 		String jti = jwtService.extractJti(authentication);
 
-		if (invalidatedTokenService.isInvalidated(jti)) {
+		if (invalidatedAccessTokenService.isInvalidated(jti)) {
 			throw new AuthenticationCredentialsNotFoundException("No authentication");
 		}
 
@@ -93,13 +94,26 @@ public class AuthController {
 				.build();
 	}
 
-	@PostMapping("/refresh")
-	public ResponseDTO<SignInResponseDto> refresh(@RequestHeader("X-Refresh-Token") String refreshToken) {
-		SignInResponseDto response = authService.refresh(refreshToken);
+	@PostMapping("/refresh2")
+	public ResponseDTO<SignInResponseDto> refresh2(@RequestHeader("X-Refresh-Token") String refreshToken) {
+		SignInResponseDto response = authService.refresh2(refreshToken);
 
 		return ResponseDTO.<SignInResponseDto>builder()
 				.success(true)
 				.message("Token refreshed successfully")
+				.data(response)
+				.build();
+	}
+
+	@PostMapping("/refresh")
+	public ResponseDTO<SignInResponseDto> refresh(
+			@RequestHeader(name = "X-Refresh-Token") String refreshToken
+	) {
+		SignInResponseDto response = authService.refresh(refreshToken);
+
+		return ResponseDTO.<SignInResponseDto>builder()
+				.success(true)
+				.message("Refresh token successful")
 				.data(response)
 				.build();
 	}

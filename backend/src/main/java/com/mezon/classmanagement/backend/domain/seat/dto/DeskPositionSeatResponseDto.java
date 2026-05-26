@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 @JsonPropertyOrder(value = {
 		"user_id",
 		"user_display_name",
+		"user_avatar_url",
 		"attendance_status"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
@@ -33,6 +34,9 @@ public final class DeskPositionSeatResponseDto {
 
 	@JsonProperty(value = "user_display_name")
 	String userDisplayName;
+
+	@JsonProperty(value = "user_avatar_url")
+	String userAvatarUrl;
 
 	@JsonProperty(value = "attendance_status")
 	GroupUser.AttendanceStatus attendanceStatus;

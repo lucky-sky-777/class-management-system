@@ -202,7 +202,7 @@ public class ClassUserService {
 	}
 
 	public boolean hasPermission(ClassUser classUser, ClassPermission classPermission) {
-		return classUser.getClassPermissionCodes() != null && classUser.getClassPermissionCodes().contains(classPermission);
+		return classUser.getPermissions() != null && classUser.getPermissions().contains(classPermission);
 	}
 
 }
