@@ -12,6 +12,7 @@ type RawMember = {
     username?: string;
     role?: string;
     joined_at?: string;
+    permissions?: PermissionCode[]; 
 };
 
 type RawClassData = {
@@ -62,6 +63,7 @@ export const memberAPI = {
                     ? "OWNER"
                     : (m.role as MemberRole) || "CLASS_MEMBER",
             joinedAt: m.joined_at || "",
+            permissions: m.permissions || [],
         }));
     },
 
