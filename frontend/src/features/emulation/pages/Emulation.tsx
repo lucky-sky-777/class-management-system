@@ -17,7 +17,7 @@ export const Emulation = () => {
     isLoading,
     filters,
     weeks,
-    canEdit,
+    // canEdit,
     setFilters,
     addGroup,
     addPoint,
@@ -147,7 +147,7 @@ export const Emulation = () => {
             groups={groups}
             selectedTeam={selectedTeam}
             setSelectedTeam={setSelectedTeam}
-            canEdit={canEdit}
+            // canEdit={canEdit}
             addGroup={addGroup}
             editGroup={editGroup}
             setShowDeleteModal={setShowDeleteModal}
@@ -162,7 +162,7 @@ export const Emulation = () => {
           <HistoryTable
             selectedTeam={selectedTeam}
             history={data.history}
-            canEdit={canEdit}
+            // canEdit={canEdit}
             onOpenPointModal={() => setShowPointModal(true)}
           />
         </div>

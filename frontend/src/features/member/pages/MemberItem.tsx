@@ -10,7 +10,7 @@ interface MemberItemProps {
   member: Member & {
     user_display_name?: string;
     avatar_url?: string;
-    user_avatar?: string;
+    user_avatar_url?: string;
     joined_at?: string;
   };
   myRole: MemberRole | "OWNER";
@@ -32,7 +32,7 @@ export const MemberItem = ({
   const showToast = useToastStore((state) => state.showToast);
 
   const name = member.displayName || member.user_display_name || "Thành viên";
-  const avatarSrc = member.avatarUrl || member.avatar_url || member.user_avatar;
+  const avatarSrc = member.user_avatar_url;
   const joinedDate = member.joinedAt || member.joined_at;
 
   const fallbackAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=e2e8f0&color=475569&bold=true`;
