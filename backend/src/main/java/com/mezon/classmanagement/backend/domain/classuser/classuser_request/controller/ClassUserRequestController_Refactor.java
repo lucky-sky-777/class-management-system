@@ -22,9 +22,9 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RequestMapping("/api/join-class-requests")
+@RequestMapping("/api/classes/{classId}/join-class-requests")
 @RestController
-public class ClassUserRequestController {
+public class ClassUserRequestController_Refactor {
 
 	AuthService authService;
 	JwtService jwtService;
@@ -32,15 +32,15 @@ public class ClassUserRequestController {
 	ClassUserRequestService classUserRequestService;
 
 	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
-	@PatchMapping("/classes/{classId}/requests/{requestId}/approve")
+	@PatchMapping("/{joinClassRequestId}/approve")
 	public ResponseDTO<ClassUserRequestIdResponseDto> approve(
 			@PathVariable Long classId,
-			@PathVariable Long requestId
+			@PathVariable Long joinClassRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		ClassUserRequestIdResponseDto response = classUserRequestService.approve(classId, userId, requestId);
+		ClassUserRequestIdResponseDto response = classUserRequestService.approve(classId, userId, joinClassRequestId);
 
 		return ResponseDTO.<ClassUserRequestIdResponseDto>builder()
 				.success(true)
@@ -50,15 +50,15 @@ public class ClassUserRequestController {
 	}
 
 	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
-	@PatchMapping("/classes/{classId}/requests/{requestId}/reject")
+	@PatchMapping("/{joinClassRequestId}/reject")
 	public ResponseDTO<ClassUserRequestIdResponseDto> reject(
 			@PathVariable Long classId,
-			@PathVariable Long requestId
+			@PathVariable Long joinClassRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		ClassUserRequestIdResponseDto response = classUserRequestService.reject(classId, userId, requestId);
+		ClassUserRequestIdResponseDto response = classUserRequestService.reject(classId, userId, joinClassRequestId);
 
 		return ResponseDTO.<ClassUserRequestIdResponseDto>builder()
 				.success(true)
@@ -68,15 +68,15 @@ public class ClassUserRequestController {
 	}
 
 	@Public
-	@PatchMapping("/classes/{classId}/requests/{requestId}/cancel")
+	@PatchMapping("/{joinClassRequestId}/cancel")
 	public ResponseDTO<ClassUserRequestIdResponseDto> cancel(
 			@PathVariable Long classId,
-			@PathVariable Long requestId
+			@PathVariable Long joinClassRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);
 
-		ClassUserRequestIdResponseDto response = classUserRequestService.cancel(classId, userId, requestId);
+		ClassUserRequestIdResponseDto response = classUserRequestService.cancel(classId, userId, joinClassRequestId);
 
 		return ResponseDTO.<ClassUserRequestIdResponseDto>builder()
 				.success(true)
@@ -86,7 +86,7 @@ public class ClassUserRequestController {
 	}
 
 	@PreAuthorize("@ClassSecurity.adminOnly(#classId)")
-	@GetMapping("/{classId}")
+	@GetMapping
 	public ResponseDTO<List<ClassUserRequestResponseDto>> getListByClass(
 			@PathVariable Long classId
 	) {
@@ -100,7 +100,7 @@ public class ClassUserRequestController {
 	}
 
 	@Public
-	@GetMapping
+	@GetMapping("/me")
 	public ResponseDTO<List<ClassUserRequestResponseDto>> getListByCreator() {
 		Authentication authentication = authService.getAuthentication();
 		Long userId = jwtService.extractUserId(authentication);

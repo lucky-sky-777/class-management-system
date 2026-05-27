@@ -9,7 +9,6 @@ export const GroupSidebar = ({
   groups,
   selectedTeam,
   setSelectedTeam,
-  canEdit,
   addGroup,
   editGroup,
   setShowDeleteModal,
@@ -22,7 +21,6 @@ export const GroupSidebar = ({
   groups: GroupItem[];
   selectedTeam: number;
   setSelectedTeam: (id: number) => void;
-  canEdit: boolean;
   addGroup: () => void;
   editGroup: (id: number, name: string) => Promise<boolean>;
   setShowDeleteModal: (show: boolean) => void;
@@ -163,23 +161,22 @@ export const GroupSidebar = ({
         <label className="text-[10px] font-black text-[var(--ink-3)] uppercase tracking-[0.2em]">
           Lựa chọn tổ
         </label>
-        {canEdit && (
-          <div className="flex gap-1 bg-[var(--bg-surface-2)] p-1 rounded-lg border border-[var(--rule)]">
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="p-1 hover:text-[var(--red-text)] transition-colors"
-            >
-              <Minus size={12} />
-            </button>
-            <div className="w-[1px] bg-[var(--rule)] mx-0.5" />
-            <button
-              onClick={addGroup}
-              className="p-1 hover:text-[var(--green-text)] transition-colors"
-            >
-              <Plus size={12} />
-            </button>
-          </div>
-        )}
+
+        <div className="flex gap-1 bg-[var(--bg-surface-2)] p-1 rounded-lg border border-[var(--rule)]">
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="p-1 hover:text-[var(--red-text)] transition-colors"
+          >
+            <Minus size={12} />
+          </button>
+          <div className="w-[1px] bg-[var(--rule)] mx-0.5" />
+          <button
+            onClick={addGroup}
+            className="p-1 hover:text-[var(--green-text)] transition-colors"
+          >
+            <Plus size={12} />
+          </button>
+        </div>
       </div>
 
       {/* DANH SÁCH TỔ */}
@@ -255,19 +252,18 @@ export const GroupSidebar = ({
                 >
                   <Users size={14} />
                 </button>
-                {canEdit && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingGroupId(group.id);
-                      setEditGroupName(group.name);
-                    }}
-                    className="p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] bg-[var(--bg-surface)] md:bg-transparent rounded-md border md:border-0 shadow-sm md:shadow-none"
-                    title="Đổi tên tổ"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                )}
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingGroupId(group.id);
+                    setEditGroupName(group.name);
+                  }}
+                  className="p-1.5 text-[var(--ink-3)] hover:text-[var(--warm-600)] bg-[var(--bg-surface)] md:bg-transparent rounded-md border md:border-0 shadow-sm md:shadow-none"
+                  title="Đổi tên tổ"
+                >
+                  <Pencil size={14} />
+                </button>
               </div>
             )}
           </div>
@@ -282,31 +278,29 @@ export const GroupSidebar = ({
       >
         <div className="p-0 sm:p-1 space-y-4">
           {/* BOX THÊM THÀNH VIÊN */}
-          {canEdit && (
-            <div className="flex flex-col xs:flex-row gap-2 bg-[var(--bg-surface-2)] p-2 rounded-xl border border-[var(--rule)]">
-              <select
-                value={newUserId}
-                onChange={(e) => setNewUserId(e.target.value)}
-                className="w-full xs:flex-1 bg-[var(--bg-surface)] border border-[var(--rule)] rounded-lg h-10 px-3 text-sm font-semibold text-[var(--ink-1)] outline-none"
-              >
-                <option value="" disabled>
-                  Chọn học sinh...
+          <div className="flex flex-col xs:flex-row gap-2 bg-[var(--bg-surface-2)] p-2 rounded-xl border border-[var(--rule)]">
+            <select
+              value={newUserId}
+              onChange={(e) => setNewUserId(e.target.value)}
+              className="w-full xs:flex-1 bg-[var(--bg-surface)] border border-[var(--rule)] rounded-lg h-10 px-3 text-sm font-semibold text-[var(--ink-1)] outline-none"
+            >
+              <option value="" disabled>
+                Chọn học sinh...
+              </option>
+              {availableMembers.map((m) => (
+                <option key={m.user_id || m.id} value={m.user_id || m.id}>
+                  {m.user_display_name || m.display_name || "Học sinh"}
                 </option>
-                {availableMembers.map((m) => (
-                  <option key={m.user_id || m.id} value={m.user_id || m.id}>
-                    {m.user_display_name || m.display_name || "Học sinh"}
-                  </option>
-                ))}
-              </select>
-              <button
-                disabled={!newUserId}
-                onClick={handleAddMember}
-                className="w-full xs:w-auto h-10 px-6 bg-[var(--warm-600)] text-white rounded-lg text-xs font-black shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
-              >
-                <Plus size={16} /> THÊM
-              </button>
-            </div>
-          )}
+              ))}
+            </select>
+            <button
+              disabled={!newUserId}
+              onClick={handleAddMember}
+              className="w-full xs:w-auto h-10 px-6 bg-[var(--warm-600)] text-white rounded-lg text-xs font-black shadow-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            >
+              <Plus size={16} /> THÊM
+            </button>
+          </div>
 
           {/* DANH SÁCH THÀNH VIÊN */}
           <div className="space-y-2 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
@@ -333,9 +327,19 @@ export const GroupSidebar = ({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="relative flex-shrink-0">
-                        <div className="w-9 h-9 rounded-full bg-[var(--warm-fill)] text-[var(--warm-text)] border border-[var(--warm-border)] font-black flex items-center justify-center text-xs shadow-inner">
-                          {avatarChar}
-                        </div>
+                        {m.user_avatar_url ? (
+                          <img
+                            src={m.user_avatar_url}
+                            alt={studentName}
+                            className="w-9 h-9 rounded-full object-cover border border-[var(--warm-border)] shadow-inner"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-[var(--warm-fill)] text-[var(--warm-text)] border border-[var(--warm-border)] font-black flex items-center justify-center text-xs shadow-inner">
+                            {avatarChar}
+                          </div>
+                        )}
+
+                        {/* Chấm trạng thái điểm danh */}
                         <div
                           className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
                             m.attendance_status === "PRESENT"
@@ -355,16 +359,14 @@ export const GroupSidebar = ({
                       </div>
                     </div>
 
-                    {canEdit && (
-                      <button
-                        onClick={() =>
-                          handleRemoveMember(String(m.user_id || m.id || ""))
-                        }
-                        className="p-2 text-[var(--ink-3)] hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] rounded-lg transition-colors border border-transparent"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
+                    <button
+                      onClick={() =>
+                        handleRemoveMember(String(m.user_id || m.id || ""))
+                      }
+                      className="p-2 text-[var(--ink-3)] hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] rounded-lg transition-colors border border-transparent"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 );
               })

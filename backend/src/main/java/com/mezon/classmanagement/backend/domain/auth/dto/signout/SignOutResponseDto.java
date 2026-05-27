@@ -13,7 +13,8 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 @JsonPropertyOrder(value = {
-        "success"
+        "signed_out_access_token",
+        "signed_out_refresh_token"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)

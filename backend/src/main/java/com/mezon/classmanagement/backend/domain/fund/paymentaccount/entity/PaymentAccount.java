@@ -33,7 +33,7 @@ public class PaymentAccount {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+	@Column(name = "id", nullable = false)
 	Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -56,7 +56,7 @@ public class PaymentAccount {
 	@JoinColumn(name = "creator_user_id", nullable = true)
 	User creator;
 
-	@Column(name = "created_at", nullable = false)
+	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
 
 }

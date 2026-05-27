@@ -78,11 +78,10 @@ public class ActivityRegistrationController {
 
 		ActivityRegistrationResponseDto response = activityRegistrationService.proof(classId, activityId, userId, activityRegistrationId, request);
 
-		return ResponseDTO.<ActivityRegistrationResponseDto>builder()
-				.success(true)
-				.message("Proof activity registration successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Proof activity registration successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
@@ -97,11 +96,10 @@ public class ActivityRegistrationController {
 
 		ActivityRegistrationResponseDto response = activityRegistrationService.unproof(classId, activityId, userId, activityRegistrationId);
 
-		return ResponseDTO.<ActivityRegistrationResponseDto>builder()
-				.success(true)
-				.message("Unproof activity registration successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Unproof activity registration successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
@@ -116,11 +114,10 @@ public class ActivityRegistrationController {
 
 		ActivityRegistrationIdResponseDto response = activityRegistrationService.approve(classId, activityId, userId, activityRegistrationId);
 
-		return ResponseDTO.<ActivityRegistrationIdResponseDto>builder()
-				.success(true)
-				.message("Approve activity registration successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Approve activity registration successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.manageActivity(#classId)")
@@ -135,11 +132,10 @@ public class ActivityRegistrationController {
 
 		ActivityRegistrationIdResponseDto response = activityRegistrationService.reject(classId, activityId, userId, activityRegistrationId);
 
-		return ResponseDTO.<ActivityRegistrationIdResponseDto>builder()
-				.success(true)
-				.message("Reject activity registration successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Reject activity registration successful",
+				response
+		);
 	}
 
 	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
@@ -154,11 +150,10 @@ public class ActivityRegistrationController {
 
 		ActivityRegistrationIdResponseDto response = activityRegistrationService.cancel(classId, activityId, userId, activityRegistrationId);
 
-		return ResponseDTO.<ActivityRegistrationIdResponseDto>builder()
-				.success(true)
-				.message("Cancel activity registration successful")
-				.data(response)
-				.build();
+		return ResponseDTO.ok(
+				"Cancel activity registration successful",
+				response
+		);
 	}
 
 }

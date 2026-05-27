@@ -147,11 +147,11 @@ public class AuthService {
 		try {
 			Jwt refreshTokenJwt = null;
 			if (rawRefreshToken != null && !rawRefreshToken.isEmpty()) {
-				refreshTokenJwt = jwtService.parse(rawRefreshToken);
+				refreshTokenJwt = jwtService.extractJwt(rawRefreshToken);
 				refreshTokenService.revokeByJti(jwtService.extractJti(refreshTokenJwt));
 			}
 
-			Jwt accessTokenJwt = jwtService.getJwt(authentication);
+			Jwt accessTokenJwt = jwtService.extractJwt(authentication);
 
 			InvalidatedAccessToken newInvalidatedAccessToken = InvalidatedAccessToken.builder()
 					.jti(jwtService.extractJti(accessTokenJwt))
@@ -159,10 +159,16 @@ public class AuthService {
 					.build();
 			invalidatedAccessTokenService.save(newInvalidatedAccessToken);
 
-			return SignOutResponseDto.builder()
-					.signedOutAccessToken(jwtService.extractToken(accessTokenJwt))
-					.signedOutRefreshToken(jwtService.extractToken(refreshTokenJwt))
-					.build();
+			if (refreshTokenJwt == null) {
+				return SignOutResponseDto.builder()
+						.signedOutAccessToken(jwtService.extractToken(accessTokenJwt))
+						.build();
+			} else {
+				return SignOutResponseDto.builder()
+						.signedOutAccessToken(jwtService.extractToken(accessTokenJwt))
+						.signedOutRefreshToken(jwtService.extractToken(refreshTokenJwt))
+						.build();
+			}
 		} catch (Exception e) {
 			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error");
 		}
@@ -189,7 +195,7 @@ public class AuthService {
 	@Transactional
 	public SignInResponseDto refresh2(String rawRefreshToken) {
 		// Parse và validate refresh token
-		Jwt jwt = jwtService.parse(rawRefreshToken);
+		Jwt jwt = jwtService.extractJwt(rawRefreshToken);
 		String jti = jwt.getId();
 
 		// Kiểm tra token đã bị revoke chưa

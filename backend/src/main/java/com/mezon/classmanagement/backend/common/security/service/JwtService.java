@@ -75,64 +75,64 @@ public class JwtService {
 		}
 	}
 
-	public Jwt getJwt(Authentication authentication) {
+
+	// From Authentication
+
+	public Jwt extractJwt(Authentication authentication) {
 		return ((JwtAuthenticationToken) authentication).getToken();
 	}
 
-	public String extractToken(Jwt jwt) {
-		return jwt == null ? null : jwt.getTokenValue();
-	}
-
-//	public Long extractUserId(Authentication authentication) {
-//		Jwt jwt = getJwt(authentication);
-//		return Long.valueOf(jwt.getClaim("user_id").toString());
-//	}
-
-	public Long extractUserId(Authentication authentication) {
-		Jwt jwt = getJwt(authentication);
-		return Long.valueOf(jwt.getSubject());
-	}
-
-//	public String extractUsername(Authentication authentication) {
-//		Jwt jwt = getJwt(authentication);
-//		return jwt.getSubject();
-//	}
-
-	public String extractUsername(Authentication authentication) {
-		Jwt jwt = getJwt(authentication);
-		return jwt.getClaim("username").toString();
-	}
-
 	public String extractJti(Authentication authentication) {
-		Jwt jwt = getJwt(authentication);
-		return jwt.getId();
-	}
-
-	public String extractJti(String rawToken) {
-		Jwt jwt = jwtDecoder.decode(rawToken);
+		Jwt jwt = extractJwt(authentication);
 		return extractJti(jwt);
 	}
 
+	public Instant extractExpiry(Authentication authentication) {
+		Jwt jwt = extractJwt(authentication);
+		return extractExpiry(jwt);
+	}
+
+	public Long extractUserId(Authentication authentication) {
+		Jwt jwt = extractJwt(authentication);
+		return extractUserId(jwt);
+	}
+
+	public String extractUsername(Authentication authentication) {
+		Jwt jwt = extractJwt(authentication);
+		return extractUsername(jwt);
+	}
+
+	// From Raw Token
+
+	public Jwt extractJwt(String rawToken) {
+		return jwtDecoder.decode(rawToken);
+	}
+
+	public String extractJti(String rawToken) {
+		Jwt jwt = extractJwt(rawToken);
+		return extractJti(jwt);
+	}
+
+	public Instant extractExpiry(String rawToken) {
+		Jwt jwt = extractJwt(rawToken);
+		return extractExpiry(jwt);
+	}
+
 	public Long extractUserId(String rawToken) {
-		Jwt jwt = jwtDecoder.decode(rawToken);
+		Jwt jwt = extractJwt(rawToken);
 		return extractUserId(jwt);
 	}
 
 	public String extractUsername(String rawToken) {
-		Jwt jwt = jwtDecoder.decode(rawToken);
+		Jwt jwt = extractJwt(rawToken);
 		return extractUsername(jwt);
 	}
 
-	public Instant extractExpiry(String rawToken) {
-		Jwt jwt = jwtDecoder.decode(rawToken);
-		return jwt.getExpiresAt();
-	}
-
-	public Jwt parse(String rawToken) {
-		return jwtDecoder.decode(rawToken);
-	}
-
 	// From JWT
+
+	public String extractToken(Jwt jwt) {
+		return jwt.getTokenValue();
+	}
 
 	public String extractJti(Jwt jwt) {
 		return jwt.getId();

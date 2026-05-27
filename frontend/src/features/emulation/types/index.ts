@@ -5,6 +5,7 @@ export interface CompetitionHistory {
   points: number;
   teamId: number;
   actor: string;
+  actor_avatar_url?: string | null;
 }
 
 export interface TeamRanking {
@@ -43,6 +44,7 @@ export type GroupMember = {
   id?: string | number;
   user_id?: string | number;
   user_display_name?: string;
+  user_avatar_url?: string;
   display_name?: string;
   full_name?: string;
   attendance_status?: "PRESENT" | "ABSENT";

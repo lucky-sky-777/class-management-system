@@ -113,7 +113,7 @@ public class AuthController {
 
 		return ResponseDTO.<SignInResponseDto>builder()
 				.success(true)
-				.message("Refresh token successful")
+				.message("Refresh tokens successful")
 				.data(response)
 				.build();
 	}

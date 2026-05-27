@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { emulationAPI } from "@features/emulation/api";
-import { homeAPI } from "@features/home/api";
-import { useAuth } from "@features/auth";
-import { ClassRole } from "@shared/domain/enums";
+
 import type { 
   CompetitionData, 
   WeekItem, 
@@ -20,6 +18,7 @@ type RawHistoryItem = {
   point?: number;
   group_id?: number;
   actor_display_name?: string;
+  actor_avatar_url?: string;
 };
 
 type RawRankItem = {
@@ -29,42 +28,17 @@ type RawRankItem = {
   total_point?: number;
 };
 
-type RawMemberItem = {
-  user_id: string | number;
-  role: ClassRole;
-};
-
 export const useEmulation = (classId: string) => {
   const [data, setData] = useState<CompetitionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [weeks, setWeeks] = useState<WeekItem[]>([]);
   const [groups, setGroups] = useState<GroupItem[]>([]);
-  const [canEdit, setCanEdit] = useState(false);
-  const { user } = useAuth();
 
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
     startDate: "",
     endDate: "",
   });
-
-  const checkPermission = useCallback(async () => {
-    if (!classId || !user?.id) return;
-    try {
-      const res = await homeAPI.getClassMembers(Number(classId));
-      if (res.success) {
-        const currentMember = res.data.find(
-          (m: RawMemberItem) => String(m.user_id) === String(user.id)
-        );
-
-        const hasPermission = currentMember?.role === ClassRole.CLASS_ADMIN;
-        setCanEdit(!!hasPermission);
-      }
-    } catch (error) {
-      console.error("Lỗi xác thực quyền thi đua:", error);
-      setCanEdit(false);
-    }
-  }, [classId, user?.id]);
 
   const loadWeeks = useCallback(async () => {
     try {
@@ -126,6 +100,7 @@ export const useEmulation = (classId: string) => {
           points: item.point || 0,
           teamId: item.group_id || 1,
           actor: item.actor_display_name || "Giáo viên",
+          actor_avatar_url: item.actor_avatar_url || null,
         }));
 
         const weeklyRanking: TeamRanking[] = (weekRankRes as unknown as RawRankItem[]).map((item) => ({
@@ -180,8 +155,8 @@ export const useEmulation = (classId: string) => {
     try {
       await emulationAPI.deletePointLog(classId, pointId);
       await loadData(true);
-    } catch {
-      alert("Xóa điểm thất bại");
+    } catch (error) {
+      console.error("Lỗi xóa tổ:", error);
     }
   };
 
@@ -198,7 +173,6 @@ export const useEmulation = (classId: string) => {
       }
     } catch (error) {
       console.error("Lỗi thêm tổ:", error);
-      alert("Đã có lỗi xảy ra khi thêm tổ!");
     }
   };
 
@@ -214,7 +188,6 @@ export const useEmulation = (classId: string) => {
       }
     } catch (error) {
       console.error("Lỗi sửa tên tổ:", error);
-      alert("Đã có lỗi xảy ra khi sửa tên tổ!");
     }
     return false;
   };
@@ -229,7 +202,6 @@ export const useEmulation = (classId: string) => {
       }
     } catch (error) {
       console.error("Lỗi xóa tổ:", error);
-      alert("Đã có lỗi xảy ra khi xóa tổ!");
     }
     return false;
   };
@@ -272,9 +244,9 @@ export const useEmulation = (classId: string) => {
     }
   };
 
-  useEffect(() => {
-    checkPermission();
-  }, [checkPermission]);
+  // useEffect(() => {
+  //   checkPermission();
+  // }, [checkPermission]);
 
   useEffect(() => {
     loadWeeks();
@@ -292,7 +264,7 @@ export const useEmulation = (classId: string) => {
     isLoading,
     filters,
     weeks,
-    canEdit,
+    // canEdit,
     setFilters: (newFilters: Partial<typeof filters>) => {
       setFilters((prev) => ({ ...prev, ...newFilters }));
     },

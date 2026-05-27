@@ -23,7 +23,7 @@ public class WeekService {
 
 	private static final WeekFields WEEK_FIELDS = WeekFields.ISO;
 
-	public List<WeekResponseDto> getWeeks(int year) {
+	public List<WeekResponseDto> getWeekList(int year) {
 		List<WeekResponseDto> response = new ArrayList<>();
 
 		int totalWeeks = LocalDate
@@ -54,18 +54,12 @@ public class WeekService {
 		return response;
 	}
 
-	public Instant getMonthByWeekStartAt() {
-		LocalDate now = LocalDate.now(ZONE_ID).minusWeeks(3);
+	///
 
-		int year = now.get(WEEK_FIELDS.weekBasedYear());
-		int week = now.get(WEEK_FIELDS.weekOfWeekBasedYear());
-
-		return getWeekStartAt(year, week);
-	}
-
-	public Instant getWeekStartAtBefore(int weeksBefore) {
-		LocalDate date = LocalDate
-				.now(ZONE_ID)
+	public Instant getWeekStartAtBefore(Instant instant, int weeksBefore) {
+		LocalDate date = instant
+				.atZone(ZONE_ID)
+				.toLocalDate()
 				.minusWeeks(weeksBefore);
 
 		int year = date.get(WEEK_FIELDS.weekBasedYear());
@@ -74,10 +68,23 @@ public class WeekService {
 		return getWeekStartAt(year, week);
 	}
 
-	public Instant getWeekStartAtBefore(Instant instant, int weeksBefore) {
+	public Instant getWeekEndAtBefore(Instant instant, int weeksBefore) {
 		LocalDate date = instant
 				.atZone(ZONE_ID)
 				.toLocalDate()
+				.minusWeeks(weeksBefore);
+
+		int year = date.get(WEEK_FIELDS.weekBasedYear());
+		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());
+
+		return getWeekEndAt(year, week);
+	}
+
+	///
+
+	public Instant getWeekStartAtBefore(int weeksBefore) {
+		LocalDate date = LocalDate
+				.now(ZONE_ID)
 				.minusWeeks(weeksBefore);
 
 		int year = date.get(WEEK_FIELDS.weekBasedYear());
@@ -97,17 +104,7 @@ public class WeekService {
 		return getWeekEndAt(year, week);
 	}
 
-	public Instant getWeekEndAtBefore(Instant instant, int weeksBefore) {
-		LocalDate date = instant
-				.atZone(ZONE_ID)
-				.toLocalDate()
-				.minusWeeks(weeksBefore);
-
-		int year = date.get(WEEK_FIELDS.weekBasedYear());
-		int week = date.get(WEEK_FIELDS.weekOfWeekBasedYear());
-
-		return getWeekEndAt(year, week);
-	}
+	///
 
 	public Instant getCurrentWeekStartAt() {
 		LocalDate now = LocalDate.now(ZONE_ID);
@@ -126,6 +123,8 @@ public class WeekService {
 
 		return getWeekEndAt(year, week);
 	}
+
+	///
 
 	private Instant getWeekStartAt(int year, int week) {
 		LocalDate startDate = LocalDate.of(year, 1, 4)

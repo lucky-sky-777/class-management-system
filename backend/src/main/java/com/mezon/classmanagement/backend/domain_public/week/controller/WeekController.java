@@ -27,7 +27,7 @@ public class WeekController {
 	public ResponseDTO<List<WeekResponseDto>> get(
 			@RequestParam int year
 	) {
-		List<WeekResponseDto> response = weekService.getWeeks(year);
+		List<WeekResponseDto> response = weekService.getWeekList(year);
 
 		return ResponseDTO.<List<WeekResponseDto>>builder()
 				.success(true)

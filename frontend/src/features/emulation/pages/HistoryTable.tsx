@@ -3,21 +3,19 @@ import type { CompetitionHistory } from "@features/emulation/types";
 interface EmulationHistoryProps {
   selectedTeam: number;
   history: CompetitionHistory[];
-  canEdit: boolean;
   onOpenPointModal: () => void;
 }
 
 export const HistoryTable = ({
   selectedTeam,
   history,
-  canEdit,
+  // canEdit,
   onOpenPointModal,
 }: EmulationHistoryProps) => {
   const filteredHistory = history.filter((h) => h.teamId === selectedTeam);
 
   return (
     <div className="bg-[var(--bg-surface)] rounded-[var(--r-xl)] border border-[var(--rule-md)] shadow-[var(--shadow-sm)] overflow-hidden flex flex-col h-[450px] transition-all">
-      {/* HEADER: Dùng font serif Lora cho tiêu đề cực sang */}
       <div className="p-3.5 border-b border-[var(--rule)] bg-[var(--bg-paper)] flex justify-between items-center sticky top-0 z-10">
         <div>
           <h3 className="text-base font-semibold italic text-[var(--ink-1)] leading-none mb-1">
@@ -25,14 +23,12 @@ export const HistoryTable = ({
           </h3>
         </div>
 
-        {canEdit && (
-          <button
-            onClick={onOpenPointModal}
-            className="flex items-center gap-1.5 bg-[var(--warm-400)] hover:bg-[var(--warm-600)] text-white px-3.5 py-1.5 rounded-[var(--r-md)] font-black text-[10px] uppercase tracking-tight shadow-[var(--shadow-sm)] transition-all active:scale-95"
-          >
-            <span>+ Ghi điểm</span>
-          </button>
-        )}
+        <button
+          onClick={onOpenPointModal}
+          className="flex items-center gap-1.5 bg-[var(--warm-400)] hover:bg-[var(--warm-600)] text-white px-3.5 py-1.5 rounded-[var(--r-md)] font-black text-[10px] uppercase tracking-tight shadow-[var(--shadow-sm)] transition-all active:scale-95"
+        >
+          <span>+ Ghi điểm</span>
+        </button>
       </div>
 
       {/* TABLE BODY: Tối ưu thanh cuộn và layout */}
@@ -81,12 +77,22 @@ export const HistoryTable = ({
                     </span>
                   </td>
 
-                  {/* 4. Người phê duyệt - Avatar nhỏ lại một chút (w-7 h-7) */}
+                  {/* 4. Người phê duyệt */}
                   <td className="md:table-cell md:px-6 md:py-3.5">
                     <div className="flex items-center gap-2.5 justify-start">
-                      <div className="w-7 h-7 rounded-full bg-[var(--blue-fill)] border border-[var(--blue-border)] flex-shrink-0 flex items-center justify-center text-[10px] font-black text-[var(--blue-text)] shadow-sm">
-                        {log.actor.charAt(0).toUpperCase()}
-                      </div>
+                      {/* Kiểm tra nếu có log.actor_avatar_url thì hiện ảnh, không thì hiện chữ cái đầu */}
+                      {log.actor_avatar_url ? (
+                        <img
+                          src={log.actor_avatar_url}
+                          alt={log.actor}
+                          className="w-7 h-7 rounded-full object-cover border border-[var(--rule)] shadow-sm"
+                        />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-[var(--blue-fill)] border border-[var(--blue-border)] flex-shrink-0 flex items-center justify-center text-[10px] font-black text-[var(--blue-text)] shadow-sm">
+                          {log.actor.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+
                       <span className="text-[12px] font-bold text-[var(--ink-2)] whitespace-nowrap">
                         {log.actor}
                       </span>
