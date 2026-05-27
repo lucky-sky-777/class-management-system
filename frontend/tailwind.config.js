@@ -242,10 +242,11 @@ module.exports = {
       // TYPOGRAPHY
       // ───────────────────────────────────────────────────────
       fontFamily: {
-        serif:   ["'Lora'", "Georgia", "serif"],
+        // Thay thế font serif (có chân) bằng font sans (không chân)
         sans:    ["'Plus Jakarta Sans'", "'Helvetica Neue'", "sans-serif"],
+        serif:   ["'Plus Jakarta Sans'", "'Helvetica Neue'", "sans-serif"], // Đổi dòng này thành sans
         mono:    ["'JetBrains Mono'", "'Fira Code'", "monospace"],
-        display: ["'Lora'", "Georgia", "serif"],
+        display: ["'Plus Jakarta Sans'", "'Helvetica Neue'", "sans-serif"], // Đổi dòng này thành sans
       },
 
       fontSize: {

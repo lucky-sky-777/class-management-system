@@ -28,8 +28,8 @@
 /* ─── CSS VARIABLES — Light Mode ───────────────────────────── */
 :root {
   --font-serif: 'Be Vietnam Pro', sans-serif;
-  --font-sans:  'Plus Jakarta Sans', 'Be Vietnam Pro', sans-serif;
-  --font-mono:  'JetBrains Mono', monospace;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
   /* Paper / Background — slate tones, học thuật sáng sủa */
   --bg-paper:     #F8FAFC; /* slate-50 */
   --bg-surface:   #FFFFFF;
