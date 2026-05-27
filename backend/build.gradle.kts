@@ -1,3 +1,5 @@
+
+
 plugins {
     java
     id("org.springframework.boot") version "4.0.5"
@@ -12,6 +14,10 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+tasks.jar {
+    enabled = false
 }
 
 repositories {
