@@ -26,12 +26,13 @@ public class GoogleOAuthStrategy implements OAuthStrategy {
 	}
 
 	@Override
-	public String getAuthUrl() {
+	public String getAuthUrl(String state) {
 		return String.format(
-				"%s?client_id=%s&redirect_uri=%s&response_type=code&scope=email profile&access_type=offline",
+				"%s?client_id=%s&redirect_uri=%s&response_type=code&scope=email profile&access_type=offline&state=%s",
 				googleEnv.AUTH_URL,
 				googleEnv.CLIENT_ID,
-				googleEnv.REDIRECT_URI
+				googleEnv.REDIRECT_URI,
+				state
 		);
 	}
 

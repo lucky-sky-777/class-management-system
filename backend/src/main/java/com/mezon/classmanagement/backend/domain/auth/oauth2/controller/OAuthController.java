@@ -1,16 +1,13 @@
 package com.mezon.classmanagement.backend.domain.auth.oauth2.controller;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
-import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
-import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.factory.OAuthFactory;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.service.GoogleOAuthService;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.service.MezonOAuthService;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.strategy.OAuthStrategy;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +29,7 @@ import java.io.IOException;
 public class OAuthController {
 
 	OAuthFactory oauthFactory;
+
 	GoogleOAuthService googleOAuthService;
 	MezonOAuthService mezonOAuthService;
 
@@ -39,54 +37,14 @@ public class OAuthController {
 	public void signin(
 			@PathVariable String provider,
 			HttpServletRequest request,
-			HttpServletResponse response,
-			HttpSession session
+			HttpServletResponse response
 	) throws IOException {
 		OAuthStrategy strategy = oauthFactory.getStrategy(provider);
 
-		String url = strategy.getAuthUrl();
-
-		if (OAuthStrategy.MEZON.equals(strategy.getName())) {
-			String state = url.substring(url.lastIndexOf("&state=") + 7);
-			session.setAttribute("MEZON_OAUTH2_STATE", state);
-		}
-		session.setAttribute("origin", request.getHeader("Origin"));
+		String origin = request.getHeader("Origin");
+		String url = strategy.getAuthUrl(origin);
 
 		response.sendRedirect(url);
-	}
-
-	@GetMapping("/callback2")
-	public ResponseDTO<SignInResponseDto> callback2(
-			@PathVariable String provider,
-			@RequestParam("code") String code,
-			@RequestParam(value = "state", required = false) String state,
-			HttpSession session
-	) {
-		OAuthStrategy strategy = oauthFactory.getStrategy(provider);
-
-		SignInResponseDto signInResponseDto = null;
-
-		if (OAuthStrategy.MEZON.equals(strategy.getName())) {
-			String savedState = (String) session.getAttribute("MEZON_OAUTH2_STATE");
-			if (savedState == null || !savedState.equals(state)) {
-				throw new GlobalException(GlobalException.Type.OAUTH_ERROR, "Sign in with Mezon failed");
-			}
-			session.removeAttribute("MEZON_OAUTH2_STATE");
-
-			String accessToken = mezonOAuthService.exchangeCodeForToken(code, state);
-			signInResponseDto = strategy.auth(accessToken);
-		}
-
-		if (OAuthStrategy.GOOGLE.equals(strategy.getName())) {
-			String accessToken = googleOAuthService.exchangeCodeForToken(code);
-			signInResponseDto = strategy.auth(accessToken);
-		}
-
-		return ResponseDTO.<SignInResponseDto>builder()
-				.success(true)
-				.message("Sign in successful")
-				.data(signInResponseDto)
-				.build();
 	}
 
 	@GetMapping("/callback")
@@ -94,32 +52,27 @@ public class OAuthController {
 			@PathVariable String provider,
 			@RequestParam("code") String code,
 			@RequestParam(value = "state", required = false) String state,
-			HttpSession session,
 			HttpServletResponse response
 	) {
 		OAuthStrategy strategy = oauthFactory.getStrategy(provider);
 
 		SignInResponseDto signInResponseDto = null;
 
-		String clientUrl = (String) session.getAttribute("origin");
+		String clientUrl = state;
 		String clientRedirectUrl = null;
 
 		try {
+			String accessToken = null;
+
 			if (OAuthStrategy.MEZON.equals(strategy.getName())) {
-				String savedState = (String) session.getAttribute("MEZON_OAUTH2_STATE");
-				if (savedState == null || !savedState.equals(state)) {
-					throw new GlobalException(GlobalException.Type.OAUTH_ERROR, "Sign in with Mezon failed");
-				}
-				session.removeAttribute("MEZON_OAUTH2_STATE");
+				accessToken = mezonOAuthService.exchangeCodeForToken(code, state);
 
-				String accessToken = mezonOAuthService.exchangeCodeForToken(code, state);
-				signInResponseDto = strategy.auth(accessToken);
 			}
-
 			if (OAuthStrategy.GOOGLE.equals(strategy.getName())) {
-				String accessToken = googleOAuthService.exchangeCodeForToken(code);
-				signInResponseDto = strategy.auth(accessToken);
+				accessToken = googleOAuthService.exchangeCodeForToken(code);
 			}
+
+			signInResponseDto = strategy.auth(accessToken);
 
 			Assert.notNull(signInResponseDto, "Internal server error");
 

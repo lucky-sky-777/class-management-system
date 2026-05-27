@@ -26,13 +26,13 @@ public class MezonOAuthStrategy implements OAuthStrategy {
 	}
 
 	@Override
-	public String getAuthUrl() {
+	public String getAuthUrl(String state) {
 		return String.format(
 				"%s?client_id=%s&redirect_uri=%s&response_type=code&scope=openid+offline&state=%s",
 				mezonEnv.AUTH_URL,
 				mezonEnv.CLIENT_ID,
 				mezonEnv.REDIRECT_URI,
-				mezonOAuthService.generate11CharState()
+				state
 		);
 	}
 
