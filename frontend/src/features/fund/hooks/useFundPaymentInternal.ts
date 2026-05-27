@@ -1,4 +1,4 @@
-import { useState, useCallback, use, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ID } from "@shared/utils/common";
 import { fundAPI } from "../api";
 import type { FundPaymentResponseDto, CreateFundPaymentRequestDto } from "../types";
