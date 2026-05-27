@@ -10,6 +10,7 @@ type RawMember = {
     user_id: string | number;
     user_display_name?: string;
     username?: string;
+    user_avatar_url?: string;
     role?: string;
     joined_at?: string;
     permissions?: PermissionCode[]; 
@@ -58,6 +59,7 @@ export const memberAPI = {
             userId: Number(m.user_id),
             displayName: m.user_display_name || "Thành viên",
             username: m.username || "",
+            user_avatar_url: m.user_avatar_url,
             role:
                 Number(m.user_id) === Number(ownerId)
                     ? "OWNER"

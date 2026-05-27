@@ -121,7 +121,7 @@ public interface ClassRepository extends JpaRepository<Class, Long> {
 			SELECT 1
 			FROM ClassUserRequest request
 			WHERE request.clazz.id = clazz.id
-				AND request.user.id = :userId
+				AND request.creator.id = :userId
 				AND request.status = 'PENDING'
 		)
 	""")
@@ -153,7 +153,7 @@ public interface ClassRepository extends JpaRepository<Class, Long> {
 
 	LEFT JOIN ClassUserRequest request
 		ON request.clazz.id = clazz.id
-		AND request.user.id = :userId
+		AND request.creator.id = :userId
 		AND request.status = 'PENDING'
 
 	WHERE

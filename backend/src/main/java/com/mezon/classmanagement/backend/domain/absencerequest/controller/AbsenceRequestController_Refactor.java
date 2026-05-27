@@ -28,98 +28,104 @@ import java.util.List;
 @RestController
 public class AbsenceRequestController_Refactor {
 
-    AuthService authService;
-    JwtService jwtService;
+	AuthService authService;
+	JwtService jwtService;
 
-    AbsenceRequestService absenceRequestService;
+	AbsenceRequestService absenceRequestService;
 
-    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
-    @PostMapping
-    public ResponseDTO<AbsenceRequestResponseDto> create(
-            @PathVariable Long classId,
-            @RequestBody CreateAbsenceRequestRequestDto request
-    ) {
-        Authentication authentication = authService.getAuthentication();
-        Long userId = jwtService.extractUserId(authentication);
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@PostMapping
+	public ResponseDTO<AbsenceRequestResponseDto> create(
+			@PathVariable Long classId,
+			@RequestBody CreateAbsenceRequestRequestDto request
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
 
-        AbsenceRequestResponseDto response = absenceRequestService.create(classId, userId, request);
+		AbsenceRequestResponseDto response = absenceRequestService.create(classId, userId, request);
 
-        return ResponseDTO.ok(
-                "Create absence request successful",
-                response
-        );
-    }
+		return ResponseDTO.ok(
+				"Create absence request successful",
+				response
+		);
+	}
 
-    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
-    @PatchMapping("/{absenceRequestId}/approve")
-    public ResponseDTO<AbsenceRequestIdResponseDto> approve(
-            @PathVariable Long classId,
-            @PathVariable Long absenceRequestId
-    ) {
-        AbsenceRequestIdResponseDto response = absenceRequestService.approve(classId, absenceRequestId);
+	@PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
+	@PatchMapping("/{absenceRequestId}/approve")
+	public ResponseDTO<AbsenceRequestIdResponseDto> approve(
+			@PathVariable Long classId,
+			@PathVariable Long absenceRequestId
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
 
-        return ResponseDTO.ok(
-                "Approve absence request successful",
-                response
-        );
-    }
+		AbsenceRequestIdResponseDto response = absenceRequestService.approve(classId, userId, absenceRequestId);
 
-    @PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
-    @PatchMapping("/{absenceRequestId}/reject")
-    public ResponseDTO<AbsenceRequestIdResponseDto> reject(
-            @PathVariable Long classId,
-            @PathVariable Long absenceRequestId
-    ) {
-        AbsenceRequestIdResponseDto response = absenceRequestService.reject(classId, absenceRequestId);
+		return ResponseDTO.ok(
+				"Approve absence request successful",
+				response
+		);
+	}
 
-        return ResponseDTO.ok(
-                "Reject absence request successful",
-                response
-        );
-    }
+	@PreAuthorize("@ClassSecurity.manageAbsenceRequest(#classId)")
+	@PatchMapping("/{absenceRequestId}/reject")
+	public ResponseDTO<AbsenceRequestIdResponseDto> reject(
+			@PathVariable Long classId,
+			@PathVariable Long absenceRequestId
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
 
-    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
-    @PatchMapping("/{absenceRequestId}/cancel")
-    public ResponseDTO<AbsenceRequestIdResponseDto> cancel(
-            @PathVariable Long classId,
-            @PathVariable Long absenceRequestId
-    ) {
-        Authentication authentication = authService.getAuthentication();
-        Long userId = jwtService.extractUserId(authentication);
+		AbsenceRequestIdResponseDto response = absenceRequestService.reject(classId, userId, absenceRequestId);
 
-        AbsenceRequestIdResponseDto response = absenceRequestService.cancel(classId, userId, absenceRequestId);
+		return ResponseDTO.ok(
+				"Reject absence request successful",
+				response
+		);
+	}
 
-        return ResponseDTO.ok(
-                "Cancel absence request successful",
-                response
-        );
-    }
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@PatchMapping("/{absenceRequestId}/cancel")
+	public ResponseDTO<AbsenceRequestIdResponseDto> cancel(
+			@PathVariable Long classId,
+			@PathVariable Long absenceRequestId
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long userId = jwtService.extractUserId(authentication);
 
-    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
-    @GetMapping
-    public ResponseDTO<List<AbsenceRequestResponseDto>> getByClass(
-            @PathVariable Long classId
-    ) {
-        List<AbsenceRequestResponseDto> response = absenceRequestService.getByClass(classId);
+		AbsenceRequestIdResponseDto response = absenceRequestService.cancel(classId, userId, absenceRequestId);
 
-        return ResponseDTO.ok(
-                "Get absence requests by class successful",
-                response
-        );
-    }
+		return ResponseDTO.ok(
+				"Cancel absence request successful",
+				response
+		);
+	}
 
-    @PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
-    @GetMapping("/users/{userId}")
-    public ResponseDTO<List<AbsenceRequestResponseDto>> getByClassAndUser(
-            @PathVariable Long classId,
-            @PathVariable Long userId
-    ) {
-        List<AbsenceRequestResponseDto> response = absenceRequestService.getByClassAndUser(classId, userId);
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@GetMapping
+	public ResponseDTO<List<AbsenceRequestResponseDto>> getListByClass(
+			@PathVariable Long classId
+	) {
+		List<AbsenceRequestResponseDto> response = absenceRequestService.getListByClass(classId);
 
-        return ResponseDTO.ok(
-                "Get absence requests by class and user successful",
-                response
-        );
-    }
+		return ResponseDTO.ok(
+				"Get absence request list by class successful",
+				response
+		);
+	}
+
+	@PreAuthorize("@ClassSecurity.everyoneInClass(#classId)")
+	@GetMapping("/users/{userId}")
+	public ResponseDTO<List<AbsenceRequestResponseDto>> getListByClassAndCreator(
+			@PathVariable Long classId,
+			@PathVariable Long userId
+	) {
+		List<AbsenceRequestResponseDto> response = absenceRequestService.getListByClassAndCreator(classId, userId);
+
+		return ResponseDTO.ok(
+				"Get absence request list by class and creator successful",
+				response
+		);
+	}
 
 }

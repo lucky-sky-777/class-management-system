@@ -12,6 +12,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -37,8 +38,20 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "class_users", uniqueConstraints = @UniqueConstraint(columnNames = {"class_id", "user_id"}))
+@Table(
+		name = "class_users",
+		uniqueConstraints = @UniqueConstraint(
+				columnNames = {"class_id", "user_id"}
+		),
+		indexes = {
+				@Index(
+						name = "index_class_users_class_id_user_id",
+						columnList = "class_id, user_id"
+				)
+		}
+)
 public class ClassUser {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false)
@@ -63,15 +76,11 @@ public class ClassUser {
 	@Column(name = "joined_at", nullable = false, insertable = false, updatable = false)
 	Instant joinedAt;
 
-//	public enum Role {
-//		CLASS_ADMIN,
-//		CLASS_MEMBER
-//	}
-
 	@PrePersist
 	public void prePersist() {
 		if (role == null) {
 			role = ClassRole.CLASS_MEMBER;
 		}
 	}
+
 }

@@ -35,7 +35,10 @@ import java.time.Instant;
 @Table(
 		name = "classes",
 		indexes = {
-				@Index(name = "index_classes_code", columnList = "code")
+				@Index(
+						name = "index_classes_code",
+						columnList = "code"
+				)
 		}
 )
 public class Class {
@@ -55,7 +58,7 @@ public class Class {
 	@Column(name = "description", nullable = true)
 	String description;
 
-	@Column(name = "code", nullable = false)
+	@Column(name = "code", nullable = false, unique = true)
 	String code;
 
 	@Column(name = "avatar_url", nullable = true)
@@ -76,7 +79,7 @@ public class Class {
 	@PrePersist
 	public void prePersist() {
 		if (name == null) {
-			name = "User_" + System.currentTimeMillis();
+			name = "Class_" + System.currentTimeMillis();
 		}
 		if (code == null) {
 			code = CodeGenerator.generate(6);

@@ -38,9 +38,18 @@ import java.util.List;
 @Table(
 		name = "users",
 		indexes = {
-				@Index(name = "index_users_username", columnList = "username"),
-				@Index(name = "index_users_phone", columnList = "phone"),
-				@Index(name = "index_users_email", columnList = "email")
+				@Index(
+						name = "index_users_username",
+						columnList = "username"
+				),
+				@Index(
+						name = "index_users_phone",
+						columnList = "phone"
+				),
+				@Index(
+						name = "index_users_email",
+						columnList = "email"
+				)
 		}
 )
 public class User implements UserDetails {
@@ -50,29 +59,29 @@ public class User implements UserDetails {
 	@Column(name = "id", nullable = false)
 	Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "provider", nullable = false)
+	@Enumerated(EnumType.STRING)
+	@Column(name = "provider", nullable = false)
 	Provider provider;
 
 	@Column(name = "provider_id", nullable = true, unique = true)
 	String providerId;
 
-    @Column(name = "username", nullable = false, unique = true)
-    String username;
+	@Column(name = "username", nullable = false, unique = true)
+	String username;
 
-    @Column(name = "hashed_password", nullable = true)
-    String hashedPassword;
+	@Column(name = "hashed_password", nullable = true)
+	String hashedPassword;
 
-    @Column(name = "display_name", nullable = true)
-    String displayName;
+	@Column(name = "display_name", nullable = true)
+	String displayName;
 
-    @Column(name = "avatar_url", nullable = true)
-    String avatarUrl;
+	@Column(name = "avatar_url", nullable = true)
+	String avatarUrl;
 
-	@Column(name = "phone", nullable = true, unique = true)
+	@Column(name = "phone", nullable = true)
 	String phone;
 
-	@Column(name = "email", nullable = true, unique = false)
+	@Column(name = "email", nullable = true)
 	String email;
 
 	@Column(name = "joined_at", nullable = false, insertable = false, updatable = false)

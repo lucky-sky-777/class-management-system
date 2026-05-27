@@ -45,7 +45,7 @@ public class ClassRoleAndPermissionController {
 	public ResponseDTO<ClassRoleAndPermissionListResponseDto> getClassRoleAndPermissionList(
 			@PathVariable Long classId
 	) {
-		ClassRoleAndPermissionListResponseDto response = classRoleAndPermissionService.getClassRoleAndPermission();
+		ClassRoleAndPermissionListResponseDto response = classRoleAndPermissionService.getRoleAndPermissionList();
 
 		return ResponseDTO.ok(
 				"Get class role and permission list successful",

@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.absencerequest.entity;
 
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
+import com.mezon.classmanagement.backend.domain.classuser.classuser_request.entity.ClassUserRequest;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,16 +39,12 @@ public class AbsenceRequest {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+	@Column(name = "id", nullable = false)
 	Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "class_id", nullable = false)
 	Class clazz;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
-	User user;
 
 	@Column(name = "reason", nullable = false)
 	String reason;
@@ -63,12 +60,23 @@ public class AbsenceRequest {
 	@Column(name = "proof_url", nullable = true)
 	String proofUrl;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "creator_user_id", nullable = true)
+	User creator;
+
+	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+	Instant createdAt;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
 	Status status;
 
-	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
-	Instant createdAt;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "actor_user_id", nullable = true)
+	User actor;
+
+	@Column(name = "acted_at", nullable = true)
+	Instant actedAt;
 
 	public enum Status {
 		PENDING,

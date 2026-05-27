@@ -1,7 +1,6 @@
 package com.mezon.classmanagement.backend.domain.classuser.classuser_request.entity;
 
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
-import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +33,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @Table(name = "classuser_requests")
 public class ClassUserRequest {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false)
@@ -43,12 +43,15 @@ public class ClassUserRequest {
 	@JoinColumn(name = "class_id", nullable = false)
 	Class clazz;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id", nullable = false)
-	User user;
-
 	@Column(name = "message", nullable = true)
 	String message;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "creator_user_id", nullable = true)
+	User creator;
+
+	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+	Instant createdAt;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
@@ -61,13 +64,10 @@ public class ClassUserRequest {
 	@Column(name = "acted_at", nullable = true)
 	Instant actedAt;
 
-	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
-	Instant createdAt;
-
 	public enum Status {
+		PENDING,
 		APPROVED,
 		REJECTED,
-		PENDING,
 		CANCELLED
 	}
 
@@ -77,4 +77,5 @@ public class ClassUserRequest {
 			status = Status.PENDING;
 		}
 	}
+
 }

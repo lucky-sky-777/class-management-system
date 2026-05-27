@@ -37,7 +37,7 @@ public class FundPayment {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+	@Column(name = "id", nullable = false)
 	Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)

@@ -5,11 +5,12 @@ import { useMembers } from "@features/member/hooks/useMembers";
 import { useAuth } from "@features/auth";
 import { memberAPI } from "@features/member/api";
 import { UserCheck } from "lucide-react";
-import { GroupSection } from "./GroupSection";
+import { GroupSection } from "@features/member/pages/GroupSection";
 import type { Member, MemberRole } from "@features/member/types";
 import { useToastStore } from "@app/store";
 import { ToastType, PermissionCode } from "@shared/domain/enums";
 import { MemberPermissionsModal } from "@features/member/pages/MemberPermissionsModal";
+import { Modal } from "@shared/components/ui/Modal";
 
 export const MemberPage = () => {
   const { classId } = useParams<{ classId: string }>();
@@ -27,15 +28,30 @@ export const MemberPage = () => {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [isSubmittingPermissions, setIsSubmittingPermissions] = useState(false);
 
-  const handleKick = async (userId: number) => {
-    if (window.confirm("Xóa thành viên này khỏi lớp học?")) {
-      try {
-        await memberAPI.kickMember(classId!, userId);
-        showToast("Đã xóa thành viên khỏi lớp!", ToastType.SUCCESS);
-        refresh(true);
-      } catch {
-        showToast("Lỗi khi xóa thành viên", ToastType.ERROR);
-      }
+  //state quản lý modal xác nhận xóa thành viên khỏi lớp
+  const [confirmDelete, setConfirmDelete] = useState<{
+    isOpen: boolean;
+    userId: number | null;
+  }>({
+    isOpen: false,
+    userId: null,
+  });
+
+  // Hàm trigger mở modal
+  const handleKick = (userId: number) => {
+    setConfirmDelete({ isOpen: true, userId });
+  };
+
+  const executeKick = async () => {
+    if (!confirmDelete.userId) return;
+    try {
+      await memberAPI.kickMember(classId!, confirmDelete.userId);
+      showToast("Đã xóa thành viên khỏi lớp!", ToastType.SUCCESS);
+      refresh(true);
+    } catch {
+      showToast("Lỗi khi xóa thành viên", ToastType.ERROR);
+    } finally {
+      setConfirmDelete({ isOpen: false, userId: null });
     }
   };
 
@@ -75,20 +91,26 @@ export const MemberPage = () => {
   };
 
   // 1. Định nghĩa logic xác định xem ai là "Quản trị viên"
-const isAdminOrHasPermissions = (m: Member) => {
+  const isAdminOrHasPermissions = (m: Member) => {
     // 1. Kiểm tra role cứng
     if (m.role === "CLASS_ADMIN" || m.role === "OWNER") return true;
-    
+
     // 2. Kiểm tra permissions an toàn:
-    // Dùng optional chaining (?.) để lấy length. 
+    // Dùng optional chaining (?.) để lấy length.
     // Nếu không có permissions thì nó trả về undefined, so sánh với > 0 sẽ là false.
     return (m.permissions?.length ?? 0) > 0;
-};
+  };
 
-// 2. Chia lại danh sách thành viên
-const ownerMembers = members.filter((m) => m.role === "OWNER");
-const adminMembers = members.filter((m) => m.role !== "OWNER" && isAdminOrHasPermissions(m));
-const regularMembers = members.filter((m) => m.role !== "OWNER" && !isAdminOrHasPermissions(m));
+  // 2. Chia lại danh sách thành viên
+  const activeMembers = members.filter((m) => m.role !== "PENDING");
+
+  const ownerMembers = activeMembers.filter((m) => m.role === "OWNER");
+  const adminMembers = activeMembers.filter(
+    (m) => m.role !== "OWNER" && isAdminOrHasPermissions(m),
+  );
+  const regularMembers = activeMembers.filter(
+    (m) => m.role !== "OWNER" && !isAdminOrHasPermissions(m),
+  );
 
   // --- KIỂM TRA ĐIỀU KIỆN RENDER ---
   if (!classInfo || isLoading) {
@@ -203,6 +225,34 @@ const regularMembers = members.filter((m) => m.role !== "OWNER" && !isAdminOrHas
         onSave={handleSavePermissions}
         isSubmitting={isSubmittingPermissions}
       />
+
+      {/* MODAL XÁC NHẬN XÓA (Tích hợp thẳng vào MemberPage) */}
+      <Modal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false, userId: null })}
+        title="Xác nhận xóa thành viên"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--ink-2)]">
+            Bạn có chắc chắn muốn xóa học sinh này khỏi lớp học? Hành động này
+            không thể hoàn tác.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmDelete({ isOpen: false, userId: null })}
+              className="flex-1 py-2 rounded-xl bg-[var(--bg-surface-2)] text-[var(--ink-2)] font-bold text-xs hover:bg-[var(--rule-md)] transition-colors"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              onClick={executeKick}
+              className="flex-1 py-2 rounded-xl bg-[var(--red)] text-white font-bold text-xs shadow-sm hover:opacity-90 transition-all active:scale-95"
+            >
+              Xác nhận xóa
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

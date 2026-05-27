@@ -1,7 +1,6 @@
 package com.mezon.classmanagement.backend.domain.group.entity;
 
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
-import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

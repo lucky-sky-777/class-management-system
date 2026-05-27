@@ -13,7 +13,8 @@ public interface AbsenceRequestMapper {
     AbsenceRequest toAbsenceRequest(CreateAbsenceRequestRequestDto createAbsenceRequestRequestDto);
 
     @Mapping(source = "clazz.id", target = "classId")
-    @Mapping(source = "user.id", target = "userId")
+    @Mapping(source = "creator.id", target = "creatorUserId")
+    @Mapping(source = "actor.id", target = "actorUserId")
     AbsenceRequestResponseDto toAbsenceRequestResponseDto(AbsenceRequest absenceRequest);
 
 }
