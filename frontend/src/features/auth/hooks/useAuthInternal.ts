@@ -112,10 +112,10 @@ export const useAuthInternal = () => {
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data: SignOutRequest = {
-        accessToken: storage.get<string>(AUTH_STORAGE_KEY.TOKEN) || "",
-      };
-      await authApi.signOut(data);
+      
+      const accessToken = storage.get<string>(AUTH_STORAGE_KEY.TOKEN) || "";
+      const refreshToken = storage.get<string>(AUTH_STORAGE_KEY.REFRESH) || "";
+      await authApi.signOut(accessToken, refreshToken);
     } catch (err) {
       console.error("Lỗi đăng xuất:", err);
       setError("Lỗi đăng xuất, vui lòng thử lại");
