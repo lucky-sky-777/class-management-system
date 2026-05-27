@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for class-management-system-frontend on 2026-05-27T11:26:24Z
+# fly.toml app configuration file generated for class-management-system-frontend on 2026-05-27T11:43:37Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -9,11 +9,11 @@ primary_region = 'sin'
 [build]
 
 [http_service]
-  internal_port = 8080
+  internal_port = 80
   force_https = true
-  auto_stop_machines = 'stop'
+  auto_stop_machines = 'off'
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ['app']
 
 [[vm]]
