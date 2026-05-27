@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -33,8 +34,20 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "group_users", uniqueConstraints = @UniqueConstraint(columnNames = {"class_id", "group_id", "user_id"}))
+@Table(
+		name = "group_users",
+		uniqueConstraints = @UniqueConstraint(
+				columnNames = {"class_id", "group_id", "user_id"}
+		),
+		indexes = {
+				@Index(
+						name = "index_group_users_class_id_group_id_user_id",
+						columnList = "class_id, group_id, user_id"
+				)
+		}
+)
 public class GroupUser {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false)
@@ -89,4 +102,5 @@ public class GroupUser {
 			attendanceStatus = AttendanceStatus.ABSENT_UNEXCUSED;
 		}
 	}
+
 }

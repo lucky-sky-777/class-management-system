@@ -11,52 +11,63 @@ import java.util.List;
 @Repository
 public interface AbsenceRequestRepository extends JpaRepository<AbsenceRequest, Long> {
 
-    boolean existsByClazz_IdAndUser_IdAndStatus(Long classId, Long userId, AbsenceRequest.Status status);
+    boolean existsByClazz_IdAndCreator_IdAndStatus(Long classId, Long creatorUserId, AbsenceRequest.Status status);
 
     List<AbsenceRequest> findByClazz_IdAndId(Long classId, Long absenceRequestId);
-    List<AbsenceRequest> findByClazz_IdAndUser_IdAndId(Long classId, Long userId, Long absenceRequestId);
+    List<AbsenceRequest> findByClazz_IdAndCreator_IdAndId(Long classId, Long creatorUserId, Long absenceRequestId);
 
     @Query(value = """
     select new com.mezon.classmanagement.backend.domain.absencerequest.dto.response.AbsenceRequestResponseDto(
         absenceRequest.id,
         class.id,
-        user.id,
-        user.displayName,
-        user.avatarUrl,
         absenceRequest.reason,
         absenceRequest.from,
         absenceRequest.to,
         absenceRequest.proofUrl,
+        creator.id,
+        creator.displayName,
+        creator.avatarUrl,
+        absenceRequest.createdAt,
         absenceRequest.status,
-        absenceRequest.createdAt
+        actor.id,
+        actor.displayName,
+        actor.avatarUrl,
+        absenceRequest.actedAt
     )
     from AbsenceRequest absenceRequest
     join absenceRequest.clazz class
-    join absenceRequest.user user
+    left join absenceRequest.creator creator
+    left join absenceRequest.actor actor
     where class.id = :classId
     order by absenceRequest.createdAt desc
     """)
     List<AbsenceRequestResponseDto> getByClazz_IdOrderByCreatedAtDesc(Long classId);
+
     @Query(value = """
     select new com.mezon.classmanagement.backend.domain.absencerequest.dto.response.AbsenceRequestResponseDto(
         absenceRequest.id,
         class.id,
-        user.id,
-        user.displayName,
-        user.avatarUrl,
         absenceRequest.reason,
         absenceRequest.from,
         absenceRequest.to,
         absenceRequest.proofUrl,
+        creator.id,
+        creator.displayName,
+        creator.avatarUrl,
+        absenceRequest.createdAt,
         absenceRequest.status,
-        absenceRequest.createdAt
+        actor.id,
+        actor.displayName,
+        actor.avatarUrl,
+        absenceRequest.actedAt
     )
     from AbsenceRequest absenceRequest
     join absenceRequest.clazz class
-    join absenceRequest.user user
-    where class.id = :classId and user.id = :userId
+    left join absenceRequest.creator creator
+    left join absenceRequest.actor actor
+    where class.id = :classId and creator.id = :creatorUserId
     order by absenceRequest.createdAt desc
     """)
-    List<AbsenceRequestResponseDto> getByClazz_IdAndUser_IdOrderByCreatedAtDesc(Long classId, Long userId);
+    List<AbsenceRequestResponseDto> getByClazz_IdAndCreator_IdOrderByCreatedAtDesc(Long classId, Long creatorUserId);
 
 }

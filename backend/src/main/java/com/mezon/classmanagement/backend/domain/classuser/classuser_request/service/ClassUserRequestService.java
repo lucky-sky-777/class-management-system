@@ -50,46 +50,20 @@ public class ClassUserRequestService {
 
 	ApplicationEventPublisher applicationEventPublisher;
 
-	public record RequestApprovedEvent(Long classId, Long userId) {}
-
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-	@RequiredArgsConstructor
-	@Component
-	public static class RequestEventListener {
-
-		ClassUserService classUserService;
-
-		@Transactional(propagation = Propagation.REQUIRES_NEW)
-		@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-		public void handleRequestApproved(RequestApprovedEvent event) {
-			classUserService.createClassUser(
-					event.classId(),
-					CreateClassUserRequestDto.builder()
-							.userId(event.userId())
-							.build(),
-					ClassRole.CLASS_MEMBER
-			);
-		}
-	}
-
 	@Transactional
 	public void create(
 			Long classId,
-			Long userId,
+			Long creatorUserId,
 			CreateClassUserRequestRequestDto request
 	) {
-		throwIfExistsByClassIdAndUserIdAndStatus(classId, userId, ClassUserRequest.Status.PENDING);
+		throwIfExistsByClassIdAndCreatorUserIdAndStatus(classId, creatorUserId, ClassUserRequest.Status.PENDING);
 
-		Class clazz = Class.builder()
-				.id(classId)
-				.build();
-		User user = User.builder()
-				.id(userId)
-				.build();
+		Class clazz = Class.create(classId);
+		User creator = User.create(creatorUserId);
 
 		ClassUserRequest newClassUserRequest = classUserRequestMapper.toClassUserRequest(request);
 		newClassUserRequest.setClazz(clazz);
-		newClassUserRequest.setUser(user);
+		newClassUserRequest.setCreator(creator);
 
 		save(newClassUserRequest);
 	}
@@ -103,9 +77,7 @@ public class ClassUserRequestService {
 	) {
 		ClassUserRequest currentClassUserRequest = findByClassIdAndClassUserRequestIdOrThrow(classId, classUserRequestId);
 
-		User actor = User.builder()
-				.id(actorUserId)
-				.build();
+		User actor = User.create(actorUserId);
 
 		currentClassUserRequest.setStatus(ClassUserRequest.Status.APPROVED);
 		currentClassUserRequest.setActor(actor);
@@ -116,62 +88,67 @@ public class ClassUserRequestService {
 		applicationEventPublisher.publishEvent(
 				new RequestApprovedEvent(
 						responseClassUserRequest.getClazz().getId(),
-						responseClassUserRequest.getUser().getId()
+						responseClassUserRequest.getCreator().getId()
 				)
 		);
 
-		return ClassUserRequestIdResponseDto.builder()
-				.classUserRequestId(responseClassUserRequest.getId())
-				.build();
+		return new ClassUserRequestIdResponseDto(
+				responseClassUserRequest.getId()
+		);
 	}
 
 	@RequireClassSecurity
 	@Transactional
 	public ClassUserRequestIdResponseDto reject(
 			Long classId,
+			Long actorUserId,
 			Long classUserRequestId
 	) {
 		ClassUserRequest currentClassUserRequest = findByClassIdAndClassUserRequestIdOrThrow(classId, classUserRequestId);
 
+		User actor = User.create(actorUserId);
+
 		currentClassUserRequest.setStatus(ClassUserRequest.Status.REJECTED);
+		currentClassUserRequest.setActor(actor);
+		currentClassUserRequest.setActedAt(Instant.now());
 
 		ClassUserRequest responseClassUserRequest = save(currentClassUserRequest);
 
-		return ClassUserRequestIdResponseDto.builder()
-				.classUserRequestId(responseClassUserRequest.getId())
-				.build();
+		return new ClassUserRequestIdResponseDto(
+				responseClassUserRequest.getId()
+		);
 	}
 
 	@Transactional
 	public ClassUserRequestIdResponseDto cancel(
 			Long classId,
-			Long userId,
+			Long actorUserId,
 			Long classUserRequestId
 	) {
-		ClassUserRequest currentClassUserRequest = findByClassIdAndUserIdAndClassUserRequestIdOrThrow(classId, userId, classUserRequestId);
+		ClassUserRequest currentClassUserRequest = findByClassIdAndCreatorUserIdAndClassUserRequestIdOrThrow(classId, actorUserId, classUserRequestId);
+
+		User actor = User.create(actorUserId);
 
 		currentClassUserRequest.setStatus(ClassUserRequest.Status.CANCELLED);
+		currentClassUserRequest.setActor(actor);
+		currentClassUserRequest.setActedAt(Instant.now());
 
 		ClassUserRequest responseClassUserRequest = save(currentClassUserRequest);
 
-		return ClassUserRequestIdResponseDto.builder()
-				.classUserRequestId(responseClassUserRequest.getId())
-				.build();
+		return new ClassUserRequestIdResponseDto(
+				responseClassUserRequest.getId()
+		);
 	}
 
 	@RequireClassSecurity
 	@Transactional(readOnly = true)
-	public List<ClassUserRequestResponseDto> getByClass(Long classId) {
-		return getByClassId(classId);
+	public List<ClassUserRequestResponseDto> getListByClass(Long classId) {
+		return getListByClassId(classId);
 	}
 
 	@Transactional(readOnly = true)
-	public List<ClassUserRequestResponseDto> getByUser(Long userId) {
-		List<ClassUserRequest> response = findByUserId(userId);
-
-		return response.stream()
-				.map(classUserRequestMapper::toClassUserRequestResponseDto)
-				.toList();
+	public List<ClassUserRequestResponseDto> getListByCreator(Long creatorUserId) {
+		return getListByCreatorUserId(creatorUserId);
 	}
 
 	/**
@@ -188,21 +165,15 @@ public class ClassUserRequestService {
 	 */
 
 	@Transactional(readOnly = true)
-	public List<ClassUserRequest> findByClassId(Long classId) {
-		return classUserRequestRepository
-				.findByClazz_IdOrderByCreatedAtDesc(classId);
-	}
-
-	@Transactional(readOnly = true)
-	public List<ClassUserRequestResponseDto> getByClassId(Long classId) {
+	public List<ClassUserRequestResponseDto> getListByClassId(Long classId) {
 		return classUserRequestRepository
 				.getByClazz_IdOrderByCreatedAtDesc(classId);
 	}
 
 	@Transactional(readOnly = true)
-	public List<ClassUserRequest> findByUserId(Long userId) {
+	public List<ClassUserRequestResponseDto> getListByCreatorUserId(Long creatorUserId) {
 		return classUserRequestRepository
-				.findByUser_IdOrderByCreatedAtDesc(userId);
+				.getByCreator_IdOrderByCreatedAtDesc(creatorUserId);
 	}
 
 	@Transactional(readOnly = true)
@@ -221,13 +192,13 @@ public class ClassUserRequestService {
 	}
 
 	@Transactional(readOnly = true)
-	public ClassUserRequest findByClassIdAndUserIdAndClassUserRequestIdOrThrow(
+	public ClassUserRequest findByClassIdAndCreatorUserIdAndClassUserRequestIdOrThrow(
 			Long classId,
-			Long userId,
+			Long creatorUserId,
 			Long classUserRequestId
 	) {
 		List<ClassUserRequest> classUserRequestList = classUserRequestRepository
-				.findByClazz_IdAndUser_IdAndId(classId, userId, classUserRequestId);
+				.findByClazz_IdAndCreator_IdAndId(classId, creatorUserId, classUserRequestId);
 		throwIfEmptyList(classUserRequestList);
 
 		ClassUserRequest classUserRequest = classUserRequestList.getFirst();
@@ -253,13 +224,21 @@ public class ClassUserRequestService {
 	 */
 
 	@Transactional(readOnly = true)
-	public boolean existsByClassIdAndUserIdAndStatus(Long classId, Long userId, ClassUserRequest.Status status) {
-		return classUserRequestRepository.existsByClazz_IdAndUser_IdAndStatus(classId, userId, status);
+	public boolean existsByClassIdAndCreatorUserIdAndStatus(
+			Long classId,
+			Long creatorUserId,
+			ClassUserRequest.Status status
+	) {
+		return classUserRequestRepository.existsByClazz_IdAndCreator_IdAndStatus(classId, creatorUserId, status);
 	}
 
 	@Transactional(readOnly = true)
-	public void throwIfExistsByClassIdAndUserIdAndStatus(Long classId, Long userId, ClassUserRequest.Status status) {
-		if (existsByClassIdAndUserIdAndStatus(classId, userId, status)) {
+	public void throwIfExistsByClassIdAndCreatorUserIdAndStatus(
+			Long classId,
+			Long creatorUserId,
+			ClassUserRequest.Status status
+	) {
+		if (existsByClassIdAndCreatorUserIdAndStatus(classId, creatorUserId, status)) {
 			throw new GlobalException(GlobalException.Type.ALREADY_EXISTS, "Join class request exists");
 		}
 	}
@@ -270,6 +249,29 @@ public class ClassUserRequestService {
 
 	public boolean isPending(ClassUserRequest.Status status) {
 		return ClassUserRequest.Status.PENDING == status;
+	}
+
+	public record RequestApprovedEvent(Long classId, Long userId) {
+	}
+
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+	@RequiredArgsConstructor
+	@Component
+	public static class RequestEventListener {
+
+		ClassUserService classUserService;
+
+		@Transactional(propagation = Propagation.REQUIRES_NEW)
+		@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+		public void handleRequestApproved(RequestApprovedEvent event) {
+			classUserService.createClassUser(
+					event.classId(),
+					CreateClassUserRequestDto.builder()
+							.userId(event.userId())
+							.build(),
+					ClassRole.CLASS_MEMBER
+			);
+		}
 	}
 
 }

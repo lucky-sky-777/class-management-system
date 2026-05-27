@@ -34,7 +34,7 @@ public class ClassRoleAndPermissionService {
 	}
 
 	@RequireClassSecurity
-	public ClassRoleAndPermissionListResponseDto getClassRoleAndPermission() {
+	public ClassRoleAndPermissionListResponseDto getRoleAndPermissionList() {
 		return ClassRoleAndPermissionListResponseDto.builder()
 				.roles(getClassRoleOrPermissionList(ClassRole.class))
 				.permissions(getClassRoleOrPermissionList(ClassPermission.class))
