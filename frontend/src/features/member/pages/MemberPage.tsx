@@ -102,11 +102,13 @@ export const MemberPage = () => {
   };
 
   // 2. Chia lại danh sách thành viên
-  const ownerMembers = members.filter((m) => m.role === "OWNER");
-  const adminMembers = members.filter(
+  const activeMembers = members.filter((m) => m.role !== "PENDING");
+
+  const ownerMembers = activeMembers.filter((m) => m.role === "OWNER");
+  const adminMembers = activeMembers.filter(
     (m) => m.role !== "OWNER" && isAdminOrHasPermissions(m),
   );
-  const regularMembers = members.filter(
+  const regularMembers = activeMembers.filter(
     (m) => m.role !== "OWNER" && !isAdminOrHasPermissions(m),
   );
 
