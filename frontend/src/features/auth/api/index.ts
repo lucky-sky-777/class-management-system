@@ -11,8 +11,13 @@ export const authApi = {
         return apiClient.post<ResponseDTO<RegisterResponse>>("/auth/signup", data);
     },
 
-    signOut: async (data: SignOutRequest): Promise<ResponseDTO<SignOutResponse>> => {
-        return apiClient.post<ResponseDTO<SignOutResponse>>("/auth/signout", data);
+    signOut: async (accesstoken: string, refreshtoken: string): Promise<ResponseDTO<SignOutResponse>> => {
+        return apiClient.post<ResponseDTO<SignOutResponse>>("/auth/signout", null, {
+            headers: {
+                Authorization: `Bearer ${accesstoken}`,
+                "X-Refresh-Token": refreshtoken,
+            },
+        });
     },
 
     callbackGoogle: async (code: string): Promise<ResponseDTO<AuthResponse>> => {
