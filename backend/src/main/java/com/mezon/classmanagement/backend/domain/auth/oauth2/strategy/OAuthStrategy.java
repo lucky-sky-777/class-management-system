@@ -10,7 +10,7 @@ public interface OAuthStrategy {
 	String MEZON = "mezon";
 
 	String getName();
-	String getAuthUrl();
+	String getAuthUrl(String state);
 	SignInResponseDto auth(String accessToken);
 
 }
