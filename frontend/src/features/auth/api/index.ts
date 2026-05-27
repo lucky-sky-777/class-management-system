@@ -1,6 +1,6 @@
 import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
-import type { LoginRequest, RegisterRequest, AuthResponse, RegisterResponse, SignOutRequest, SignOutResponse, UserResponse } from "@features/auth/types";
+import type { LoginRequest, RegisterRequest, AuthResponse, RegisterResponse, SignOutResponse, UserResponse } from "@features/auth/types";
 
 export const authApi = {
     signIn: async (data: LoginRequest): Promise<ResponseDTO<AuthResponse>> => {
