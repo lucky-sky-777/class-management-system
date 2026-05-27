@@ -26,6 +26,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class JwtService {
 	private final JwtDecoder jwtDecoder;
+	private final JwtConstant jwtConstant;
 
 	public String generateAccessToken(Long userId, String username) {
 		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
@@ -68,7 +69,7 @@ public class JwtService {
 		JWSObject jwsObject = new JWSObject(jwsHeader, payload);
 
 		try {
-			jwsObject.sign(new MACSigner(JwtConstant.SIGNER_KEY.getBytes()));
+			jwsObject.sign(new MACSigner(jwtConstant.SIGNER_KEY.getBytes()));
 			return jwsObject.serialize();
 		} catch (JOSEException e) {
 			throw new RuntimeException("Cannot create token", e);

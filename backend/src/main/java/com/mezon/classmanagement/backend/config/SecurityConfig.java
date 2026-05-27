@@ -45,6 +45,8 @@ public class SecurityConfig {
 	CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 	CustomAccessDeniedHandler customAccessDeniedHandler;
 
+	JwtConstant jwtConstant;
+
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) {
 		httpSecurity
@@ -101,7 +103,7 @@ public class SecurityConfig {
 
 	@Bean
 	public JwtDecoder jwtDecoder() {
-		SecretKeySpec secretKeySpec = new SecretKeySpec(JwtConstant.SIGNER_KEY.getBytes(), "HmacSHA512");
+		SecretKeySpec secretKeySpec = new SecretKeySpec(jwtConstant.SIGNER_KEY.getBytes(), "HmacSHA512");
 
 		return NimbusJwtDecoder
 				.withSecretKey(secretKeySpec)
