@@ -94,9 +94,14 @@ export const useAuthInternal = () => {
           setError(response.message);
           return false;
         }
-      } catch (err: any) {
-        setError("Lỗi đăng ký, vui lòng thử lại");
-        console.error("Lỗi đăng ký:", err);
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.code === 409 || err.status === 409) {
+            setError("Tên đăng nhập đã tồn tại, vui lòng chọn tên khác");
+            return false
+          }
+          setError(err.message || "Lỗi đăng ký");
+        }
         return false;
       } finally {
         setIsLoading(false);
