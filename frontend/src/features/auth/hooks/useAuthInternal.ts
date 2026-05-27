@@ -2,8 +2,7 @@ import { useState, useCallback } from "react";
 import { authApi } from "@features/auth/api";
 import type {
   LoginRequest,
-  RegisterRequest,
-  SignOutRequest,
+  RegisterRequest
 } from "@features/auth/types";
 import type { User } from "@shared/domain/user";
 import { useAuthStore } from "./useAuthStore";
@@ -12,6 +11,7 @@ import type { AccessTokenPayload } from "@features/auth/types/jwtpayload";
 import { storage } from "@shared/storages";
 import { AUTH_STORAGE_KEY } from "@features/auth/types/keyStorage";
 import { UserType } from "@shared/domain/enums";
+import { ApiError } from "@services/api-client";
 
 /**
  * useAuthInternal: Chỉ dùng nội bộ trong feature auth (LoginPage, RegisterPage)
@@ -35,29 +35,26 @@ export const useAuthInternal = () => {
 
           const token = response.data;
 
-          // const accessToken = jwtDecode<AccessTokenPayload>(token.access_token);
-
           //  luu token vào localStorage thông qua storage abstraction
           storage.set(AUTH_STORAGE_KEY.TOKEN, token.access_token);
           storage.set(AUTH_STORAGE_KEY.REFRESH, token.refresh_token);
-
-          // useFetchCurrentUser(); // Tự động fetch user hiện tại sau khi có token mới
-          // const userData: User = {
-          //   id: Number(accessToken.sub) || 0,
-          //   username: data.username,
-          //   type: "INTERNAL",
-          //   avatarUrl: "",
-          //   token: token.access_token, // them dong nay de bat token
-          // };
-
-          // setUser(userData); // Zustand sẽ tự lưu vào localStorage 'auth-storage'
           return true;
         } else {
-          setError(response.message);
+          if (response.code === 401) {
+            setError("Tên đăng nhập hoặc mật khẩu không đúng");
+          } else {
+            setError(response.message); 
+          }
           return false;
         }
-      } catch (err: any) {
-        setError(err.message || "Lỗi đăng nhập");
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.status === 401) {
+            setError("Tên đăng nhập hoặc mật khẩu không đúng");
+          } else {
+            setError(err.message || "Lỗi đăng nhập");
+          }
+        }
         return false;
       } finally {
         setIsLoading(false);

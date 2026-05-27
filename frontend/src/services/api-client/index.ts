@@ -3,6 +3,42 @@ import type { AxiosRequestConfig } from "axios";
 import { axiosInstance } from "./core";
 import type { ApiClientOptions } from "./config";
 
+
+/**
+ * Class representing an error returned from the API.
+ * Extends the native Error class with additional status and business logic codes.
+ */
+export class ApiError extends Error {
+    /**
+     * HTTP Status code returned from the server (e.g., 400, 401, 403, 404, 500).
+     * If no response was received, this will be 0.
+     */
+    status: number;
+
+    /**
+     * Specific business logic error code returned in the ResponseDTO from the backend (e.g., 1000).
+     * This field is optional and may be undefined if no custom code is provided.
+     */
+    code?: number;
+
+    /**
+     * Creates an instance of ApiError.
+     * 
+     * @param message - The error message detailing the reason for the failure.
+     * @param status - The HTTP Status code.
+     * @param code - The custom business logic error code (optional).
+     */
+    constructor(message: string, status: number, code?: number) {
+        super(message);
+        this.name = "ApiError";
+        this.status = status;
+        this.code = code;
+
+        // Restore prototype chain
+        Object.setPrototypeOf(this, ApiError.prototype);
+    }
+}
+
 let tempHeaders: Record<string, string> = {};
 
 /**
@@ -42,10 +78,18 @@ async function runRequest<T>(
         const response = await axiosInstance.request<T>(config);
         return response.data;
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            throw new Error(
-                `API Error: ${error.response.status} ${error.response.statusText || ""}`.trim()
-            );
+        if (axios.isAxiosError(error)) {
+            if (error.response) {
+                const data = error.response.data as { message?: string; code?: number } | undefined;
+                const status = error.response.status;
+                const message = data?.message || error.response.statusText || `API Error: ${status}`;
+                const code = data?.code;
+                throw new ApiError(message, status, code);
+            } else if (error.request) {
+                throw new ApiError("No response received from the server", 0);
+            } else {
+                throw new ApiError(error.message, 0);
+            }
         }
         throw error;
     }

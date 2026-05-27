@@ -1,6 +1,6 @@
 import type { CreateAxiosDefaults, AxiosRequestConfig } from "axios";
 
-export const BASE_URL = "http://localhost:8080/api";
+export const BASE_URL = "https://class-management-system-backend.fly.dev/api";
 
 export const configAxios: CreateAxiosDefaults = {
     baseURL: BASE_URL,
@@ -15,4 +15,4 @@ export interface ApiClientOptions extends Omit<RequestInit, "headers" | "signal"
     timeout?: number;
     signal?: AbortSignal | null;
     axiosConfig?: Omit<AxiosRequestConfig, "url" | "method" | "data" | "headers" | "signal" | "params" | "timeout">;
-}
+}
