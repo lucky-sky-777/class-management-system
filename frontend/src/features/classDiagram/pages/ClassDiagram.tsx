@@ -1,9 +1,17 @@
 // src/features/classDiagram/pages/ClassDiagram.tsx
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { GraduationCap, Presentation, Shuffle } from "lucide-react";
+import {
+  GraduationCap,
+  Presentation,
+  Shuffle,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+} from "lucide-react";
 import { useClassDiagram } from "@features/classDiagram/hooks/useClassDiagram";
 import { Group } from "@features/classDiagram/pages/Group";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 export const ClassDiagram = () => {
   const { classId } = useParams();
@@ -259,69 +267,108 @@ export const ClassDiagram = () => {
 
       {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
       <div
-        className="w-full bg-[var(--bg-surface-2)] rounded-3xl border border-[var(--rule-lg)] shadow-inner overflow-hidden flex flex-col"
+        className="w-full h-[75vh] min-h-[500px] relative overflow-hidden px-2 md:px-0"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-full overflow-x-auto custom-scrollbar p-6 md:p-12">
-          {/* Main Layout wrapper: Xoay trên/dưới theo góc nhìn */}
-          <div
-            className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-10 md:gap-16 transition-all duration-500 min-w-max mx-auto`}
-          >
-            <div
-              className={`flex w-full items-center justify-center gap-8 md:gap-16 ${isTeacherView ? "flex-row-reverse" : "flex-row"}`}
-            >
-              {/* KHỐI 1: BÀN GIÁO VIÊN */}
-              {/* Mặc định nằm TRÁI (Học sinh nhìn lên), khi lật sẽ nhảy sang PHẢI */}
-              <div className="bg-[var(--bg-surface)] px-8 md:px-12 py-3.5 md:py-4 rounded-xl shadow-[var(--shadow-md)] border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
-                <div className="absolute top-1 w-1/3 h-1 bg-[var(--rule)] rounded-full"></div>
-                <span className="text-[11px] md:text-xs font-black text-[var(--warm-600)] uppercase tracking-[0.15em] mt-1">
-                  Bàn Giáo Viên
-                </span>
-              </div>
-
-              {/* KHỐI 2: BẢNG ĐEN */}
-              {/* Mặc định nằm PHẢI (Học sinh nhìn lên), khi lật sẽ nhảy sang TRÁI */}
-              <div className="flex flex-col items-center gap-2 shrink-0">
-                <span className="text-[10px] md:text-[11px] font-black text-[var(--ink-3)] uppercase tracking-[0.4em]">
-                  Bảng Đen
-                </span>
-                <div className="w-72 md:w-96 h-4 md:h-5 bg-[#1a1c23] rounded-md shadow-[0_5px_15px_rgba(0,0,0,0.12)] border-x-2 border-t-2 border-b-[4px] border-[#4a3f35] relative">
-                  <div className="absolute bottom-0 w-full h-[1.5px] bg-white/20"></div>
-                </div>
-              </div>
-            </div>
-
-            {/* LƯỚI CHỖ NGỒI (Đã chia cột đối xứng) */}
-            <div
-              style={{
-                transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-              className={`flex flex-nowrap justify-center gap-10 md:gap-12 pb-10 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
-            >
-              {groupColumns.map((colGroups, colIndex) => (
-                <div
-                  key={`col-${colIndex}`}
-                  className="flex flex-col gap-10 md:gap-12 relative w-fit"
+        <TransformWrapper
+          initialScale={0.4}
+          minScale={0.1}
+          maxScale={3}
+          centerOnInit={true}
+          centerZoomedOut={true}
+          limitToBounds={false}
+          panning={{
+            allowLeftClickPan: true,
+            velocityDisabled: true,
+          }}
+          wheel={{ disabled: true }}
+          pinch={{ step: 2 }}
+        >
+          {({ zoomIn, zoomOut, resetTransform }) => (
+            <div className="w-full h-full relative">
+              {/* THANH CÔNG CỤ ZOOM - ĐƯA LÊN TRÊN */}
+              <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 bg-[var(--bg-surface)]/90 backdrop-blur-md p-1.5 rounded-2xl shadow-md border border-[var(--rule-md)]">
+                <button
+                  onClick={() => zoomIn()}
+                  className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
+                  title="Phóng to"
                 >
-                  {/* Đường kẻ đứt nét chia luồng đi ở giữa */}
-                  {colIndex === 0 && (
-                    <div className="absolute -right-5 md:-right-6 top-0 bottom-0 w-px border-r-2 border-dashed border-[var(--rule-md)] opacity-40" />
-                  )}
+                  <ZoomIn size={18} />
+                </button>
+                <div className="w-full h-px bg-[var(--rule-md)]" />
+                <button
+                  onClick={() => zoomOut()}
+                  className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
+                  title="Thu nhỏ"
+                >
+                  <ZoomOut size={18} />
+                </button>
+                <div className="w-full h-px bg-[var(--rule-md)]" />
+                <button
+                  onClick={() => resetTransform()}
+                  className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
+                  title="Căn giữa"
+                >
+                  <Maximize size={18} />
+                </button>
+              </div>
 
-                  {colGroups.map((groupData) => (
-                    <Group
-                      key={groupData.groupId}
-                      groupData={groupData}
-                      isTeacherView={isTeacherView}
-                      onSeatClick={handleSeatClick}
-                      selectedStudentId={selectedStudentId}
-                    />
-                  ))}
+              {/* CANVAS SƠ ĐỒ CHÍNH */}
+              <TransformComponent
+                wrapperStyle={{ width: "100%", height: "100%", cursor: "grab" }}
+                contentStyle={{ width: "max-content", height: "max-content" }}
+              >
+                <div
+                  className="p-24 flex flex-col items-center"
+                  style={{ touchAction: "pan-y" }}
+                >
+                  <div
+                    className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-16 transition-all duration-500`}
+                  >
+                    {/* BÀN GIÁO VIÊN VÀ BẢNG ĐEN */}
+                    <div
+                      className={`flex w-full items-center justify-center gap-16 ${isTeacherView ? "flex-row-reverse" : "flex-row"}`}
+                    >
+                      <div className="bg-[var(--bg-surface)] px-12 py-4 rounded-xl border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
+                        <span className="text-xs font-black text-[var(--warm-600)] uppercase tracking-[0.15em]">
+                          Bàn Giáo Viên
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 shrink-0">
+                        <span className="text-xs font-black text-[var(--ink-3)] uppercase tracking-[0.4em]">
+                          Bảng Đen
+                        </span>
+                        <div className="w-96 h-5 bg-[#1a1c23] rounded-md shadow-lg border-b-[4px] border-[#4a3f35]" />
+                      </div>
+                    </div>
+
+                    {/* LƯỚI CHỖ NGỒI */}
+                    <div
+                      className={`flex flex-nowrap justify-center gap-12 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
+                    >
+                      {groupColumns.map((colGroups, colIndex) => (
+                        <div
+                          key={colIndex}
+                          className="flex flex-col gap-12 relative"
+                        >
+                          {colGroups.map((groupData) => (
+                            <Group
+                              key={groupData.groupId}
+                              groupData={groupData}
+                              isTeacherView={isTeacherView}
+                              onSeatClick={handleSeatClick}
+                              selectedStudentId={selectedStudentId}
+                            />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              ))}
+              </TransformComponent>
             </div>
-          </div>
-        </div>
+          )}
+        </TransformWrapper>
       </div>
     </div>
   );
