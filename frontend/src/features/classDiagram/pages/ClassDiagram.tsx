@@ -60,11 +60,11 @@ export const ClassDiagram = () => {
                     pixelRatio: 0.5, // Giảm tỷ lệ để ảnh nhẹ hơn, tương đương scale: 0.5
                     skipFonts: false,
                     cacheBust: true,
-                    filter: (node) => {
-                        // Bỏ qua các thẻ img (chỉ lấy layout và text)
-                        if (node.tagName === 'IMG') return false;
-                        return true;
-                    }
+                    // filter: (node) => {
+                    //     // Bỏ qua các thẻ img (chỉ lấy layout và text)
+                    //     if (node.tagName === 'IMG') return false;
+                    //     return true;
+                    // }
                 });
                 setMinimapImg(dataUrl);
             } catch (error) {
