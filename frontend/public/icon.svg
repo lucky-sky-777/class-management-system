@@ -1,0 +1,26 @@
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="64"
+    height="64"
+    viewBox="0 0 64 64"
+>
+    <rect
+        x="10"
+        y="10"
+        width="44"
+        height="44"
+        rx="12"
+        fill="#3367E8"
+    />
+    <text
+        x="32"
+        y="39"
+        text-anchor="middle"
+        fill="white"
+        font-size="24"
+        font-family="Arial, sans-serif"
+        font-weight="500"
+    >
+        E
+    </text>
+</svg>
