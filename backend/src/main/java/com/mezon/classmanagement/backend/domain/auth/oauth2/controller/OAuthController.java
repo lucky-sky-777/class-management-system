@@ -101,7 +101,9 @@ public class OAuthController {
 			clientRedirectUrl =
 					state
 							+ "/oauth2-signin-redirect?authorization-code="
-							+ oAuthAuthorization.getCode();
+							+ oAuthAuthorization.getCode()
+							+ "&provider="
+							+ provider;
 		} catch (Exception e) {
 			clientRedirectUrl =
 					state
