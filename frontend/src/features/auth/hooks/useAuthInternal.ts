@@ -6,8 +6,7 @@ import type {
 } from "@features/auth/types";
 import type { User } from "@shared/domain/user";
 import { useAuthStore } from "./useAuthStore";
-import { jwtDecode } from "jwt-decode";
-import type { AccessTokenPayload } from "@features/auth/types/jwtpayload";
+
 import { storage } from "@shared/storages";
 import { AUTH_STORAGE_KEY } from "@features/auth/types/keyStorage";
 import { UserType } from "@shared/domain/enums";
@@ -152,7 +151,7 @@ export const useAuthInternal = () => {
       finally {
         setIsLoading(false);
       }
-    },[setUser]);
+    },[]);
 
   return {
 

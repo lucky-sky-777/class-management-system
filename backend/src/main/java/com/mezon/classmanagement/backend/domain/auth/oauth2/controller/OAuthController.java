@@ -123,6 +123,7 @@ public class OAuthController {
 			@PathVariable String provider,
 			@RequestBody ExchangeOAuthAuthorizationCodeRequest request
 	) {
+		System.out.println("from controller: " + request.getOAuthAuthorizationCode());
 		OAuthStrategy oAuthStrategy = oAuthFactory.getStrategy(provider);
 
 		OAuthAuthorization oAuthAuthorization = oAuthAuthorizationService.exchange(oAuthStrategy.getName(), request);

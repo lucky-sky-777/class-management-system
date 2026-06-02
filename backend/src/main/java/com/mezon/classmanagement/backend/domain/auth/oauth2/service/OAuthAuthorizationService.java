@@ -68,7 +68,7 @@ public class OAuthAuthorizationService {
 	@Transactional
 	public OAuthAuthorization findByCode(String code) {
 		return oAuthAuthorizationRepository
-				.findById(code)
+				.findByCode(code)
 				.orElseThrow(() ->
 						new GlobalException(GlobalException.Type.NOT_FOUND, "OAuth authorization code not found")
 				);
