@@ -29,7 +29,7 @@ export const authApi = {
     },
 
     fetchJWTTokenWithAuthCode: async (code: string, provider: string): Promise<ResponseDTO<AuthResponse>> => {
-        return apiClient.post<ResponseDTO<AuthResponse>>(`/auth/auth/${provider}/exchange`,{
+        return apiClient.post<ResponseDTO<AuthResponse>>(`/auth/${provider}/exchange`,{
             'oauth_authorization_code' : code
         });
     }

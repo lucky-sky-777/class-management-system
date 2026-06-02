@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { authApi } from '@features/auth/api';
 import { useAuthStore } from '@features/auth/hooks/useAuthStore';
 import type { User } from '@shared/domain/user';
@@ -19,7 +19,7 @@ export const useFetchCurrentUser = (): UseFetchCurrentUserReturn => {
     const [error, setError] = useState<Error | null>(null);
     const { user, setUser } = useAuthStore();
 
-    const fetchUser = async () => {
+    const fetchUser = useCallback( async () => {
         try {
             setIsLoading(true);
             setError(null);
@@ -45,7 +45,7 @@ export const useFetchCurrentUser = (): UseFetchCurrentUserReturn => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [setUser]);
 
     // Tự động fetch khi component mount
     useEffect(() => {

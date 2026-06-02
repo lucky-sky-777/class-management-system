@@ -15,7 +15,7 @@ export const OAuth2RedirectHandler = () => {
     const provider = searchParams.get("provider");
     const backendError = searchParams.get("error-message");
 
-    useEffect(() => {
+    useEffect( () => {
         const processAuthentication = async () => {
             if (backendError) {
                 setErrorMsg(decodeURIComponent(backendError));
@@ -41,7 +41,7 @@ export const OAuth2RedirectHandler = () => {
         };
 
         processAuthentication();
-    }, [auth_code, provider, backendError, refetch, navigate]);
+    }, [auth_code, provider, backendError]);
 
     return (
         <div className="min-h-screen bg-paper flex flex-col items-center justify-center p-6">
