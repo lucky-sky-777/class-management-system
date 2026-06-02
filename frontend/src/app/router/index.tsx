@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 import { LoginPage, RegisterPage, OAuth2RedirectHandler } from "@features/auth";
-import { GoogleCallbackPage } from "@features/auth/pages/GoogleCallbackPage";
 import App from "@/App";
 import { HomePage } from "@features/home/pages/HomePage";
 import { ClassDiagram } from "@features/classDiagram/pages/ClassDiagram";
@@ -38,17 +37,6 @@ export const router = createBrowserRouter([
         ),
         handle: {
             title: "Đăng ký"
-        }
-    },
-    {
-        path: "/google-callback",
-        element: (
-            <EmptyLayout>
-                <GoogleCallbackPage />
-            </EmptyLayout>
-        ),
-        handle: {
-            title: "Đăng nhập bằng Google"
         }
     },
     {

@@ -127,42 +127,32 @@ export const useAuthInternal = () => {
     }
   }, [storeLogout]);
 
-  const loginWithGoogle = useCallback(
-    async (code: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await authApi.callbackGoogle(code);
-      if (response.success && response.data) {
-        const token = response.data;
-        const accessToken = jwtDecode<AccessTokenPayload>(token.access_token);
-
-        storage.set(AUTH_STORAGE_KEY.TOKEN, token.access_token);
-        storage.set(AUTH_STORAGE_KEY.REFRESH, token.refresh_token);
-
-        const userData: User = {
-          id: Number(accessToken.sub) || 0,
-          username: accessToken.username || "",
-          type: UserType.GOOGLE,
-          avatarUrl: "",
-          token: token.access_token,
-        };
-
-        setUser(userData);
-        return true;
-      } else {
-        setError(response.message);
+  // lây token với mã auth code (OAuth2)
+  const fetchTokenWithAuthCode = useCallback(
+    async (code: string, provider: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await authApi.fetchJWTTokenWithAuthCode(code, provider);
+        if (response.success && response.data) {
+          const token = response.data;
+          storage.set(AUTH_STORAGE_KEY.TOKEN, token.access_token);
+          storage.set(AUTH_STORAGE_KEY.REFRESH, token.refresh_token);
+          return true;
+        } else {
+          setError(response.message);
+          return false;
+        }
+      } catch (err) {
+        if (err instanceof ApiError) {
+          setError(err.message || "Lỗi xác thực với mã OAuth");
+        }
         return false;
       }
-    } catch (err: any) {
-      setError(err.message || "Lỗi xác thực Google");
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  },
-  [setUser],
-  );
+      finally {
+        setIsLoading(false);
+      }
+    },[setUser]);
 
   return {
 
@@ -171,6 +161,6 @@ export const useAuthInternal = () => {
     login,
     signup,
     logout,
-    loginWithGoogle,
+    fetchTokenWithAuthCode,
   };
 };
