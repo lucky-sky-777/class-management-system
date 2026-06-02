@@ -3,6 +3,8 @@ package com.mezon.classmanagement.backend.domain.auth.oauth2.entity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -30,6 +32,7 @@ public class OAuthAuthorization {
 	@Column(name = "code", nullable = false)
 	String code;
 
+	@Enumerated(EnumType.STRING)
 	@Column(name = "provider", nullable = false)
 	User.Provider provider;
 

@@ -1,6 +1,8 @@
 package com.mezon.classmanagement.backend.domain.auth.oauth2.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend.common.mapper.UserProviderMapper;
+import com.mezon.classmanagement.backend.common.util.EnumUtils;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.dto.ExchangeOAuthAuthorizationCodeRequest;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthAuthorization;
@@ -31,7 +33,7 @@ public class OAuthAuthorizationService {
 	) {
 		OAuthAuthorization newOAuthAuthorization = OAuthAuthorization.builder()
 				.code(code)
-				.provider(provider)
+				.provider(UserProviderMapper.toUserProvider(provider))
 				.accessToken(accessToken)
 				.refreshToken(refreshToken)
 				.build();
