@@ -1,0 +1,75 @@
+package com.mezon.classmanagement.backend.domain.auth.oauth2.service;
+
+import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend.domain.auth.entity.User;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.dto.ExchangeOAuthAuthorizationCodeRequest;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthAuthorization;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.repository.OAuthAuthorizationRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Locale;
+import java.util.Objects;
+
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
+@Service
+public class OAuthAuthorizationService {
+
+	OAuthAuthorizationRepository oAuthAuthorizationRepository;
+
+	@Transactional
+	public OAuthAuthorization create(
+			String code,
+			String provider,
+			String accessToken,
+			String refreshToken
+	) {
+		OAuthAuthorization newOAuthAuthorization = OAuthAuthorization.builder()
+				.code(code)
+				.provider(provider)
+				.accessToken(accessToken)
+				.refreshToken(refreshToken)
+				.build();
+
+		return save(newOAuthAuthorization);
+	}
+
+	@Transactional
+	public OAuthAuthorization exchange(String provider, ExchangeOAuthAuthorizationCodeRequest request) {
+		OAuthAuthorization currentOAuthAuthorization = findByCode(request.getOAuthAuthorizationCode());
+
+		if (!Objects.equals(provider.toLowerCase(Locale.ROOT), currentOAuthAuthorization.getProvider().name().toLowerCase(Locale.ROOT))) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid request");
+		}
+		if (currentOAuthAuthorization.getExpiryDate().isBefore(Instant.now())) {
+			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "OAuth authorization code expired");
+		}
+		if (currentOAuthAuthorization.getUsed()) {
+			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "OAuth authorization code already used");
+		}
+
+		currentOAuthAuthorization.setUsed(true);
+
+		return save(currentOAuthAuthorization);
+	}
+
+	@Transactional
+	public OAuthAuthorization save(OAuthAuthorization oAuthAuthorization) {
+		return oAuthAuthorizationRepository.save(oAuthAuthorization);
+	}
+
+	@Transactional
+	public OAuthAuthorization findByCode(String code) {
+		return oAuthAuthorizationRepository
+				.findById(code)
+				.orElseThrow(() ->
+						new GlobalException(GlobalException.Type.NOT_FOUND, "OAuth authorization code not found")
+				);
+	}
+
+}

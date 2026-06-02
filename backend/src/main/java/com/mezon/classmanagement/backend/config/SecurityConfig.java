@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.config;
 
+import com.mezon.classmanagement.backend.common.constant.ClientConstant;
 import com.mezon.classmanagement.backend.common.exeption.custom.CustomAccessDeniedHandler;
 import com.mezon.classmanagement.backend.common.exeption.custom.CustomAuthenticationEntryPoint;
 import com.mezon.classmanagement.backend.common.constant.JwtConstant;
@@ -68,15 +69,13 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/auth/**").permitAll()
 
-						.requestMatchers(HttpMethod.GET, "/api/seats/**").permitAll()
-						.requestMatchers(HttpMethod.PATCH, "/api/seats/**").permitAll()
 						.requestMatchers("/api/public/**").permitAll()
 
 						// test
 						//.requestMatchers("/**").permitAll()
 
 						// actuator
-						.requestMatchers("/actuator/**").permitAll()
+						//.requestMatchers("/actuator/**").permitAll()
 
 						.anyRequest().authenticated()
 				)
@@ -111,34 +110,19 @@ public class SecurityConfig {
 				.build();
 	}
 
-//	@Bean
-//	public CorsConfigurationSource corsConfigurationSource() {
-//		CorsConfiguration corsConfiguration = new CorsConfiguration();
-//
-//		corsConfiguration.setAllowedOrigins(/*List.of("http://localhost:5173")*/ List.of("*"));
-//		corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-//		corsConfiguration.setAllowedHeaders(List.of("*"));
-//		corsConfiguration.setAllowCredentials(true);
-//
-//		UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-//		urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
-//
-//		return urlBasedCorsConfigurationSource;
-//	}
-
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-		corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+		corsConfiguration.setAllowedOrigins(ClientConstant.ALLOWED_ORIGIN_LIST);
 		corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		corsConfiguration.setAllowedHeaders(List.of("*"));
 		corsConfiguration.setAllowCredentials(true);
 
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", corsConfiguration);
+		UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+		urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
 
-		return source;
+		return urlBasedCorsConfigurationSource;
 	}
 
 }
