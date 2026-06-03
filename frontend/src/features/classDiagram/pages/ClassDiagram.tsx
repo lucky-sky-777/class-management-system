@@ -42,7 +42,12 @@ export const ClassDiagram = () => {
   const [showMinimap, setShowMinimap] = useState(true);
 
   // Lưu vị trí & kích thước hộp View Box trên Minimap (tính theo %)
-  const [viewBox, setViewBox] = useState({ left: 0, top: 0, width: 100, height: 100 });
+  //const [viewBox, setViewBox] = useState({ left: 0, top: 0, width: 100, height: 100 });
+  const viewBoxRef = useRef<HTMLDivElement>(null);
+
+  const minimapRef = useRef<HTMLDivElement>(null); // Trỏ tới thẻ chứa toàn bộ Minimap
+  const isDraggingMinimap = useRef(false); // Đánh dấu trạng thái đang nhấn giữ chuột
+  const currentMapState = useRef({ scale: 0.4, x: 0, y: 0 }); // Lưu lại tọa độ & mức zoom hiện tại của Map chính
 
   // Hàm chụp ảnh sơ đồ đang hiển thị
   // const captureMinimap = async () => {
@@ -97,11 +102,46 @@ export const ClassDiagram = () => {
     }
   }, [data, perspective]);
 
+  // // Xử lý sự kiện di chuyển/phóng to sơ đồ chính để cập nhật View Box
+  // const handleTransformed = useCallback((ref: any) => {
+  //   if (!contentRef.current || !wrapperRef.current) return;
+  //
+  //   const { scale, positionX, positionY } = ref.state;
+  //
+  //   // Đo kích thước nguyên bản của vùng chứa sơ đồ
+  //   const contentW = contentRef.current.offsetWidth;
+  //   const contentH = contentRef.current.offsetHeight;
+  //
+  //   // Đo kích thước khung nhìn thực tế của màn hình thiết bị
+  //   const wrapperW = wrapperRef.current.offsetWidth;
+  //   const wrapperH = wrapperRef.current.offsetHeight;
+  //
+  //   // Kích thước thực tế sau khi bị tác động bởi mức phóng to (Scale)
+  //   const scaledContentW = contentW * scale;
+  //   const scaledContentH = contentH * scale;
+  //
+  //   // Tỷ lệ phần trăm diện tích hiển thị trên tổng thể sơ đồ
+  //   const visibleWidthPct = (wrapperW / scaledContentW) * 100;
+  //   const visibleHeightPct = (wrapperH / scaledContentH) * 100;
+  //
+  //   // Tỷ lệ phần trăm tọa độ điểm bắt đầu dịch chuyển (Pan)
+  //   const leftPct = (-positionX / scaledContentW) * 100;
+  //   const topPct = (-positionY / scaledContentH) * 100;
+  //
+  //   setViewBox({
+  //     left: Math.max(0, leftPct),
+  //     top: Math.max(0, topPct),
+  //     width: Math.min(100 - Math.max(0, leftPct), visibleWidthPct),
+  //     height: Math.min(100 - Math.max(0, topPct), visibleHeightPct)
+  //   });
+  // }, []);
   // Xử lý sự kiện di chuyển/phóng to sơ đồ chính để cập nhật View Box
   const handleTransformed = useCallback((ref: any) => {
     if (!contentRef.current || !wrapperRef.current) return;
 
     const { scale, positionX, positionY } = ref.state;
+
+    currentMapState.current = { scale, x: positionX, y: positionY };
 
     // Đo kích thước nguyên bản của vùng chứa sơ đồ
     const contentW = contentRef.current.offsetWidth;
@@ -123,12 +163,20 @@ export const ClassDiagram = () => {
     const leftPct = (-positionX / scaledContentW) * 100;
     const topPct = (-positionY / scaledContentH) * 100;
 
-    setViewBox({
-      left: Math.max(0, leftPct),
-      top: Math.max(0, topPct),
-      width: Math.min(100 - Math.max(0, leftPct), visibleWidthPct),
-      height: Math.min(100 - Math.max(0, topPct), visibleHeightPct)
-    });
+    // ĐÃ FIX: Loại bỏ Math.max và Math.min để box tự do di chuyển vượt ranh giới
+    // CSS overflow-hidden ở thẻ cha sẽ tự lo phần cắt xén hiển thị
+    // setViewBox({
+    //   left: leftPct,
+    //   top: topPct,
+    //   width: visibleWidthPct,
+    //   height: visibleHeightPct
+    // });
+    if (viewBoxRef.current) {
+      viewBoxRef.current.style.left = `${leftPct}%`;
+      viewBoxRef.current.style.top = `${topPct}%`;
+      viewBoxRef.current.style.width = `${visibleWidthPct}%`;
+      viewBoxRef.current.style.height = `${visibleHeightPct}%`;
+    }
   }, []);
   // --- KẾT THÚC LOGIC MINIMAP ---
 
@@ -378,119 +426,217 @@ export const ClassDiagram = () => {
               }}
               wheel={{ disabled: true }}
               pinch={{ step: 2 }}
-              onTransform={handleTransformed}
+              onTransform={handleTransformed} // Kích hoạt khi bấm nút Zoom In/Out/Reset
+              onPanning={handleTransformed}     // Kích hoạt LIÊN TỤC khi đang kéo (Drag)
+              onZoom={handleTransformed}     // Kích hoạt LIÊN TỤC khi đang phóng to/thu nhỏ
+              onPinch={handleTransformed}    // Kích hoạt LIÊN TỤC khi dùng 2 ngón tay trên điện thoại
           >
-            {({ zoomIn, zoomOut, resetTransform }) => (
-                <div className="w-full h-full relative">
-                  {/* THANH CÔNG CỤ ZOOM */}
-                  <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 bg-[var(--bg-surface)]/90 backdrop-blur-md p-1.5 rounded-2xl shadow-md border border-[var(--rule-md)]">
-                    <button
-                        onClick={() => zoomIn()}
-                        className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
-                        title="Phóng to"
-                    >
-                      <ZoomIn size={18} />
-                    </button>
-                    <div className="w-full h-px bg-[var(--rule-md)]" />
-                    <button
-                        onClick={() => zoomOut()}
-                        className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
-                        title="Thu nhỏ"
-                    >
-                      <ZoomOut size={18} />
-                    </button>
-                    <div className="w-full h-px bg-[var(--rule-md)]" />
-                    <button
-                        onClick={() => resetTransform()}
-                        className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
-                        title="Căn giữa"
-                    >
-                      <Maximize size={18} />
-                    </button>
-                    <div className="w-full h-px bg-[var(--rule-md)]" />
-                    <button
-                        onClick={() => setShowMinimap(!showMinimap)}
-                        className={`p-2 transition-colors ${showMinimap ? "text-[var(--warm-600)]" : "text-[var(--ink-2)]"}`}
-                        title="Bật/Tắt sơ đồ thu nhỏ"
-                    >
-                      <MapIcon size={18} />
-                    </button>
-                  </div>
+            {({ zoomIn, zoomOut, resetTransform, setTransform }) => {
+                const updateMapFromMinimap = (e: React.PointerEvent<HTMLDivElement>) => {
+                    const minimapEl = minimapRef.current;
+                    if (!contentRef.current || !wrapperRef.current || !minimapEl) return;
 
-                  {/* THÀNH PHẦN MINIMAP ĐIỀU KHIỂN NGHỊCH */}
-                  {showMinimap && minimapImg && (
-                      <div className="absolute bottom-6 right-6 z-50 w-48 bg-white border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 pointer-events-none select-none">
-                        <img src={minimapImg} alt="Sơ đồ lớp thu nhỏ" className="w-full h-auto opacity-60 bg-[var(--bg-paper)]" />
+                    // 1. Lấy vị trí của Minimap trên màn hình
+                    const rect = minimapEl.getBoundingClientRect();
 
-                        {/* Hộp chỉ định vùng hiển thị hiện tại (View Box) */}
+                    // 2. Tính vị trí trỏ chuột (từ 0 đến 1, tương đương 0% -> 100%)
+                    let xPct = (e.clientX - rect.left) / rect.width;
+                    let yPct = (e.clientY - rect.top) / rect.height;
+
+                    // Giới hạn để chuột không kéo Box bay ra khỏi viền Minimap
+                    xPct = Math.max(0, Math.min(1, xPct));
+                    yPct = Math.max(0, Math.min(1, yPct));
+
+                    // 3. Lấy thông số hiện tại của map chính
+                    const scale = currentMapState.current.scale;
+                    const contentW = contentRef.current.offsetWidth;
+                    const contentH = contentRef.current.offsetHeight;
+                    const wrapperW = wrapperRef.current.offsetWidth;
+                    const wrapperH = wrapperRef.current.offsetHeight;
+
+                    const scaledContentW = contentW * scale;
+                    const scaledContentH = contentH * scale;
+
+                    // 4. Căn giữa View Box vào con trỏ chuột
+                    const viewBoxWidthPct = wrapperW / scaledContentW;
+                    const viewBoxHeightPct = wrapperH / scaledContentH;
+                    const leftPct = xPct - (viewBoxWidthPct / 2);
+                    const topPct = yPct - (viewBoxHeightPct / 2);
+
+                    // 5. Quy đổi ra Pixel và ép map chính di chuyển
+                    const newX = -(leftPct * scaledContentW);
+                    const newY = -(topPct * scaledContentH);
+
+                    // setTransform(x, y, scale, animationTime)
+                    setTransform(newX, newY, scale, 0);
+                };
+
+                // Khi bắt đầu nhấn chuột vào Minimap
+                const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+                    e.stopPropagation(); // Ngăn không cho map chính nhận sự kiện click này
+                    isDraggingMinimap.current = true;
+
+                    if (minimapRef.current) {
+                        minimapRef.current.setPointerCapture(e.pointerId); // Khóa con trỏ
+                    }
+
+                    updateMapFromMinimap(e); // Cập nhật vị trí ngay cú click đầu tiên
+                };
+
+                // Khi di chuyển chuột (chỉ chạy nếu đang nhấn giữ)
+                const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+                    if (!isDraggingMinimap.current) return;
+                    updateMapFromMinimap(e);
+                };
+
+                // Khi nhả chuột ra
+                const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+                    isDraggingMinimap.current = false;
+                    if (minimapRef.current) {
+                        minimapRef.current.releasePointerCapture(e.pointerId); // Mở khóa con trỏ
+                    }
+                };
+
+              return (
+                  <div className="w-full h-full relative">
+                    {/* THANH CÔNG CỤ ZOOM */}
+                    <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 bg-[var(--bg-surface)]/90 backdrop-blur-md p-1.5 rounded-2xl shadow-md border border-[var(--rule-md)]">
+                      <button
+                          onClick={() => zoomIn()}
+                          className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
+                          title="Phóng to"
+                      >
+                        <ZoomIn size={18} />
+                      </button>
+                      <div className="w-full h-px bg-[var(--rule-md)]" />
+                      <button
+                          onClick={() => zoomOut()}
+                          className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
+                          title="Thu nhỏ"
+                      >
+                        <ZoomOut size={18} />
+                      </button>
+                      <div className="w-full h-px bg-[var(--rule-md)]" />
+                      <button
+                          onClick={() => resetTransform()}
+                          className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
+                          title="Căn giữa"
+                      >
+                        <Maximize size={18} />
+                      </button>
+                      <div className="w-full h-px bg-[var(--rule-md)]" />
+                      <button
+                          onClick={() => setShowMinimap(!showMinimap)}
+                          className={`p-2 transition-colors ${showMinimap ? "text-[var(--warm-600)]" : "text-[var(--ink-2)]"}`}
+                          title="Bật/Tắt sơ đồ thu nhỏ"
+                      >
+                        <MapIcon size={18} />
+                      </button>
+                    </div>
+
+                    {/* THÀNH PHẦN MINIMAP ĐIỀU KHIỂN NGHỊCH */}
+                    {showMinimap && minimapImg && (
                         <div
-                            className="absolute border-[1.5px] border-blue-500 bg-blue-500/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)] transition-all duration-75"
-                            style={{
-                              left: `${viewBox.left}%`,
-                              top: `${viewBox.top}%`,
-                              width: `${viewBox.width}%`,
-                              height: `${viewBox.height}%`,
-                            }}
-                        />
-                      </div>
-                  )}
+                            ref={minimapRef} // Gắn ref để hàm updateMapFromMinimap đo kích thước
 
-                  {/* CANVAS SƠ ĐỒ CHÍNH */}
-                  <TransformComponent
-                      wrapperStyle={{ width: "100%", height: "100%", cursor: "grab" }}
-                      contentStyle={{ width: "max-content", height: "max-content" }}
-                  >
-                    <div
-                        ref={contentRef}
-                        className="p-24 flex flex-col items-center"
-                        style={{ touchAction: "pan-y" }}
+                            // GẮN 3 HÀM XỬ LÝ KÉO THẢ VÀO ĐÂY:
+                            onPointerDown={handlePointerDown}
+                            onPointerMove={handlePointerMove}
+                            onPointerUp={handlePointerUp}
+                            onPointerCancel={handlePointerUp} // Dự phòng khi drag ra ngoài trình duyệt
+
+                            // CHÚ Ý: Đã xóa "pointer-events-none" ở cuối class này
+                            // Thêm "cursor-move" để chuột đổi icon thành hình 4 mũi tên
+                            className="absolute bottom-6 right-6 z-50 w-48 bg-white border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 cursor-move select-none"
+
+                            // Ngăn điện thoại tự động cuộn trang web khi đang vuốt Minimap
+                            style={{ touchAction: "none" }}
+                        >
+                          <img src={minimapImg} alt="Sơ đồ lớp thu nhỏ" className="w-full h-auto opacity-60 bg-[var(--bg-paper)]" />
+
+                          {/*/!* Hộp chỉ định vùng hiển thị hiện tại (View Box) *!/*/}
+                          {/*<div*/}
+                          {/*    className="absolute border-[1.5px] border-blue-500 bg-blue-500/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)] transition-all duration-75"*/}
+                          {/*    style={{*/}
+                          {/*      left: `${viewBox.left}%`,*/}
+                          {/*      top: `${viewBox.top}%`,*/}
+                          {/*      width: `${viewBox.width}%`,*/}
+                          {/*      height: `${viewBox.height}%`,*/}
+                          {/*    }}*/}
+                          {/*/>*/}
+                          {/* Hộp chỉ định vùng hiển thị hiện tại (View Box) */}
+                          <div
+                              ref={viewBoxRef} // <-- THÊM DÒNG NÀY
+                              // ĐÃ XÓA: "transition-all duration-75" để tránh xung đột với tốc độ drag
+                              className="absolute border-[1.5px] border-blue-500 bg-blue-500/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
+                              style={{
+                                // Khởi tạo giá trị mặc định bao phủ 100% trước khi có sự kiện transform đầu tiên
+                                left: '0%',
+                                top: '0%',
+                                width: '100%',
+                                height: '100%',
+                              }}
+                          />
+                        </div>
+                    )}
+
+                    {/* CANVAS SƠ ĐỒ CHÍNH */}
+                    <TransformComponent
+                        wrapperStyle={{ width: "100%", height: "100%", cursor: "grab" }}
+                        contentStyle={{ width: "max-content", height: "max-content" }}
                     >
                       <div
-                          className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-16 transition-all duration-500`}
+                          ref={contentRef}
+                          className="p-24 flex flex-col items-center"
+                          style={{ touchAction: "pan-y" }}
                       >
-                        {/* BÀN GIÁO VIÊN VÀ BẢNG ĐEN */}
                         <div
-                            className={`flex w-full items-center justify-center gap-16 ${isTeacherView ? "flex-row-reverse" : "flex-row"}`}
+                            className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-16 transition-all duration-500`}
                         >
-                          <div className="bg-[var(--bg-surface)] px-12 py-4 rounded-xl border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
+                          {/* BÀN GIÁO VIÊN VÀ BẢNG ĐEN */}
+                          <div
+                              className={`flex w-full items-center justify-center gap-16 ${isTeacherView ? "flex-row-reverse" : "flex-row"}`}
+                          >
+                            <div className="bg-[var(--bg-surface)] px-12 py-4 rounded-xl border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
                         <span className="text-xs font-black text-[var(--warm-600)] uppercase tracking-[0.15em]">
                           Bàn Giáo Viên
                         </span>
-                          </div>
-                          <div className="flex flex-col items-center gap-2 shrink-0">
+                            </div>
+                            <div className="flex flex-col items-center gap-2 shrink-0">
                         <span className="text-xs font-black text-[var(--ink-3)] uppercase tracking-[0.4em]">
                           Bảng Đen
                         </span>
-                            <div className="w-96 h-5 bg-[#1a1c23] rounded-md shadow-lg border-b-[4px] border-[#4a3f35]" />
+                              <div className="w-96 h-5 bg-[#1a1c23] rounded-md shadow-lg border-b-[4px] border-[#4a3f35]" />
+                            </div>
+                          </div>
+
+                          {/* LƯỚI CHỖ NGỒI */}
+                          <div
+                              className={`flex flex-nowrap justify-center gap-12 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
+                          >
+                            {groupColumns.map((colGroups, colIndex) => (
+                                <div
+                                    key={colIndex}
+                                    className="flex flex-col gap-12 relative"
+                                >
+                                  {colGroups.map((groupData) => (
+                                      <Group
+                                          key={groupData.groupId}
+                                          groupData={groupData}
+                                          isTeacherView={isTeacherView}
+                                          onSeatClick={handleSeatClick}
+                                          selectedStudentId={selectedStudentId}
+                                      />
+                                  ))}
+                                </div>
+                            ))}
                           </div>
                         </div>
-
-                        {/* LƯỚI CHỖ NGỒI */}
-                        <div
-                            className={`flex flex-nowrap justify-center gap-12 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
-                        >
-                          {groupColumns.map((colGroups, colIndex) => (
-                              <div
-                                  key={colIndex}
-                                  className="flex flex-col gap-12 relative"
-                              >
-                                {colGroups.map((groupData) => (
-                                    <Group
-                                        key={groupData.groupId}
-                                        groupData={groupData}
-                                        isTeacherView={isTeacherView}
-                                        onSeatClick={handleSeatClick}
-                                        selectedStudentId={selectedStudentId}
-                                    />
-                                ))}
-                              </div>
-                          ))}
-                        </div>
                       </div>
-                    </div>
-                  </TransformComponent>
-                </div>
-            )}
+                    </TransformComponent>
+                  </div>
+              );
+            }}
           </TransformWrapper>
         </div>
       </div>
