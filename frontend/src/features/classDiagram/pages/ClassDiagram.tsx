@@ -410,7 +410,7 @@ export const ClassDiagram = () => {
         {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
         <div
             ref={wrapperRef}
-            className="w-full h-[75vh] min-h-[500px] relative overflow-hidden px-2 md:px-0 bg-gray-50/30 rounded-xl"
+            className="w-full h-[75vh] min-h-[500px] relative overflow-hidden px-2 md:px-0 bg-gray-50/30 rounded-xl border-2 border-[var(--rule-md)] shadow-sm"
             onClick={(e) => e.stopPropagation()}
         >
           <TransformWrapper
@@ -587,49 +587,53 @@ export const ClassDiagram = () => {
                     >
                       <div
                           ref={contentRef}
-                          className="p-24 flex flex-col items-center"
-                          style={{ touchAction: "pan-y" }}
+                          className="p-10"
                       >
                         <div
-                            className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-16 transition-all duration-500`}
+                            className="p-14 flex flex-col items-center bg-white border-[3px] border-[var(--rule-md)] rounded-[2rem] shadow-sm"
+                            style={{ touchAction: "pan-y" }}
                         >
-                          {/* BÀN GIÁO VIÊN VÀ BẢNG ĐEN */}
                           <div
-                              className={`flex w-full items-center justify-center gap-16 ${isTeacherView ? "flex-row-reverse" : "flex-row"}`}
+                              className={`flex ${isTeacherView ? "flex-col-reverse" : "flex-col"} gap-16 transition-all duration-500`}
                           >
-                            <div className="bg-[var(--bg-surface)] px-12 py-4 rounded-xl border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
+                            {/* BÀN GIÁO VIÊN VÀ BẢNG ĐEN */}
+                            <div
+                                className={`flex w-full items-center justify-center gap-16 ${isTeacherView ? "flex-row-reverse" : "flex-row"}`}
+                            >
+                              <div className="bg-[var(--bg-surface)] px-12 py-4 rounded-xl border-2 border-[var(--warm-border)] flex items-center justify-center relative shrink-0 min-w-[160px]">
                         <span className="text-xs font-black text-[var(--warm-600)] uppercase tracking-[0.15em]">
                           Bàn Giáo Viên
                         </span>
-                            </div>
-                            <div className="flex flex-col items-center gap-2 shrink-0">
+                              </div>
+                              <div className="flex flex-col items-center gap-2 shrink-0">
                         <span className="text-xs font-black text-[var(--ink-3)] uppercase tracking-[0.4em]">
                           Bảng Đen
                         </span>
-                              <div className="w-96 h-5 bg-[#1a1c23] rounded-md shadow-lg border-b-[4px] border-[#4a3f35]" />
+                                <div className="w-96 h-5 bg-[#1a1c23] rounded-md shadow-lg border-b-[4px] border-[#4a3f35]" />
+                              </div>
                             </div>
-                          </div>
 
-                          {/* LƯỚI CHỖ NGỒI */}
-                          <div
-                              className={`flex flex-nowrap justify-center gap-12 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
-                          >
-                            {groupColumns.map((colGroups, colIndex) => (
-                                <div
-                                    key={colIndex}
-                                    className="flex flex-col gap-12 relative"
-                                >
-                                  {colGroups.map((groupData) => (
-                                      <Group
-                                          key={groupData.groupId}
-                                          groupData={groupData}
-                                          isTeacherView={isTeacherView}
-                                          onSeatClick={handleSeatClick}
-                                          selectedStudentId={selectedStudentId}
-                                      />
-                                  ))}
-                                </div>
-                            ))}
+                            {/* LƯỚI CHỖ NGỒI */}
+                            <div
+                                className={`flex flex-nowrap justify-center gap-12 ${mode !== "view" ? "cursor-crosshair" : ""} ${isTeacherView ? "rotate-180" : "rotate-0"}`}
+                            >
+                              {groupColumns.map((colGroups, colIndex) => (
+                                  <div
+                                      key={colIndex}
+                                      className="flex flex-col gap-12 relative"
+                                  >
+                                    {colGroups.map((groupData) => (
+                                        <Group
+                                            key={groupData.groupId}
+                                            groupData={groupData}
+                                            isTeacherView={isTeacherView}
+                                            onSeatClick={handleSeatClick}
+                                            selectedStudentId={selectedStudentId}
+                                        />
+                                    ))}
+                                  </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>

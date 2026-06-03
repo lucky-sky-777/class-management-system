@@ -3,7 +3,6 @@ package com.mezon.classmanagement.backend.domain.auth.service;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
-import com.mezon.classmanagement.backend.common.util.EmailProcessor;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
@@ -16,6 +15,7 @@ import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.GoogleUser;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.MezonUser;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthUser;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -41,6 +41,10 @@ public class AuthService {
 	InvalidatedAccessTokenService invalidatedAccessTokenService;
 	RefreshTokenService refreshTokenService;
 
+	/**
+	 * SignIn
+	 */
+
 	public SignInResponseDto signInInternal(SignInRequestDto request) {
 		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
 				= new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
@@ -48,67 +52,49 @@ public class AuthService {
 
 		User user = userService.findByUsernameOrThrow(request.getUsername());
 
-		String accessToken = jwtService.generateAccessToken(user.getId(), user.getUsername());
-		String refreshToken = jwtService.generateRefreshToken(user.getId(), user.getUsername());
-
-		refreshTokenService.save(RefreshToken.builder()
-				.jti(jwtService.extractJti(refreshToken))
-				.expiryDate(jwtService.extractExpiry(refreshToken))
-				.build());
-
-		return SignInResponseDto.builder()
-				.accessToken(accessToken)
-				.refreshToken(refreshToken)
-				.build();
-	}
-
-	public SignInResponseDto signInMezon(MezonUser mezonUser) {
-		String username = EmailProcessor.extractAndClean(mezonUser.getEmail()) + "-" + User.Provider.MEZON + "-" + System.currentTimeMillis();
-
-		SignUpRequestDto signUpRequest = SignUpRequestDto.builder()
-				.provider(User.Provider.MEZON)
-				.providerId(mezonUser.getSub())
-				.username(username)
-				.displayName(mezonUser.getDisplayName())
-				.avatarUrl(mezonUser.getAvatar())
-				.email(mezonUser.getEmail())
-				.build();
-		SignUpResponseDto signUpResponse = signUpExternal(signUpRequest);
-
-		String accessToken = jwtService.generateAccessToken(signUpResponse.getUserId(), signUpResponse.getUsername());
-		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUserId(), signUpResponse.getUsername());
-
-		refreshTokenService.save(RefreshToken.builder()
-				.jti(jwtService.extractJti(refreshToken))
-				.expiryDate(jwtService.extractExpiry(refreshToken))
-				.build());
-
-		return SignInResponseDto.builder()
-				.accessToken(accessToken)
-				.refreshToken(refreshToken)
-				.build();
+		return signIn(user.getId(), user.getPassword());
 	}
 
 	public SignInResponseDto signInGoogle(GoogleUser googleUser) {
-		String username = EmailProcessor.extractAndClean(googleUser.getEmail()) + "-" + User.Provider.GOOGLE + "-" + System.currentTimeMillis();
+		return signInOAuth(googleUser);
+	}
 
+	public SignInResponseDto signInMezon(MezonUser mezonUser) {
+		return signInOAuth(mezonUser);
+	}
+
+	private SignInResponseDto signInOAuth(OAuthUser oAuthUser) {
 		SignUpRequestDto signUpRequest = SignUpRequestDto.builder()
-				.provider(User.Provider.GOOGLE)
-				.providerId(googleUser.getSub())
-				.username(username)
-				.displayName(googleUser.getDisplayName())
-				.avatarUrl(googleUser.getAvatarUrl())
-				.email(googleUser.getEmail())
+				.provider(oAuthUser.getProvider())
+				.providerId(oAuthUser.getSub())
+				.username(oAuthUser.getCustomUsername())
+				.displayName(oAuthUser.getDisplayName())
+				.avatarUrl(oAuthUser.getAvatarUrl())
+				.email(oAuthUser.getEmail())
 				.build();
-		SignUpResponseDto signUpResponse = signUpExternal(signUpRequest);
 
-		String accessToken = jwtService.generateAccessToken(signUpResponse.getUserId(), signUpResponse.getUsername());
-		String refreshToken = jwtService.generateRefreshToken(signUpResponse.getUserId(), signUpResponse.getUsername());
+		return signIn(signUpRequest);
+	}
 
-		refreshTokenService.save(RefreshToken.builder()
-				.jti(jwtService.extractJti(refreshToken))
-				.expiryDate(jwtService.extractExpiry(refreshToken))
-				.build());
+	private SignInResponseDto signIn(SignUpRequestDto signUpRequest) {
+		SignUpResponseDto signUpResponseDto = signUpOAuth(signUpRequest);
+
+		return signIn(signUpResponseDto.getUserId(), signUpResponseDto.getUsername());
+	}
+
+	private SignInResponseDto signIn(
+			Long userId,
+			String username
+	) {
+		String accessToken = jwtService.generateAccessToken(userId, username);
+		String refreshToken = jwtService.generateRefreshToken(userId, username);
+
+		refreshTokenService.save(
+				RefreshToken.builder()
+						.jti(jwtService.extractJtiFromRefreshToken(refreshToken))
+						.expiryDate(jwtService.extractExpiryFromRefreshToken(refreshToken))
+						.build()
+		);
 
 		return SignInResponseDto.builder()
 				.accessToken(accessToken)
@@ -116,7 +102,7 @@ public class AuthService {
 				.build();
 	}
 
-	public SignUpResponseDto signUpExternal(SignUpRequestDto request) {
+	public SignUpResponseDto signUpOAuth(SignUpRequestDto request) {
 		if (userService.existsByProviderId(request.getProviderId())) {
 			User currentUser = userService.findByProviderIdOrThrow(request.getProviderId());
 
@@ -143,11 +129,14 @@ public class AuthService {
 				.build();
 	}
 
-	public SignOutResponseDto signOut(Authentication authentication, String rawRefreshToken) {
+	public SignOutResponseDto signOut(
+			Authentication authentication,
+			String rawRefreshToken
+	) {
 		try {
 			Jwt refreshTokenJwt = null;
 			if (rawRefreshToken != null && !rawRefreshToken.isEmpty()) {
-				refreshTokenJwt = jwtService.extractJwt(rawRefreshToken);
+				refreshTokenJwt = jwtService.extractJwtFromRefreshToken(rawRefreshToken);
 				refreshTokenService.revokeByJti(jwtService.extractJti(refreshTokenJwt));
 			}
 
@@ -178,7 +167,11 @@ public class AuthService {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (!(authentication instanceof JwtAuthenticationToken)) {
-			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Invalid authentication");
+			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Unauthorized");
+		}
+		String jti = jwtService.extractJti(authentication);
+		if (invalidatedAccessTokenService.isInvalidated(jti)) {
+			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Unauthorized");
 		}
 
 		return authentication;
@@ -191,59 +184,24 @@ public class AuthService {
 		return userMapper.toUserResponseDto(user);
 	}
 
-
-	@Transactional
-	public SignInResponseDto refresh2(String rawRefreshToken) {
-		// Parse và validate refresh token
-		Jwt jwt = jwtService.extractJwt(rawRefreshToken);
-		String jti = jwt.getId();
-
-		// Kiểm tra token đã bị revoke chưa
-		if (refreshTokenService.isRevoked(jti)) {
-			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Refresh token revoked");
-		}
-
-		// Rotation: revoke token cũ
-		refreshTokenService.revokeByJti(jti);
-
-		// Lấy thông tin user từ token cũ
-		Long userId = jwtService.extractUserId(jwt);
-		String username = jwtService.extractUsername(jwt);
-
-		// Tạo token mới
-		String newAccessToken = jwtService.generateAccessToken(userId, username);
-		String newRefreshToken = jwtService.generateRefreshToken(userId, username);
-
-		// Lưu refresh token mới vào DB
-		refreshTokenService.save(RefreshToken.builder()
-				.jti(jwtService.extractJti(newRefreshToken))
-				.expiryDate(jwtService.extractExpiry(newRefreshToken))
-				.revoked(false)
-				.build());
-
-		return SignInResponseDto.builder()
-				.accessToken(newAccessToken)
-				.refreshToken(newRefreshToken)
-				.build();
-	}
-
 	@Transactional
 	public SignInResponseDto refresh(String rawRefreshToken) {
-		String jti = jwtService.extractJti(rawRefreshToken);
+		String jti = jwtService.extractJtiFromRefreshToken(rawRefreshToken);
 
 		refreshTokenService.throwIfIsRevoked(jti);
+		refreshTokenService.throwIfIsExpired(jti);
 
 		refreshTokenService.revokeByJti(jti);
 
-		Long userId = jwtService.extractUserId(rawRefreshToken);
-		String username = jwtService.extractUsername(rawRefreshToken);
+		Long userId = jwtService.extractUserIdFromRefreshToken(rawRefreshToken);
+		String username = jwtService.extractUsernameFromRefreshToken(rawRefreshToken);
 
 		String newAccessToken = jwtService.generateAccessToken(userId, username);
 		String newRefreshToken = jwtService.generateRefreshToken(userId, username);
 
 		RefreshToken refreshToken = RefreshToken.builder()
-				.jti(jwtService.extractJti(newRefreshToken))
-				.expiryDate(jwtService.extractExpiry(newRefreshToken))
+				.jti(jwtService.extractJtiFromRefreshToken(newRefreshToken))
+				.expiryDate(jwtService.extractExpiryFromRefreshToken(newRefreshToken))
 				.build();
 
 		refreshTokenService.save(refreshToken);

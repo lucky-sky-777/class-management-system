@@ -1,12 +1,13 @@
 package com.mezon.classmanagement.backend.domain.fund.mapper;
 
+import com.mezon.classmanagement.backend.config.MapStructConfig;
 import com.mezon.classmanagement.backend.domain.fund.dto.CreateFundRequestDto;
 import com.mezon.classmanagement.backend.domain.fund.dto.FundResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.entity.Fund;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface FundMapper {
 	Fund toFund(CreateFundRequestDto createFundRequestDto);
 

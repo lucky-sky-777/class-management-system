@@ -1,7 +1,6 @@
 package com.mezon.classmanagement.backend.domain.auth.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
@@ -10,13 +9,17 @@ import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDt
 import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
-import com.mezon.classmanagement.backend.domain.auth.service.InvalidatedAccessTokenService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -25,11 +28,9 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
 	AuthService authService;
-	JwtService jwtService;
-	InvalidatedAccessTokenService invalidatedAccessTokenService;
 
 	@PostMapping("/signin")
-	public ResponseDTO<SignInResponseDto> signIn(@RequestBody SignInRequestDto request){
+	public ResponseDTO<SignInResponseDto> signIn(@RequestBody SignInRequestDto request) {
 		SignInResponseDto signInResponseDto = authService.signInInternal(request);
 
 		return ResponseDTO.<SignInResponseDto>builder()
@@ -53,10 +54,12 @@ public class AuthController {
 				.build();
 	}
 
+	@PreAuthorize("@TokenSecurity.isValid()")
 	@PostMapping("/signout")
 	public ResponseDTO<SignOutResponseDto> signOut(
 			@RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken
 	) {
+		System.out.println(refreshToken);
 		Authentication authentication = authService.getAuthentication();
 		SignOutResponseDto signOutResponseDto = authService.signOut(authentication, refreshToken);
 
@@ -67,6 +70,7 @@ public class AuthController {
 				.build();
 	}
 
+	@PreAuthorize("@TokenSecurity.isValid()")
 	@GetMapping("/user")
 	public ResponseDTO<UserResponseDto> current() {
 		Authentication authentication = authService.getAuthentication();
@@ -79,29 +83,12 @@ public class AuthController {
 				.build();
 	}
 
-	@PostMapping("/state")
+	@PreAuthorize("@TokenSecurity.isValid()")
+	@GetMapping("/state")
 	public ResponseDTO<Void> validateAuthState() {
-		Authentication authentication = authService.getAuthentication();
-		String jti = jwtService.extractJti(authentication);
-
-		if (invalidatedAccessTokenService.isInvalidated(jti)) {
-			throw new AuthenticationCredentialsNotFoundException("No authentication");
-		}
-
 		return ResponseDTO.<Void>builder()
 				.success(true)
 				.message("Valid auth state")
-				.build();
-	}
-
-	@PostMapping("/refresh2")
-	public ResponseDTO<SignInResponseDto> refresh2(@RequestHeader("X-Refresh-Token") String refreshToken) {
-		SignInResponseDto response = authService.refresh2(refreshToken);
-
-		return ResponseDTO.<SignInResponseDto>builder()
-				.success(true)
-				.message("Token refreshed successfully")
-				.data(response)
 				.build();
 	}
 

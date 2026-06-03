@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain.groupuser.mapper;
 
+import com.mezon.classmanagement.backend.config.MapStructConfig;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.request.UpdateGroupUserRoleRequestDto;
 import com.mezon.classmanagement.backend.domain.groupuser.dto.response.GroupUserResponseDto;
 import com.mezon.classmanagement.backend.domain.groupuser.entity.GroupUser;
@@ -9,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface GroupUserMapper {
 	@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 	void updateGroupUserFromRequestDto(UpdateGroupUserRoleRequestDto updateGroupUserRoleRequestDto, @MappingTarget GroupUser groupUser);

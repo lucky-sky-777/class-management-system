@@ -25,7 +25,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class JwtService {
-	private final JwtDecoder jwtDecoder;
+	private final JwtDecoder accessTokenDecoder;
+	private final JwtDecoder refreshTokenDecoder;
 	private final JwtConstant jwtConstant;
 
 	public String generateAccessToken(Long userId, String username) {
@@ -39,7 +40,7 @@ public class JwtService {
 						Instant.now().plus(15, ChronoUnit.MINUTES).toEpochMilli()
 				))
 				.jwtID(UUID.randomUUID().toString())
-				.claim("type", "access")
+				.claim("type", JwtConstant.TYPE_ACCESS)
 				.claim("username", username)
 				.build();
 
@@ -57,7 +58,7 @@ public class JwtService {
 						Instant.now().plus(7, ChronoUnit.DAYS).toEpochMilli()
 				))
 				.jwtID(UUID.randomUUID().toString())
-				.claim("type", "refresh")
+				.claim("type", JwtConstant.TYPE_REFRESH)
 				.claim("username", username)
 				.build();
 
@@ -103,29 +104,55 @@ public class JwtService {
 		return extractUsername(jwt);
 	}
 
-	// From Raw Token
+	// From Raw Access Token
 
-	public Jwt extractJwt(String rawToken) {
-		return jwtDecoder.decode(rawToken);
+	public Jwt extractJwtFromAccessToken(String rawAccessToken) {
+		return accessTokenDecoder.decode(rawAccessToken);
 	}
 
-	public String extractJti(String rawToken) {
-		Jwt jwt = extractJwt(rawToken);
+	public String extractJtiFromAccessToken(String rawAccessToken) {
+		Jwt jwt = extractJwtFromAccessToken(rawAccessToken);
 		return extractJti(jwt);
 	}
 
-	public Instant extractExpiry(String rawToken) {
-		Jwt jwt = extractJwt(rawToken);
+	public Instant extractExpiryFromAccessToken(String rawAccessToken) {
+		Jwt jwt = extractJwtFromAccessToken(rawAccessToken);
 		return extractExpiry(jwt);
 	}
 
-	public Long extractUserId(String rawToken) {
-		Jwt jwt = extractJwt(rawToken);
+	public Long extractUserIdFromAccessToken(String rawAccessToken) {
+		Jwt jwt = extractJwtFromAccessToken(rawAccessToken);
 		return extractUserId(jwt);
 	}
 
-	public String extractUsername(String rawToken) {
-		Jwt jwt = extractJwt(rawToken);
+	public String extractUsernameFromAccessToken(String rawAccessToken) {
+		Jwt jwt = extractJwtFromAccessToken(rawAccessToken);
+		return extractUsername(jwt);
+	}
+
+	// From Raw Refresh Token
+
+	public Jwt extractJwtFromRefreshToken(String rawRefreshToken) {
+		return refreshTokenDecoder.decode(rawRefreshToken);
+	}
+
+	public String extractJtiFromRefreshToken(String rawRefreshToken) {
+		Jwt jwt = extractJwtFromRefreshToken(rawRefreshToken);
+		return extractJti(jwt);
+	}
+
+	public Instant extractExpiryFromRefreshToken(String rawRefreshToken) {
+		Jwt jwt = extractJwtFromRefreshToken(rawRefreshToken);
+		return extractExpiry(jwt);
+	}
+
+	public Long extractUserIdFromRefreshToken(String rawRefreshToken) {
+		Jwt jwt = extractJwtFromRefreshToken(rawRefreshToken);
+		return extractUserId(jwt);
+	}
+
+	public String extractUsernameFromRefreshToken(String rawRefreshToken) {
+		Jwt jwt = extractJwtFromRefreshToken(rawRefreshToken);
 		return extractUsername(jwt);
 	}
 
@@ -149,6 +176,10 @@ public class JwtService {
 
 	public String extractUsername(Jwt jwt) {
 		return jwt.getClaim("username").toString();
+	}
+
+	public static String extractType(Jwt jwt) {
+		return jwt.getClaim("type").toString();
 	}
 
 }

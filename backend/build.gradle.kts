@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "4.0.5"
+    id("org.springframework.boot") version "4.1.0-RC1"
     id("io.spring.dependency-management") version "1.1.7"
 }
 
@@ -17,6 +17,9 @@ java {
 repositories {
     mavenCentral()
 }
+
+extra["tomcat.version"] = "11.0.22"
+extra["netty.version"] = "4.2.14.Final"
 
 dependencies {
 

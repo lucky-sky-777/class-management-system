@@ -1,16 +1,16 @@
 package com.mezon.classmanagement.backend.domain.activity.mapper;
 
+import com.mezon.classmanagement.backend.config.MapStructConfig;
 import com.mezon.classmanagement.backend.domain.activity.dto.request.CreateAndUpdateActivityRequestDto;
 import com.mezon.classmanagement.backend.domain.activity.dto.response.ActivityResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.entity.Activity;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(config = MapStructConfig.class)
 public interface ActivityMapper {
 
 	Activity toActivity(CreateAndUpdateActivityRequestDto createAndUpdateActivityRequestDto);
