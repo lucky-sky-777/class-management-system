@@ -93,6 +93,7 @@ public class OAuthController {
 
 			OAuthAuthorization oAuthAuthorization = oAuthAuthorizationService.create(
 					oauthAuthorizationCode,
+					state,
 					provider,
 					signInResponseDto.getAccessToken(),
 					signInResponseDto.getRefreshToken()
@@ -120,12 +121,15 @@ public class OAuthController {
 
 	@PostMapping("/exchange")
 	public ResponseDTO<SignInResponseDto> exchange(
+			HttpServletRequest httpServletRequest,
 			@PathVariable String provider,
 			@RequestBody ExchangeOAuthAuthorizationCodeRequest request
 	) {
 		OAuthStrategy oAuthStrategy = oAuthFactory.getStrategy(provider);
 
-		OAuthAuthorization oAuthAuthorization = oAuthAuthorizationService.exchange(oAuthStrategy.getName(), request);
+		String origin = httpServletRequest.getHeader("Origin");
+
+		OAuthAuthorization oAuthAuthorization = oAuthAuthorizationService.exchange(origin, oAuthStrategy.getName(), request);
 		SignInResponseDto response = SignInResponseDto.builder()
 				.accessToken(oAuthAuthorization.getAccessToken())
 				.refreshToken(oAuthAuthorization.getRefreshToken())

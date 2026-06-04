@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useFetchCurrentUser } from "@features/auth/hooks/useFetchCurrentUser";
@@ -14,6 +14,7 @@ export const OAuth2RedirectHandler = () => {
     const auth_code = searchParams.get("authorization-code");
     const provider = searchParams.get("provider");
     const backendError = searchParams.get("error-message");
+
 
     useEffect( () => {
         const processAuthentication = async () => {

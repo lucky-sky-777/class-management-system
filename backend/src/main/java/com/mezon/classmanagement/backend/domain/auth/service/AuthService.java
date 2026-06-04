@@ -212,7 +212,7 @@ public class AuthService {
 				.build();
 	}
 	/*
-	no
+	noinspection
 	@Deprecated
 	public SignOutResponseDto signOut(SignOutRequestDto request) {
 		try {
@@ -237,7 +237,7 @@ public class AuthService {
 	*/
 
 	/*
-	no
+	noinspection
 	@Deprecated
 	private SignedJWT verifyToken(String token) throws JOSEException, ParseException {
 		JWSVerifier verifier = new MACVerifier(JwtConstant.SIGNER_KEY.getBytes());

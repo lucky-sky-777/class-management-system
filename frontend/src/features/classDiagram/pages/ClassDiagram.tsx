@@ -547,7 +547,7 @@ export const ClassDiagram = () => {
 
                             // CHÚ Ý: Đã xóa "pointer-events-none" ở cuối class này
                             // Thêm "cursor-move" để chuột đổi icon thành hình 4 mũi tên
-                            className="absolute bottom-6 right-6 z-50 w-48 bg-white border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 cursor-move select-none"
+                            className="absolute bottom-6 right-6 z-50 w-48 bg-[var(--bg-surface)] border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 cursor-move select-none"
 
                             // Ngăn điện thoại tự động cuộn trang web khi đang vuốt Minimap
                             style={{ touchAction: "none" }}
@@ -590,7 +590,7 @@ export const ClassDiagram = () => {
                           className="p-10"
                       >
                         <div
-                            className="p-14 flex flex-col items-center bg-white border-[3px] border-[var(--rule-md)] rounded-[2rem] shadow-sm"
+                            className="p-14 flex flex-col items-center bg-[var(--bg-surface)] border-[3px] border-[var(--rule-md)] rounded-[2rem] shadow-sm"
                             style={{ touchAction: "pan-y" }}
                         >
                           <div

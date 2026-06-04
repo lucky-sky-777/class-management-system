@@ -2,8 +2,6 @@ package com.mezon.classmanagement.backend.domain.auth.oauth2.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.mapper.UserProviderMapper;
-import com.mezon.classmanagement.backend.common.util.EnumUtils;
-import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.dto.ExchangeOAuthAuthorizationCodeRequest;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthAuthorization;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.repository.OAuthAuthorizationRepository;
@@ -27,12 +25,14 @@ public class OAuthAuthorizationService {
 	@Transactional
 	public OAuthAuthorization create(
 			String code,
+			String origin,
 			String provider,
 			String accessToken,
 			String refreshToken
 	) {
 		OAuthAuthorization newOAuthAuthorization = OAuthAuthorization.builder()
 				.code(code)
+				.origin(origin)
 				.provider(UserProviderMapper.toUserProvider(provider))
 				.accessToken(accessToken)
 				.refreshToken(refreshToken)
@@ -42,8 +42,9 @@ public class OAuthAuthorizationService {
 	}
 
 	@Transactional
-	public OAuthAuthorization exchange(String provider, ExchangeOAuthAuthorizationCodeRequest request) {
-		OAuthAuthorization currentOAuthAuthorization = findByCode(request.getOAuthAuthorizationCode());
+	public OAuthAuthorization exchange(String origin, String provider, ExchangeOAuthAuthorizationCodeRequest request) {
+		OAuthAuthorization currentOAuthAuthorization = findByOriginAndCodeOrThrow(origin, request.getOAuthAuthorizationCode());
+		System.out.println("exchange code " + request.getOAuthAuthorizationCode() + " for origin " + origin);
 
 		if (!Objects.equals(provider.toLowerCase(Locale.ROOT), currentOAuthAuthorization.getProvider().name().toLowerCase(Locale.ROOT))) {
 			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid request");
@@ -66,9 +67,9 @@ public class OAuthAuthorizationService {
 	}
 
 	@Transactional
-	public OAuthAuthorization findByCode(String code) {
+	public OAuthAuthorization findByOriginAndCodeOrThrow(String origin, String code) {
 		return oAuthAuthorizationRepository
-				.findByCode(code)
+				.findByOriginAndCode(origin, code)
 				.orElseThrow(() ->
 						new GlobalException(GlobalException.Type.NOT_FOUND, "OAuth authorization code not found")
 				);

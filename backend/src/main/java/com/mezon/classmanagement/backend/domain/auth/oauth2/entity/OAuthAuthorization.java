@@ -32,6 +32,9 @@ public class OAuthAuthorization {
 	@Column(name = "code", nullable = false)
 	String code;
 
+	@Column(name = "origin", nullable = false)
+	String origin;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "provider", nullable = false)
 	User.Provider provider;
