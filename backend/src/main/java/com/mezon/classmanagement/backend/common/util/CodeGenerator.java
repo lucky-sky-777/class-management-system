@@ -1,16 +1,24 @@
 package com.mezon.classmanagement.backend.common.util;
 
+import java.security.SecureRandom;
+
 public final class CodeGenerator {
 
-	public static String generate(int length) {
-		StringBuilder stringBuilder = new StringBuilder();
+	private static final SecureRandom RANDOM = new SecureRandom();
+	private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-		for (int i = 1; i <= length; i++) {
-			int number = (int) (Math.random() * 10);
-			stringBuilder.append(number);
+	public static String generate(int length) {
+		StringBuilder code = new StringBuilder(length);
+
+		for (int i = 0; i < length; i++) {
+			code.append(
+					CHARACTERS.charAt(
+							RANDOM.nextInt(CHARACTERS.length())
+					)
+			);
 		}
 
-		return stringBuilder.toString();
+		return code.toString();
 	}
 
 }

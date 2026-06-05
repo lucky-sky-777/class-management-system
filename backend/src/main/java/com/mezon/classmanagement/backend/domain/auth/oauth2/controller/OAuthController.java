@@ -1,10 +1,16 @@
 package com.mezon.classmanagement.backend.domain.auth.oauth2.controller;
 
+import com.mezon.classmanagement.backend.common.constant.ClientConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
+import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.dto.ExchangeOAuthAuthorizationCodeRequest;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthAuthorization;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.factory.OAuthFactory;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.service.GoogleOAuthService;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.service.MezonOAuthService;
+import com.mezon.classmanagement.backend.domain.auth.oauth2.service.OAuthAuthorizationService;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.strategy.OAuthStrategy;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,11 +21,13 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -28,7 +36,9 @@ import java.io.IOException;
 @RestController
 public class OAuthController {
 
-	OAuthFactory oauthFactory;
+	OAuthFactory oAuthFactory;
+
+	OAuthAuthorizationService oAuthAuthorizationService;
 
 	GoogleOAuthService googleOAuthService;
 	MezonOAuthService mezonOAuthService;
@@ -39,9 +49,13 @@ public class OAuthController {
 			HttpServletRequest request,
 			HttpServletResponse response
 	) throws IOException {
-		OAuthStrategy strategy = oauthFactory.getStrategy(provider);
+		OAuthStrategy strategy = oAuthFactory.getStrategy(provider);
 
 		String origin = request.getHeader("Origin");
+		if (!ClientConstant.ALLOWED_ORIGIN_LIST.contains(origin)) {
+			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid request");
+		}
+
 		String url = strategy.getAuthUrl(origin);
 
 		response.sendRedirect(url);
@@ -51,15 +65,15 @@ public class OAuthController {
 	public void callback(
 			@PathVariable String provider,
 			@RequestParam("code") String code,
+			/* Client URL */
 			@RequestParam(value = "state", required = false) String state,
 			HttpServletResponse response
 	) {
-		OAuthStrategy strategy = oauthFactory.getStrategy(provider);
+		OAuthStrategy strategy = oAuthFactory.getStrategy(provider);
 
-		SignInResponseDto signInResponseDto = null;
+		SignInResponseDto signInResponseDto;
 
-		String clientUrl = state;
-		String clientRedirectUrl = null;
+		String clientRedirectUrl;
 
 		try {
 			String accessToken = null;
@@ -73,18 +87,27 @@ public class OAuthController {
 			}
 
 			signInResponseDto = strategy.auth(accessToken);
+			String oauthAuthorizationCode = UUID.randomUUID().toString();
 
 			Assert.notNull(signInResponseDto, "Internal server error");
 
+			OAuthAuthorization oAuthAuthorization = oAuthAuthorizationService.create(
+					oauthAuthorizationCode,
+					state,
+					provider,
+					signInResponseDto.getAccessToken(),
+					signInResponseDto.getRefreshToken()
+			);
+
 			clientRedirectUrl =
-					clientUrl
-							+ "/oauth2-signin-redirect?access-token="
-							+ signInResponseDto.getAccessToken()
-							+ "&refresh-token="
-							+ signInResponseDto.getRefreshToken();
+					state
+							+ "/oauth2-signin-redirect?authorization-code="
+							+ oAuthAuthorization.getCode()
+							+ "&provider="
+							+ provider;
 		} catch (Exception e) {
 			clientRedirectUrl =
-					clientUrl
+					state
 							+ "/oauth2-signin-redirect?error-message="
 							+ e.getMessage();
 		}
@@ -92,8 +115,30 @@ public class OAuthController {
 		try {
 			response.sendRedirect(clientRedirectUrl);
 		} catch (IOException ie) {
-			throw new RuntimeException();
+			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error");
 		}
+	}
+
+	@PostMapping("/exchange")
+	public ResponseDTO<SignInResponseDto> exchange(
+			HttpServletRequest httpServletRequest,
+			@PathVariable String provider,
+			@RequestBody ExchangeOAuthAuthorizationCodeRequest request
+	) {
+		OAuthStrategy oAuthStrategy = oAuthFactory.getStrategy(provider);
+
+		String origin = httpServletRequest.getHeader("Origin");
+
+		OAuthAuthorization oAuthAuthorization = oAuthAuthorizationService.exchange(origin, oAuthStrategy.getName(), request);
+		SignInResponseDto response = SignInResponseDto.builder()
+				.accessToken(oAuthAuthorization.getAccessToken())
+				.refreshToken(oAuthAuthorization.getRefreshToken())
+				.build();
+
+		return ResponseDTO.ok(
+				"Exchange oauth authorization code successful",
+				response
+		);
 	}
 
 }

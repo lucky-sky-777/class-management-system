@@ -9,6 +9,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
@@ -62,9 +64,24 @@ public class RefreshTokenService {
     }
 
     @Transactional(readOnly = true)
+    public boolean isExpired(String jti) {
+        return refreshTokenRepository
+                .findByJti(jti)
+                .map(item -> item.getExpiryDate().isBefore(Instant.now()))
+                .orElse(true);
+    }
+
+    @Transactional(readOnly = true)
     public void throwIfIsRevoked(String jti) {
         if (isRevoked(jti)) {
             throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Refresh token revoked");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void throwIfIsExpired(String jti) {
+        if (isExpired(jti)) {
+            throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Refresh token expired");
         }
     }
 

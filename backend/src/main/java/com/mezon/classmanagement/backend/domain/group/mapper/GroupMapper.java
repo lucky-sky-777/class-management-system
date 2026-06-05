@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain.group.mapper;
 
+import com.mezon.classmanagement.backend.config.MapStructConfig;
 import com.mezon.classmanagement.backend.domain.group.dto.CreateAndUpdateGroupRequestDto;
 import com.mezon.classmanagement.backend.domain.group.dto.GroupResponseDto;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
@@ -9,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface GroupMapper {
     Group toGroup(CreateAndUpdateGroupRequestDto createAndUpdateGroupRequestDto);
 

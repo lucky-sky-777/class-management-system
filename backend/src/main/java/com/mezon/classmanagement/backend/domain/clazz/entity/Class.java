@@ -82,7 +82,7 @@ public class Class {
 			name = "Class_" + System.currentTimeMillis();
 		}
 		if (code == null) {
-			code = CodeGenerator.generate(6);
+			code = CodeGenerator.generate(7);
 		}
 		if (privacy == null) {
 			privacy = Privacy.PRIVATE;

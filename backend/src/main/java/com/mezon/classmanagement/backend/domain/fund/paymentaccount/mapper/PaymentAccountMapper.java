@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain.fund.paymentaccount.mapper;
 
+import com.mezon.classmanagement.backend.config.MapStructConfig;
 import com.mezon.classmanagement.backend.domain.fund.paymentaccount.dto.CreateOrUpdatePaymentAccountRequestDto;
 import com.mezon.classmanagement.backend.domain.fund.paymentaccount.dto.PaymentAccountResponseDto;
 import com.mezon.classmanagement.backend.domain.fund.paymentaccount.entity.PaymentAccount;
@@ -8,7 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = MapStructConfig.class)
 public interface PaymentAccountMapper {
 	PaymentAccount toPaymentAccount(CreateOrUpdatePaymentAccountRequestDto createOrUpdatePaymentAccountRequestDto);
 

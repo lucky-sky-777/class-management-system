@@ -1,6 +1,8 @@
 package com.mezon.classmanagement.backend.domain.auth.oauth2.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mezon.classmanagement.backend.common.util.EmailProcessor;
+import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,9 +17,20 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoogleUser {
+public final class GoogleUser implements OAuthUser {
+
+	@Override
+	public User.Provider getProvider() {
+		return User.Provider.GOOGLE;
+	}
+
 	@JsonProperty(value = "sub")
 	String sub;
+
+	@Override
+	public String getCustomUsername() {
+		return EmailProcessor.extractAndClean(email) + "-" + User.Provider.GOOGLE + "-" + System.currentTimeMillis();
+	}
 
 	@JsonProperty(value = "name")
 	String displayName;
@@ -27,4 +40,5 @@ public class GoogleUser {
 
 	@JsonProperty(value = "email")
 	String email;
+
 }

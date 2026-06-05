@@ -1,35 +1,34 @@
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { storage } from "@shared/storages";
-import { AUTH_STORAGE_KEY } from "@features/auth/types/keyStorage";
+
 import { useFetchCurrentUser } from "@features/auth/hooks/useFetchCurrentUser";
+import { useAuthInternal } from "@features/auth/hooks/useAuthInternal";
 
 export const OAuth2RedirectHandler = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { refetch } = useFetchCurrentUser();
+    const { fetchTokenWithAuthCode } = useAuthInternal();
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    const accessToken = searchParams.get("access-token");
-    const refreshToken = searchParams.get("refresh-token");
+    const auth_code = searchParams.get("authorization-code");
+    const provider = searchParams.get("provider");
     const backendError = searchParams.get("error-message");
 
-    useEffect(() => {
+
+    useEffect( () => {
         const processAuthentication = async () => {
             if (backendError) {
                 setErrorMsg(decodeURIComponent(backendError));
                 return;
             }
 
-            if (accessToken && refreshToken) {
+            if (auth_code && provider) {
                 try {
-                    // Lưu JWT tokens vào LocalStorage
-                    storage.set(AUTH_STORAGE_KEY.TOKEN, accessToken);
-                    storage.set(AUTH_STORAGE_KEY.REFRESH, refreshToken);
-
+                    // fetch mã tạm thời
+                    await fetchTokenWithAuthCode(auth_code, provider);
                     // Tải thông tin tài khoản người dùng hiện tại lên Global Store
                     await refetch();
-
                     // Điều hướng thành công về trang chủ
                     navigate("/", { replace: true });
                 } catch (err: any) {
@@ -43,7 +42,7 @@ export const OAuth2RedirectHandler = () => {
         };
 
         processAuthentication();
-    }, [accessToken, refreshToken, backendError, refetch, navigate]);
+    }, [auth_code, provider, backendError]);
 
     return (
         <div className="min-h-screen bg-paper flex flex-col items-center justify-center p-6">

@@ -9,4 +9,8 @@ public final class JwtConstant {
 	@Value(value = "${jwt.signer-key}")
 	public String SIGNER_KEY;
 
+	public static final String TYPE_ACCESS = "access";
+
+	public static final String TYPE_REFRESH = "refresh";
+
 }

@@ -2,6 +2,8 @@ package com.mezon.classmanagement.backend.domain.auth.oauth2.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.common.util.EmailProcessor;
+import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,25 +19,37 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MezonUser {
+public final class MezonUser implements OAuthUser {
+
 	@JsonProperty("user_id")
 	String userId;
 
 	@JsonProperty("mezon_id")
 	String mezonId;
 
+	@Override
+	public User.Provider getProvider() {
+		return User.Provider.MEZON;
+	}
+
 	@JsonProperty("sub")
 	String sub;
 
-	@JsonProperty("email")
-	String email;
-
 	@JsonProperty("username")
 	String username;
+
+	@Override
+	public String getCustomUsername() {
+		return EmailProcessor.extractAndClean(email) + "-" + User.Provider.MEZON + "-" + System.currentTimeMillis();
+	}
 
 	@JsonProperty("display_name")
 	String displayName;
 
 	@JsonProperty("avatar")
-	String avatar;
+	String avatarUrl;
+
+	@JsonProperty("email")
+	String email;
+
 }

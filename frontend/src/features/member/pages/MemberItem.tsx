@@ -84,7 +84,7 @@ export const MemberItem = ({
         <div className="min-w-0 flex-1 ml-4">
           {/* Tên thành viên - luôn hiện đầy đủ */}
           <p className="text-sm font-black text-[var(--ink-1)] leading-tight break-words">
-            {name}
+            {avatarSrc}
           </p>
 
           {/* Hàng chứa Ngày gia nhập + Các Tags (Vai trò + Quyền) */}
