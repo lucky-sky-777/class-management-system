@@ -24,6 +24,7 @@ type RawPendingRequest = {
     id: number;
     user_id: string | number;
     user_display_name?: string;
+    user_avatar_url?: string;
     status?: string;
     created_at?: string;
 };
@@ -82,6 +83,7 @@ export const memberAPI = {
                 userId: Number(p.user_id),
                 requestId: p.id,
                 displayName: p.user_display_name || `Học sinh #${p.user_id}`,
+                avatarUrl: p.user_avatar_url || "",
                 username: `user_${p.user_id}`,
                 role: "PENDING",
                 joinedAt: p.created_at || "",
