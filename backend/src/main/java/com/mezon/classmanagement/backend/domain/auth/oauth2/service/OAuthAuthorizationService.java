@@ -44,7 +44,6 @@ public class OAuthAuthorizationService {
 	@Transactional
 	public OAuthAuthorization exchange(String origin, String provider, ExchangeOAuthAuthorizationCodeRequest request) {
 		OAuthAuthorization currentOAuthAuthorization = findByOriginAndCodeOrThrow(origin, request.getOAuthAuthorizationCode());
-		System.out.println("exchange code " + request.getOAuthAuthorizationCode() + " for origin " + origin);
 
 		if (!Objects.equals(provider.toLowerCase(Locale.ROOT), currentOAuthAuthorization.getProvider().name().toLowerCase(Locale.ROOT))) {
 			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid request");

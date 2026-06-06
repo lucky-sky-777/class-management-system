@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.clazz.entity;
 
 import com.mezon.classmanagement.backend.common.util.CodeGenerator;
+import com.mezon.classmanagement.backend.common.util.DateTimeUtils;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -79,7 +80,7 @@ public class Class {
 	@PrePersist
 	public void prePersist() {
 		if (name == null) {
-			name = "Class_" + System.currentTimeMillis();
+			name = "Class_" + DateTimeUtils.currentTimestamp();
 		}
 		if (code == null) {
 			code = CodeGenerator.generate(7);

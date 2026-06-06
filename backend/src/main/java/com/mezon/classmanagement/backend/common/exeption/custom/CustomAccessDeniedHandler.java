@@ -30,11 +30,10 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 		httpServletResponse.setContentType("application/json;charset=UTF-8");
 		httpServletResponse.setCharacterEncoding("UTF-8");
 
-		ResponseDTO<?> responseDTO = ResponseDTO.builder()
-				.success(false)
-				.code(httpServletResponse.getStatus())
-				.message(accessDeniedException.getMessage())
-				.build();
+		ResponseDTO<?> responseDTO = ResponseDTO.fail(
+				httpServletResponse.getStatus(),
+				accessDeniedException.getMessage()
+		);
 
 		httpServletResponse.getWriter().write(objectMapper.writeValueAsString(responseDTO));
 	}

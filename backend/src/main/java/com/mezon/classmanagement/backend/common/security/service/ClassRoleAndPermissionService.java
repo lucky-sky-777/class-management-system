@@ -1,24 +1,22 @@
 package com.mezon.classmanagement.backend.common.security.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
+import com.mezon.classmanagement.backend.common.security.authority.ClassPermission;
+import com.mezon.classmanagement.backend.common.security.authority.ClassRole;
+import com.mezon.classmanagement.backend.common.security.authority.ClassRoleOrPermission;
 import com.mezon.classmanagement.backend.common.security.dto.ClassRoleAndPermissionListResponseDto;
 import com.mezon.classmanagement.backend.common.security.dto.ClassRoleOrPermissionResponseDto;
-import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
-import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
-import com.mezon.classmanagement.backend.common.security.permission.ClassRoleOrPermission;
 import com.mezon.classmanagement.backend.common.util.EnumUtils;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.UpdateClassUserRoleAndPermissionRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.service.ClassUserService;
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -29,7 +27,11 @@ public class ClassRoleAndPermissionService {
 
 	@RequireClassSecurity
 	@Transactional
-	public ClassUserResponseDto setClassUserRoleAndPermission(Long classId, Long userId, UpdateClassUserRoleAndPermissionRequestDto request) {
+	public ClassUserResponseDto setClassUserRoleAndPermission(
+			Long classId,
+			Long userId,
+			UpdateClassUserRoleAndPermissionRequestDto request
+	) {
 		return classUserService.updateClassUserRoleAndPermission(classId, userId, request);
 	}
 

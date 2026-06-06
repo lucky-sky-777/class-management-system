@@ -3,7 +3,7 @@ package com.mezon.classmanagement.backend.domain.clazz.service;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
-import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
+import com.mezon.classmanagement.backend.common.security.authority.ClassRole;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
 import com.mezon.classmanagement.backend.domain.classuser.classuser_request.dto.CreateClassUserRequestRequestDto;

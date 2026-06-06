@@ -10,7 +10,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@SuppressWarnings({WarningConstant.UNUSED})
+@SuppressWarnings(value = {WarningConstant.UNUSED})
 @RestControllerAdvice
 public class GlobalExceptionController {
 
@@ -32,11 +32,10 @@ public class GlobalExceptionController {
 		return ResponseEntity
 				.status(GlobalException.Type.INVALID_REQUEST.getCode())
 				.body(
-						ResponseDTO.<Void>builder()
-								.success(false)
-								.code(GlobalException.Type.INVALID_REQUEST.getCode())
-								.message("Invalid request")
-								.build()
+						ResponseDTO.fail(
+								GlobalException.Type.INVALID_REQUEST.getCode(),
+								"Invalid request"
+						)
 				);
 	}
 
@@ -45,24 +44,22 @@ public class GlobalExceptionController {
 		return ResponseEntity
 				.status(GlobalException.Type.INVALID_REQUEST.getCode())
 				.body(
-						ResponseDTO.<Void>builder()
-								.success(false)
-								.code(GlobalException.Type.INVALID_REQUEST.getCode())
-								.message("Invalid request")
-								.build()
+						ResponseDTO.fail(
+								GlobalException.Type.INVALID_REQUEST.getCode(),
+								"Invalid request"
+						)
 				);
 	}
 
-	@ExceptionHandler(MethodArgumentNotValidException.class)
+	@ExceptionHandler(value = MethodArgumentNotValidException.class)
 	public ResponseEntity<ResponseDTO<Void>> handleValidationException(MethodArgumentNotValidException methodArgumentNotValidException) {
 		return ResponseEntity
 				.status(GlobalException.Type.INVALID_REQUEST.getCode())
 				.body(
-						ResponseDTO.<Void>builder()
-								.success(false)
-								.code(GlobalException.Type.INVALID_REQUEST.getCode())
-								.message("Invalid request")
-								.build()
+						ResponseDTO.fail(
+								GlobalException.Type.INVALID_REQUEST.getCode(),
+								"Invalid request"
+						)
 				);
 	}
 

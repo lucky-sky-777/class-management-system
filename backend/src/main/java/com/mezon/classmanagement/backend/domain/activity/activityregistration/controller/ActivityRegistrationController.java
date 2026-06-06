@@ -40,7 +40,7 @@ public class ActivityRegistrationController {
 			@PathVariable Long activityId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ActivityRegistrationResponseDto response = activityRegistrationService.create(classId, activityId, userId);
 
@@ -74,7 +74,7 @@ public class ActivityRegistrationController {
 			@RequestBody UpdateActivityRegistrationRequestDto request
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ActivityRegistrationResponseDto response = activityRegistrationService.proof(classId, activityId, userId, activityRegistrationId, request);
 
@@ -92,7 +92,7 @@ public class ActivityRegistrationController {
 			@PathVariable Long activityRegistrationId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ActivityRegistrationResponseDto response = activityRegistrationService.unproof(classId, activityId, userId, activityRegistrationId);
 
@@ -110,7 +110,7 @@ public class ActivityRegistrationController {
 			@PathVariable Long activityRegistrationId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ActivityRegistrationIdResponseDto response = activityRegistrationService.approve(classId, activityId, userId, activityRegistrationId);
 
@@ -128,7 +128,7 @@ public class ActivityRegistrationController {
 			@PathVariable Long activityRegistrationId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ActivityRegistrationIdResponseDto response = activityRegistrationService.reject(classId, activityId, userId, activityRegistrationId);
 
@@ -146,7 +146,7 @@ public class ActivityRegistrationController {
 			@PathVariable Long activityRegistrationId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ActivityRegistrationIdResponseDto response = activityRegistrationService.cancel(classId, activityId, userId, activityRegistrationId);
 

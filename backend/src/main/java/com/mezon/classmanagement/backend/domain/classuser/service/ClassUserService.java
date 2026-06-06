@@ -2,8 +2,8 @@ package com.mezon.classmanagement.backend.domain.classuser.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
-import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
-import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
+import com.mezon.classmanagement.backend.common.security.authority.ClassPermission;
+import com.mezon.classmanagement.backend.common.security.authority.ClassRole;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserIdResponseDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;

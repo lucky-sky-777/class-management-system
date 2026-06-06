@@ -4,12 +4,8 @@ import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.security.annotation.Public;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
-import com.mezon.classmanagement.backend.domain.classuser.dto.ClassUserResponseDto;
-import com.mezon.classmanagement.backend.domain.classuser.dto.CreateClassUserRequestDto;
 import com.mezon.classmanagement.backend.domain.classuser.dto.response.CreateClassUserResponseDto;
-import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
 import com.mezon.classmanagement.backend.domain.clazz.dto.ClassResponseDto;
-import com.mezon.classmanagement.backend.domain.clazz.dto.class_privacy.ClassPrivacyResponseDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.classid.ClassIdResponseDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.createandupdate.CreateAndUpdateClassRequestDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.join.JoinClassRequestDto;
@@ -46,7 +42,7 @@ public class ClassController {
 			@RequestBody CreateAndUpdateClassRequestDto request
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long clientUserId = jwtService.extractUserId(authentication);
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ClassResponseDto response = classService.createClass(clientUserId, request);
 
@@ -107,7 +103,7 @@ public class ClassController {
 			@RequestBody JoinClassRequestDto request
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		CreateClassUserResponseDto response = classService.joinClass(userId, request);
 
@@ -124,7 +120,7 @@ public class ClassController {
 			@PathVariable Long classId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ClassIdResponseDto response = classService.leaveClass(userId, classId);
 
@@ -139,7 +135,7 @@ public class ClassController {
 	@GetMapping
 	public ResponseDTO<List<ClassResponseDto>> getJoinedClasses() {
 		Authentication authentication = authService.getAuthentication();
-		Long currentUserId = jwtService.extractUserId(authentication);
+		Long currentUserId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		List<ClassResponseDto> response = classService.getJoinedClasses(currentUserId);
 

@@ -38,7 +38,7 @@ public class ClassUserRequestController_Refactor {
 			@PathVariable Long joinClassRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ClassUserRequestIdResponseDto response = classUserRequestService.approve(classId, userId, joinClassRequestId);
 
@@ -56,7 +56,7 @@ public class ClassUserRequestController_Refactor {
 			@PathVariable Long joinClassRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ClassUserRequestIdResponseDto response = classUserRequestService.reject(classId, userId, joinClassRequestId);
 
@@ -74,7 +74,7 @@ public class ClassUserRequestController_Refactor {
 			@PathVariable Long joinClassRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ClassUserRequestIdResponseDto response = classUserRequestService.cancel(classId, userId, joinClassRequestId);
 
@@ -103,7 +103,7 @@ public class ClassUserRequestController_Refactor {
 	@GetMapping("/me")
 	public ResponseDTO<List<ClassUserRequestResponseDto>> getListByCreator() {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		List<ClassUserRequestResponseDto> response = classUserRequestService.getListByCreator(userId);
 

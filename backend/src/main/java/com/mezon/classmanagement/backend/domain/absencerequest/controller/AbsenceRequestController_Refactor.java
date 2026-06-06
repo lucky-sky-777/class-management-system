@@ -40,7 +40,7 @@ public class AbsenceRequestController_Refactor {
 			@RequestBody CreateAbsenceRequestRequestDto request
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		AbsenceRequestResponseDto response = absenceRequestService.create(classId, userId, request);
 
@@ -57,7 +57,7 @@ public class AbsenceRequestController_Refactor {
 			@PathVariable Long absenceRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		AbsenceRequestIdResponseDto response = absenceRequestService.approve(classId, userId, absenceRequestId);
 
@@ -74,7 +74,7 @@ public class AbsenceRequestController_Refactor {
 			@PathVariable Long absenceRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		AbsenceRequestIdResponseDto response = absenceRequestService.reject(classId, userId, absenceRequestId);
 
@@ -91,7 +91,7 @@ public class AbsenceRequestController_Refactor {
 			@PathVariable Long absenceRequestId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		AbsenceRequestIdResponseDto response = absenceRequestService.cancel(classId, userId, absenceRequestId);
 

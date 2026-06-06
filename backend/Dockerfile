@@ -1,4 +1,4 @@
-FROM gradle:8.7-jdk21 AS builder
+FROM gradle:9.4.1-jdk21 AS builder
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN chmod +x gradlew
 
 RUN ./gradlew bootJar --no-daemon
 
-FROM eclipse-temurin:21.0.10-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 

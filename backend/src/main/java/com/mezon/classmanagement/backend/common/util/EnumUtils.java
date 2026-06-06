@@ -3,7 +3,7 @@ package com.mezon.classmanagement.backend.common.util;
 import java.util.Arrays;
 import java.util.List;
 
-public class EnumUtils {
+public final class EnumUtils {
 
 	public static <E extends Enum<E>> List<E> toList(Class<E> enumClass) {
 		return Arrays.asList(enumClass.getEnumConstants());

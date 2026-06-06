@@ -41,7 +41,7 @@ public class FundPaymentController {
 			@RequestBody CreateFundPaymentRequestDto request
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		FundPaymentResponseDto response = fundPaymentService.create(
 				classId,
@@ -65,7 +65,7 @@ public class FundPaymentController {
 			@PathVariable Long fundPaymentId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		FundPaymentIdResponseDto response = fundPaymentService.approve(classId, fundId, userId, fundPaymentId);
 
@@ -84,7 +84,7 @@ public class FundPaymentController {
 			@PathVariable Long fundPaymentId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		FundPaymentIdResponseDto response = fundPaymentService.reject(classId, fundId, userId, fundPaymentId);
 
@@ -103,7 +103,7 @@ public class FundPaymentController {
 			@PathVariable Long fundPaymentId
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		FundPaymentIdResponseDto response = fundPaymentService.cancel(classId, fundId, userId, fundPaymentId);
 

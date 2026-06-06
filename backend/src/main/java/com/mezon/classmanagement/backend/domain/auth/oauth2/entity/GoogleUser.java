@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain.auth.oauth2.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mezon.classmanagement.backend.common.util.DateTimeUtils;
 import com.mezon.classmanagement.backend.common.util.EmailProcessor;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import lombok.AccessLevel;
@@ -29,7 +30,7 @@ public final class GoogleUser implements OAuthUser {
 
 	@Override
 	public String getCustomUsername() {
-		return EmailProcessor.extractAndClean(email) + "-" + User.Provider.GOOGLE + "-" + System.currentTimeMillis();
+		return EmailProcessor.extractAndClean(email) + "-" + User.Provider.GOOGLE + "-" + DateTimeUtils.currentTimestamp();
 	}
 
 	@JsonProperty(value = "name")

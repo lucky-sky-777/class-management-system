@@ -137,25 +137,25 @@ public class AuthService {
 			Jwt refreshTokenJwt = null;
 			if (rawRefreshToken != null && !rawRefreshToken.isEmpty()) {
 				refreshTokenJwt = jwtService.extractJwtFromRefreshToken(rawRefreshToken);
-				refreshTokenService.revokeByJti(jwtService.extractJti(refreshTokenJwt));
+				refreshTokenService.revokeByJti(jwtService.extractJtiFromJwt(refreshTokenJwt));
 			}
 
-			Jwt accessTokenJwt = jwtService.extractJwt(authentication);
+			Jwt accessTokenJwt = jwtService.extractJwtFromAuthentication(authentication);
 
 			InvalidatedAccessToken newInvalidatedAccessToken = InvalidatedAccessToken.builder()
-					.jti(jwtService.extractJti(accessTokenJwt))
-					.expiryDate(jwtService.extractExpiry(accessTokenJwt))
+					.jti(jwtService.extractJtiFromJwt(accessTokenJwt))
+					.expiryDate(jwtService.extractExpiryFromJwt(accessTokenJwt))
 					.build();
 			invalidatedAccessTokenService.save(newInvalidatedAccessToken);
 
 			if (refreshTokenJwt == null) {
 				return SignOutResponseDto.builder()
-						.signedOutAccessToken(jwtService.extractToken(accessTokenJwt))
+						.signedOutAccessToken(jwtService.extractTokenFromJwt(accessTokenJwt))
 						.build();
 			} else {
 				return SignOutResponseDto.builder()
-						.signedOutAccessToken(jwtService.extractToken(accessTokenJwt))
-						.signedOutRefreshToken(jwtService.extractToken(refreshTokenJwt))
+						.signedOutAccessToken(jwtService.extractTokenFromJwt(accessTokenJwt))
+						.signedOutRefreshToken(jwtService.extractTokenFromJwt(refreshTokenJwt))
 						.build();
 			}
 		} catch (Exception e) {
@@ -169,7 +169,7 @@ public class AuthService {
 		if (!(authentication instanceof JwtAuthenticationToken)) {
 			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Unauthorized");
 		}
-		String jti = jwtService.extractJti(authentication);
+		String jti = jwtService.extractJtiFromAuthentication(authentication);
 		if (invalidatedAccessTokenService.isInvalidated(jti)) {
 			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Unauthorized");
 		}
@@ -179,7 +179,7 @@ public class AuthService {
 
 	@Transactional
 	public UserResponseDto getCurrentUser(Authentication authentication) {
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 		User user = userService.findByUserIdOrThrow(userId);
 		return userMapper.toUserResponseDto(user);
 	}

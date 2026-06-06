@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.common.security;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
-import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
+import com.mezon.classmanagement.backend.common.security.authority.ClassPermission;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
@@ -18,7 +18,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-@SuppressWarnings({
+@SuppressWarnings(value = {
 		WarningConstant.UNUSED,
 		WarningConstant.SPELL_CHECKING_INSPECTION,
 		WarningConstant.BOOLEAN_METHOD_IS_ALWAYS_INVERTED
@@ -29,16 +29,17 @@ import org.springframework.stereotype.Component;
 public class ClassSecurity {
 
 	AuthService authService;
+	JwtService jwtService;
+
 	ClassService classService;
 	UserService userService;
 	GroupService groupService;
 	GroupUserService groupUserService;
 	ClassUserService classUserService;
-	JwtService jwtService;
 
 	public boolean adminOnly(Long classId) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		ClassUser classUser = classUserService.findByClassIdAndUserIdOrThrow(classId, userId);
 
@@ -54,7 +55,8 @@ public class ClassSecurity {
 			if (adminOnly(classId)) {
 				throw new AccessDeniedException("Admin không được phép làm việc này");
 			}
-		} catch (AccessDeniedException ignored) {}
+		} catch (AccessDeniedException ignored) {
+		}
 
 		return true;
 	}
@@ -67,7 +69,10 @@ public class ClassSecurity {
 		return true;
 	}
 
-	public boolean manageGroupData(Long classId, Long groupId) {
+	public boolean manageGroupData(
+			Long classId,
+			Long groupId
+	) {
 		if (!(manageGroup(classId) || hasGroupAccess(classId, groupId))) {
 			throw new AccessDeniedException("Yêu cầu quyền: "
 					+ ClassPermission.MANAGE_ACTIVITY.getLabel()
@@ -113,7 +118,7 @@ public class ClassSecurity {
 
 	public boolean everyoneInClass(Long classId) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		if (!classUserService.existsByClassIdAndUserId(classId, userId)) {
 			throw new AccessDeniedException("Chỉ thành viên lớp được phép làm việc này");
@@ -126,20 +131,26 @@ public class ClassSecurity {
 	 * Private
 	 */
 
-	private boolean hasGroupAccess(Long classId, Long groupId) {
+	private boolean hasGroupAccess(
+			Long classId,
+			Long groupId
+	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		GroupUser groupUser = groupUserService.findByClassIdAndGroupIdAndUserIdOrThrow(classId, groupId, userId);
 
 		return groupUserService.isLeader(groupUser);
 	}
 
-	private boolean hasClassAccess(Long classId, ClassPermission classPermission) {
+	private boolean hasClassAccess(
+			Long classId,
+			ClassPermission classPermission
+	) {
 		classService.throwIfNotExistsById(classId);
 
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		userService.throwIfNotExistsById(userId);
 
