@@ -45,7 +45,7 @@ public class PointController {
 			@RequestBody CreatePointRequestDto request
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		PointResponseDto response = pointService.create(classId, groupId, userId, request);
 

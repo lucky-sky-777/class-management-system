@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain.classuser.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
-import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
+import com.mezon.classmanagement.backend.common.security.authority.ClassPermission;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

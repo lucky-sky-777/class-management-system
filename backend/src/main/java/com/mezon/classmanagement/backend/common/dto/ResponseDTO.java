@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -51,7 +52,10 @@ public final class ResponseDTO<Data> {
 	@JsonProperty(value = "time")
 	Instant timestamp = Instant.now();
 
-	public static <Data> ResponseDTO<Data> fail(Integer code, String message) {
+	public static <Data> ResponseDTO<Data> fail(
+			Integer code,
+			String message
+	) {
 		return ResponseDTO.<Data>builder()
 				.success(false)
 				.code(code)
@@ -59,6 +63,7 @@ public final class ResponseDTO<Data> {
 				.build();
 	}
 
+	@SuppressWarnings(value = {WarningConstant.UNUSED})
 	public static <Data> ResponseDTO<Data> ok(String message) {
 		return ResponseDTO.<Data>builder()
 				.success(true)
@@ -67,7 +72,10 @@ public final class ResponseDTO<Data> {
 				.build();
 	}
 
-	public static <Data> ResponseDTO<Data> ok(String message, Data data) {
+	public static <Data> ResponseDTO<Data> ok(
+			String message,
+			Data data
+	) {
 		return ResponseDTO.<Data>builder()
 				.success(true)
 				.code(200)

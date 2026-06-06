@@ -8,7 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @PreAuthorize("true")
-@Target({ ElementType.METHOD, ElementType.TYPE })
-@Retention(RetentionPolicy.RUNTIME)
+@Target(value = {ElementType.METHOD, ElementType.TYPE})
+@Retention(value = RetentionPolicy.RUNTIME)
 public @interface Public {
 }

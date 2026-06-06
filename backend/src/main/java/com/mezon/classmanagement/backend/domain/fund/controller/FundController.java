@@ -41,7 +41,7 @@ public class FundController {
 			@RequestBody CreateFundRequestDto request
 	) {
 		Authentication authentication = authService.getAuthentication();
-		Long userId = jwtService.extractUserId(authentication);
+		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
 
 		FundResponseDto response = fundService.create(classId, userId, request);
 

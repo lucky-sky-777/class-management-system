@@ -5,7 +5,8 @@ import java.security.SecureRandom;
 public final class CodeGenerator {
 
 	private static final SecureRandom RANDOM = new SecureRandom();
-	private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+	private static final String CHARACTERS = "ABCDEFGHJKMNPQRSTUVWXYZ123456789";
+	//private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 	public static String generate(int length) {
 		StringBuilder code = new StringBuilder(length);

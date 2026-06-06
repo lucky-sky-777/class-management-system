@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.classuser.entity;
 
-import com.mezon.classmanagement.backend.common.security.permission.ClassPermission;
-import com.mezon.classmanagement.backend.common.security.permission.ClassRole;
+import com.mezon.classmanagement.backend.common.security.authority.ClassPermission;
+import com.mezon.classmanagement.backend.common.security.authority.ClassRole;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import jakarta.persistence.Column;

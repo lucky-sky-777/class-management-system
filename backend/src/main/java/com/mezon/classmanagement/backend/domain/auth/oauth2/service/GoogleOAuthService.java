@@ -49,7 +49,7 @@ public class GoogleOAuthService {
 			return (String) response.getBody().get("access_token");
 		}
 
-		throw new GlobalException(GlobalException.Type.OAUTH_ERROR, "Sign in with Google failed");
+		throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Sign in with Google failed");
 	}
 
 	public GoogleUser getUserInfo(String accessToken) {

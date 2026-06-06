@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.common.security;
 
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
@@ -7,10 +8,10 @@ import com.mezon.classmanagement.backend.domain.auth.service.InvalidatedAccessTo
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+@SuppressWarnings(value = {WarningConstant.UNUSED})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Component("TokenSecurity")
@@ -22,7 +23,7 @@ public class TokenSecurity {
 
 	public boolean isValid() {
 		Authentication authentication = authService.getAuthentication();
-		String jti = jwtService.extractJti(authentication);
+		String jti = jwtService.extractJtiFromAuthentication(authentication);
 
 		return isValid(jti);
 	}

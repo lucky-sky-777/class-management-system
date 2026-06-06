@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.domain.auth.oauth2.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.common.util.DateTimeUtils;
 import com.mezon.classmanagement.backend.common.util.EmailProcessor;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import lombok.AccessLevel;
@@ -40,7 +41,7 @@ public final class MezonUser implements OAuthUser {
 
 	@Override
 	public String getCustomUsername() {
-		return EmailProcessor.extractAndClean(email) + "-" + User.Provider.MEZON + "-" + System.currentTimeMillis();
+		return EmailProcessor.extractAndClean(email) + "-" + User.Provider.MEZON + "-" + DateTimeUtils.currentTimestamp();
 	}
 
 	@JsonProperty("display_name")

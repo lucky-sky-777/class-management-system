@@ -26,7 +26,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @DTO
-public class ClassRoleAndPermissionListResponseDto {
+public final class ClassRoleAndPermissionListResponseDto {
 
 	@JsonProperty(value = "roles")
 	List<ClassRoleOrPermissionResponseDto> roles;
