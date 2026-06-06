@@ -8,7 +8,7 @@ RUN chmod +x gradlew
 
 RUN ./gradlew bootJar --no-daemon
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
