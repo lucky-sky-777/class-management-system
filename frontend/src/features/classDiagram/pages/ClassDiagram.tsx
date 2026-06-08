@@ -500,7 +500,7 @@ export const ClassDiagram = () => {
               return (
                   <div className="w-full h-full relative">
                     {/* THANH CÔNG CỤ ZOOM */}
-                    <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 bg-[var(--bg-surface)]/90 backdrop-blur-md p-1.5 rounded-2xl shadow-md border border-[var(--rule-md)]">
+                    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 bg-[var(--bg-surface)]/90 backdrop-blur-md p-1.5 rounded-2xl shadow-md border border-[var(--rule-md)]">
                       <button
                           onClick={() => zoomIn()}
                           className="p-2 text-[var(--ink-2)] hover:text-[var(--ink-1)]"
@@ -547,7 +547,7 @@ export const ClassDiagram = () => {
 
                             // CHÚ Ý: Đã xóa "pointer-events-none" ở cuối class này
                             // Thêm "cursor-move" để chuột đổi icon thành hình 4 mũi tên
-                            className="absolute bottom-6 right-6 z-50 w-48 bg-[var(--bg-surface)] border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 cursor-move select-none"
+                            className="absolute bottom-6 right-6 z-10 w-48 bg-[var(--bg-surface)] border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 cursor-move select-none"
 
                             // Ngăn điện thoại tự động cuộn trang web khi đang vuốt Minimap
                             style={{ touchAction: "none" }}
