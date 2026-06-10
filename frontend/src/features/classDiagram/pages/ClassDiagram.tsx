@@ -49,35 +49,20 @@ export const ClassDiagram = () => {
   const isDraggingMinimap = useRef(false); // Đánh dấu trạng thái đang nhấn giữ chuột
   const currentMapState = useRef({ scale: 0.4, x: 0, y: 0 }); // Lưu lại tọa độ & mức zoom hiện tại của Map chính
 
-  // Hàm chụp ảnh sơ đồ đang hiển thị
-  // const captureMinimap = async () => {
-  //   if (contentRef.current) {
-  //     try {
-  //       const canvas = await html2canvas(contentRef.current, {
-  //         scale: 0.5, // Giảm tỷ lệ chụp để tối ưu dung lượng ảnh base64 và hiệu năng render
-  //         backgroundColor: null,
-  //         useCORS: true,
-  //       });
-  //       setMinimapImg(canvas.toDataURL("image/png"));
-  //     } catch (error) {
-  //       console.error("Lỗi khi kết xuất ảnh sơ đồ thu nhỏ:", error);
-  //     }
-  //   }
-  // };
 
   const captureMinimap = async () => {
     if (contentRef.current) {
       try {
         const dataUrl = await htmlToImage.toPng(contentRef.current, {
-          quality: 0.8,
-          pixelRatio: 0.5, // Giảm tỷ lệ để ảnh nhẹ hơn, tương đương scale: 0.5
+          quality: 1.0,
+          pixelRatio: 1.0, // Giảm tỷ lệ để ảnh nhẹ hơn, tương đương scale: 0.5
           skipFonts: false,
           cacheBust: true,
-            // filter: (node) => {
-            // // Bỏ qua các thẻ img (chỉ lấy layout và text)
-            //   if (node.tagName === 'IMG') return false;
-            //   return true;
-            // }
+          filter: (node) => {
+            // Bỏ qua các thẻ img (chỉ lấy layout và text)
+            if (node.tagName === 'IMG') return false;
+            return true;
+          }
         });
         setMinimapImg(dataUrl);
       } catch (error) {
@@ -85,14 +70,6 @@ export const ClassDiagram = () => {
       }
     }
   };
-
-  // Tự động cập nhật lại ảnh nền Minimap khi dữ liệu lớp hoặc góc nhìn xoay thay đổi
-  // useEffect(() => {
-  //   if (data) {
-  //     const timer = setTimeout(() => captureMinimap(), 1000);
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [data, perspective]);
 
   useEffect(() => {
     if (data) {
@@ -103,81 +80,84 @@ export const ClassDiagram = () => {
   }, [data, perspective]);
 
   // // Xử lý sự kiện di chuyển/phóng to sơ đồ chính để cập nhật View Box
-  // const handleTransformed = useCallback((ref: any) => {
-  //   if (!contentRef.current || !wrapperRef.current) return;
+  const transformComponentRef = useRef<any>(null);
+  // const updateViewBoxDirect = useCallback(() => {
+  //   if (!contentRef.current || !wrapperRef.current || !viewBoxRef.current) return;
   //
-  //   const { scale, positionX, positionY } = ref.state;
+  //   // QUAN TRỌNG: Lấy thẻ viewport lõi của thư viện, bỏ qua border/padding của wrapperRef
+  //   const viewportEl = wrapperRef.current.firstElementChild as HTMLElement;
+  //   if (!viewportEl) return;
   //
-  //   // Đo kích thước nguyên bản của vùng chứa sơ đồ
-  //   const contentW = contentRef.current.offsetWidth;
-  //   const contentH = contentRef.current.offsetHeight;
+  //   const viewportRect = viewportEl.getBoundingClientRect();
+  //   const contentRect = contentRef.current.getBoundingClientRect();
   //
-  //   // Đo kích thước khung nhìn thực tế của màn hình thiết bị
-  //   const wrapperW = wrapperRef.current.offsetWidth;
-  //   const wrapperH = wrapperRef.current.offsetHeight;
+  //   // Tính phần giao (overlap) giữa viewport thực tế và nội dung
+  //   const intersectLeft = Math.max(viewportRect.left, contentRect.left);
+  //   const intersectTop = Math.max(viewportRect.top, contentRect.top);
+  //   const intersectRight = Math.min(viewportRect.right, contentRect.right);
+  //   const intersectBottom = Math.min(viewportRect.bottom, contentRect.bottom);
   //
-  //   // Kích thước thực tế sau khi bị tác động bởi mức phóng to (Scale)
-  //   const scaledContentW = contentW * scale;
-  //   const scaledContentH = contentH * scale;
+  //   const intersectWidth = Math.max(0, intersectRight - intersectLeft);
+  //   const intersectHeight = Math.max(0, intersectBottom - intersectTop);
   //
-  //   // Tỷ lệ phần trăm diện tích hiển thị trên tổng thể sơ đồ
-  //   const visibleWidthPct = (wrapperW / scaledContentW) * 100;
-  //   const visibleHeightPct = (wrapperH / scaledContentH) * 100;
+  //   const relativeLeft = intersectLeft - contentRect.left;
+  //   const relativeTop = intersectTop - contentRect.top;
   //
-  //   // Tỷ lệ phần trăm tọa độ điểm bắt đầu dịch chuyển (Pan)
-  //   const leftPct = (-positionX / scaledContentW) * 100;
-  //   const topPct = (-positionY / scaledContentH) * 100;
+  //   const leftPct = contentRect.width > 0 ? (relativeLeft / contentRect.width) * 100 : 0;
+  //   const topPct = contentRect.height > 0 ? (relativeTop / contentRect.height) * 100 : 0;
+  //   const widthPct = contentRect.width > 0 ? (intersectWidth / contentRect.width) * 100 : 0;
+  //   const heightPct = contentRect.height > 0 ? (intersectHeight / contentRect.height) * 100 : 0;
   //
-  //   setViewBox({
-  //     left: Math.max(0, leftPct),
-  //     top: Math.max(0, topPct),
-  //     width: Math.min(100 - Math.max(0, leftPct), visibleWidthPct),
-  //     height: Math.min(100 - Math.max(0, topPct), visibleHeightPct)
-  //   });
+  //   viewBoxRef.current.style.left = `${leftPct}%`;
+  //   viewBoxRef.current.style.top = `${topPct}%`;
+  //   viewBoxRef.current.style.width = `${widthPct}%`;
+  //   viewBoxRef.current.style.height = `${heightPct}%`;
   // }, []);
-  // Xử lý sự kiện di chuyển/phóng to sơ đồ chính để cập nhật View Box
-  const handleTransformed = useCallback((ref: any) => {
-    if (!contentRef.current || !wrapperRef.current) return;
+  const updateViewBoxDirect = useCallback(() => {
+    if (!contentRef.current || !wrapperRef.current || !viewBoxRef.current) return;
 
-    const { scale, positionX, positionY } = ref.state;
+    const viewportEl = wrapperRef.current.firstElementChild as HTMLElement;
+    if (!viewportEl) return;
 
-    currentMapState.current = { scale, x: positionX, y: positionY };
+    const viewportRect = viewportEl.getBoundingClientRect();
+    const contentRect = contentRef.current.getBoundingClientRect();
 
-    // Đo kích thước nguyên bản của vùng chứa sơ đồ
-    const contentW = contentRef.current.offsetWidth;
-    const contentH = contentRef.current.offsetHeight;
+    // 1. Tọa độ của góc TRÊN - TRÁI Viewport so với Sơ đồ chính (Content)
+    const relativeLeft = viewportRect.left - contentRect.left;
+    const relativeTop = viewportRect.top - contentRect.top;
 
-    // Đo kích thước khung nhìn thực tế của màn hình thiết bị
-    const wrapperW = wrapperRef.current.offsetWidth;
-    const wrapperH = wrapperRef.current.offsetHeight;
+    // 2. Chuyển đổi tọa độ khởi đầu thành % dựa trên kích thước thực của sơ đồ (đã scale)
+    const leftPct = contentRect.width > 0 ? (relativeLeft / contentRect.width) * 100 : 0;
+    const topPct = contentRect.height > 0 ? (relativeTop / contentRect.height) * 100 : 0;
 
-    // Kích thước thực tế sau khi bị tác động bởi mức phóng to (Scale)
-    const scaledContentW = contentW * scale;
-    const scaledContentH = contentH * scale;
+    // 3. THAY ĐỔI CỐT LÕI: Tính chiều rộng/cao của View Box dựa trên CHÍNH XÁC kích thước Viewport
+    // Không dùng vùng giao intersect nữa, ép tỷ lệ luôn luôn là tỷ lệ màn hình (1.83)
+    const widthPct = contentRect.width > 0 ? (viewportRect.width / contentRect.width) * 100 : 0;
+    const heightPct = contentRect.height > 0 ? (viewportRect.height / contentRect.height) * 100 : 0;
 
-    // Tỷ lệ phần trăm diện tích hiển thị trên tổng thể sơ đồ
-    const visibleWidthPct = (wrapperW / scaledContentW) * 100;
-    const visibleHeightPct = (wrapperH / scaledContentH) * 100;
-
-    // Tỷ lệ phần trăm tọa độ điểm bắt đầu dịch chuyển (Pan)
-    const leftPct = (-positionX / scaledContentW) * 100;
-    const topPct = (-positionY / scaledContentH) * 100;
-
-    // ĐÃ FIX: Loại bỏ Math.max và Math.min để box tự do di chuyển vượt ranh giới
-    // CSS overflow-hidden ở thẻ cha sẽ tự lo phần cắt xén hiển thị
-    // setViewBox({
-    //   left: leftPct,
-    //   top: topPct,
-    //   width: visibleWidthPct,
-    //   height: visibleHeightPct
-    // });
-    if (viewBoxRef.current) {
-      viewBoxRef.current.style.left = `${leftPct}%`;
-      viewBoxRef.current.style.top = `${topPct}%`;
-      viewBoxRef.current.style.width = `${visibleWidthPct}%`;
-      viewBoxRef.current.style.height = `${visibleHeightPct}%`;
-    }
+    // 4. Cập nhật style trực tiếp (giữ nguyên cơ chế outline hiện tại của bạn)
+    viewBoxRef.current.style.left = `${leftPct}%`;
+    viewBoxRef.current.style.top = `${topPct}%`;
+    viewBoxRef.current.style.width = `${widthPct}%`;
+    viewBoxRef.current.style.height = `${heightPct}%`;
   }, []);
+
+  const handleTransformed = useCallback(() => {
+    // Cập nhật currentMapState nếu cần cho kéo minimap
+    if (transformComponentRef.current) {
+      currentMapState.current = transformComponentRef.current.state;
+    }
+    updateViewBoxDirect();
+  }, [updateViewBoxDirect]);
+  useEffect(() => {
+    if (data && minimapImg) {
+      // Đợi DOM hoàn tất render
+      const timer = setTimeout(() => {
+        updateViewBoxDirect();
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [data, minimapImg, updateViewBoxDirect]);
   // --- KẾT THÚC LOGIC MINIMAP ---
 
   // THUẬT TOÁN CHIA CỘT TỔ CHỖ NGỒI
@@ -410,7 +390,7 @@ export const ClassDiagram = () => {
         {/* 3. CONTAINER SƠ ĐỒ LỚP HỌC */}
         <div
             ref={wrapperRef}
-            className="w-full h-[75vh] min-h-[500px] relative overflow-hidden px-2 md:px-0 bg-gray-50/30 rounded-xl border-2 border-[var(--rule-md)] shadow-sm"
+            className="w-full h-[75vh] min-h-[500px] relative overflow-hidden bg-gray-50/30 rounded-xl border-4 border-[var(--rule-md)] shadow-sm"
             onClick={(e) => e.stopPropagation()}
         >
           <TransformWrapper
@@ -426,76 +406,78 @@ export const ClassDiagram = () => {
               }}
               wheel={{ disabled: true }}
               pinch={{ step: 2 }}
+
+              ref={transformComponentRef}
+
               onTransform={handleTransformed} // Kích hoạt khi bấm nút Zoom In/Out/Reset
               onPanning={handleTransformed}     // Kích hoạt LIÊN TỤC khi đang kéo (Drag)
               onZoom={handleTransformed}     // Kích hoạt LIÊN TỤC khi đang phóng to/thu nhỏ
               onPinch={handleTransformed}    // Kích hoạt LIÊN TỤC khi dùng 2 ngón tay trên điện thoại
           >
             {({ zoomIn, zoomOut, resetTransform, setTransform }) => {
-                const updateMapFromMinimap = (e: React.PointerEvent<HTMLDivElement>) => {
-                    const minimapEl = minimapRef.current;
-                    if (!contentRef.current || !wrapperRef.current || !minimapEl) return;
+              const updateMapFromMinimap = (e: React.PointerEvent<HTMLDivElement>) => {
+                const minimapEl = minimapRef.current;
+                if (!contentRef.current || !wrapperRef.current || !minimapEl) return;
 
-                    // 1. Lấy vị trí của Minimap trên màn hình
-                    const rect = minimapEl.getBoundingClientRect();
+                const imgEl = minimapEl.querySelector('img');
+                if (!imgEl) return;
+                const rect = imgEl.getBoundingClientRect();
 
-                    // 2. Tính vị trí trỏ chuột (từ 0 đến 1, tương đương 0% -> 100%)
-                    let xPct = (e.clientX - rect.left) / rect.width;
-                    let yPct = (e.clientY - rect.top) / rect.height;
+                let xPct = (e.clientX - rect.left) / rect.width;
+                let yPct = (e.clientY - rect.top) / rect.height;
 
-                    // Giới hạn để chuột không kéo Box bay ra khỏi viền Minimap
-                    xPct = Math.max(0, Math.min(1, xPct));
-                    yPct = Math.max(0, Math.min(1, yPct));
+                xPct = Math.max(0, Math.min(1, xPct));
+                yPct = Math.max(0, Math.min(1, yPct));
 
-                    // 3. Lấy thông số hiện tại của map chính
-                    const scale = currentMapState.current.scale;
-                    const contentW = contentRef.current.offsetWidth;
-                    const contentH = contentRef.current.offsetHeight;
-                    const wrapperW = wrapperRef.current.offsetWidth;
-                    const wrapperH = wrapperRef.current.offsetHeight;
+                // QUAN TRỌNG: Lấy thẻ viewport lõi để đo kích thước vùng nhìn
+                const viewportEl = wrapperRef.current.firstElementChild as HTMLElement;
+                if (!viewportEl) return;
+                const viewportRect = viewportEl.getBoundingClientRect();
 
-                    const scaledContentW = contentW * scale;
-                    const scaledContentH = contentH * scale;
+                const scale = currentMapState.current.scale;
+                const contentW = contentRef.current.offsetWidth;
+                const contentH = contentRef.current.offsetHeight;
 
-                    // 4. Căn giữa View Box vào con trỏ chuột
-                    const viewBoxWidthPct = wrapperW / scaledContentW;
-                    const viewBoxHeightPct = wrapperH / scaledContentH;
-                    const leftPct = xPct - (viewBoxWidthPct / 2);
-                    const topPct = yPct - (viewBoxHeightPct / 2);
+                const scaledContentW = contentW * scale;
+                const scaledContentH = contentH * scale;
 
-                    // 5. Quy đổi ra Pixel và ép map chính di chuyển
-                    const newX = -(leftPct * scaledContentW);
-                    const newY = -(topPct * scaledContentH);
+                // Căn giữa View Box dựa trên kích thước viewport thực tế
+                const viewBoxWidthPct = viewportRect.width / scaledContentW;
+                const viewBoxHeightPct = viewportRect.height / scaledContentH;
+                const leftPct = xPct - (viewBoxWidthPct / 2);
+                const topPct = yPct - (viewBoxHeightPct / 2);
 
-                    // setTransform(x, y, scale, animationTime)
-                    setTransform(newX, newY, scale, 0);
-                };
+                const newX = -(leftPct * scaledContentW);
+                const newY = -(topPct * scaledContentH);
 
-                // Khi bắt đầu nhấn chuột vào Minimap
-                const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-                    e.stopPropagation(); // Ngăn không cho map chính nhận sự kiện click này
-                    isDraggingMinimap.current = true;
+                setTransform(newX, newY, scale, 0);
+              };
 
-                    if (minimapRef.current) {
-                        minimapRef.current.setPointerCapture(e.pointerId); // Khóa con trỏ
-                    }
+              // Khi bắt đầu nhấn chuột vào Minimap
+              const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+                e.stopPropagation(); // Ngăn không cho map chính nhận sự kiện click này
+                isDraggingMinimap.current = true;
 
-                    updateMapFromMinimap(e); // Cập nhật vị trí ngay cú click đầu tiên
-                };
+                if (minimapRef.current) {
+                  minimapRef.current.setPointerCapture(e.pointerId); // Khóa con trỏ
+                }
 
-                // Khi di chuyển chuột (chỉ chạy nếu đang nhấn giữ)
-                const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-                    if (!isDraggingMinimap.current) return;
-                    updateMapFromMinimap(e);
-                };
+                updateMapFromMinimap(e); // Cập nhật vị trí ngay cú click đầu tiên
+              };
 
-                // Khi nhả chuột ra
-                const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-                    isDraggingMinimap.current = false;
-                    if (minimapRef.current) {
-                        minimapRef.current.releasePointerCapture(e.pointerId); // Mở khóa con trỏ
-                    }
-                };
+              // Khi di chuyển chuột (chỉ chạy nếu đang nhấn giữ)
+              const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+                if (!isDraggingMinimap.current) return;
+                updateMapFromMinimap(e);
+              };
+
+              // Khi nhả chuột ra
+              const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+                isDraggingMinimap.current = false;
+                if (minimapRef.current) {
+                  minimapRef.current.releasePointerCapture(e.pointerId); // Mở khóa con trỏ
+                }
+              };
 
               return (
                   <div className="w-full h-full relative">
@@ -547,12 +529,12 @@ export const ClassDiagram = () => {
 
                             // CHÚ Ý: Đã xóa "pointer-events-none" ở cuối class này
                             // Thêm "cursor-move" để chuột đổi icon thành hình 4 mũi tên
-                            className="absolute bottom-6 right-6 z-10 w-48 bg-[var(--bg-surface)] border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 cursor-move select-none"
+                            className="absolute bottom-6 right-6 z-10 w-36 bg-[var(--bg-surface)] border-2 border-[var(--rule-md)] rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 cursor-move select-none"
 
                             // Ngăn điện thoại tự động cuộn trang web khi đang vuốt Minimap
                             style={{ touchAction: "none" }}
                         >
-                          <img src={minimapImg} alt="Sơ đồ lớp thu nhỏ" className="w-full h-auto opacity-60 bg-[var(--bg-paper)]" />
+                          <img src={minimapImg} alt="Sơ đồ lớp thu nhỏ" className="block w-full h-auto opacity-60 bg-[var(--bg-paper)]" />
 
                           {/*/!* Hộp chỉ định vùng hiển thị hiện tại (View Box) *!/*/}
                           {/*<div*/}
@@ -566,16 +548,8 @@ export const ClassDiagram = () => {
                           {/*/>*/}
                           {/* Hộp chỉ định vùng hiển thị hiện tại (View Box) */}
                           <div
-                              ref={viewBoxRef} // <-- THÊM DÒNG NÀY
-                              // ĐÃ XÓA: "transition-all duration-75" để tránh xung đột với tốc độ drag
-                              className="absolute border-[1.5px] border-blue-500 bg-blue-500/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
-                              style={{
-                                // Khởi tạo giá trị mặc định bao phủ 100% trước khi có sự kiện transform đầu tiên
-                                left: '0%',
-                                top: '0%',
-                                width: '100%',
-                                height: '100%',
-                              }}
+                              ref={viewBoxRef}
+                              className="absolute outline outline-[1.5px] outline-blue-500 bg-blue-500/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"
                           />
                         </div>
                     )}
