@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+@Deprecated
 @JsonPropertyOrder(value = {
 		"bank_qr_code_url"
 })

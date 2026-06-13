@@ -24,14 +24,14 @@ public class WeekController {
 	WeekService weekService;
 
 	@GetMapping
-	public ResponseDTO<List<WeekResponseDto>> get(
+	public ResponseDTO<List<WeekResponseDto>> getWeekList(
 			@RequestParam int year
 	) {
 		List<WeekResponseDto> response = weekService.getWeekList(year);
 
 		return ResponseDTO.<List<WeekResponseDto>>builder()
 				.success(true)
-				.message("Get weeks successful")
+				.message("Get week list successful")
 				.data(response)
 				.build();
 	}

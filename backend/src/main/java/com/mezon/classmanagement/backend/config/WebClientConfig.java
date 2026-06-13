@@ -8,13 +8,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class WebClientConfig {
 
-	@Bean
+	@Bean(name = "vietQrWebClient")
 	public WebClient vietQrWebClient() {
 		return WebClient.builder()
 				.baseUrl("https://api.vietqr.io")
 				.build();
 	}
 
+	@Deprecated
 	@Bean
 	public RestTemplate restTemplate() {
 		return new RestTemplate();

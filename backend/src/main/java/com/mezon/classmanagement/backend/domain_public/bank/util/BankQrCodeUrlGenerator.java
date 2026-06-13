@@ -38,6 +38,7 @@ public final class BankQrCodeUrlGenerator {
 	}
 
 	public static Map<String, ImageType> imageTypeMap = new HashMap<>();
+
 	static {
 		for (ImageType imageType : EnumUtils.toList(ImageType.class)) {
 			imageTypeMap.put(normalizeImageTypeName(imageType.name()), imageType);
@@ -61,7 +62,14 @@ public final class BankQrCodeUrlGenerator {
 				.toLowerCase(Locale.ROOT);
 	}
 
-	public static String generate(ImageType imageType, String bankCode, String accountNumber, String accountName, Long amount, String notes) {
+	public static String generate(
+			ImageType imageType,
+			String bankCode,
+			String accountNumber,
+			String accountName,
+			Long amount,
+			String notes
+	) {
 		if (bankCode == null || accountNumber == null) {
 			return "";
 		}

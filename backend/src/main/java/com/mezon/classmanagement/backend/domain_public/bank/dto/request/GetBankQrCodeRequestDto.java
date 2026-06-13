@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+@Deprecated
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Setter
 @Getter
