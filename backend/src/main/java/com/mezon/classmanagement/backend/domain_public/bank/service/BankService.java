@@ -1,11 +1,11 @@
 package com.mezon.classmanagement.backend.domain_public.bank.service;
 
+import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain_public.bank.dto.request.GetBankQrCodeRequestDto;
 import com.mezon.classmanagement.backend.domain_public.bank.dto.response.BankQrCodeUrlResponseDto;
 import com.mezon.classmanagement.backend.domain_public.bank.dto.response.vietqr.VietQrBankListResponseDto;
 import com.mezon.classmanagement.backend.domain_public.bank.dto.response.vietqr.VietQrBankResponseDto;
 import com.mezon.classmanagement.backend.domain_public.bank.util.BankQrCodeUrlGenerator;
-import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -36,7 +36,11 @@ public class BankService {
 		return response.getData();
 	}
 
-	public BankQrCodeUrlResponseDto getQrCodeUrl(String imageTypeName, GetBankQrCodeRequestDto request) {
+	@Deprecated
+	public BankQrCodeUrlResponseDto getQrCodeUrl(
+			String imageTypeName,
+			GetBankQrCodeRequestDto request
+	) {
 		if (!BankQrCodeUrlGenerator.isValidImageType(imageTypeName)) {
 			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid image type");
 		}

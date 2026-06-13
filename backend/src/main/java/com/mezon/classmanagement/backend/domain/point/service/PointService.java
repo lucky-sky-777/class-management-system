@@ -1,8 +1,8 @@
 package com.mezon.classmanagement.backend.domain.point.service;
 
-import com.mezon.classmanagement.backend.domain_public.week.service.WeekService;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.security.annotation.RequireClassSecurity;
+import com.mezon.classmanagement.backend.common.util.DateTimeUtils;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain.group.entity.Group;
@@ -40,12 +40,6 @@ public class PointService {
 	 */
 
 	PointMapper pointMapper;
-
-	/**
-	 * Other services
-	 */
-
-	WeekService weekService;
 
 	@RequireClassSecurity
 	@Transactional
@@ -92,10 +86,13 @@ public class PointService {
 
 	@RequireClassSecurity
 	@Transactional(readOnly = true)
-	public List<PointResponseDto> getByClass(Long classId, GetPointRequestDto request) {
+	public List<PointResponseDto> getByClass(
+			Long classId,
+			GetPointRequestDto request
+	) {
 		if (request == null) {
 			return getByClassId(
-					classId, weekService.getCurrentWeekStartAt(), weekService.getCurrentWeekEndAt()
+					classId, DateTimeUtils.getCurrentWeekStartAt(), DateTimeUtils.getCurrentWeekEndAt()
 			);
 		}
 
@@ -104,10 +101,14 @@ public class PointService {
 
 	@RequireClassSecurity
 	@Transactional(readOnly = true)
-	public List<PointResponseDto> getByGroup(Long classId, Long groupId, GetPointRequestDto request) {
+	public List<PointResponseDto> getByGroup(
+			Long classId,
+			Long groupId,
+			GetPointRequestDto request
+	) {
 		if (request == null) {
 			return getByClassIdAndGroupId(
-					classId, groupId, weekService.getCurrentWeekStartAt(), weekService.getCurrentWeekEndAt()
+					classId, groupId, DateTimeUtils.getCurrentWeekStartAt(), DateTimeUtils.getCurrentWeekEndAt()
 			);
 		}
 
@@ -116,13 +117,16 @@ public class PointService {
 
 	@RequireClassSecurity
 	@Transactional(readOnly = true)
-	public List<WeekPointRankingResponseDto> getWeekRanking(Long classId, GetPointRequestDto request) {
+	public List<WeekPointRankingResponseDto> getWeekRanking(
+			Long classId,
+			GetPointRequestDto request
+	) {
 		List<WeekPointRankingResponseDto> responseList;
 
 		if (request == null) {
 			responseList = pointRepository.getWeekRankingAllGroupByClass(
 					classId,
-					weekService.getCurrentWeekStartAt(),
+					DateTimeUtils.getCurrentWeekStartAt(),
 					Instant.now()
 			);
 		} else {
@@ -144,48 +148,50 @@ public class PointService {
 
 	@RequireClassSecurity
 	@Transactional(readOnly = true)
-	public List<MonthPointRankingResponseDto> getMonthRanking(Long classId, GetPointRequestDto request) {
+	public List<MonthPointRankingResponseDto> getMonthRanking(
+			Long classId,
+			GetPointRequestDto request
+	) {
 		List<MonthPointRankingResponseDto> monthPointRankingList;
 
 		if (request == null) {
 			monthPointRankingList = pointRepository.getMonthRankingByClass(
 					classId,
 
-					weekService.getWeekStartAtBefore(3),
-					weekService.getWeekEndAtBefore(3),
+					DateTimeUtils.getWeekStartAtBefore(3),
+					DateTimeUtils.getWeekEndAtBefore(3),
 
-					weekService.getWeekStartAtBefore(2),
-					weekService.getWeekEndAtBefore(2),
+					DateTimeUtils.getWeekStartAtBefore(2),
+					DateTimeUtils.getWeekEndAtBefore(2),
 
-					weekService.getWeekStartAtBefore(1),
-					weekService.getWeekEndAtBefore(1),
+					DateTimeUtils.getWeekStartAtBefore(1),
+					DateTimeUtils.getWeekEndAtBefore(1),
 
-					weekService.getWeekStartAtBefore(0),
-					weekService.getWeekEndAtBefore(0)
+					DateTimeUtils.getWeekStartAtBefore(0),
+					DateTimeUtils.getWeekEndAtBefore(0)
 			);
 		} else {
 			if (request.getStartAt() == null) {
-				System.out.println("start null");
-				request.setStartAt(weekService.getCurrentWeekStartAt());
+				request.setStartAt(DateTimeUtils.getCurrentWeekStartAt());
 			}
 			if (request.getEndAt() == null) {
-				System.out.println("end null");
-				request.setEndAt(weekService.getCurrentWeekEndAt());
+				request.setEndAt(DateTimeUtils.getCurrentWeekEndAt());
 			}
+
 			monthPointRankingList = pointRepository.getMonthRankingByClass(
 					classId,
 
-					weekService.getWeekStartAtBefore(request.getStartAt(), 3),
-					weekService.getWeekEndAtBefore(request.getEndAt(), 3),
+					DateTimeUtils.getWeekStartAtBefore(request.getStartAt(), 3),
+					DateTimeUtils.getWeekEndAtBefore(request.getEndAt(), 3),
 
-					weekService.getWeekStartAtBefore(request.getStartAt(), 2),
-					weekService.getWeekEndAtBefore(request.getEndAt(), 2),
+					DateTimeUtils.getWeekStartAtBefore(request.getStartAt(), 2),
+					DateTimeUtils.getWeekEndAtBefore(request.getEndAt(), 2),
 
-					weekService.getWeekStartAtBefore(request.getStartAt(), 1),
-					weekService.getWeekEndAtBefore(request.getEndAt(), 1),
+					DateTimeUtils.getWeekStartAtBefore(request.getStartAt(), 1),
+					DateTimeUtils.getWeekEndAtBefore(request.getEndAt(), 1),
 
-					weekService.getWeekStartAtBefore(request.getStartAt(), 0),
-					weekService.getWeekEndAtBefore(request.getEndAt(), 0)
+					DateTimeUtils.getWeekStartAtBefore(request.getStartAt(), 0),
+					DateTimeUtils.getWeekEndAtBefore(request.getEndAt(), 0)
 			);
 		}
 
@@ -217,7 +223,10 @@ public class PointService {
 	 */
 
 	@Transactional(readOnly = true)
-	public Point findByClassIdAndPointIdOrThrow(Long classId, Long pointId) {
+	public Point findByClassIdAndPointIdOrThrow(
+			Long classId,
+			Long pointId
+	) {
 		return pointRepository
 				.findByClazz_IdAndId(classId, pointId)
 				.orElseThrow(() ->
@@ -226,19 +235,11 @@ public class PointService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<Point> findByClassIdAndGroupId(Long classId, Long groupId) {
-		return pointRepository
-				.findByClazz_IdAndGroup_IdOrderByCreatedAtDesc(classId, groupId);
-	}
-
-	@Transactional(readOnly = true)
-	public List<PointResponseDto> getByClassIdAndGroupId(Long classId, Long groupId) {
-		return pointRepository
-				.getByClazz_IdAndGroup_IdOrderByCreatedAtDesc(classId, groupId);
-	}
-
-	@Transactional(readOnly = true)
-	public List<PointResponseDto> getByClassId(Long classId, Instant startAt, Instant endAt) {
+	public List<PointResponseDto> getByClassId(
+			Long classId,
+			Instant startAt,
+			Instant endAt
+	) {
 		return pointRepository
 				.getByClazz_IdOrderByGroup_IdAscCreatedAtDescFilterByStartAtAndEndAt(
 						classId, startAt, endAt
@@ -246,7 +247,12 @@ public class PointService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<PointResponseDto> getByClassIdAndGroupId(Long classId, Long groupId, Instant startAt, Instant endAt) {
+	public List<PointResponseDto> getByClassIdAndGroupId(
+			Long classId,
+			Long groupId,
+			Instant startAt,
+			Instant endAt
+	) {
 		return pointRepository
 				.getByClazz_IdAndGroup_IdOrderByCreatedAtDescFilterByStartAtAndEndAt(
 						classId, groupId, startAt, endAt

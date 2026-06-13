@@ -30,7 +30,6 @@ import java.util.List;
 public class BankController {
 
 	BankService bankService;
-	RestTemplate restTemplate;
 
 	@GetMapping
 	public ResponseDTO<List<VietQrBankResponseDto>> getBankList() {
@@ -38,11 +37,15 @@ public class BankController {
 
 		return ResponseDTO.<List<VietQrBankResponseDto>>builder()
 				.success(true)
-				.message("Get banks successful")
+				.message("Get bank list successful")
 				.data(response)
 				.build();
 	}
 
+	@Deprecated
+	RestTemplate restTemplate;
+
+	@Deprecated
 	@GetMapping("/qrcode-url")
 	public ResponseDTO<BankQrCodeUrlResponseDto> getQrCodeUrl(
 			@RequestBody GetBankQrCodeRequestDto request
@@ -56,6 +59,7 @@ public class BankController {
 				.build();
 	}
 
+	@Deprecated
 	@GetMapping(value = "/qrcode-image/{imageTypeName}", produces = MediaType.IMAGE_PNG_VALUE)
 	public ResponseEntity<byte[]> getQrCodeImage(
 			@PathVariable String imageTypeName,
@@ -89,6 +93,7 @@ public class BankController {
 				.body(response.getBody());
 	}
 
+	@Deprecated
 	@GetMapping(value = "/qrcode-image2", produces = MediaType.IMAGE_PNG_VALUE)
 	public ResponseEntity<byte[]> getQrCodeImage(
 			@RequestBody GetBankQrCodeRequestDto request

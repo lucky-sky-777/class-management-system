@@ -18,8 +18,11 @@ import java.time.Instant;
 
 @JsonPropertyOrder(value = {
 		"week",
+		"is_current_week",
 		"start_at",
-		"end_at"
+		"end_at",
+		"formatted_start_at",
+		"formatted_end_at"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
