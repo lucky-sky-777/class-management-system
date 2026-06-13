@@ -2,7 +2,6 @@ package com.mezon.classmanagement.backend.domain.auth.service;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
