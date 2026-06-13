@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.fund.paymentaccount.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.fund.paymentaccount.dto.CreateOrUpdatePaymentAccountRequestDto;
 import com.mezon.classmanagement.backend.domain.fund.paymentaccount.dto.PaymentAccountResponseDto;

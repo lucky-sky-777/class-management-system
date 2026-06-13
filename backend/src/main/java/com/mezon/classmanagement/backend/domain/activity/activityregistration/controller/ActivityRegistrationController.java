@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.activity.activityregistration.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.request.UpdateActivityRegistrationRequestDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.response.ActivityRegistrationIdResponseDto;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.response.ActivityRegistrationResponseDto;

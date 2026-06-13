@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.absencerequest.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain.absencerequest.dto.request.CreateAbsenceRequestRequestDto;
 import com.mezon.classmanagement.backend.domain.absencerequest.dto.response.AbsenceRequestIdResponseDto;
 import com.mezon.classmanagement.backend.domain.absencerequest.dto.response.AbsenceRequestResponseDto;

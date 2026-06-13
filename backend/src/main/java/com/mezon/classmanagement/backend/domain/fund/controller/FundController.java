@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain.fund.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.fund.dto.CreateFundRequestDto;
 import com.mezon.classmanagement.backend.domain.fund.dto.FundIdResponseDto;

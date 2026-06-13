@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.common.security.service;
+package com.mezon.classmanagement.backend.domain.auth.service;
 
 import com.mezon.classmanagement.backend.common.constant.JwtConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;

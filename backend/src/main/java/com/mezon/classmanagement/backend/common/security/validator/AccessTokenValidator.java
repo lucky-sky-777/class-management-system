@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.common.security.validator;
 
 import com.mezon.classmanagement.backend.common.constant.JwtConstant;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

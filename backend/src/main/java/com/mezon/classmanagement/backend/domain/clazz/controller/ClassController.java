@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain.clazz.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.security.annotation.Public;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.classuser.dto.response.CreateClassUserResponseDto;
 import com.mezon.classmanagement.backend.domain.clazz.dto.ClassResponseDto;

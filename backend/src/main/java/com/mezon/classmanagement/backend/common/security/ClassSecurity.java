@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.common.security;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.security.authority.ClassPermission;
-import com.mezon.classmanagement.backend.common.security.service.JwtService;
+import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
 import com.mezon.classmanagement.backend.domain.classuser.entity.ClassUser;
