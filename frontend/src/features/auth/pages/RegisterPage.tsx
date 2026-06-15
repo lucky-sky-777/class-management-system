@@ -1,20 +1,30 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthInternal } from '@features/auth/hooks/useAuthInternal';
-import { User, AtSign } from 'lucide-react';
+import { User, AtSign, Lock, Eye, EyeOff } from 'lucide-react';
 
 export const RegisterPage = () => {
     const [formData, setFormData] = useState({
         username: '',
         displayName: '',
-        password: ''
+        password: '',
+        confirmPassword: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [localError, setLocalError] = useState<string | null>(null);
     const { signup, isLoading, error } = useAuthInternal();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLocalError(null);
         if (!formData.username.trim() || !formData.displayName.trim()) return;
+        
+        if (formData.password !== formData.confirmPassword) {
+            setLocalError('Mật khẩu nhập lại không khớp');
+            return;
+        }
         
         const success = await signup(formData.username, formData.password, formData.displayName);
         if (success) {
@@ -35,9 +45,9 @@ export const RegisterPage = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="card-body space-y-5 px-8 pb-10 pt-0">
-                    {error && (
+                    {(error || localError) && (
                         <div className="p-3 bg-ink-red-fill border border-ink-red-border rounded text-ink-red-text text-xs font-medium animate-pulse-dot">
-                            {error}
+                            {error || localError}
                         </div>
                     )}
 
@@ -74,15 +84,46 @@ export const RegisterPage = () => {
                     <div className="input-wrap flex flex-col gap-1.5">
                         <label className="input-label">Mật khẩu</label>
                         <div className="input-field">
-                            <AtSign size={16} className="text-ink-3" />
+                            <Lock size={16} className="text-ink-3" />
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 placeholder="zxhb102_"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 required
                                 className="focus:outline-none w-full bg-transparent text-ink-1"
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="text-ink-3 hover:text-ink-1 focus:outline-none ml-2 flex items-center justify-center"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="input-wrap flex flex-col gap-1.5">
+                        <label className="input-label">Nhập lại mật khẩu</label>
+                        <div className="input-field">
+                            <Lock size={16} className="text-ink-3" />
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                required
+                                className="focus:outline-none w-full bg-transparent text-ink-1"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="text-ink-3 hover:text-ink-1 focus:outline-none ml-2 flex items-center justify-center"
+                                tabIndex={-1}
+                            >
+                                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
                         </div>
                     </div>
 
