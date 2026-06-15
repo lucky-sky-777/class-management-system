@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.constant.ClientConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend.common.security.annotation.Public;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.dto.ExchangeOAuthAuthorizationCodeRequest;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthAuthorization;
@@ -43,6 +44,7 @@ public class OAuthController {
 	GoogleOAuthService googleOAuthService;
 	MezonOAuthService mezonOAuthService;
 
+	@Public
 	@PostMapping("/signin")
 	public void signin(
 			@PathVariable String provider,
@@ -52,15 +54,13 @@ public class OAuthController {
 		OAuthStrategy strategy = oAuthFactory.getStrategy(provider);
 
 		String origin = request.getHeader("Origin");
-		if (!ClientConstant.ALLOWED_ORIGIN_LIST.contains(origin)) {
-			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid request");
-		}
 
 		String url = strategy.getAuthUrl(origin);
 
 		response.sendRedirect(url);
 	}
 
+	@Public
 	@GetMapping("/callback")
 	public void callback(
 			@PathVariable String provider,
@@ -119,6 +119,7 @@ public class OAuthController {
 		}
 	}
 
+	@Public
 	@PostMapping("/exchange")
 	public ResponseDTO<SignInResponseDto> exchange(
 			HttpServletRequest httpServletRequest,
