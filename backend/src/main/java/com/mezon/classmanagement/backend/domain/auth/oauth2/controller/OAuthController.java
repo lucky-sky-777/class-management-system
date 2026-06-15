@@ -1,6 +1,5 @@
 package com.mezon.classmanagement.backend.domain.auth.oauth2.controller;
 
-import com.mezon.classmanagement.backend.common.constant.ClientConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
