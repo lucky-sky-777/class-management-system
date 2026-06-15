@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Modal } from "@shared/components/ui/Modal";
 import { CheckCircle, XCircle, Clock, ExternalLink, ShieldCheck } from "lucide-react";
 import type { ID } from "@shared/utils/common";
 import { useFundPayment } from "../hooks/useFund";
 import type { FundPaymentStatus } from "../types";
+import { useAuth } from "@features/auth";
 
 interface FundPaymentListProps {
     isOpen: boolean;
@@ -12,23 +13,59 @@ interface FundPaymentListProps {
     classId: ID;
     fundTitle: string;
     fundDescription: string;
+    isAdminOrOwner: boolean;
 }
 
 export const FundPaymentList: React.FC<FundPaymentListProps> = ({
-    isOpen, onClose, fundId, classId, fundTitle, fundDescription
+    isOpen, onClose, fundId, classId, fundTitle, fundDescription, isAdminOrOwner
 }) => {
-    const { payments, fetchPayments, isLoading } = useFundPayment(classId);
+    const { user } = useAuth();
+    const { payments, fetchPayments, isLoading, approvePayment, rejectPayment, cancelPayment } = useFundPayment(classId);
     
+    // Trạng thái xử lý cục bộ cho từng giao dịch
+    const [processingId, setProcessingId] = useState<ID | null>(null);
+    const [processingAction, setProcessingAction] = useState<"approve" | "reject" | "cancel" | null>(null);
+
+    const handleApprove = async (paymentId: ID) => {
+        setProcessingId(paymentId);
+        setProcessingAction("approve");
+        await approvePayment(fundId, paymentId);
+        setProcessingId(null);
+        setProcessingAction(null);
+    };
+
+    const handleReject = async (paymentId: ID) => {
+        setProcessingId(paymentId);
+        setProcessingAction("reject");
+        await rejectPayment(fundId, paymentId);
+        setProcessingId(null);
+        setProcessingAction(null);
+    };
+
+    const handleCancel = async (paymentId: ID) => {
+        setProcessingId(paymentId);
+        setProcessingAction("cancel");
+        await cancelPayment(fundId, paymentId);
+        setProcessingId(null);
+        setProcessingAction(null);
+    };
+
     useEffect(() => {
         if (isOpen && fundId) {
             fetchPayments(fundId);
         }
     }, [isOpen, fundId, fetchPayments]);
 
-    const fundPayments = useMemo(
-        () => (payments[fundId] || []).slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-        [payments, fundId]
-    );
+    const fundPayments = useMemo(() => {
+        const rawPayments = payments[fundId] || [];
+        const sorted = rawPayments.slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
+        if (isAdminOrOwner) {
+            return sorted;
+        } else {
+            return sorted.filter(p => p.creator_user_id === user?.id);
+        }
+    }, [payments, fundId, isAdminOrOwner, user?.id]);
 
     const getStatusBadge = (status: FundPaymentStatus) => {
         switch (status) {
@@ -112,27 +149,65 @@ export const FundPaymentList: React.FC<FundPaymentListProps> = ({
                                     <div className="flex items-center justify-between gap-3">
                                         <div>
                                             <p className="text-sm font-semibold text-ink-1">Minh chứng</p>
-                                            <p className="text-xs text-ink-3">Nhấn vào ảnh để xem đầy đủ</p>
                                         </div>
                                         <a href={payment.proof_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-rule px-3 py-1 text-xs text-ink-2 hover:border-warm-400 hover:text-warm-400 transition-colors">
                                             <ExternalLink className="w-3.5 h-3.5" />
                                             Mở ảnh
                                         </a>
                                     </div>
-
-                                    <div className="relative group overflow-hidden rounded-2xl border border-rule bg-white shadow-sm">
-                                        <img
-                                            src={payment.proof_url}
-                                            alt={`Minh chứng của ${payment.creator_display_name}`}
-                                            loading="lazy"
-                                            className="w-full min-h-[180px] max-h-[260px] object-contain bg-surface-3"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="14" fill="%23999">Ảnh không tải được</text></svg>';
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-ink-900/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
                                 </div>
+
+                                {payment.status === "PENDING" && (
+                                    <div className="flex justify-end gap-2 pt-2 mt-2 border-t border-rule/50 animate-fade-in">
+                                        {isAdminOrOwner ? (
+                                            <>
+                                                <button
+                                                    onClick={() => handleReject(payment.id)}
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-ink-red-border text-ink-red-text hover:bg-ink-red-fill transition-colors flex items-center gap-1.5"
+                                                    disabled={processingId !== null}
+                                                >
+                                                    {processingId === payment.id && processingAction === "reject" ? (
+                                                        <>
+                                                            <div className="w-3.5 h-3.5 border-2 border-ink-red-text/30 border-t-ink-red-text rounded-full animate-spin" />
+                                                            <span>Đang từ chối...</span>
+                                                        </>
+                                                    ) : (
+                                                        "Từ chối"
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleApprove(payment.id)}
+                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-ink-green-fill border border-ink-green-border text-ink-green-text hover:bg-opacity-80 transition-colors flex items-center gap-1.5"
+                                                    disabled={processingId !== null}
+                                                >
+                                                    {processingId === payment.id && processingAction === "approve" ? (
+                                                        <>
+                                                            <div className="w-3.5 h-3.5 border-2 border-ink-green-text/30 border-t-ink-green-text rounded-full animate-spin" />
+                                                            <span>Đang duyệt...</span>
+                                                        </>
+                                                    ) : (
+                                                        "Phê duyệt"
+                                                    )}
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleCancel(payment.id)}
+                                                className="px-3 py-1.5 rounded-lg text-xs font-semibold border border-rule text-ink-2 hover:bg-surface-2 transition-colors flex items-center gap-1.5"
+                                                disabled={processingId !== null}
+                                            >
+                                                {processingId === payment.id && processingAction === "cancel" ? (
+                                                    <>
+                                                        <div className="w-3.5 h-3.5 border-2 border-ink-2/30 border-t-ink-2 rounded-full animate-spin" />
+                                                        <span>Đang hủy...</span>
+                                                    </>
+                                                ) : (
+                                                    "Hủy nộp minh chứng"
+                                                )}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

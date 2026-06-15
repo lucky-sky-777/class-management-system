@@ -360,33 +360,46 @@ export const FundPage: React.FC = () => {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-150">
                           {fund.type === "INCOME" &&
-                            (isAdminOrOwner ? (
-                              <button
-                                onClick={() => {
-                                  setViewPaymentsFundId(fund.id);
-                                  setSelectedFundTitle(fund.title);
-                                  setselectedFundDescription(fund.description || "")
-                                }}
-                                className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
-                                title="Xem và duyệt minh chứng"
-                              >
-                                <ShieldCheck className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  setSubmitPaymentFundId(fund.id);
-                                  setSelectedFundTitle(fund.title);
-                                  setselectedFundDescription(fund.description || "")
-                                  setSelectedFundAmount(fund.amount);
-                                  setSelectedFundQrUrl(fund.qr_code_url);
-                                }}
-                                className="p-1.5 text-ink-3 hover:text-[var(--green-text)] hover:bg-[var(--green-fill)] border border-transparent hover:border-[var(--green-border)] rounded-lg transition-all"
-                                title="Nộp minh chứng thanh toán"
-                              >
-                                <Upload className="w-4 h-4" />
-                              </button>
-                            ))}
+                             (isAdminOrOwner ? (
+                               <button
+                                 onClick={() => {
+                                   setViewPaymentsFundId(fund.id);
+                                   setSelectedFundTitle(fund.title);
+                                   setselectedFundDescription(fund.description || "")
+                                 }}
+                                 className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
+                                 title="Xem và duyệt minh chứng"
+                               >
+                                 <ShieldCheck className="w-4 h-4" />
+                               </button>
+                             ) : (
+                               <div className="flex items-center gap-1">
+                                 <button
+                                   onClick={() => {
+                                     setSubmitPaymentFundId(fund.id);
+                                     setSelectedFundTitle(fund.title);
+                                     setselectedFundDescription(fund.description || "")
+                                     setSelectedFundAmount(fund.amount);
+                                     setSelectedFundQrUrl(fund.qr_code_url);
+                                   }}
+                                   className="p-1.5 text-ink-3 hover:text-[var(--green-text)] hover:bg-[var(--green-fill)] border border-transparent hover:border-[var(--green-border)] rounded-lg transition-all"
+                                   title="Nộp minh chứng thanh toán"
+                                 >
+                                   <Upload className="w-4 h-4" />
+                                 </button>
+                                 <button
+                                   onClick={() => {
+                                     setViewPaymentsFundId(fund.id);
+                                     setSelectedFundTitle(fund.title);
+                                     setselectedFundDescription(fund.description || "")
+                                   }}
+                                   className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
+                                   title="Xem minh chứng đã nộp"
+                                 >
+                                   <ShieldCheck className="w-4 h-4" />
+                                 </button>
+                               </div>
+                             ))}
 
                           {isAdminOrOwner && (
                             <button
@@ -460,6 +473,7 @@ export const FundPage: React.FC = () => {
           classId={numericClassId}
           fundTitle={selectedFundTitle}
           fundDescription={selectedFundDescription}
+          isAdminOrOwner={isAdminOrOwner}
         />
       )}
     </div>

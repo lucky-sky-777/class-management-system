@@ -1,7 +1,6 @@
 // ============================================================
 // activity.ts — domain entity cho Activity và ActivityRegistration
 // ============================================================
-import type { User } from "./user";
 import { ActivityRegistrationStatus } from "@shared/domain/enums";
 import type { ID, Timestamp } from "@shared/utils/common";
 
@@ -12,6 +11,7 @@ export interface Activity {
     description: string | null;
     startAt: Timestamp | null;
     endAt: Timestamp | null;
+    registrationEndAt: Timestamp | null;
     location: string | null;
     point: number | null;
     isMandatory: boolean;
@@ -20,11 +20,17 @@ export interface Activity {
 
 export interface ActivityRegistration {
     id: ID;
+    classId: ID;
     activityId: ID;
-    registeredUser: User;
-    proofImageUrl: string | null;
+    proofUrl: string | null;
+    createdAt: Timestamp;
+    creatorUserId: ID;
+    creatorDisplayName: string;
+    creatorAvatarUrl: string | null;
     status: ActivityRegistrationStatus;
-    registeredAt: Timestamp;
+    actorUserId?: ID | null;
+    actorDisplayName?: string | null;
+    actorAvatarUrl?: string | null;
 }
 
 // State machine helpers — encode transition rule tại đây

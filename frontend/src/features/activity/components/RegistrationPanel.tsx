@@ -109,7 +109,7 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
                         >
                             {/* Avatar */}
                             <div className="w-9 h-9 rounded-full bg-surface-3 flex items-center justify-center text-ink-2 font-bold text-sm shrink-0 border border-rule">
-                                {(reg.registeredUser.displayName ?? reg.registeredUser.username ?? "?")
+                                {(reg.creatorDisplayName ?? "?")
                                     .charAt(0)
                                     .toUpperCase()}
                             </div>
@@ -117,10 +117,10 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-sm text-ink-1 truncate">
-                                    {reg.registeredUser.displayName ?? reg.registeredUser.username}
+                                    {reg.creatorDisplayName}
                                 </p>
                                 <p className="text-xs text-ink-3 font-mono">
-                                    {new Date(reg.registeredAt).toLocaleDateString("vi-VN", {
+                                    {new Date(reg.createdAt).toLocaleDateString("vi-VN", {
                                         day: "2-digit",
                                         month: "2-digit",
                                         hour: "2-digit",
@@ -130,9 +130,9 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
                             </div>
 
                             {/* Proof link */}
-                            {reg.proofImageUrl && (
+                            {reg.proofUrl && (
                                 <a
-                                    href={reg.proofImageUrl}
+                                    href={reg.proofUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="p-1.5 rounded-lg text-ink-3 hover:text-ink-blue-text hover:bg-ink-blue-fill transition-colors"

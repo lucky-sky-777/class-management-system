@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Modal } from "@shared/components/ui/Modal";
-import { Upload, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
+import { Upload, Link as LinkIcon } from "lucide-react";
 import type { ID } from "@shared/utils/common";
 import { useFundPayment } from "../hooks/useFund";
 
@@ -84,23 +84,7 @@ export const SubmitPaymentModal: React.FC<SubmitPaymentModalProps> = ({
                     </p>
                 </div>
 
-                {proofUrl && (
-                    <div className="mt-4 border border-rule rounded-xl overflow-hidden p-2 bg-surface-2/50">
-                        <p className="text-xs font-semibold text-ink-2 mb-2 flex items-center gap-1">
-                            <ImageIcon className="w-3 h-3" /> Xem trước ảnh:
-                        </p>
-                        <div className="w-full flex justify-center">
-                            <img
-                                src={proofUrl}
-                                alt="Proof Preview"
-                                className="max-h-48 object-contain rounded-lg"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%23999">Lỗi tải ảnh</text></svg>';
-                                }}
-                            />
-                        </div>
-                    </div>
-                )}
+
 
                 <div className="pt-4 flex gap-3">
                     <button type="button" onClick={onClose} className="btn btn-secondary flex-1" disabled={isLoading}>
