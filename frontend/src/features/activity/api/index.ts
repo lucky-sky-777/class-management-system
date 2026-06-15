@@ -37,6 +37,14 @@ interface ActivityRegistrationIdResponseDto {
     activity_registration_id: ID;
 }
 
+interface ActivitySummaryResponseDto {
+    rank: number | null;
+    user_id: ID;
+    user_display_name: string;
+    user_avatar_url?: string | null;
+    total_point: number;
+}
+
 const mapRegistration = (item: ActivityRegistrationResponseDto): ActivityRegistration => ({
     id: item.id,
     classId: item.class_id,
@@ -202,9 +210,15 @@ export const activityAPI = {
 
     /** Thống kê điểm rèn luyện tất cả members trong lớp */
     getSummaries: async (classId: ID): Promise<ActivitySummary[]> => {
-        const response = await apiClient.get<ResponseDTO<ActivitySummary[]>>(`/classes/${classId}/activities/summaries`);
+        const response = await apiClient.get<ResponseDTO<ActivitySummaryResponseDto[]>>(`/classes/${classId}/activities/summaries`);
         if (Array.isArray(response.data)) {
-            return response.data;
+            return response.data.map(item => ({
+                rank: item.rank,
+                userId: item.user_id,
+                userDisplayName: item.user_display_name,
+                userAvatarUrl: item.user_avatar_url || null,
+                totalPoint: item.total_point
+            }));
         }
         return [];
     },

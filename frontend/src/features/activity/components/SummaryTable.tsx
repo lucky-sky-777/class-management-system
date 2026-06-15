@@ -57,14 +57,14 @@ export const SummaryTable: React.FC<SummaryTableProps> = ({summaries, isLoading}
                                 ) : (
                                     <div
                                         className="w-8 h-8 rounded-full bg-surface-3 flex items-center justify-center text-xs font-bold border border-rule">
-                                        {summary.userDisplayName
+                                        {(summary.userDisplayName || "?")
                                             .charAt(0)
                                             .toUpperCase()}
                                     </div>
                                 )}
 
                                 <span className="font-medium text-ink-1">
-                                        {summary.userDisplayName}
+                                        {summary.userDisplayName || "Không rõ"}
                                     </span>
                             </div>
                         </td>
