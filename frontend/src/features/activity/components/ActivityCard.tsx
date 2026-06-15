@@ -44,10 +44,17 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         }
     }, [activity.id, fetchRegistrations, isAdminOrOwner]);
 
-    // Tìm đăng ký của user hiện tại
-    const myReg = registrations.find(
-        (r) => r.creatorUserId === user?.id && r.status !== ActivityRegistrationStatus.CANCELLED
-    );
+    // Lấy đăng ký của user hiện tại (ưu tiên đăng ký mới nhất)
+    const myReg = (() => {
+        const userRegs = registrations.filter((r) => r.creatorUserId === user?.id);
+        if (userRegs.length === 0) return undefined;
+        const latest = userRegs.reduce((latest, current) => Number(current.id) > Number(latest.id) ? current : latest, userRegs[0]);
+        // Nếu đăng ký mới nhất đã hủy thì coi như chưa đăng ký để có thể đăng ký lại
+        if (latest.status === ActivityRegistrationStatus.CANCELLED) {
+            return undefined;
+        }
+        return latest;
+    })();
 
     const handleRegister = async () => {
         if (isActionLoading) return;
@@ -122,7 +129,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                     );
                 case ActivityRegistrationStatus.REJECTED:
                     return (
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end gap-1.5">
                             <span className="pill pill-red font-semibold">
                                 <span className="pill-dot bg-[var(--red-text)]" />
                                 Từ chối tham gia
@@ -137,6 +144,18 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                                     Xem minh chứng
                                 </a>
                             )}
+                            <button
+                                onClick={handleRegister}
+                                disabled={isActionLoading}
+                                className="btn btn-warm btn-sm py-1 px-3 text-xs font-semibold rounded text-white bg-[#C2714F] hover:bg-[#A85A38] disabled:opacity-50 flex items-center gap-1 mt-1"
+                            >
+                                {isActionLoading ? (
+                                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                ) : (
+                                    <ArrowUpRight className="w-3.5 h-3.5" />
+                                )}
+                                Đăng ký lại
+                            </button>
                         </div>
                     );
                 case ActivityRegistrationStatus.PENDING:

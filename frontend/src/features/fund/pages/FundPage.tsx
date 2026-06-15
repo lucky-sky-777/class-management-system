@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   Wallet,
@@ -15,7 +15,7 @@ import {
   Upload,
   ShieldCheck,
 } from "lucide-react";
-import { useFund } from "../hooks/useFund";
+import { useFund, useFundPayment } from "../hooks/useFund";
 import { FundFormModal } from "../components/FundFormModal";
 import { BankConfigModal } from "../components/BankConfigModal";
 import { BankQrModal } from "../components/BankQrModal";
@@ -42,8 +42,19 @@ export const FundPage: React.FC = () => {
 
   const { user } = useAuth();
   const { members, myRole } = useMembers(classId || "", user?.id);
+  const { payments, fetchPayments } = useFundPayment(numericClassId);
 
   const isAdminOrOwner = myRole === "OWNER" || myRole === "CLASS_ADMIN";
+
+  useEffect(() => {
+    if (funds.length > 0) {
+      funds.forEach((fund) => {
+        if (fund.type === "INCOME") {
+          fetchPayments(fund.id);
+        }
+      });
+    }
+  }, [funds, fetchPayments]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
@@ -280,140 +291,173 @@ export const FundPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredFunds.map((fund) => (
-                    <tr
-                      key={fund.id}
-                      className="group hover:bg-[var(--bg-surface-2)]/40 transition-all border-b border-[var(--rule)] last:border-0"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3.5">
-                          <div
-                            className={`hidden sm:flex w-9 h-9 rounded-xl items-center justify-center flex-shrink-0 border ${
-                              fund.type === "INCOME"
-                                ? "bg-[var(--green-fill)] text-[var(--green-text)] border-[var(--green-border)]"
-                                : "bg-[var(--warm-fill)] text-[var(--warm-text)] border-[var(--warm-border)]"
-                            }`}
-                          >
-                            {fund.type === "INCOME" ? (
-                              <ArrowDownLeft className="w-4 h-4" />
-                            ) : (
-                              <ArrowUpRight className="w-4 h-4" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="font-bold text-ink-1 text-sm truncate group-hover:text-[var(--warm-600)] transition-colors">
-                              {fund.title}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                              <div className="flex items-center gap-1 text-[11px] text-ink-3 font-medium">
-                                <Calendar className="w-3 h-3" />
-                                {new Date(fund.created_at).toLocaleDateString(
-                                  "vi-VN",
-                                  {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  },
-                                )}
-                              </div>
-                              {fund.description && (
-                                <div
-                                  className="text-[11px] text-ink-3 italic truncate max-w-[150px] sm:max-w-[250px]"
-                                  title={fund.description}
-                                >
-                                  — {fund.description}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div
-                          className={`text-base font-serif font-bold [font-variant-numeric:lining-nums] ${
-                            fund.type === "INCOME"
-                              ? "text-[var(--green-text)]"
-                              : "text-ink-1"
-                          }`}
-                        >
-                          {fund.type === "INCOME" ? "+" : "-"}
-                          {fund.amount.toLocaleString("vi-VN")}
-                          <span className="text-xs ml-0.5 font-sans font-bold">
-                            đ
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 hidden md:table-cell">
-                        <div className="flex items-center gap-2 text-xs text-ink-2 font-semibold">
-                          <div className="w-6 h-6 rounded-full bg-[var(--bg-surface-3)] border border-[var(--rule)] flex items-center justify-center text-[10px] font-black text-ink-1 shadow-2xs">
-                            {getUserName(fund.creator_user_id)
-                              .charAt(0)
-                              .toUpperCase()}
-                          </div>
-                          <span className="truncate max-w-[120px]">
-                            {getUserName(fund.creator_user_id)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-150">
-                          {fund.type === "INCOME" &&
-                             (isAdminOrOwner ? (
-                               <button
-                                 onClick={() => {
-                                   setViewPaymentsFundId(fund.id);
-                                   setSelectedFundTitle(fund.title);
-                                   setselectedFundDescription(fund.description || "")
-                                 }}
-                                 className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
-                                 title="Xem và duyệt minh chứng"
-                               >
-                                 <ShieldCheck className="w-4 h-4" />
-                               </button>
-                             ) : (
-                               <div className="flex items-center gap-1">
-                                 <button
-                                   onClick={() => {
-                                     setSubmitPaymentFundId(fund.id);
-                                     setSelectedFundTitle(fund.title);
-                                     setselectedFundDescription(fund.description || "")
-                                     setSelectedFundAmount(fund.amount);
-                                     setSelectedFundQrUrl(fund.qr_code_url);
-                                   }}
-                                   className="p-1.5 text-ink-3 hover:text-[var(--green-text)] hover:bg-[var(--green-fill)] border border-transparent hover:border-[var(--green-border)] rounded-lg transition-all"
-                                   title="Nộp minh chứng thanh toán"
-                                 >
-                                   <Upload className="w-4 h-4" />
-                                 </button>
-                                 <button
-                                   onClick={() => {
-                                     setViewPaymentsFundId(fund.id);
-                                     setSelectedFundTitle(fund.title);
-                                     setselectedFundDescription(fund.description || "")
-                                   }}
-                                   className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
-                                   title="Xem minh chứng đã nộp"
-                                 >
-                                   <ShieldCheck className="w-4 h-4" />
-                                 </button>
-                               </div>
-                             ))}
+                  {filteredFunds.map((fund) => {
+                      const fundPayments = payments[fund.id] || [];
+                      const myPayments = fundPayments.filter(p => String(p.creator_user_id) === String(user?.id));
+                      const latestPayment = myPayments.length > 0
+                          ? myPayments.reduce((latest, current) => Number(current.id) > Number(latest.id) ? current : latest, myPayments[0])
+                          : undefined;
 
-                          {isAdminOrOwner && (
-                            <button
-                              onClick={() => handleDelete(fund.id)}
-                              className="p-1.5 text-ink-3 hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] border border-transparent hover:border-[var(--red-border)] rounded-lg transition-all"
-                              title="Xóa giao dịch"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                      return (
+                          <tr
+                              key={fund.id}
+                              className="group hover:bg-[var(--bg-surface-2)]/40 transition-all border-b border-[var(--rule)] last:border-0"
+                          >
+                              <td className="px-6 py-4">
+                                  <div className="flex items-center gap-3.5">
+                                      <div
+                                          className={`hidden sm:flex w-9 h-9 rounded-xl items-center justify-center flex-shrink-0 border ${
+                                              fund.type === "INCOME"
+                                                  ? "bg-[var(--green-fill)] text-[var(--green-text)] border-[var(--green-border)]"
+                                                  : "bg-[var(--warm-fill)] text-[var(--warm-text)] border-[var(--warm-border)]"
+                                          }`}
+                                      >
+                                          {fund.type === "INCOME" ? (
+                                              <ArrowDownLeft className="w-4 h-4" />
+                                          ) : (
+                                              <ArrowUpRight className="w-4 h-4" />
+                                          )}
+                                      </div>
+                                      <div className="min-w-0">
+                                          <div className="font-bold text-ink-1 text-sm truncate group-hover:text-[var(--warm-600)] transition-colors flex items-center">
+                                              {fund.title}
+                                              {latestPayment && (
+                                                  <span className={`ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                                      latestPayment.status === "APPROVED" ? "bg-ink-green-fill text-ink-green-text" :
+                                                      latestPayment.status === "PENDING" ? "bg-warm-fill text-warm-text animate-pulse" :
+                                                      latestPayment.status === "REJECTED" ? "bg-ink-red-fill text-ink-red-text" :
+                                                      "bg-surface-2 text-ink-3"
+                                                  }`}>
+                                                      {latestPayment.status === "APPROVED" ? "Đã đóng" :
+                                                       latestPayment.status === "PENDING" ? "Chờ duyệt" :
+                                                       latestPayment.status === "REJECTED" ? "Bị từ chối" :
+                                                       "Đã hủy"}
+                                                  </span>
+                                              )}
+                                          </div>
+                                          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                                              <div className="flex items-center gap-1 text-[11px] text-ink-3 font-medium">
+                                                  <Calendar className="w-3 h-3" />
+                                                  {new Date(fund.created_at).toLocaleDateString(
+                                                      "vi-VN",
+                                                      {
+                                                          day: "2-digit",
+                                                          month: "2-digit",
+                                                          year: "numeric",
+                                                          hour: "2-digit",
+                                                          minute: "2-digit",
+                                                      },
+                                                  )}
+                                              </div>
+                                              {fund.description && (
+                                                  <div
+                                                      className="text-[11px] text-ink-3 italic truncate max-w-[150px] sm:max-w-[250px]"
+                                                      title={fund.description}
+                                                  >
+                                                      — {fund.description}
+                                                  </div>
+                                              )}
+                                          </div>
+                                      </div>
+                                  </div>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                  <div
+                                      className={`text-base font-serif font-bold [font-variant-numeric:lining-nums] ${
+                                          fund.type === "INCOME"
+                                              ? "text-[var(--green-text)]"
+                                              : "text-ink-1"
+                                      }`}
+                                  >
+                                      {fund.type === "INCOME" ? "+" : "-"}
+                                      {fund.amount.toLocaleString("vi-VN")}
+                                      <span className="text-xs ml-0.5 font-sans font-bold">
+                                          đ
+                                      </span>
+                                  </div>
+                              </td>
+                              <td className="px-6 py-4 hidden md:table-cell">
+                                  <div className="flex items-center gap-2 text-xs text-ink-2 font-semibold">
+                                      <div className="w-6 h-6 rounded-full bg-[var(--bg-surface-3)] border border-[var(--rule)] flex items-center justify-center text-[10px] font-black text-ink-1 shadow-2xs">
+                                          {getUserName(fund.creator_user_id)
+                                              .charAt(0)
+                                              .toUpperCase()}
+                                      </div>
+                                      <span className="truncate max-w-[120px]">
+                                          {getUserName(fund.creator_user_id)}
+                                      </span>
+                                  </div>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                  <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-150">
+                                      {fund.type === "INCOME" &&
+                                          (isAdminOrOwner ? (
+                                              <button
+                                                  onClick={() => {
+                                                      setViewPaymentsFundId(fund.id);
+                                                      setSelectedFundTitle(fund.title);
+                                                      setselectedFundDescription(fund.description || "")
+                                                  }}
+                                                  className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
+                                                  title="Xem và duyệt minh chứng"
+                                              >
+                                                  <ShieldCheck className="w-4 h-4" />
+                                              </button>
+                                          ) : (
+                                              <div className="flex items-center gap-1">
+                                                  <button
+                                                      onClick={() => {
+                                                          if (latestPayment?.status === "PENDING" || latestPayment?.status === "APPROVED") return;
+                                                          setSubmitPaymentFundId(fund.id);
+                                                          setSelectedFundTitle(fund.title);
+                                                          setselectedFundDescription(fund.description || "")
+                                                          setSelectedFundAmount(fund.amount);
+                                                          setSelectedFundQrUrl(fund.qr_code_url);
+                                                      }}
+                                                      disabled={latestPayment?.status === "PENDING" || latestPayment?.status === "APPROVED"}
+                                                      className={`p-1.5 rounded-lg transition-all border border-transparent ${
+                                                          latestPayment?.status === "PENDING" || latestPayment?.status === "APPROVED"
+                                                              ? "text-ink-4 cursor-not-allowed opacity-50"
+                                                              : "text-ink-3 hover:text-[var(--green-text)] hover:bg-[var(--green-fill)] hover:border-[var(--green-border)]"
+                                                      }`}
+                                                      title={
+                                                          latestPayment?.status === "PENDING"
+                                                              ? "Đang chờ duyệt minh chứng"
+                                                              : latestPayment?.status === "APPROVED"
+                                                              ? "Đã nộp và phê duyệt thành công"
+                                                              : "Nộp minh chứng thanh toán"
+                                                      }
+                                                  >
+                                                      <Upload className="w-4 h-4" />
+                                                  </button>
+                                                  <button
+                                                      onClick={() => {
+                                                          setViewPaymentsFundId(fund.id);
+                                                          setSelectedFundTitle(fund.title);
+                                                          setselectedFundDescription(fund.description || "")
+                                                      }}
+                                                      className="p-1.5 text-ink-3 hover:text-[var(--warm-600)] hover:bg-[var(--warm-fill)] border border-transparent hover:border-[var(--warm-border)] rounded-lg transition-all"
+                                                      title="Xem minh chứng đã nộp"
+                                                  >
+                                                      <ShieldCheck className="w-4 h-4" />
+                                                  </button>
+                                              </div>
+                                          ))}
+
+                                      {isAdminOrOwner && (
+                                          <button
+                                              onClick={() => handleDelete(fund.id)}
+                                              className="p-1.5 text-ink-3 hover:text-[var(--red-text)] hover:bg-[var(--red-fill)] border border-transparent hover:border-[var(--red-border)] rounded-lg transition-all"
+                                              title="Xóa giao dịch"
+                                          >
+                                              <Trash2 className="w-4 h-4" />
+                                          </button>
+                                      )}
+                                  </div>
+                              </td>
+                          </tr>
+                      );
+                  })}
                 </tbody>
               </table>
             </div>
