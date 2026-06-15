@@ -15,6 +15,7 @@ const EMPTY_FORM: CreateActivityDTO = {
     description: "",
     startAt: "",
     endAt: "",
+    registrationEndAt: "",
     location: "",
     point: undefined,
     isMandatory: false,
@@ -38,11 +39,13 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
     // Điền form khi edit
     useEffect(() => {
         if (editingActivity) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setForm({
                 name: editingActivity.name,
                 description: editingActivity.description ?? "",
                 startAt: toInputValue(editingActivity.startAt),
                 endAt: toInputValue(editingActivity.endAt),
+                registrationEndAt: toInputValue(editingActivity.registrationEndAt),
                 location: editingActivity.location ?? "",
                 point: editingActivity.point ?? undefined,
                 isMandatory: editingActivity.isMandatory,
@@ -62,6 +65,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
             ...form,
             startAt: form.startAt ? new Date(form.startAt).toISOString() : undefined,
             endAt: form.endAt ? new Date(form.endAt).toISOString() : undefined,
+            registrationEndAt: form.registrationEndAt ? new Date(form.registrationEndAt).toISOString() : undefined,
         };
         const success = await onSubmit(dto);
         if (success) onClose();
@@ -127,6 +131,17 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                 type="datetime-local"
                                 value={form.endAt}
                                 onChange={(e) => set("endAt", e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <label className="input-label">Hạn chót đăng ký</label>
+                        <div className="input-field">
+                            <input
+                                type="datetime-local"
+                                value={form.registrationEndAt || ""}
+                                onChange={(e) => set("registrationEndAt", e.target.value)}
                             />
                         </div>
                     </div>

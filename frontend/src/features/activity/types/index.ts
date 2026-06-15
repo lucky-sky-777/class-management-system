@@ -8,6 +8,7 @@ export interface CreateActivityDTO {
     description?: string;
     startAt?: string; // ISO string
     endAt?: string;   // ISO string
+    registrationEndAt?: string; // ISO string
     location?: string;
     point?: number;
     isMandatory: boolean;

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { activityAPI } from "@features/activity/api";
 import type { ActivityRegistration } from "@features/activity/types";
+import { ActivityRegistrationStatus } from "@shared/domain/enums";
 import type { ID } from "@shared/utils/common";
 
 export const useRegistrations = (classId?: ID) => {
@@ -38,9 +39,9 @@ export const useRegistrations = (classId?: ID) => {
         }
 
         try {
-            const updated = await activityAPI.approveRegistration(activeClassId, activeActivityId, regId);
+            const returnedId = await activityAPI.approveRegistration(activeClassId, activeActivityId, regId);
             setRegistrations((prev) =>
-                prev.map((r) => (r.id === regId ? updated : r))
+                prev.map((r) => (r.id === returnedId ? { ...r, status: ActivityRegistrationStatus.APPROVED } : r))
             );
             return true;
         } catch (err) {
@@ -60,9 +61,9 @@ export const useRegistrations = (classId?: ID) => {
         }
 
         try {
-            const updated = await activityAPI.rejectRegistration(activeClassId, activeActivityId, regId);
+            const returnedId = await activityAPI.rejectRegistration(activeClassId, activeActivityId, regId);
             setRegistrations((prev) =>
-                prev.map((r) => (r.id === regId ? updated : r))
+                prev.map((r) => (r.id === returnedId ? { ...r, status: ActivityRegistrationStatus.REJECTED } : r))
             );
             return true;
         } catch (err) {
@@ -82,9 +83,9 @@ export const useRegistrations = (classId?: ID) => {
         }
 
         try {
-            const updated = await activityAPI.cancelRegistration(activeClassId, activeActivityId, regId);
+            const returnedId = await activityAPI.cancelRegistration(activeClassId, activeActivityId, regId);
             setRegistrations((prev) =>
-                prev.map((r) => (r.id === regId ? updated : r))
+                prev.map((r) => (r.id === returnedId ? { ...r, status: ActivityRegistrationStatus.CANCELLED } : r))
             );
             return true;
         } catch (err) {
@@ -110,6 +111,44 @@ export const useRegistrations = (classId?: ID) => {
         }
     };
 
+    const submitProof = async (regId: ID, activityId: ID, proofUrl: string): Promise<boolean> => {
+        const activeClassId = classId;
+        if (!activeClassId) {
+            console.error("submitProof: Thiếu classId");
+            return false;
+        }
+
+        try {
+            const updated = await activityAPI.submitProof(activeClassId, activityId, regId, proofUrl);
+            setRegistrations((prev) =>
+                prev.map((r) => (r.id === regId ? updated : r))
+            );
+            return true;
+        } catch (err) {
+            console.error("Lỗi nộp minh chứng:", err);
+            return false;
+        }
+    };
+
+    const cancelProof = async (regId: ID, activityId: ID): Promise<boolean> => {
+        const activeClassId = classId;
+        if (!activeClassId) {
+            console.error("cancelProof: Thiếu classId");
+            return false;
+        }
+
+        try {
+            const updated = await activityAPI.cancelProof(activeClassId, activityId, regId);
+            setRegistrations((prev) =>
+                prev.map((r) => (r.id === regId ? updated : r))
+            );
+            return true;
+        } catch (err) {
+            console.error("Lỗi hủy minh chứng:", err);
+            return false;
+        }
+    };
+
     return {
         registrations,
         isLoading,
@@ -119,5 +158,7 @@ export const useRegistrations = (classId?: ID) => {
         reject,
         cancel,
         register,
+        submitProof,
+        cancelProof,
     };
 };

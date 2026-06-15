@@ -35,7 +35,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
     const isAdminOrOwner = myRole === "OWNER" || myRole === "CLASS_ADMIN";
     
     // Quản lý đăng ký của chính học sinh này
-    const { registrations, fetchRegistrations, register, cancel } = useRegistrations(activity.classId);
+    const { registrations, fetchRegistrations, register, cancel, submitProof, cancelProof } = useRegistrations(activity.classId);
     const [isActionLoading, setIsActionLoading] = useState(false);
 
     useEffect(() => {
@@ -44,10 +44,17 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         }
     }, [activity.id, fetchRegistrations, isAdminOrOwner]);
 
-    // Tìm đăng ký của user hiện tại
-    const myReg = registrations.find(
-        (r) => r.registeredUser.id === user?.id && r.status !== ActivityRegistrationStatus.CANCELLED
-    );
+    // Lấy đăng ký của user hiện tại (ưu tiên đăng ký mới nhất)
+    const myReg = (() => {
+        const userRegs = registrations.filter((r) => r.creatorUserId === user?.id);
+        if (userRegs.length === 0) return undefined;
+        const latest = userRegs.reduce((latest, current) => Number(current.id) > Number(latest.id) ? current : latest, userRegs[0]);
+        // Nếu đăng ký mới nhất đã hủy thì coi như chưa đăng ký để có thể đăng ký lại
+        if (latest.status === ActivityRegistrationStatus.CANCELLED) {
+            return undefined;
+        }
+        return latest;
+    })();
 
     const handleRegister = async () => {
         if (isActionLoading) return;
@@ -71,6 +78,31 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         }
     };
 
+    const handleAddProof = async () => {
+        if (!myReg || isActionLoading) return;
+        const url = window.prompt("Nhập URL ảnh minh chứng tham gia hoạt động:");
+        if (!url || !url.trim()) return;
+
+        setIsActionLoading(true);
+        try {
+            await submitProof(myReg.id, activity.id, url.trim());
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleRemoveProof = async () => {
+        if (!myReg || isActionLoading) return;
+        if (window.confirm("Bạn có chắc muốn xóa minh chứng này?")) {
+            setIsActionLoading(true);
+            try {
+                await cancelProof(myReg.id, activity.id);
+            } finally {
+                setIsActionLoading(false);
+            }
+        }
+    };
+
     const renderRegistrationStatus = () => {
         if (isAdminOrOwner) return null;
 
@@ -78,34 +110,102 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
             switch (myReg.status) {
                 case ActivityRegistrationStatus.APPROVED:
                     return (
-                        <span className="pill pill-green font-semibold">
-                            <span className="pill-dot bg-[var(--green-text)]" />
-                            Đã duyệt tham gia
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                            <span className="pill pill-green font-semibold">
+                                <span className="pill-dot bg-[var(--green-text)]" />
+                                Đã duyệt tham gia
+                            </span>
+                            {myReg.proofUrl && (
+                                <a
+                                    href={myReg.proofUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-2xs text-ink-blue-text hover:underline mt-0.5"
+                                >
+                                    Xem minh chứng
+                                </a>
+                            )}
+                        </div>
                     );
                 case ActivityRegistrationStatus.REJECTED:
                     return (
-                        <span className="pill pill-red font-semibold">
-                            <span className="pill-dot bg-[var(--red-text)]" />
-                            Từ chối tham gia
-                        </span>
+                        <div className="flex flex-col items-end gap-1.5">
+                            <span className="pill pill-red font-semibold">
+                                <span className="pill-dot bg-[var(--red-text)]" />
+                                Từ chối tham gia
+                            </span>
+                            {myReg.proofUrl && (
+                                <a
+                                    href={myReg.proofUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-2xs text-ink-blue-text hover:underline mt-0.5"
+                                >
+                                    Xem minh chứng
+                                </a>
+                            )}
+                            <button
+                                onClick={handleRegister}
+                                disabled={isActionLoading}
+                                className="btn btn-warm btn-sm py-1 px-3 text-xs font-semibold rounded text-white bg-[#C2714F] hover:bg-[#A85A38] disabled:opacity-50 flex items-center gap-1 mt-1"
+                            >
+                                {isActionLoading ? (
+                                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                ) : (
+                                    <ArrowUpRight className="w-3.5 h-3.5" />
+                                )}
+                                Đăng ký lại
+                            </button>
+                        </div>
                     );
                 case ActivityRegistrationStatus.PENDING:
                 default:
                     return (
-                        <div className="flex items-center gap-2">
-                            <span className="pill pill-amber font-semibold">
-                                <span className="pill-dot bg-[var(--amber-text)]" />
-                                Chờ phê duyệt
-                            </span>
-                            <button
-                                onClick={handleCancel}
-                                disabled={isActionLoading}
-                                className="text-2xs text-[#991B1B] hover:underline flex items-center gap-0.5 ml-1 disabled:opacity-50"
-                            >
-                                <LogOut className="w-3 h-3" />
-                                Hủy đăng ký
-                            </button>
+                        <div className="flex flex-col items-end gap-1.5">
+                            <div className="flex items-center gap-2">
+                                <span className="pill pill-amber font-semibold">
+                                    <span className="pill-dot bg-[var(--amber-text)]" />
+                                    Chờ phê duyệt
+                                </span>
+                                <button
+                                    onClick={handleCancel}
+                                    disabled={isActionLoading}
+                                    className="text-2xs text-[#991B1B] hover:underline flex items-center gap-0.5 ml-1 disabled:opacity-50"
+                                >
+                                    <LogOut className="w-3 h-3" />
+                                    Hủy đăng ký
+                                </button>
+                            </div>
+                            <div className="text-2xs flex items-center gap-2 mt-0.5">
+                                {myReg.proofUrl ? (
+                                    <>
+                                        <a
+                                            href={myReg.proofUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-ink-blue-text hover:underline font-medium"
+                                        >
+                                            Xem minh chứng
+                                        </a>
+                                        <span className="text-ink-4">|</span>
+                                        <button
+                                            onClick={handleRemoveProof}
+                                            className="text-[#991B1B] hover:underline"
+                                            disabled={isActionLoading}
+                                        >
+                                            Xóa minh chứng
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={handleAddProof}
+                                        className="text-warm-text font-semibold hover:underline"
+                                        disabled={isActionLoading}
+                                    >
+                                        + Nộp minh chứng
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     );
             }
