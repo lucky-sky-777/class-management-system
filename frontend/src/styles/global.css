@@ -518,3 +518,9 @@
   -ms-overflow-style: none;
   scrollbar-width:    none;
 }
+
+/* Hide native browser password reveal/clear buttons */
+input::-ms-reveal,
+input::-ms-clear {
+    display: none;
+}
