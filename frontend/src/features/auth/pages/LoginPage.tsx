@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthInternal } from '@features/auth/hooks/useAuthInternal';
-import { User, Lock } from 'lucide-react';
+import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { GoogleIcon, MezonIcon } from '@shared/components/icons';
 import { BASE_URL } from '@services/api-client';
 import { useFetchCurrentUser } from '@features/auth/hooks/useFetchCurrentUser';
@@ -9,6 +9,7 @@ import { useFetchCurrentUser } from '@features/auth/hooks/useFetchCurrentUser';
 export const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const { login, isLoading, error } = useAuthInternal();
     const { refetch } = useFetchCurrentUser(); 
     const navigate = useNavigate();
@@ -107,22 +108,24 @@ export const LoginPage = () => {
                         </div>
 
                         <div className="input-wrap flex flex-col gap-1.5">
-                            <div className="flex justify-between items-center">
-                                <label className="input-label">Mật khẩu</label>
-                                <button type="button" className="text-2xs font-semibold text-warm-400 hover:text-warm-600 transition-colors uppercase tracking-label">
-                                    Quên mật khẩu?
-                                </button>
-                            </div>
                             <div className="input-field">
                                 <Lock size={16} className="text-ink-3" />
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     className="focus:outline-none w-full bg-transparent text-ink-1"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="text-ink-3 hover:text-ink-1 focus:outline-none ml-2 flex items-center justify-center"
+                                    tabIndex={-1}
+                                >
+                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
                             </div>
                         </div>
                     </div>

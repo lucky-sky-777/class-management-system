@@ -51,6 +51,7 @@ public interface ActivityRegistrationRepository extends JpaRepository<ActivityRe
 	left join activityRegistration.creator creator
 	left join activityRegistration.actor actor
 	where class.id = :classId and activity.id = :activityId
+	order by activityRegistration.createdAt desc
 	""")
 	List<ActivityRegistrationResponseDto> getByClazz_IdAndActivity_Id(
 			Long classId,

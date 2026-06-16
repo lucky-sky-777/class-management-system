@@ -101,7 +101,9 @@ public class ActivityRegistrationService {
 		);
 		throwIfNotPending(currentActivityRegistration);
 
-		activityRegistrationMapper.updateActivityRegistrationFromRequestDto(request, currentActivityRegistration);
+		// activityRegistrationMapper.updateActivityRegistrationFromRequestDto(request, currentActivityRegistration);
+		// đổi chỗ này vì mapper cấu hình bỏ qua null, nên cái unproof nó ko cập nhật được
+		currentActivityRegistration.setProofUrl(request.getProofUrl());
 
 		ActivityRegistration responseActivityRegistration = save(currentActivityRegistration);
 

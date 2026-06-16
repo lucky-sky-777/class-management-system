@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "@shared/components/ui/Modal";
 import { useRegistrations } from "@features/activity/hooks/useRegistrations";
 import { ActivityRegistrationStatus } from "@features/activity/types";
@@ -28,6 +28,13 @@ const StatusPill: React.FC<{ status: string }> = ({ status }) => {
                     Đã từ chối
                 </span>
             );
+        case ActivityRegistrationStatus.CANCELLED:
+            return (
+                <span className="pill pill-gray">
+                    <span className="pill-dot" />
+                    Đã hủy
+                </span>
+            );
         default:
             return (
                 <span className="pill pill-amber">
@@ -45,6 +52,25 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
 }) => {
     const { registrations, isLoading, error, fetchRegistrations, approve, reject } =
         useRegistrations(activity?.classId);
+
+    const [processingId, setProcessingId] = useState<ID | null>(null);
+    const [processingAction, setProcessingAction] = useState<"approve" | "reject" | null>(null);
+
+    const handleApprove = async (regId: ID) => {
+        setProcessingId(regId);
+        setProcessingAction("approve");
+        await approve(regId);
+        setProcessingId(null);
+        setProcessingAction(null);
+    };
+
+    const handleReject = async (regId: ID) => {
+        setProcessingId(regId);
+        setProcessingAction("reject");
+        await reject(regId);
+        setProcessingId(null);
+        setProcessingAction(null);
+    };
 
     useEffect(() => {
         if (isOpen && activity?.id != null) {
@@ -108,31 +134,34 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
                             className="py-3.5 flex items-center gap-3"
                         >
                             {/* Avatar */}
-                            <div className="w-9 h-9 rounded-full bg-surface-3 flex items-center justify-center text-ink-2 font-bold text-sm shrink-0 border border-rule">
-                                {(reg.registeredUser.displayName ?? reg.registeredUser.username ?? "?")
-                                    .charAt(0)
-                                    .toUpperCase()}
+                            <div className="w-9 h-9 rounded-full bg-surface-3 flex items-center justify-center text-ink-2 font-bold text-sm shrink-0 border border-rule overflow-hidden">
+                                {reg.creatorAvatarUrl ? (
+                                    <img
+                                        src={reg.creatorAvatarUrl}
+                                        alt={reg.creatorDisplayName ?? "Avatar"}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    (reg.creatorDisplayName ?? "?")
+                                        .charAt(0)
+                                        .toUpperCase()
+                                )}
                             </div>
 
                             {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-sm text-ink-1 truncate">
-                                    {reg.registeredUser.displayName ?? reg.registeredUser.username}
+                                    {reg.creatorDisplayName}
                                 </p>
                                 <p className="text-xs text-ink-3 font-mono">
-                                    {new Date(reg.registeredAt).toLocaleDateString("vi-VN", {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
+                                    {reg.createdAt}
                                 </p>
                             </div>
 
                             {/* Proof link */}
-                            {reg.proofImageUrl && (
+                            {reg.proofUrl && (
                                 <a
-                                    href={reg.proofImageUrl}
+                                    href={reg.proofUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="p-1.5 rounded-lg text-ink-3 hover:text-ink-blue-text hover:bg-ink-blue-fill transition-colors"
@@ -146,18 +175,28 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
                             {reg.status === ActivityRegistrationStatus.PENDING ? (
                                 <div className="flex gap-1.5 shrink-0">
                                     <button
-                                        onClick={() => approve(reg.id as ID)}
-                                        className="p-1.5 rounded-lg text-ink-green-text hover:bg-ink-green-fill border border-ink-green-border transition-colors"
+                                        onClick={() => handleApprove(reg.id as ID)}
+                                        className="p-1.5 rounded-lg text-ink-green-text hover:bg-ink-green-fill border border-ink-green-border transition-colors disabled:opacity-50"
                                         title="Duyệt"
+                                        disabled={processingId !== null}
                                     >
-                                        <CheckCircle className="w-4 h-4" />
+                                        {processingId === reg.id && processingAction === "approve" ? (
+                                            <div className="w-4 h-4 border-2 border-ink-green-text/30 border-t-ink-green-text rounded-full animate-spin" />
+                                        ) : (
+                                            <CheckCircle className="w-4 h-4" />
+                                        )}
                                     </button>
                                     <button
-                                        onClick={() => reject(reg.id as ID)}
-                                        className="p-1.5 rounded-lg text-ink-red-text hover:bg-ink-red-fill border border-ink-red-border transition-colors"
+                                        onClick={() => handleReject(reg.id as ID)}
+                                        className="p-1.5 rounded-lg text-ink-red-text hover:bg-ink-red-fill border border-ink-red-border transition-colors disabled:opacity-50"
                                         title="Từ chối"
+                                        disabled={processingId !== null}
                                     >
-                                        <XCircle className="w-4 h-4" />
+                                        {processingId === reg.id && processingAction === "reject" ? (
+                                            <div className="w-4 h-4 border-2 border-ink-red-text/30 border-t-ink-red-text rounded-full animate-spin" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4" />
+                                        )}
                                     </button>
                                 </div>
                             ) : (

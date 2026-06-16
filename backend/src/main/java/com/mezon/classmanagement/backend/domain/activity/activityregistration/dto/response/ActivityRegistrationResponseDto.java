@@ -1,9 +1,11 @@
 package com.mezon.classmanagement.backend.domain.activity.activityregistration.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
+import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
 import com.mezon.classmanagement.backend.domain.activity.activityregistration.entity.ActivityRegistration;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -51,6 +53,7 @@ public final class ActivityRegistrationResponseDto {
 	@JsonProperty(value = "proof_url")
 	String proofUrl;
 
+	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")
 	Instant createdAt;
 	
