@@ -9,6 +9,7 @@ import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDt
 import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,7 +31,10 @@ public class AuthController {
 	AuthService authService;
 
 	@PostMapping("/signin")
-	public ResponseDTO<SignInResponseDto> signIn(@RequestBody SignInRequestDto request) {
+	public ResponseDTO<SignInResponseDto> signIn(
+			@Valid
+			@RequestBody SignInRequestDto request
+	) {
 		SignInResponseDto signInResponseDto = authService.signInInternal(request);
 
 		return ResponseDTO.<SignInResponseDto>builder()
@@ -41,10 +45,10 @@ public class AuthController {
 	}
 
 	@PostMapping("/signup")
-	public ResponseDTO<SignUpResponseDto> signUp(@RequestBody SignUpRequestDto request) {
-		request.setProvider(User.Provider.INTERNAL);
-		request.setProviderId(null);
-
+	public ResponseDTO<SignUpResponseDto> signUp(
+			@Valid
+			@RequestBody SignUpRequestDto request
+	) {
 		SignUpResponseDto signUpResponseDto = authService.signUpInternal(request);
 
 		return ResponseDTO.<SignUpResponseDto>builder()

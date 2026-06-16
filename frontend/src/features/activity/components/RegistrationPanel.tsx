@@ -134,10 +134,18 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
                             className="py-3.5 flex items-center gap-3"
                         >
                             {/* Avatar */}
-                            <div className="w-9 h-9 rounded-full bg-surface-3 flex items-center justify-center text-ink-2 font-bold text-sm shrink-0 border border-rule">
-                                {(reg.creatorDisplayName ?? "?")
-                                    .charAt(0)
-                                    .toUpperCase()}
+                            <div className="w-9 h-9 rounded-full bg-surface-3 flex items-center justify-center text-ink-2 font-bold text-sm shrink-0 border border-rule overflow-hidden">
+                                {reg.creatorAvatarUrl ? (
+                                    <img
+                                        src={reg.creatorAvatarUrl}
+                                        alt={reg.creatorDisplayName ?? "Avatar"}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    (reg.creatorDisplayName ?? "?")
+                                        .charAt(0)
+                                        .toUpperCase()
+                                )}
                             </div>
 
                             {/* Info */}
@@ -146,12 +154,7 @@ export const RegistrationPanel: React.FC<RegistrationPanelProps> = ({
                                     {reg.creatorDisplayName}
                                 </p>
                                 <p className="text-xs text-ink-3 font-mono">
-                                    {new Date(reg.createdAt).toLocaleDateString("vi-VN", {
-                                        day: "2-digit",
-                                        month: "2-digit",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    })}
+                                    {reg.createdAt}
                                 </p>
                             </div>
 

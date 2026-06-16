@@ -37,6 +37,8 @@ public class UserService {
 
 	@Transactional
 	public User createUser(SignUpRequestDto request) {
+		throwIfExistsByUsername(request.getUsername());
+
 		User user = userMapper.toUser(request);
 		user.setHashedPassword(passwordEncoder.encode(request.getPassword()));
 

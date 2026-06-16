@@ -101,7 +101,7 @@ public class AuthService {
 				.build();
 	}
 
-	public SignUpResponseDto signUpOAuth(SignUpRequestDto request) {
+	private SignUpResponseDto signUpOAuth(SignUpRequestDto request) {
 		if (userService.existsByProviderId(request.getProviderId())) {
 			User currentUser = userService.findByProviderIdOrThrow(request.getProviderId());
 
@@ -115,7 +115,8 @@ public class AuthService {
 	}
 
 	public SignUpResponseDto signUpInternal(SignUpRequestDto request) {
-		userService.throwIfExistsByUsername(request.getUsername());
+		request.setProvider(User.Provider.INTERNAL);
+		request.setProviderId(null);
 		return signUp(request);
 	}
 

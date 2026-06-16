@@ -127,11 +127,9 @@ export const ActivityPage: React.FC = () => {
                                         : "Hiện chưa có hoạt động nào diễn ra."}
                                 </p>
                             </div>
-                            {isAdminOrOwner && (
-                                <button onClick={handleOpenCreate} className="btn btn-warm btn-sm mt-2">
-                                    + Tạo hoạt động
-                                </button>
-                            )}
+                            <button onClick={handleOpenCreate} className="btn btn-warm btn-sm mt-2">
+                                + Tạo hoạt động
+                            </button>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
