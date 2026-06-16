@@ -4,6 +4,7 @@ import { Calendar, MapPin, Star, Award, Pencil, Trash2, LogOut, ArrowUpRight } f
 import { useAuth } from "@features/auth";
 import { useRegistrations } from "@features/activity/hooks/useRegistrations";
 import { ActivityRegistrationStatus } from "@shared/domain/enums";
+import { canApprove } from "@shared/domain/activity";
 
 interface ActivityCardProps {
     activity: Activity;
@@ -196,7 +197,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                                             Xóa minh chứng
                                         </button>
                                     </>
-                                ) : (
+                                ) : 
+                                canApprove(myReg) ??
+                                (
                                     <button
                                         onClick={handleAddProof}
                                         className="text-warm-text font-semibold hover:underline"

@@ -28,6 +28,13 @@ const StatusPill: React.FC<{ status: string }> = ({ status }) => {
                     Đã từ chối
                 </span>
             );
+        case ActivityRegistrationStatus.CANCELLED:
+            return (
+                <span className="pill pill-gray">
+                    <span className="pill-dot" />
+                    Đã hủy
+                </span>
+            );
         default:
             return (
                 <span className="pill pill-amber">
