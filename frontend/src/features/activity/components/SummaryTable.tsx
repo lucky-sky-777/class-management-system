@@ -1,5 +1,8 @@
 import React from "react";
 import type { ActivitySummary } from "@features/activity/types";
+import Rank1 from "@assets/rank1.png";
+import Rank2 from "@assets/rank2.png";
+import Rank3 from "@assets/rank3.png";
 
 interface SummaryTableProps {
     summaries: ActivitySummary[];
@@ -33,9 +36,9 @@ export const SummaryTable: React.FC<SummaryTableProps> = ({summaries, isLoading}
             <table className="data-table">
                 <thead>
                 <tr>
-                    <th className="w-16 text-center">Hạng</th>
+                    <th className="w-20 text-center">Hạng</th>
                     <th>Thành viên</th>
-                    <th className="text-center">Điểm</th>
+                    <th className="text-center w-24">Điểm tích lũy</th>
                 </tr>
                 </thead>
 
@@ -43,7 +46,15 @@ export const SummaryTable: React.FC<SummaryTableProps> = ({summaries, isLoading}
                 {summaries.map((summary) => (
                     <tr key={summary.userId}>
                         <td className="text-center font-mono text-ink-3">
-                            {summary.rank ?? "—"}
+                            {summary.rank === 1 ? (
+                                <img src={Rank1} alt="Top 1" className="w-6 h-6 object-contain mx-auto" />
+                            ) : summary.rank === 2 ? (
+                                <img src={Rank2} alt="Top 2" className="w-6 h-6 object-contain mx-auto" />
+                            ) : summary.rank === 3 ? (
+                                <img src={Rank3} alt="Top 3" className="w-6 h-6 object-contain mx-auto" />
+                            ) : (
+                                <span className="text-xs font-semibold">{summary.rank ?? "—"}</span>
+                            )}
                         </td>
 
                         <td>
@@ -69,8 +80,8 @@ export const SummaryTable: React.FC<SummaryTableProps> = ({summaries, isLoading}
                             </div>
                         </td>
 
-                        <td className="font-semibold font-mono text-ink-1">
-                            {summary.totalPoint}
+                        <td className="font-semibold font-mono text-ink-1 text-center">
+                            {summary.totalPoint}đ
                         </td>
                     </tr>
                 ))}

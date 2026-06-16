@@ -4,7 +4,6 @@ import { Calendar, MapPin, Star, Award, Pencil, Trash2, LogOut, ArrowUpRight } f
 import { useAuth } from "@features/auth";
 import { useRegistrations } from "@features/activity/hooks/useRegistrations";
 import { ActivityRegistrationStatus } from "@shared/domain/enums";
-import { canApprove } from "@shared/domain/activity";
 
 interface ActivityCardProps {
     activity: Activity;
@@ -38,6 +37,8 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
     // Quản lý đăng ký của chính học sinh này
     const { registrations, fetchRegistrations, register, cancel, submitProof, cancelProof } = useRegistrations(activity.classId);
     const [isActionLoading, setIsActionLoading] = useState(false);
+    const [showProofInput, setShowProofInput] = useState(false);
+    const [proofUrl, setProofUrl] = useState("");
 
     useEffect(() => {
         if (activity.id != null && !isAdminOrOwner) {
@@ -79,14 +80,17 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         }
     };
 
-    const handleAddProof = async () => {
-        if (!myReg || isActionLoading) return;
-        const url = window.prompt("Nhập URL ảnh minh chứng tham gia hoạt động:");
-        if (!url || !url.trim()) return;
+    const handleAddProof = () => {
+        setShowProofInput(true);
+    };
 
+    const handleSaveProof = async () => {
+        if (!myReg || isActionLoading || !proofUrl.trim()) return;
         setIsActionLoading(true);
         try {
-            await submitProof(myReg.id, activity.id, url.trim());
+            await submitProof(myReg.id, activity.id, proofUrl.trim());
+            setShowProofInput(false);
+            setProofUrl("");
         } finally {
             setIsActionLoading(false);
         }
@@ -111,7 +115,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
             switch (myReg.status) {
                 case ActivityRegistrationStatus.APPROVED:
                     return (
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end gap-1.5">
                             <span className="pill pill-green font-semibold">
                                 <span className="pill-dot bg-[var(--green-text)]" />
                                 Đã duyệt tham gia
@@ -121,9 +125,10 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                                     href={myReg.proofUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-2xs text-ink-blue-text hover:underline mt-0.5"
+                                    className="text-2xs text-[var(--warm-text)] hover:underline font-semibold flex items-center gap-0.5 mt-0.5"
                                 >
                                     Xem minh chứng
+                                    <ArrowUpRight className="w-3 h-3" />
                                 </a>
                             )}
                         </div>
@@ -140,9 +145,10 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                                     href={myReg.proofUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-2xs text-ink-blue-text hover:underline mt-0.5"
+                                    className="text-2xs text-[var(--warm-text)] hover:underline font-semibold flex items-center gap-0.5 mt-0.5"
                                 >
                                     Xem minh chứng
+                                    <ArrowUpRight className="w-3 h-3" />
                                 </a>
                             )}
                             <button
@@ -171,7 +177,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                                 <button
                                     onClick={handleCancel}
                                     disabled={isActionLoading}
-                                    className="text-2xs text-[#991B1B] hover:underline flex items-center gap-0.5 ml-1 disabled:opacity-50"
+                                    className="text-2xs text-[#991B1B] hover:underline flex items-center gap-0.5 ml-1 disabled:opacity-50 font-medium"
                                 >
                                     <LogOut className="w-3 h-3" />
                                     Hủy đăng ký
@@ -184,22 +190,21 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                                             href={myReg.proofUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-ink-blue-text hover:underline font-medium"
+                                            className="text-[var(--warm-text)] hover:underline font-semibold flex items-center gap-0.5"
                                         >
                                             Xem minh chứng
+                                            <ArrowUpRight className="w-3 h-3" />
                                         </a>
                                         <span className="text-ink-4">|</span>
                                         <button
                                             onClick={handleRemoveProof}
-                                            className="text-[#991B1B] hover:underline"
+                                            className="text-[#991B1B] hover:underline font-medium"
                                             disabled={isActionLoading}
                                         >
                                             Xóa minh chứng
                                         </button>
                                     </>
-                                ) : 
-                                canApprove(myReg) ??
-                                (
+                                ) : (
                                     <button
                                         onClick={handleAddProof}
                                         className="text-warm-text font-semibold hover:underline"
@@ -282,9 +287,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                 </div>
 
                 {/* Meta info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-ink-2">
-                    <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-ink-3 shrink-0" />
+                <div className="flex flex-wrap gap-2 text-xs text-ink-2">
+                    <div className="flex items-center gap-1.5 bg-surface-2 px-2.5 py-1 rounded border border-rule">
+                        <Calendar className="w-3.5 h-3.5 text-ink-3 shrink-0" />
                         <span>
                             {formatDate(activity.startAt)}
                             {activity.endAt && (
@@ -296,9 +301,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                         </span>
                     </div>
                     {activity.location && (
-                        <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-ink-3 shrink-0" />
-                            <span className="truncate">{activity.location}</span>
+                        <div className="flex items-center gap-1.5 bg-surface-2 px-2.5 py-1 rounded border border-rule">
+                            <MapPin className="w-3.5 h-3.5 text-ink-3 shrink-0" />
+                            <span className="truncate max-w-[200px]">{activity.location}</span>
                         </div>
                     )}
                 </div>
@@ -307,11 +312,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                 <div className="flex items-center justify-between pt-2 border-t border-rule">
                     <div className="flex items-center gap-3">
                         {activity.point != null && (
-                            <div className="flex items-center gap-1.5">
-                                <Star className="w-3.5 h-3.5 text-amber-text" />
-                                <span className="text-sm font-semibold text-ink-1 font-mono">
-                                    +{activity.point} điểm
-                                </span>
+                            <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--gold-fill)] text-[var(--gold-text)] border border-[var(--gold-border)] font-mono text-xs font-semibold">
+                                <Star className="w-3 h-3 fill-current text-[var(--gold-text)]" />
+                                <span>+{activity.point}đ</span>
                             </div>
                         )}
                         {activity.isMandatory ? (
@@ -340,6 +343,47 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                         )}
                     </div>
                 </div>
+
+                {/* Inline Proof Input Form */}
+                {showProofInput && (
+                    <div className="mt-2 pt-3 border-t border-dashed border-rule animate-fade-in flex flex-col gap-2 w-full">
+                        <div className="flex items-center justify-between">
+                            <label className="text-2xs font-semibold uppercase tracking-label text-ink-3">
+                                Link minh chứng tham gia hoạt động
+                            </label>
+                            <span className="text-[10px] text-ink-3">
+                                VD: Drive, ảnh upload, v.v.
+                            </span>
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                type="url"
+                                placeholder="Nhập đường dẫn URL minh chứng..."
+                                value={proofUrl}
+                                onChange={(e) => setProofUrl(e.target.value)}
+                                className="flex-1 bg-surface border border-rule-md rounded px-3 py-1.5 text-sm text-ink-1 focus:outline-none focus:ring-1 focus:ring-warm-400 placeholder:text-ink-3"
+                                disabled={isActionLoading}
+                            />
+                            <button
+                                onClick={handleSaveProof}
+                                disabled={isActionLoading || !proofUrl.trim()}
+                                className="btn btn-warm btn-sm font-semibold shrink-0"
+                            >
+                                Nộp
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowProofInput(false);
+                                    setProofUrl("");
+                                }}
+                                disabled={isActionLoading}
+                                className="btn btn-ghost btn-sm font-semibold shrink-0"
+                            >
+                                Hủy
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
