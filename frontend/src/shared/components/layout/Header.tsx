@@ -1,6 +1,6 @@
 // src/shared/components/layout/Header.tsx
 import React, { useState, useRef, useEffect } from "react";
-import { Menu, Plus, User, Hash, LogIn, LogOut, Sun, Moon } from "lucide-react";
+import { Menu, Plus, User, Hash, LogIn, LogOut, Sun, Moon, Key } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useHome } from "@features/home/hooks/useHome";
 import { useAuth } from "@features/auth";
@@ -206,7 +206,10 @@ export const Header = () => {
             } rounded-full flex items-center justify-center overflow-hidden border cursor-pointer shrink-0 hover:ring-2 hover:ring-[var(--primary-border)] transition-all`}
           >
             {isAuthenticated && user ? (
-              <Avatar src={user.avatarUrl ?? ""} name={user.displayName ?? user.username} />
+              <Avatar
+                src={user.avatarUrl ?? ""}
+                name={user.displayName ?? user.username}
+              />
             ) : (
               <User size={20} className="text-[var(--ink-3)]" />
             )}
@@ -222,6 +225,17 @@ export const Header = () => {
                   @{user?.username}
                 </p>
               </div>
+
+              <button
+                onClick={() => {
+                  setShowUserMenu(false);
+                  navigate("/change-password");
+                }}
+                className="w-full text-left px-4 py-2.5 text-sm text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] flex items-center gap-2 transition-colors font-medium"
+              >
+                <Key size={16} />
+                Đổi mật khẩu
+              </button>
               <button
                 onClick={handleLogout}
                 className="w-full text-left px-4 py-2.5 text-sm text-[var(--red-text)] hover:bg-[var(--red-fill)] flex items-center gap-2 transition-colors font-medium"
