@@ -12,8 +12,8 @@ import {
   ArrowDownLeft,
   Inbox,
   Building2,
-  Upload,
   ShieldCheck,
+  QrCode,
 } from "lucide-react";
 import { useFund, useFundPayment } from "../hooks/useFund";
 import { FundFormModal } from "../components/FundFormModal";
@@ -428,7 +428,7 @@ export const FundPage: React.FC = () => {
                                                               : "Nộp minh chứng thanh toán"
                                                       }
                                                   >
-                                                      <Upload className="w-4 h-4" />
+                                                      <QrCode className="w-4 h-4" />
                                                   </button>
                                                   <button
                                                       onClick={() => {
