@@ -12,6 +12,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { ActivityPage } from "@features/activity";
 import { MemberPage } from "@features/member/pages/MemberPage";
 import { EmptyLayout } from "@shared/components/layout/EmptyLayout";
+import { ChangePasswordPage } from "@features/auth/pages/ChangePasswordPage";
 
 /**
  * Global application router configuration using React Router
@@ -67,6 +68,11 @@ export const router = createBrowserRouter([
                 handle: {
                     title: "Trang chủ"
                 }
+            },
+            {
+                path: "change-password",
+                element: <ChangePasswordPage />,
+                handle: { title: "Đổi mật khẩu" }
             },
             {
                 path: "class/:classId",

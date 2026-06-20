@@ -1,7 +1,9 @@
 package com.mezon.classmanagement.backend.domain.auth.service;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend.domain.auth.dto.changepassword.ChangePasswordRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
@@ -21,11 +23,14 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.PrintStream;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -45,13 +50,17 @@ public class AuthService {
 	 */
 
 	public SignInResponseDto signInInternal(SignInRequestDto request) {
-		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
-				= new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
-		authenticationManager.authenticate(usernamePasswordAuthenticationToken);
+		authenticate(request.getUsername(), request.getPassword());
 
 		User user = userService.findByUsernameOrThrow(request.getUsername());
 
-		return signIn(user.getId(), user.getPassword());
+		return signIn(user.getId(), user.getUsername());
+	}
+
+	private void authenticate(String username, String password) {
+		UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken
+				= new UsernamePasswordAuthenticationToken(username, password);
+		authenticationManager.authenticate(usernamePasswordAuthenticationToken);
 	}
 
 	public SignInResponseDto signInGoogle(GoogleUser googleUser) {
@@ -211,6 +220,19 @@ public class AuthService {
 				.refreshToken(newRefreshToken)
 				.build();
 	}
+
+	public void changePassword(Authentication authentication, ChangePasswordRequestDto request) {
+		String username = jwtService.extractUsernameFromAuthentication(authentication);
+
+		try {
+			authenticate(username, request.getOldPassword());
+		} catch (AuthenticationException e) {
+			throw new GlobalException(GlobalException.Type.INVALID_AUTHENTICATION, "Mật khẩu cũ không đúng");
+		}
+
+		userService.updatePassword(username, request.getNewPassword());
+	}
+
 	/*
 	noinspection
 	@Deprecated

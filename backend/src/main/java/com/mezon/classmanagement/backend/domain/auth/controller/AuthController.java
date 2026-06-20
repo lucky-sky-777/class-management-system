@@ -1,13 +1,13 @@
 package com.mezon.classmanagement.backend.domain.auth.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
+import com.mezon.classmanagement.backend.domain.auth.dto.changepassword.ChangePasswordRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
-import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -107,6 +108,20 @@ public class AuthController {
 				.message("Refresh tokens successful")
 				.data(response)
 				.build();
+	}
+
+	@PreAuthorize("@TokenSecurity.isValid()")
+	@PatchMapping("password")
+	public ResponseDTO<Void> changePassword(
+			@RequestBody
+			ChangePasswordRequestDto request
+	) {
+		Authentication authentication = authService.getAuthentication();
+		authService.changePassword(authentication, request);
+
+		return ResponseDTO.ok(
+				"Đổi mật khẩu thành công"
+		);
 	}
 
 }

@@ -36,3 +36,8 @@ export interface UserResponse {
     email?: string;
     joined_at?: string;
 }
+
+export interface ChangePasswordRequest {
+  old_password?: string;
+  new_password?: string;
+}

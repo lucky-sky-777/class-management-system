@@ -11,6 +11,7 @@ import { storage } from "@shared/storages";
 import { AUTH_STORAGE_KEY } from "@features/auth/types/keyStorage";
 import { UserType } from "@shared/domain/enums";
 import { ApiError } from "@services/api-client";
+import type { ChangePasswordRequest } from "@features/auth/types";
 
 /**
  * useAuthInternal: Chỉ dùng nội bộ trong feature auth (LoginPage, RegisterPage)
@@ -126,6 +127,33 @@ export const useAuthInternal = () => {
     }
   }, [storeLogout]);
 
+  //doi mat khau
+  const changePassword = useCallback(
+    async (oldPassword: string, newPassword: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data: ChangePasswordRequest = {
+          old_password: oldPassword,
+          new_password: newPassword,
+        };
+        
+        await authApi.changePassword(data);
+        return true;
+      } catch (err) {
+        if (err instanceof ApiError) {
+          setError(err.message || "Lỗi đổi mật khẩu");
+        } else {
+          setError("Đã có lỗi xảy ra");
+        }
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   // lây token với mã auth code (OAuth2)
   const fetchTokenWithAuthCode = useCallback(
     async (code: string, provider: string) => {
@@ -160,6 +188,7 @@ export const useAuthInternal = () => {
     login,
     signup,
     logout,
+    changePassword,
     fetchTokenWithAuthCode,
   };
 };

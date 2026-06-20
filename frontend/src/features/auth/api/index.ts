@@ -1,6 +1,6 @@
 import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
-import type { LoginRequest, RegisterRequest, AuthResponse, RegisterResponse, SignOutResponse, UserResponse } from "@features/auth/types";
+import type { LoginRequest, RegisterRequest, AuthResponse, RegisterResponse, SignOutResponse, UserResponse, ChangePasswordRequest } from "@features/auth/types";
 
 export const authApi = {
     signIn: async (data: LoginRequest): Promise<ResponseDTO<AuthResponse>> => {
@@ -18,6 +18,10 @@ export const authApi = {
                 "X-Refresh-Token": refreshtoken,
             },
         });
+    },
+    //doi mat khau
+    changePassword: async (data: ChangePasswordRequest): Promise<ResponseDTO<void>> => {
+        return apiClient.patch<ResponseDTO<void>>("/auth/password", data);
     },
 
     callbackGoogle: async (code: string): Promise<ResponseDTO<AuthResponse>> => {
