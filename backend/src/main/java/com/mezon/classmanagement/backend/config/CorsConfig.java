@@ -12,19 +12,19 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration corsConfiguration = new CorsConfiguration();
-
-		corsConfiguration.setAllowedOrigins(ClientConstant.ALLOWED_ORIGIN_LIST);
-		corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-		corsConfiguration.setAllowedHeaders(List.of("*"));
-		corsConfiguration.setAllowCredentials(true);
-
-		UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-		urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
-
-		return urlBasedCorsConfigurationSource;
-	}
+//	@Bean
+//	public CorsConfigurationSource corsConfigurationSource() {
+//		CorsConfiguration corsConfiguration = new CorsConfiguration();
+//
+//		corsConfiguration.setAllowedOrigins(ClientConstant.ALLOWED_ORIGIN_LIST);
+//		corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+//		corsConfiguration.setAllowedHeaders(List.of("*"));
+//		corsConfiguration.setAllowCredentials(true);
+//
+//		UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+//		urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
+//
+//		return urlBasedCorsConfigurationSource;
+//	}
 
 }

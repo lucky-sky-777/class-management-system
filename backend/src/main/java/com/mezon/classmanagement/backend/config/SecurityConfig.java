@@ -5,6 +5,7 @@ import com.mezon.classmanagement.backend.common.exeption.custom.CustomAuthentica
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -32,11 +33,11 @@ public class SecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) {
 		httpSecurity
 				.csrf(AbstractHttpConfigurer::disable)
-				.cors(cors -> cors
-						.configurationSource(
-								corsConfig.corsConfigurationSource()
-						)
-				)
+//				.cors(cors -> cors
+//						.configurationSource(
+//								corsConfig.corsConfigurationSource()
+//						)
+//				)
 				.sessionManagement(session -> session
 						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
 				)
@@ -81,7 +82,8 @@ public class SecurityConfig {
 						.requestMatchers("/api/public/**").permitAll()
 
 						// test
-						//.requestMatchers("/**").permitAll()
+						.requestMatchers("/**").permitAll()
+						.requestMatchers("/api/documents/**").permitAll()
 
 						// actuator
 						//.requestMatchers("/actuator/**").permitAll()
