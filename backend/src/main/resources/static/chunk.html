@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Chunk API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+        }
+
+        button {
+            margin-top: 12px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+
+        pre {
+            margin-top: 20px;
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Test /chunk API</h2>
+
+<input type="file" id="file">
+
+<br>
+
+<button onclick="upload()">Upload</button>
+
+<pre id="result"></pre>
+
+<script>
+    async function upload() {
+        const input = document.getElementById("file");
+
+        if (input.files.length === 0) {
+            alert("Hãy chọn một file.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", input.files[0]);
+
+        const result = document.getElementById("result");
+        result.textContent = "Đang gửi...";
+
+        try {
+            const response = await fetch("http://localhost:8080/api/documents/chunk", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                const text = await response.text();
+                result.textContent = text || "Upload thành công!";
+            } else {
+                result.textContent =
+                    `Lỗi ${response.status}\n` + await response.text();
+            }
+        } catch (e) {
+            result.textContent = e.toString();
+        }
+    }
+</script>
+
+</body>
+</html>

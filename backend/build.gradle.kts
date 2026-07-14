@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mezon.classmanagement"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.1"
 description = "backend"
 
 java {
@@ -38,11 +38,23 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
     implementation("org.mapstruct:mapstruct:1.6.3")
 
+    implementation("org.apache.poi:poi:5.5.1")
+    implementation("org.apache.tika:tika:3.3.1")
+    implementation("dev.langchain4j:langchain4j:1.17.1")
+    //implementation("dev.langchain4j:langchain4j-core:1.17.1")
+    implementation("dev.langchain4j:langchain4j-open-ai:1.17.1")
+    implementation("dev.langchain4j:langchain4j-easy-rag:1.17.1-beta27")
+    implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.17.1")
+    implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
+    implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.17.1-beta27")
+
     implementation("org.springframework.security:spring-security-crypto")
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
 
     //implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("io.projectreactor:reactor-test")
+    testImplementation("org.springframework.amqp:spring-rabbit-test")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
