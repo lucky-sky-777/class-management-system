@@ -3,7 +3,7 @@ package com.mezon.classmanagement.backend_document.domain.main.document.controll
 import com.mezon.classmanagement.backend_document.domain.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend_document.common.util.GeminiTokenCountEstimator;
 import com.mezon.classmanagement.backend_document.domain.component.embedding.service.EmbeddingService;
-import com.mezon.classmanagement.backend_document.domain.component.ingest.service.DocumentIngestService;
+import com.mezon.classmanagement.backend_document.domain.component.ingest.service.IngestService;
 import com.mezon.classmanagement.backend_document.domain.component.split.strategy.impl.SplitByParagraphStrategy;
 import com.mezon.classmanagement.backend_document.domain.component.vector.entity.impl.Vector3072;
 import com.mezon.classmanagement.backend_document.domain.main.document.dto.TextRequest;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -27,9 +28,10 @@ import java.util.List;
 @RequestMapping("/api/documents")
 public class DocumentController {
 
-	DocumentIngestService ingestService;
+	IngestService ingestService;
 	EmbeddingService embeddingService;
 	ChunkService chunkService;
+	GeminiTokenCountEstimator geminiTokenCountEstimator;
 
 	SplitByParagraphStrategy splitByParagraphStrategy;
 
@@ -47,15 +49,12 @@ public class DocumentController {
 			consumes = MediaType.MULTIPART_FORM_DATA_VALUE
 	)
 	public ResponseEntity<Void> chunk(
-			//@RequestParam MultipartFile file
-	) {
+			@RequestParam MultipartFile file
+	) throws Exception {
 		System.out.println("start chunk");
-//		List<String> chunkList = chunkService.getChunkListFromMultipartFile(
-//				file,
-//				splitByParagraphStrategy
-//		);
-//
-//		chunkList.forEach(System.out::println);
+
+		ingestService.ingest(file);
+
 		System.out.println("end chunk");
 		return ResponseEntity
 				.accepted()
@@ -77,7 +76,7 @@ public class DocumentController {
 			TextRequest request
 	) {
 		System.out.println(request.text());
-		System.out.println(new GeminiTokenCountEstimator().estimateTokenCountInText(request.text()));
+		System.out.println(geminiTokenCountEstimator.estimateTokenCountInText(request.text()));
 	}
 
 }

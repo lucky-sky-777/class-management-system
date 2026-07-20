@@ -17,9 +17,11 @@ import org.apache.poi.ooxml.POIXMLProperties;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +32,22 @@ import java.util.List;
 public class ChunkService {
 
 	SplitService splitService;
+
+	public List<String> getChunkListFromFile(
+			File file,
+			SplitStrategy splitStrategy
+	) {
+		try {
+			Document document = FileUtils.toDocument(file);
+
+			return formatChunkListForGemini(
+					document.metadata(),
+					getChunkList(document, splitStrategy)
+			);
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	}
 
 	public List<String> getChunkListFromMultipartFile(
 			MultipartFile multipartFile,
