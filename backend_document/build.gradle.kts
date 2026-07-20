@@ -48,6 +48,11 @@ dependencies {
     implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
     implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.17.1-beta27")
     implementation("ai.djl.sentencepiece:sentencepiece:0.36.0")
+    implementation("org.apache.lucene:lucene-core:10.5.0")
+    //implementation("org.apache.lucene:lucene-queryparser:10.5.0")
+    implementation("org.apache.lucene:lucene-analysis-common:10.5.0")
+    implementation("commons-validator:commons-validator:1.10.1")
+    implementation(files("libs/VnCoreNLP/VnCoreNLP-Gradle-1.2.jar"))
 
     //implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")

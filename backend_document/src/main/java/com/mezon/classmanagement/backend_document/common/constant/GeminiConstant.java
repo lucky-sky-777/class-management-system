@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-public class GeminiConstant {
+public final class GeminiConstant {
 
 	public enum TaskType {
 		RETRIEVAL_DOCUMENT,
