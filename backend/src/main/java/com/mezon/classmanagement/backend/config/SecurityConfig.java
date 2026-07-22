@@ -83,7 +83,7 @@ public class SecurityConfig {
 
 						// test
 						.requestMatchers("/**").permitAll()
-						.requestMatchers("/api/documents/**").permitAll()
+						//.requestMatchers("/api/documents/**").permitAll()
 
 						// actuator
 						//.requestMatchers("/actuator/**").permitAll()

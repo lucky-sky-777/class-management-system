@@ -20,6 +20,7 @@ repositories {
 
 extra["tomcat.version"] = "11.0.22"
 extra["netty.version"] = "4.2.14.Final"
+val springCloudVersion by extra("2025.1.2")
 
 dependencies {
 
@@ -33,6 +34,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+
 
     implementation("org.projectlombok:lombok")
     implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
@@ -50,6 +52,7 @@ dependencies {
 
     implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
+    implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc")
 
     //implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     testImplementation("org.springframework.security:spring-security-test")
@@ -66,6 +69,11 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     runtimeOnly("org.postgresql:postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
+    }
 }
 
 tasks.withType<Test> {

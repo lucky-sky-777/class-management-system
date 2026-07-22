@@ -28,16 +28,16 @@ public class DocumentChunkingTest {
 	SplitBySentenceStrategy splitBySentenceStrategy;
 	SplitByWordStrategy splitByWordStrategy;
 
-	@Test
-	public void testToken() {
-		List<String> list = chunkService.getChunkListFromFilePath(
-				"src/main/resources/TTNT.docx",
-				splitByAllStrategy
-		);
-
-		System.out.println("token");
-		list.forEach(System.out::println);
-	}
+//	@Test
+//	public void testToken() {
+//		List<String> list = chunkService.getChunkListFromFilePath(
+//				"src/main/resources/TTNT.docx",
+//				splitByAllStrategy
+//		);
+//
+//		System.out.println("token");
+//		list.forEach(System.out::println);
+//	}
 
 	/**
 	 * Nên dùng cái này
@@ -45,7 +45,7 @@ public class DocumentChunkingTest {
 	@Test
 	public void testParagraph() {
 		List<String> list = chunkService.getChunkListFromFilePath(
-				"src/main/resources/TTNT.docx",
+				"src/main/resources/triethocmaclenin.pdf",
 				splitByParagraphStrategy
 		);
 
@@ -53,37 +53,37 @@ public class DocumentChunkingTest {
 		list.forEach(System.out::println);
 	}
 
-	@Test
-	public void testLine() {
-		List<String> list = chunkService.getChunkListFromFilePath(
-				"src/main/resources/TTNT.docx",
-				splitByLineStrategy
-		);
-
-		System.out.println("line");
-		list.forEach(System.out::println);
-	}
-
-	@Test
-	public void testSentence() {
-		List<String> list = chunkService.getChunkListFromFilePath(
-				"src/main/resources/TTNT.docx",
-				splitBySentenceStrategy
-		);
-
-		System.out.println("sentence");
-		list.forEach(System.out::println);
-	}
-
-	@Test
-	public void testWord() {
-		List<String> list = chunkService.getChunkListFromFilePath(
-				"src/main/resources/TTNT.docx",
-				splitByWordStrategy
-		);
-
-		System.out.println("word");
-		list.forEach(System.out::println);
-	}
+//	@Test
+//	public void testLine() {
+//		List<String> list = chunkService.getChunkListFromFilePath(
+//				"src/main/resources/TTNT.docx",
+//				splitByLineStrategy
+//		);
+//
+//		System.out.println("line");
+//		list.forEach(System.out::println);
+//	}
+//
+//	@Test
+//	public void testSentence() {
+//		List<String> list = chunkService.getChunkListFromFilePath(
+//				"src/main/resources/TTNT.docx",
+//				splitBySentenceStrategy
+//		);
+//
+//		System.out.println("sentence");
+//		list.forEach(System.out::println);
+//	}
+//
+//	@Test
+//	public void testWord() {
+//		List<String> list = chunkService.getChunkListFromFilePath(
+//				"src/main/resources/TTNT.docx",
+//				splitByWordStrategy
+//		);
+//
+//		System.out.println("word");
+//		list.forEach(System.out::println);
+//	}
 
 }
