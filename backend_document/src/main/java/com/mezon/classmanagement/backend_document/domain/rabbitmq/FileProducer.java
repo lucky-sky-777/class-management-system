@@ -2,25 +2,26 @@ package com.mezon.classmanagement.backend_document.domain.rabbitmq;
 
 import com.mezon.classmanagement.backend_document.config.RabbitConfig;
 import com.mezon.classmanagement.backend_document.domain.component.ingest.dto.RabbitIngestRequest;
-import com.mezon.classmanagement.backend_document.domain.component.ingest.service.IngestService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Component
-public class FileConsumer {
+public class FileProducer {
 
-	IngestService ingestService;
+	RabbitTemplate rabbitTemplate;
 
-	@RabbitListener(queues = RabbitConfig.FILE_QUEUE)
-	public void receive(RabbitIngestRequest message) {
+	public void send(String filePath) {
+		RabbitIngestRequest message = new RabbitIngestRequest(filePath);
 
-		ingestService.ingest(message.filePath());
-
+		rabbitTemplate.convertAndSend(
+				RabbitConfig.FILE_QUEUE,
+				message
+		);
 	}
 
 }

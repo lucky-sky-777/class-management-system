@@ -1,0 +1,62 @@
+package com.mezon.classmanagement.backend_document.common.exeption.entity;
+
+import com.mezon.classmanagement.backend_document.common.constant.WarningConstant;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
+
+@SuppressWarnings(value = {WarningConstant.UNUSED})
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter
+public class GlobalException extends RuntimeException {
+
+	int code;
+
+	public GlobalException(Type type) {
+		super();
+	}
+
+	public GlobalException(
+			Type type,
+			String message
+	) {
+		super(message);
+		this.code = type.getCode();
+	}
+
+	public GlobalException(
+			Type type,
+			String message,
+			Throwable cause
+	) {
+		super(message, cause);
+		this.code = type.getCode();
+	}
+
+	public GlobalException(
+			Type type,
+			Throwable cause
+	) {
+		super(cause);
+		this.code = type.getCode();
+	}
+
+	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+	@Getter
+	@AllArgsConstructor
+	public enum Type {
+
+		NOT_FOUND(HttpStatus.NOT_FOUND.value()),
+		ALREADY_EXISTS(HttpStatus.CONFLICT.value()),
+		INVALID_AUTHENTICATION(HttpStatus.UNAUTHORIZED.value()),
+		FORBIDDEN(HttpStatus.FORBIDDEN.value()),
+		INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value()),
+		INVALID_REQUEST(HttpStatus.BAD_REQUEST.value());
+
+		int code;
+
+	}
+
+}

@@ -86,7 +86,7 @@ public class SecurityConfig {
 						//.requestMatchers("/api/documents/**").permitAll()
 
 						// actuator
-						//.requestMatchers("/actuator/**").permitAll()
+						.requestMatchers("/actuator/**").permitAll()
 
 						.anyRequest().authenticated()
 				);

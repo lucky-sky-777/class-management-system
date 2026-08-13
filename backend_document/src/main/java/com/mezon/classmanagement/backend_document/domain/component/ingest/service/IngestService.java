@@ -1,18 +1,21 @@
 package com.mezon.classmanagement.backend_document.domain.component.ingest.service;
 
+import com.mezon.classmanagement.backend_document.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend_document.common.util.FileUtils;
 import com.mezon.classmanagement.backend_document.domain.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend_document.domain.component.split.strategy.impl.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend_document.domain.rabbitmq.FileProducer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Function;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -22,25 +25,47 @@ public class IngestService {
 	ChunkService chunkService;
 
 	SplitByParagraphStrategy splitByParagraphStrategy;
+	FileProducer fileProducer;
 
-	@Async
-	public void ingest(
-			MultipartFile file
-	) throws Exception {
-		File tmp = File.createTempFile("upload-", ".tmp");
+	public void ingest(MultipartFile file) {
 		try {
-			file.transferTo(tmp);
+			Path tmp = FileUtils.createTempFile(file);
 
-			List<String> chunkList = chunkService.getChunkListFromFile(
-					tmp,
-					splitByParagraphStrategy
+			fileProducer.send(
+					tmp.toAbsolutePath().toString()
 			);
-
-			chunkList.forEach(System.out::println);
-		} finally {
-			if (tmp.exists()) {
-				Files.delete(Paths.get(tmp.getAbsolutePath()));
-			}
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR
+			);
 		}
 	}
+
+	public void ingest(
+			String filePath
+	) {
+		Path path = Paths.get(filePath);
+		System.out.println(
+				"Start ingest: " + path.toAbsolutePath()
+		);
+
+		List<String> chunkList =
+				chunkService.getChunkListFromFile(
+						path.toFile(),
+						splitByParagraphStrategy
+				);
+
+		chunkList.forEach(System.out::println);
+
+		System.out.println("Ingest completed");
+
+		try {
+			Files.deleteIfExists(path);
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR
+			);
+		}
+	}
+
 }

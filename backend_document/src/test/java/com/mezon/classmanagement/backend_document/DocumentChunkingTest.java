@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend_document;
 
+import com.mezon.classmanagement.backend_document.common.constant.FileConstant;
 import com.mezon.classmanagement.backend_document.domain.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend_document.domain.component.split.strategy.impl.SplitByAllStrategy;
 import com.mezon.classmanagement.backend_document.domain.component.split.strategy.impl.SplitByLineStrategy;
@@ -45,10 +46,11 @@ public class DocumentChunkingTest {
 	@Test
 	public void testParagraph() {
 		List<String> list = chunkService.getChunkListFromFilePath(
-				"src/main/resources/triethocmaclenin.pdf",
+				"src/main/resources/The-gioi-5000-nam-nhung-dieu-bi-an.pdf",
 				splitByParagraphStrategy
 		);
 
+		System.out.println(FileConstant.AllowedMimeType.TXT);
 		System.out.println("paragraph");
 		list.forEach(System.out::println);
 	}

@@ -1,5 +1,7 @@
 package com.mezon.classmanagement.backend_document.domain.main.document.controller;
 
+import com.mezon.classmanagement.backend_document.common.dto.ResponseDTO;
+import com.mezon.classmanagement.backend_document.common.validator.FileValidator;
 import com.mezon.classmanagement.backend_document.domain.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend_document.common.util.GeminiTokenCountEstimator;
 import com.mezon.classmanagement.backend_document.domain.component.embedding.service.EmbeddingService;
@@ -18,9 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.File;
-import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -41,16 +40,18 @@ public class DocumentController {
 	public void upload(
 			@RequestParam MultipartFile file
 	) {
-		//ingestService.ingest(file);
+		FileValidator.validateFileType(file);
+		ingestService.ingest(file);
 	}
 
 	@PostMapping(
 			value = "/chunk",
 			consumes = MediaType.MULTIPART_FORM_DATA_VALUE
 	)
-	public ResponseEntity<Void> chunk(
+	public ResponseEntity<ResponseDTO<String>> chunk(
 			@RequestParam MultipartFile file
 	) throws Exception {
+		FileValidator.validateFileType(file);
 		System.out.println("start chunk");
 
 		ingestService.ingest(file);
