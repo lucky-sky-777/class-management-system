@@ -24,7 +24,11 @@ export const useClassMembers = (classId: number | null) => {
   }, [classId]);
 
   useEffect(() => {
-    fetchMembers();
+    const timer = setTimeout(() => {
+      fetchMembers();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchMembers]); // Gọi lại chuẩn xác theo tham chiếu hàm bảo vệ
 
   return { members, isLoading, refreshMembers: fetchMembers };
