@@ -34,11 +34,11 @@ export const useHome = () => {
   }, [isAuthenticated, user, fetchClasses, clearClasses]);
 
   // Hàm ép đồng bộ thủ công khi có biến động
-  const loadData = useCallback(async () => {
+ const loadData = useCallback(async () => {
     if (user?.id) {
       await forceRefresh(isAuthenticated, user.id);
     }
-  }, [isAuthenticated, user?.id, forceRefresh]);
+  }, [isAuthenticated, user, forceRefresh]);
 
   const createClassMutation = async (formData: {
     className: string;

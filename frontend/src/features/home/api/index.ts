@@ -1,6 +1,77 @@
-import type { ClassItems, ClassResponse, ClassIdResponse, ClassMember, JoinClassResult } from "@features/home/types";
+import type {
+  ClassItems,
+  ClassResponse,
+  ClassIdResponse,
+  ClassMember,
+  JoinClassResult,
+  RecentGroupDocument,
+} from "@features/home/types";
 import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
+import { ClassPrivacy } from "@shared/domain/enums";
+
+export const MOCK_SUGGESTED_CLASSES: ClassItems[] = [
+  {
+    id: 991,
+    name: "Cộng đồng lập trình",
+    owner_user_id: 1,
+    owner_avatar_url: "",
+    description: "Cộng đồng lập trình Việt Nam",
+    code: "CODE_PUBLIC",
+    member_count: "1000",
+    owner_display_name: "Cộng đồng",
+    privacy: ClassPrivacy.PUBLIC,
+    status: "" as any,
+  },
+  {
+    id: 992,
+    name: "Đồ án cuối kì",
+    owner_user_id: 2,
+    owner_avatar_url: "",
+    description: "Đồ án 1 - QNU",
+    code: "CODE_PRIVATE",
+    member_count: "1000",
+    owner_display_name: "Giảng viên",
+    privacy: ClassPrivacy.PRIVATE,
+    status: "" as any,
+  },
+];
+
+// Dữ liệu Mock cho tài liệu mới
+export const MOCK_RECENT_DOCUMENTS: RecentGroupDocument[] = [
+  {
+    id: 1,
+    title: "Tài liệu NCKHSV 2026 - 2027.docx",
+    authorName: "Đặng Phong Hào",
+    createdAt: "2 giờ trước",
+    groupName: "KTPM46",
+    fileExtension: "docx",
+  },
+  {
+    id: 2,
+    title: "Slide_BaoCao_TienDo.pptx",
+    authorName: "Nguyễn Văn A",
+    createdAt: "5 giờ trước",
+    groupName: "Đồ án chuyên ngành",
+    fileExtension: "pptx",
+  },
+  {
+    id: 3,
+    title: "SoDo_KienTruc_HeThong.png",
+    authorName: "Trần Thị B",
+    createdAt: "1 ngày trước",
+    groupName: "Cộng đồng lập trình",
+    fileExtension: "png",
+  },
+  {
+    id: 4,
+    title: "Demo_ChucNang_App.mp4",
+    authorName: "Lê Văn C",
+    createdAt: "2 ngày trước",
+    groupName: "Nhóm Kỹ Thuật",
+    fileExtension: "mp4",
+  }
+];
 
 export const homeAPI = {
   createClass: async (
@@ -90,8 +161,10 @@ export const homeAPI = {
     return response.data;
   },
 
-  // Rời khỏi lớp 
-  leaveClass: async (classId: number): Promise<ResponseDTO<ClassIdResponse>> => {
+  // Rời khỏi lớp
+  leaveClass: async (
+    classId: number,
+  ): Promise<ResponseDTO<ClassIdResponse>> => {
     const authStorage = localStorage.getItem("auth-storage");
     let token = null;
     if (authStorage) {
@@ -99,15 +172,20 @@ export const homeAPI = {
       token = parsed.state.user?.token || parsed.state.user?.access_token;
     }
 
-    return apiClient.delete<ResponseDTO<ClassIdResponse>>(`/classes/${classId}/leave`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    return apiClient.delete<ResponseDTO<ClassIdResponse>>(
+      `/classes/${classId}/leave`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
   },
 
-  // Xóa lớp 
-  deleteClass: async (classId: number): Promise<ResponseDTO<ClassIdResponse>> => {
+  // Xóa lớp
+  deleteClass: async (
+    classId: number,
+  ): Promise<ResponseDTO<ClassIdResponse>> => {
     const authStorage = localStorage.getItem("auth-storage");
     let token = null;
     if (authStorage) {
@@ -115,17 +193,20 @@ export const homeAPI = {
       token = parsed.state.user?.token || parsed.state.user?.access_token;
     }
 
-    return apiClient.delete<ResponseDTO<ClassIdResponse>>(`/classes/${classId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    return apiClient.delete<ResponseDTO<ClassIdResponse>>(
+      `/classes/${classId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
   },
 
   // Cập nhật/Sửa lớp
   updateClass: async (
     classId: number,
-    data: Partial<ClassResponse>, 
+    data: Partial<ClassResponse>,
   ): Promise<ResponseDTO<ClassResponse>> => {
     const authStorage = localStorage.getItem("auth-storage");
     let token = null;
@@ -146,7 +227,9 @@ export const homeAPI = {
     );
   },
 
-  getClassMembers: async (classId: number): Promise<ResponseDTO<ClassMember[]>> => {
+  getClassMembers: async (
+    classId: number,
+  ): Promise<ResponseDTO<ClassMember[]>> => {
     const authStorage = localStorage.getItem("auth-storage");
     let token = null;
     if (authStorage) {
@@ -154,10 +237,44 @@ export const homeAPI = {
       token = parsed.state.user?.token || parsed.state.user?.access_token;
     }
 
-    return apiClient.get<ResponseDTO<ClassMember[]>>(`/classes/${classId}/members`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    return apiClient.get<ResponseDTO<ClassMember[]>>(
+      `/classes/${classId}/members`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
+  },
+
+  //gợi ý lớp
+  getSuggestedClasses: async (): Promise<ResponseDTO<ClassItems[]>> => {
+    // Giả lập delay mạng 800ms
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    // Bổ sung thêm 'code' và 'time' cho đủ format của ResponseDTO
+    return {
+      success: true,
+      message: "Lấy gợi ý thành công",
+      data: MOCK_SUGGESTED_CLASSES,
+      code: 200,
+      time: new Date().toISOString(),
+    };
+  },
+  
+  //tài liệu mới
+  getRecentDocuments: async (): Promise<ResponseDTO<RecentGroupDocument[]>> => {
+    // Giả lập delay mạng 800ms
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    return {
+      success: true,
+      message: "Lấy tài liệu mới thành công",
+      data: MOCK_RECENT_DOCUMENTS,
+      code: 200,
+      time: new Date().toISOString(),
+    };
   },
 };
+
+

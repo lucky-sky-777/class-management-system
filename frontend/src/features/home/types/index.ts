@@ -8,6 +8,7 @@ export interface ClassItems {
   description: string;
   code: string;
   owner_display_name: string;
+  member_count: string;
   privacy: ClassPrivacy;
   status: ClassStatus;
 }
@@ -49,4 +50,13 @@ export interface JoinClassResult {
   type?: 'REQUESTED' | 'JOINED';
   userJoinStatus?: 'joined' | 'pending';
   status?: 'PENDING_REQUEST' | 'JOINED' | string;
+}
+
+export interface RecentGroupDocument {
+  id: number;
+  title: string;
+  authorName: string;
+  createdAt: string;
+  groupName: string;
+  fileExtension: string; // Ví dụ: 'docx', 'pptx', 'png', 'mp4'
 }

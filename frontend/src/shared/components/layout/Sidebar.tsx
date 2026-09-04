@@ -1,6 +1,6 @@
 // src/shared/components/layout/Sidebar.tsx
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Home,
   MonitorPlay,
@@ -9,6 +9,8 @@ import {
   ChevronUp,
   Lock,
   Globe,
+  Heart,
+  User,
 } from "lucide-react";
 import { useHome } from "@features/home/hooks/useHome";
 import { useUIStore, useToastStore } from "@app/store";
@@ -22,7 +24,7 @@ interface UIStoreState {
 
 export const Sidebar = () => {
   const [isRegisteredOpen, setIsRegisteredOpen] = useState(true);
-  // đã được Hook useHome quản lý an toàn từ bên trong dựa theo User ID.
+  const location = useLocation();
   const { classes, isLoading, refresh } = useHome();
 
   const isSidebarOpen = useUIStore(
@@ -41,7 +43,6 @@ export const Sidebar = () => {
     );
   };
 
-  // Chỉ giữ lại lắng nghe sự kiện phát ra từ các modal (tạo/xóa lớp) để đồng bộ dữ liệu
   useEffect(() => {
     const handleRefresh = () => {
       refresh();
@@ -54,6 +55,9 @@ export const Sidebar = () => {
   }, [refresh]);
 
   const myClasses = classes || [];
+
+  // Kiểm tra xem người dùng có đang ở trang Nhóm học (/groups) hoặc đang xem chi tiết lớp học (/class/...) hay không
+  const isGroupSection = location.pathname.startsWith("/groups") || location.pathname.startsWith("/class");
 
   return (
     <>
@@ -70,6 +74,7 @@ export const Sidebar = () => {
         }`}
       >
         <nav className="flex-1 py-2 overflow-y-auto p-2.5">
+          {/* Menu Trang chủ */}
           <NavLink to="/" end>
             {({ isActive }: { isActive: boolean }) => (
               <div
@@ -88,117 +93,172 @@ export const Sidebar = () => {
             )}
           </NavLink>
 
-          <div className="mt-4">
-            <div
-              className="flex items-center justify-between px-3 py-2 cursor-pointer text-[var(--ink-2)] hover:text-[var(--ink-1)] hover:bg-[var(--bg-surface-2)] rounded-[var(--r-xl)] transition-colors"
-              onClick={() => setIsRegisteredOpen(!isRegisteredOpen)}
-            >
-              <div className="flex items-center gap-3">
+          {/* Menu Nhóm học */}
+          <NavLink to="/groups">
+            {({ isActive }: { isActive: boolean }) => (
+              <div
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--r-xl)] transition-all font-medium mt-1 ${
+                  isActive
+                    ? "bg-[var(--primary-fill)] text-[var(--primary-text)]"
+                    : "text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--ink-1)]"
+                }`}
+              >
                 <MonitorPlay size={20} className="shrink-0" />
-                <span className="text-[10px] font-bold tracking-wider uppercase">
-                  Đã đăng ký
-                </span>
+                <span>Nhóm học</span>
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--primary-text)]"></span>
+                )}
               </div>
-              {isRegisteredOpen ? (
-                <ChevronUp size={14} />
-              ) : (
-                <ChevronDown size={14} />
+            )}
+          </NavLink>
+
+          {/* CHỈ HIỆN KHI ĐANG Ở KHU VỰC NHÓM HỌC HOẶC CHI TIẾT LỚP */}
+          {isGroupSection && (
+            <div className="mt-4 animate-in fade-in duration-200">
+              <div
+                className="flex items-center justify-between px-3 py-2 cursor-pointer text-[var(--ink-2)] hover:text-[var(--ink-1)] hover:bg-[var(--bg-surface-2)] rounded-[var(--r-xl)] transition-colors"
+                onClick={() => setIsRegisteredOpen(!isRegisteredOpen)}
+              >
+                <div className="flex items-center gap-3">
+                  {/* <MonitorPlay size={20} className="shrink-0" /> */}
+                  <span className="text-[10px] font-bold tracking-wider uppercase">
+                    đã đăng ký
+                  </span>
+                </div>
+                {isRegisteredOpen ? (
+                  <ChevronUp size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </div>
+
+              {isRegisteredOpen && (
+                <ul className="mt-1 flex flex-col gap-0.5">
+                  {isLoading ? (
+                    <li className="px-10 py-3">
+                      <div className="skeleton h-4 w-full opacity-20 rounded-md"></div>
+                    </li>
+                  ) : myClasses.length > 0 ? (
+                    myClasses.map((item) => {
+                      const isPending = item.status !== "JOINED";
+
+                      return (
+                        <li key={item.id}>
+                          {isPending ? (
+                            <div
+                              onClick={handlePendingClick}
+                              className="group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] text-[var(--ink-3)] opacity-60 cursor-pointer hover:bg-[var(--bg-surface-2)] transition-all bg-[var(--bg-surface-2)]/50"
+                              title="Lớp đang chờ giáo viên duyệt"
+                            >
+                              <div className="flex items-center gap-3 truncate">
+                                <Users size={18} className="shrink-0" />
+                                <span className="text-sm font-medium truncate leading-tight">
+                                  {item.name}
+                                </span>
+                              </div>
+                              <Lock
+                                size={12}
+                                className="text-[var(--amber-text)] opacity-80"
+                              />
+                            </div>
+                          ) : (
+                            <NavLink to={`/class/${item.id}/diagram`}>
+                              {({ isActive }: { isActive: boolean }) => (
+                                <div
+                                  className={`group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] transition-all ${
+                                    isActive
+                                      ? "bg-[var(--primary-fill)] text-[var(--primary-text)]"
+                                      : "text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--ink-1)]"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 truncate">
+                                    <Users size={18} className="shrink-0" />
+                                    <span className="text-sm font-medium truncate leading-tight">
+                                      {item.name}
+                                    </span>
+                                  </div>
+
+                                  <div
+                                    title={
+                                      item.privacy === "PUBLIC"
+                                        ? "Cộng đồng"
+                                        : "Nhóm kín"
+                                    }
+                                  >
+                                    {item.privacy === "PUBLIC" ? (
+                                      <Globe
+                                        size={12}
+                                        className={
+                                          isActive
+                                            ? "text-[var(--primary-text)] opacity-80"
+                                            : "text-[var(--green-text)] opacity-60"
+                                        }
+                                      />
+                                    ) : (
+                                      <Lock
+                                        size={12}
+                                        className={
+                                          isActive
+                                            ? "text-[var(--primary-text)] opacity-80"
+                                            : "text-[var(--amber-text)] opacity-80"
+                                        }
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </NavLink>
+                          )}
+                        </li>
+                      );
+                    })
+                  ) : (
+                    <li className="px-10 py-4 text-xs text-[var(--ink-3)] opacity-80 italic">
+                      Chưa tham gia lớp nào
+                    </li>
+                  )}
+                </ul>
               )}
             </div>
+          )}
 
-            {isRegisteredOpen && (
-              <ul className="mt-1 flex flex-col gap-0.5">
-                {/* DANH SÁCH LỚP HỌC TRONG SIDEBAR */}
-                {isLoading ? (
-                  <li className="px-10 py-3">
-                    <div className="skeleton h-4 w-full opacity-20 rounded-md"></div>
-                  </li>
-                ) : myClasses.length > 0 ? (
-                  myClasses.map((item) => {
-                    // 1. KIỂM TRA TRẠNG THÁI: Lớp này học sinh đã được duyệt chưa?
-                    const isPending = item.status !== "JOINED";
-
-                    return (
-                      <li key={item.id}>
-                        {isPending ? (
-                          // 2. NẾU CHƯA DUYỆT: Hiện thẻ div mờ nhạt, gắn sự kiện onClick mở Toast
-                          <div
-                            onClick={handlePendingClick}
-                            className="group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] text-[var(--ink-3)] opacity-60 cursor-pointer hover:bg-[var(--bg-surface-2)] transition-all bg-[var(--bg-surface-2)]/50"
-                            title="Lớp đang chờ giáo viên duyệt"
-                          >
-                            <div className="flex items-center gap-3 truncate">
-                              <Users size={18} className="shrink-0" />
-                              <span className="text-sm font-medium truncate leading-tight">
-                                {item.name}
-                              </span>
-                            </div>
-                            {/* Icon ổ khóa báo hiệu bị khóa */}
-                            <Lock
-                              size={12}
-                              className="text-[var(--amber-text)] opacity-80"
-                            />
-                          </div>
-                        ) : (
-                          // 3. NẾU ĐÃ DUYỆT: Trả về NavLink bình thường
-                          <NavLink to={`/class/${item.id}/diagram`}>
-                            {({ isActive }: { isActive: boolean }) => (
-                              <div
-                                className={`group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] transition-all ${
-                                  isActive
-                                    ? "bg-[var(--primary-fill)] text-[var(--primary-text)]"
-                                    : "text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--ink-1)]"
-                                }`}
-                              >
-                                <div className="flex items-center gap-3 truncate">
-                                  <Users size={18} className="shrink-0" />
-                                  <span className="text-sm font-medium truncate leading-tight">
-                                    {item.name}
-                                  </span>
-                                </div>
-
-                                <div
-                                  title={
-                                    item.privacy === "PUBLIC"
-                                      ? "Cộng đồng"
-                                      : "Nhóm kín"
-                                  }
-                                >
-                                  {item.privacy === "PUBLIC" ? (
-                                    <Globe
-                                      size={12}
-                                      className={
-                                        isActive
-                                          ? "text-[var(--primary-text)] opacity-80"
-                                          : "text-[var(--green-text)] opacity-60"
-                                      }
-                                    />
-                                  ) : (
-                                    <Lock
-                                      size={12}
-                                      className={
-                                        isActive
-                                          ? "text-[var(--primary-text)] opacity-80"
-                                          : "text-[var(--amber-text)] opacity-80"
-                                      }
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </NavLink>
-                        )}
-                      </li>
-                    );
-                  })
-                ) : (
-                  <li className="px-10 py-4 text-xs text-[var(--ink-3)] opacity-80 italic">
-                    Chưa tham gia lớp nào
-                  </li>
+          {/* Menu Yêu thích */}
+          <NavLink to="/favorites">
+            {({ isActive }: { isActive: boolean }) => (
+              <div
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--r-xl)] transition-all font-medium mt-1 ${
+                  isActive
+                    ? "bg-[var(--primary-fill)] text-[var(--primary-text)]"
+                    : "text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--ink-1)]"
+                }`}
+              >
+                <Heart size={20} className="shrink-0" />
+                <span>Yêu thích</span>
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--primary-text)]"></span>
                 )}
-              </ul>
+              </div>
             )}
-          </div>
+          </NavLink>
+
+          {/* Menu Hồ sơ cá nhân */}
+          <NavLink to="/profile">
+            {({ isActive }: { isActive: boolean }) => (
+              <div
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--r-xl)] transition-all font-medium mt-1 ${
+                  isActive
+                    ? "bg-[var(--primary-fill)] text-[var(--primary-text)]"
+                    : "text-[var(--ink-2)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--ink-1)]"
+                }`}
+              >
+                <User size={20} className="shrink-0" />
+                <span>Hồ sơ cá nhân</span>
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--primary-text)]"></span>
+                )}
+              </div>
+            )}
+          </NavLink>
         </nav>
       </aside>
     </>
