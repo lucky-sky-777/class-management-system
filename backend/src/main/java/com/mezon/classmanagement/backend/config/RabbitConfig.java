@@ -1,6 +1,10 @@
 package com.mezon.classmanagement.backend.config;
 
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +16,24 @@ public class RabbitConfig {
 	@Bean
 	Queue queue() {
 		return new Queue(FILE_QUEUE, true);
+	}
+
+	@Bean
+	public MessageConverter messageConverter() {
+		return new JacksonJsonMessageConverter();
+	}
+
+	@Bean
+	public RabbitTemplate rabbitTemplate(
+			ConnectionFactory connectionFactory,
+			MessageConverter messageConverter
+	) {
+		RabbitTemplate rabbitTemplate =
+				new RabbitTemplate(connectionFactory);
+
+		rabbitTemplate.setMessageConverter(messageConverter);
+
+		return rabbitTemplate;
 	}
 
 }
