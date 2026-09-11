@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthInternal } from '@features/auth/hooks/useAuthInternal';
-import { User, AtSign, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, AtSign, Lock, Eye, EyeOff, Mail, Image } from 'lucide-react';
 
 export const RegisterPage = () => {
     const [formData, setFormData] = useState({
         username: '',
         displayName: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        email: '',
+        avatarUrl: ''
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -19,14 +21,14 @@ export const RegisterPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLocalError(null);
-        if (!formData.username.trim() || !formData.displayName.trim()) return;
+        if (!formData.username.trim() || !formData.displayName.trim() || !formData.email.trim()) return;
         
         if (formData.password !== formData.confirmPassword) {
             setLocalError('Mật khẩu nhập lại không khớp');
             return;
         }
         
-        const success = await signup(formData.username, formData.password, formData.displayName);
+        const success = await signup(formData.username, formData.password, formData.displayName, formData.email, formData.avatarUrl);
         if (success) {
             navigate('/login');
         }
@@ -76,6 +78,35 @@ export const RegisterPage = () => {
                                 value={formData.username}
                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                 required
+                                className="focus:outline-none w-full bg-transparent text-ink-1"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="input-wrap flex flex-col gap-1.5">
+                        <label className="input-label">Email</label>
+                        <div className="input-field">
+                            <Mail size={16} className="text-ink-3" />
+                            <input
+                                type="email"
+                                placeholder="Ví dụ: example@domain.com"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                required
+                                className="focus:outline-none w-full bg-transparent text-ink-1"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="input-wrap flex flex-col gap-1.5">
+                        <label className="input-label">URL ảnh đại diện (Tùy chọn)</label>
+                        <div className="input-field">
+                            <Image size={16} className="text-ink-3" />
+                            <input
+                                type="url"
+                                placeholder="https://example.com/avatar.jpg"
+                                value={formData.avatarUrl}
+                                onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
                                 className="focus:outline-none w-full bg-transparent text-ink-1"
                             />
                         </div>

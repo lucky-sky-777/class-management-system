@@ -7,6 +7,8 @@ export interface RegisterRequest {
     username: string;
     display_name: string;
     password?: string;
+    email: string;
+    avatar_url?: string;
 }
 
 export interface AuthResponse {

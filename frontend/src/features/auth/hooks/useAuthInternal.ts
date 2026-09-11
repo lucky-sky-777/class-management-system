@@ -65,7 +65,7 @@ export const useAuthInternal = () => {
 
   // đăng kí
   const signup = useCallback(
-    async (username: string, password: string, displayname: string) => {
+    async (username: string, password: string, displayname: string, email: string, avatarUrl: string) => {
       setIsLoading(true);
       setError(null);
       try {
@@ -73,6 +73,8 @@ export const useAuthInternal = () => {
           username,
           password,
           display_name: displayname,
+          email,
+          avatar_url: avatarUrl,
         };
         const response = await authApi.signUp(data);
         if (response.success && response.data) {
@@ -83,7 +85,7 @@ export const useAuthInternal = () => {
             username: data.username,
             displayName: data.display_name,
             type: UserType.INTERNAL,
-            avatarUrl: "",
+            avatarUrl: data.avatar_url || "",
             joinedAt: new Date().toISOString(),
             token: authData.accessToken,
           };
