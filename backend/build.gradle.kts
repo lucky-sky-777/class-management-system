@@ -61,6 +61,10 @@ dependencies {
     implementation("commons-validator:commons-validator:1.10.1")
     implementation(files("libs/VnCoreNLP/VnCoreNLP-Gradle-1.2.jar"))
 
+    implementation("org.hibernate.orm:hibernate-vector")
+
+    //implementation("org.hibernate.orm:hibernate-vector:7.4.7.Final")
+
     //implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("io.projectreactor:reactor-test")
