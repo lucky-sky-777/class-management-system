@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
@@ -139,6 +141,10 @@ public class UserService {
 		}
 	}
 
+	@Transactional(readOnly = true)
+	public Optional<User> findByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
 
 
 }
