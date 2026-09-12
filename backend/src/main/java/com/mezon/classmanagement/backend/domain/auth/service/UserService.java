@@ -40,7 +40,7 @@ public class UserService {
 		throwIfExistsByUsername(request.getUsername());
 
 		User user = userMapper.toUser(request);
-		user.setHashedPassword(passwordEncoder.encode(request.getPassword()));
+		user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
 		return save(user);
 	}
@@ -49,7 +49,7 @@ public class UserService {
 	public void updatePassword(String username, String newPassword) {
 		User user = findByUsernameOrThrow(username);
 
-		user.setHashedPassword(passwordEncoder.encode(newPassword));
+		user.setPasswordHash(passwordEncoder.encode(newPassword));
 
 		save(user);
 	}

@@ -1,7 +1,11 @@
 package com.mezon.classmanagement.backend.domain.auth.entity;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
+import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector3072Converter;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -18,6 +22,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
@@ -59,9 +65,15 @@ public class User implements UserDetails {
 	@Column(name = "id", nullable = false)
 	Long id;
 
-	@Enumerated(EnumType.STRING)
+	@Enumerated(value = EnumType.STRING)
 	@Column(name = "provider", nullable = false)
 	Provider provider;
+
+	public enum Provider {
+		GOOGLE,
+		MEZON,
+		INTERNAL
+	}
 
 	@Column(name = "provider_id", nullable = true, unique = true)
 	String providerId;
@@ -69,8 +81,8 @@ public class User implements UserDetails {
 	@Column(name = "username", nullable = false, unique = true)
 	String username;
 
-	@Column(name = "hashed_password", nullable = true)
-	String hashedPassword;
+	@Column(name = "password_hash", nullable = true)
+	String passwordHash;
 
 	@Column(name = "display_name", nullable = true)
 	String displayName;
@@ -84,19 +96,37 @@ public class User implements UserDetails {
 	@Column(name = "email", nullable = true)
 	String email;
 
+	@Enumerated(value = EnumType.STRING)
+	@Column(name = "status", nullable = false)
+	Status status;
+
+	public enum Status {
+		NORMAL,
+		WARNING,
+		BANNED
+	}
+
+	@Column(name = "school", nullable = true)
+	String school;
+
+	@Column(name = "major", nullable = true)
+	String major;
+
+	@JdbcTypeCode(value = SqlTypes.VECTOR)
+	@Convert(converter = Vector1536Converter.class)
+	@Column(name = "embedding", columnDefinition = "vector(1536)", nullable = false)
+	Vector1536 embedding;
+
 	@Column(name = "joined_at", nullable = false, insertable = false, updatable = false)
 	Instant joinedAt;
-
-	public enum Provider {
-		GOOGLE,
-		MEZON,
-		INTERNAL
-	}
 
 	@PrePersist
 	public void prePersist() {
 		if (provider == null) {
 			provider = Provider.INTERNAL;
+		}
+		if (status == null) {
+			status = Status.NORMAL;
 		}
 	}
 
@@ -108,7 +138,7 @@ public class User implements UserDetails {
 
 	@Override
 	public @Nullable String getPassword() {
-		return this.hashedPassword;
+		return this.passwordHash;
 	}
 
 	@Override

@@ -1,0 +1,22 @@
+package com.mezon.classmanagement.backend.domain.deprecated.groupuser.mapper;
+
+import com.mezon.classmanagement.backend.config.MapStructConfig;
+import com.mezon.classmanagement.backend.domain.deprecated.groupuser.dto.request.UpdateGroupUserRoleRequestDto;
+import com.mezon.classmanagement.backend.domain.deprecated.groupuser.dto.response.GroupUserResponseDto;
+import com.mezon.classmanagement.backend.domain.deprecated.groupuser.entity.GroupUser;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
+@Mapper(config = MapStructConfig.class)
+public interface GroupUserMapper {
+	@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+	void updateGroupUserFromRequestDto(UpdateGroupUserRoleRequestDto updateGroupUserRoleRequestDto, @MappingTarget GroupUser groupUser);
+
+	@Mapping(source = "clazz.id", target = "classId")
+	@Mapping(source = "group.id", target = "groupId")
+	@Mapping(source = "user.id", target = "userId")
+	GroupUserResponseDto toGroupUserResponseDto(GroupUser groupUser);
+}
