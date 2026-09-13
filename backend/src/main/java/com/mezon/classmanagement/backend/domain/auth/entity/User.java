@@ -128,6 +128,9 @@ public class User implements UserDetails {
 		if (status == null) {
 			status = Status.NORMAL;
 		}
+		if (embedding == null) {
+			embedding = new Vector1536(new float[Vector1536.DIMENSION]);
+		}
 	}
 
 	@NullMarked

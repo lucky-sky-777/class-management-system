@@ -1,15 +1,15 @@
-package com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity;
+package com.mezon.classmanagement.backend.domain_document.main.tag.document_tag.entity;
 
-import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
+import com.mezon.classmanagement.backend.domain_document.main.tag.tag.entity.Tag;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -20,8 +20,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
+
+import java.time.Instant;
 
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -31,9 +31,16 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-		name = "document_chunks"
+		name = "document_tags",
+		indexes = {
+				@Index(
+						name = "unique_index_document_tags_document_id_tag_id",
+						columnList = "document_id, tag_id",
+						unique = true
+				)
+		}
 )
-public class DocumentChunk {
+public class DocumentTag {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,15 +51,11 @@ public class DocumentChunk {
 	@JoinColumn(name = "document_id", nullable = false)
 	Document document;
 
-	@Column(name = "index", nullable = false)
-	Short index;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "tag_id", nullable = false)
+	Tag tag;
 
-	@Column(name = "content", nullable = false)
-	String content;
-
-	@JdbcTypeCode(value = SqlTypes.VECTOR)
-	@Convert(converter = Vector1536Converter.class)
-	@Column(name = "embedding", columnDefinition = "vector(1536)", nullable = false)
-	Vector1536 embedding;
+	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
+	Instant createdAt;
 
 }

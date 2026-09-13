@@ -1,9 +1,13 @@
 package com.mezon.classmanagement.backend.domain.auth.service;
 
+import com.mezon.classmanagement.backend.common.constant.ForgotPasswordConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend.common.util.EmailService;
 import com.mezon.classmanagement.backend.domain.auth.dto.changepassword.ChangePasswordRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.forgotpassword.ForgotPasswordRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.forgotpassword.ResetPasswordRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
@@ -44,6 +48,9 @@ public class AuthService {
 	JwtService jwtService;
 	InvalidatedAccessTokenService invalidatedAccessTokenService;
 	RefreshTokenService refreshTokenService;
+	PasswordResetTokenService passwordResetTokenService;
+	EmailService emailService;
+	ForgotPasswordConstant forgotPasswordConstant;
 
 	/**
 	 * SignIn
@@ -231,6 +238,27 @@ public class AuthService {
 		}
 
 		userService.updatePassword(username, request.getNewPassword());
+	}
+
+	public void forgotPassword(ForgotPasswordRequestDto request) {
+		User user = userService.findByEmail(request.getEmail())
+				.orElseThrow(() -> new GlobalException(
+						GlobalException.Type.NOT_FOUND,
+						"Email chưa được đăng ký tài khoản"
+				));
+
+		String otp = passwordResetTokenService.createOtp(user.getId());
+		emailService.sendOtpEmail(user.getEmail(), otp, forgotPasswordConstant.OTP_EXPIRY_MINUTES);
+	}
+
+	@Transactional
+	public void resetPassword(ResetPasswordRequestDto request) {
+		User user = userService.findByEmail(request.getEmail())
+				.orElseThrow(() -> new GlobalException(GlobalException.Type.INVALID_REQUEST, "Mã xác nhận không hợp lệ"));
+
+		passwordResetTokenService.verifyAndConsume(user.getId(), request.getCode());
+
+		userService.updatePassword(user.getUsername(), request.getNewPassword());
 	}
 
 	/*
