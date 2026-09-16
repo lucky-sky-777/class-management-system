@@ -5,6 +5,7 @@ import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
 import com.mezon.classmanagement.backend.domain.auth.repository.UserRepository;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.Vector;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,15 @@ public class UserService {
 		User user = findByUsernameOrThrow(username);
 
 		user.setPasswordHash(passwordEncoder.encode(newPassword));
+
+		save(user);
+	}
+
+	@Transactional
+	public void updateEmbedding(String username, Vector1536 embedding) {
+		User user = findByUsernameOrThrow(username);
+
+		user.setEmbedding(embedding);
 
 		save(user);
 	}

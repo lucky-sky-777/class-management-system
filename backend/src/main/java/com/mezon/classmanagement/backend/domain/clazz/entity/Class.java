@@ -99,7 +99,7 @@ public class Class {
 			privacy = Privacy.PRIVATE;
 		}
 		if (embedding == null) {
-			embedding = new Vector1536(new float[Vector1536.DIMENSION]);
+			embedding = new Vector1536();
 		}
 	}
 

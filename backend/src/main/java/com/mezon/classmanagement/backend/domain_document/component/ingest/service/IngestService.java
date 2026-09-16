@@ -3,7 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.component.ingest.servi
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
 import com.mezon.classmanagement.backend.domain_document.rabbitmq.FileProducer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

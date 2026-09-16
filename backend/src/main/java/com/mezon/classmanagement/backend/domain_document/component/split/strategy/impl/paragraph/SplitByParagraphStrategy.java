@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl;
+package com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph;
 
 import com.mezon.classmanagement.backend.config.SplitConfig;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.SplitStrategy;

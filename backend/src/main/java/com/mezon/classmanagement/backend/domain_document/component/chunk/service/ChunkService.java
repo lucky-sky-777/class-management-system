@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.common.util.GeminiPromptBuilder;
 import com.mezon.classmanagement.backend.domain_document.component.split.service.SplitService;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.SplitStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphWithoutOverlapStrategy;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.Metadata;
@@ -31,6 +32,7 @@ import java.util.List;
 public class ChunkService {
 
 	SplitService splitService;
+	SplitByParagraphWithoutOverlapStrategy splitByParagraphWithoutOverlapStrategy;
 
 	public List<String> getChunkListFromFile(
 			File file,
@@ -62,6 +64,12 @@ public class ChunkService {
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
 		}
+	}
+
+	public List<String> getChunkListFromFilePathWithoutOverlap(
+			String filePath
+	) {
+		return getChunkListFromFilePath(filePath, splitByParagraphWithoutOverlapStrategy);
 	}
 
 	public List<String> getChunkListFromFilePath(

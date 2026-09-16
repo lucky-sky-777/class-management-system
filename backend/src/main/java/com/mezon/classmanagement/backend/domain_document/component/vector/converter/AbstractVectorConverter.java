@@ -1,11 +1,11 @@
 package com.mezon.classmanagement.backend.domain_document.component.vector.converter;
 
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.Vector;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 @Converter
-public abstract class AbstractVectorConverter<T extends Vector> implements AttributeConverter<T, float[]> {
+public abstract class AbstractVectorConverter<T extends BaseVector> implements AttributeConverter<T, float[]> {
 
 	@Override
 	public float[] convertToDatabaseColumn(T attribute) {
@@ -24,9 +24,9 @@ public abstract class AbstractVectorConverter<T extends Vector> implements Attri
 			return null;
 		}
 
-		return createVector(dbData);
+		return create(dbData);
 	}
 
-	protected abstract T createVector(float[] values);
+	protected abstract T create(float[] values);
 
 }

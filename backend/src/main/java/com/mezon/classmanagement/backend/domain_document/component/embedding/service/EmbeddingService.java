@@ -13,6 +13,7 @@ import com.mezon.classmanagement.backend.domain_document.component.embedding.dto
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.response.EmbeddingData;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.response.EmbeddingResponse;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.Vector;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector3072;
 
 import lombok.AccessLevel;
@@ -47,6 +48,10 @@ public class EmbeddingService {
 		return vector.toString();
 	}
 
+	public String toVectorString(Vector1536 vector) {
+		return vector.toString();
+	}
+
 	public float[] convertListToArray(List<Float> floatList) {
 		float[] floatArray = new float[floatList.size()];
 
@@ -57,7 +62,7 @@ public class EmbeddingService {
 		return floatArray;
 	}
 
-	public Vector3072 embedSingleMedia(byte[] mediaBytes, String mimeType) throws Exception {
+	public Vector1536 embedSingleMedia(byte[] mediaBytes, String mimeType) throws Exception {
 		String base64Data = Base64.getEncoder().encodeToString(mediaBytes);
 
 		GeminiMediaEmbeddingRequest request = new GeminiMediaEmbeddingRequest(
@@ -78,7 +83,7 @@ public class EmbeddingService {
 		return send(jsonBody);
 	}
 
-	public Vector embedSingleMedia(MultipartFile file) throws Exception {
+	public Vector1536 embedSingleMedia(MultipartFile file) throws Exception {
 		byte[] fileBytes = file.getBytes();
 
 		return embedSingleMedia(
@@ -121,19 +126,19 @@ public class EmbeddingService {
 	 * Text
 	 */
 
-	public Vector3072 embedSingleQueryText(String content) throws Exception {
+	public Vector1536 embedSingleQueryText(String content) throws Exception {
 		String prompt = GeminiPromptBuilder.buildQueryPrompt(content);
 
 		return embedSingleText(prompt);
 	}
 
-	public Vector3072 embedSingleDocumentText(String title, String content) throws Exception {
+	public Vector1536 embedSingleDocumentText(String title, String content) throws Exception {
 		String prompt = GeminiPromptBuilder.buildDocumentPrompt(title, content);
 
 		return embedSingleText(prompt);
 	}
 
-	private Vector3072 embedSingleText(String prompt) throws Exception {
+	private Vector1536 embedSingleText(String prompt) throws Exception {
 		GeminiTextEmbeddingRequest request = new GeminiTextEmbeddingRequest(
 				GeminiConstant.Model.GEMINI_EMBEDDING_2.getName(),
 				new GeminiTextEmbeddingRequest.Content(
@@ -244,7 +249,7 @@ public class EmbeddingService {
 //	private static final String MODEL_NAME = "models/gemini-embedding-2";
 
 
-	private Vector3072 send(String json) throws Exception {
+	private Vector1536 send(String json) throws Exception {
 		HttpRequest request = buildRequest(
 				geminiEnv.apiUrl,
 				geminiEnv.apiKey,
@@ -255,7 +260,7 @@ public class EmbeddingService {
 
 		if (response.statusCode() == 200) {
 			EmbeddingResponse embedResponse = objectMapper.readValue(response.body(), EmbeddingResponse.class);
-			return new Vector3072(convertListToArray(embedResponse.embedding().values()));
+			return new Vector1536(convertListToArray(embedResponse.embedding().values()));
 		}
 
 		throw new RuntimeException(response.body());

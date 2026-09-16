@@ -6,8 +6,8 @@ import com.mezon.classmanagement.backend.common.validator.FileValidator;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.service.IngestService;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByParagraphStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector3072;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.TextRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RestController
 @RequestMapping("/api/documents")
+@RestController
 public class DocumentController {
 
 	IngestService ingestService;
@@ -66,7 +66,7 @@ public class DocumentController {
 	public void embed(
 			@RequestParam String text
 	) throws Exception {
-		Vector3072 vector3072 = embeddingService.embedSingleQueryText(text);
+		Vector1536 vector3072 = embeddingService.embedSingleQueryText(text);
 
 		System.out.println(embeddingService.toVectorString(vector3072));
 	}
