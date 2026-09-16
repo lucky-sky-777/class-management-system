@@ -98,6 +98,9 @@ public class Class {
 		if (privacy == null) {
 			privacy = Privacy.PRIVATE;
 		}
+		if (embedding == null) {
+			embedding = new Vector1536(new float[Vector1536.DIMENSION]);
+		}
 	}
 
 	public static Class create(Long id) {
