@@ -14,6 +14,7 @@ import { MemberPage } from "@features/member/pages/MemberPage";
 import { EmptyLayout } from "@shared/components/layout/EmptyLayout";
 import { ChangePasswordPage } from "@features/auth/pages/ChangePasswordPage";
 import { HomePageNew } from "@features/homePageNew/pages/HomePageNew";
+import { DocumentPage } from "@features/document/pages/DocumentPage";
 
 /**
  * Global application router configuration using React Router
@@ -118,6 +119,13 @@ export const router = createBrowserRouter([
                         element: <ActivityPage />,
                         handle: {
                             title: "Hoạt động"
+                        }
+                    },
+                    {
+                        path: "document",
+                        element: <DocumentPage/>,
+                        handle: {
+                            title: "Tài liệu"
                         }
                     },
                     {
