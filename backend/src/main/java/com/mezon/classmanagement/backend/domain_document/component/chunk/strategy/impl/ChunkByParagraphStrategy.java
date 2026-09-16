@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain_document.component.chunk.strate
 
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.ChunkStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

@@ -21,6 +21,9 @@ import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.GoogleUser;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.MezonUser;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthUser;
+import com.mezon.classmanagement.backend.domain_document.component.async.service.AsyncService;
+import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
+import dev.langchain4j.data.embedding.Embedding;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -51,6 +54,8 @@ public class AuthService {
 	PasswordResetTokenService passwordResetTokenService;
 	EmailService emailService;
 	ForgotPasswordConstant forgotPasswordConstant;
+	AsyncService asyncService;
+	EmbeddingService embeddingService;
 
 	/**
 	 * SignIn
@@ -138,6 +143,10 @@ public class AuthService {
 
 	private SignUpResponseDto signUp(SignUpRequestDto request) {
 		User newUser = userService.createUser(request);
+
+		try {
+			asyncService.updateUserEmbedding(newUser.getUsername(), embeddingService.embedSingleDocumentText("User Info", "haha"));
+		} catch (Exception e) {}
 
 		return SignUpResponseDto.builder()
 				.userId(newUser.getId())

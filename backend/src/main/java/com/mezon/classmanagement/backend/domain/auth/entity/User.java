@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector3072Converter;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector3072;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -129,7 +130,7 @@ public class User implements UserDetails {
 			status = Status.NORMAL;
 		}
 		if (embedding == null) {
-			embedding = new Vector1536(new float[Vector1536.DIMENSION]);
+			embedding = new Vector1536();
 		}
 	}
 
