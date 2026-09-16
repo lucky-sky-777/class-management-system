@@ -51,6 +51,80 @@ export const useClassDocuments = () => {
     }
   };
 
+  const handleCreateFolder = async (folderName: string) => {
+    try {
+      const newFolder = await classDocumentsAPI.createFolder(folderName);
+      // Nối thư mục mới vào mảng thư mục hiện tại
+      setFolders((prevFolders) => [...prevFolders, newFolder]);
+    } catch (error) {
+      console.error("Lỗi khi tạo thư mục:", error);
+    }
+  };
+
+  const handleRenameFolder = async (id: string | number, newName: string) => {
+    try {
+      await classDocumentsAPI.renameFolder(id, newName);
+      
+      // 1. Cập nhật tên trong danh sách thư mục ngoài màn hình Gốc
+      setFolders((prevFolders) => 
+        prevFolders.map((folder) => 
+          folder.id === id ? { ...folder, name: newName } : folder
+        )
+      );
+
+      // 2. Nếu đang đứng BÊN TRONG thư mục đó thì cập nhật luôn Breadcrumbs
+      if (currentFolder?.id === id) {
+        setCurrentFolder((prev) => prev ? { ...prev, name: newName } : null);
+      }
+    } catch (error) {
+      console.error("Lỗi khi sửa tên thư mục:", error);
+    }
+  };
+
+  const handleDeleteFolder = async (id: string | number) => {
+    try {
+      await classDocumentsAPI.deleteFolder(id);
+      
+      // Xóa thư mục khỏi danh sách hiện tại
+      setFolders((prevFolders) => prevFolders.filter((folder) => folder.id !== id));
+
+      // Nếu người dùng bằng cách nào đó đang ở trong thư mục bị xóa, đẩy họ ra ngoài Gốc
+      if (currentFolder?.id === id) {
+        handleGoToRoot();
+      }
+    } catch (error) {
+      console.error("Lỗi khi xóa thư mục:", error);
+    }
+  };
+
+  const handleRenameFile = async (id: string | number, newName: string) => {
+    try {
+      await classDocumentsAPI.renameFile(id, newName);
+      
+      const updateFiles = (prevFiles: FileItem[]) => 
+        prevFiles.map(file => file.id === id ? { ...file, name: newName } : file);
+        
+      setRecentFiles(updateFiles);
+      setFolderFiles(updateFiles);
+    } catch (error) {
+      console.error("Lỗi khi đổi tên file:", error);
+    }
+  };
+
+  const handleDeleteFile = async (id: string | number) => {
+    try {
+      await classDocumentsAPI.deleteFile(id);
+      
+      const filterFiles = (prevFiles: FileItem[]) => 
+        prevFiles.filter(file => file.id !== id);
+        
+      setRecentFiles(filterFiles);
+      setFolderFiles(filterFiles);
+    } catch (error) {
+      console.error("Lỗi khi xóa file:", error);
+    }
+  };
+
   // Trở về thư mục gốc
   const handleGoToRoot = () => {
     setCurrentFolder(null);
@@ -70,7 +144,11 @@ export const useClassDocuments = () => {
     isFolderLoading,
     handleOpenFolder,
     handleGoToRoot,
-    
+    handleCreateFolder,
     handleSearch,
+    handleRenameFolder,
+    handleDeleteFolder,
+    handleDeleteFile,
+    handleRenameFile
   };
 };

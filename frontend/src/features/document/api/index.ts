@@ -1,4 +1,4 @@
-import type { FolderItem, FileItem } from "../types";
+import type { FolderItem, FileItem } from "@features/document/types";
 
 export const classDocumentsAPI = {
   getFolders: async (): Promise<FolderItem[]> => {
@@ -44,5 +44,32 @@ export const classDocumentsAPI = {
       { id: 103, name: "Slide bài giảng.pptx", size: "15 MB", uploader: "Giáo viên", fileExtension: "pptx" },
       { id: 104, name: "Source code tham khảo.zip", size: "45 MB", uploader: "Giáo viên", fileExtension: "zip" },
     ];
+  },
+
+  createFolder: async (name: string): Promise<FolderItem> => {
+    await new Promise((resolve) => setTimeout(resolve, 400)); // Giả lập mạng
+    return {
+      id: Date.now(), // Sinh ID ngẫu nhiên tạm thời
+      name: name,
+      itemCount: 0, 
+    };
+  },
+
+  renameFolder: async (id: string | number, newName: string): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 300)); // Giả lập mạng
+    // Thực tế sẽ gọi axios.put(...) ở đây
+  },
+
+  deleteFolder: async (id: string | number): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 300)); // Giả lập gọi mạng
+    // Thực tế sẽ gọi axios.delete(...)
+  },
+
+  renameFile: async (id: string | number, newName: string): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  },
+  
+  deleteFile: async (id: string | number): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 300));
   },
 };
