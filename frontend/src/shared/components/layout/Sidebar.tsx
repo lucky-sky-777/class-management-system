@@ -162,7 +162,7 @@ export const Sidebar = () => {
                               />
                             </div>
                           ) : (
-                            <NavLink to={`/class/${item.id}/diagram`}>
+                            <NavLink to={`/class/${item.id}/document`}>
                               {({ isActive }: { isActive: boolean }) => (
                                 <div
                                   className={`group flex items-center justify-between px-3 py-2.5 rounded-[var(--r-xl)] transition-all ${
