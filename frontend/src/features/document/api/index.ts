@@ -46,6 +46,24 @@ export const classDocumentsAPI = {
     ];
   },
 
+  getFileDetail: async (fileId: string | number): Promise<FileItem> => {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return {
+      id: fileId,
+      name: "NCKHSV 26-27.pdf",
+      size: "7.1 MB",
+      uploader: "Phong Hào",
+      uploadDate: "20/07/2026",
+      fileExtension: "pdf",
+      downloads: 125,
+      likes: 10,
+      description: "Tài liệu nghiên cứu khoa học sinh viên năm học 2026 - 2027. Đề tài Xây dựng nền tảng chia sẻ tài liệu và học nhóm sinh viên",
+      tags: ["NCKHSV 26-27", "QNU"],
+      isLiked: false,
+      fileUrl: "https://pdfobject.com/pdf/sample-3pp.pdf",
+    };
+  },
+
   createFolder: async (name: string): Promise<FolderItem> => {
     await new Promise((resolve) => setTimeout(resolve, 400)); // Giả lập mạng
     return {

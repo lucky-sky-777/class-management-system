@@ -137,7 +137,7 @@ export const HomePage = () => {
 
   const handleClassClick = (item: ClassItems) => {
     if (item.status === ClassStatus.JOINED) {
-      navigate(`/class/${item.id}/diagram`);
+      navigate(`/class/${item.id}/document`);
       return;
     }
     showToast("Yêu cầu tham gia của bạn đang chờ chủ nhóm duyệt.", ToastType.WARNING);
