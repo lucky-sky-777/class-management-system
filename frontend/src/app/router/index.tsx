@@ -15,7 +15,8 @@ import { EmptyLayout } from "@shared/components/layout/EmptyLayout";
 import { ChangePasswordPage } from "@features/auth/pages/ChangePasswordPage";
 import { HomePageNew } from "@features/homePageNew/pages/HomePageNew";
 import { DocumentPage } from "@features/document/pages/DocumentPage";
-
+import { ProfilePage } from "@features/profile/pages/ProfilePage";
+import { FavoritePage } from "@features/favorite/pages/FavoritePage";
 /**
  * Global application router configuration using React Router
  */
@@ -73,8 +74,20 @@ export const router = createBrowserRouter([
         path: "groups",
         element: <HomePage />, //nhóm học (lớp học)
         handle: {
-          title: "Trang chủ",
+          title: "Nhóm học",
         },
+      },
+      {
+        path: "favorites",
+        element: <FavoritePage />,
+        handle: {
+          title: "Yêu thích",
+        },
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
+        handle: { title: "Hồ sơ cá nhân" },
       },
       {
         path: "change-password",
