@@ -24,7 +24,6 @@ val springCloudVersion by extra("2025.1.2")
 
 dependencies {
 
-
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -50,6 +49,9 @@ dependencies {
     //implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
     implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.17.1-beta27")
 
+    implementation("io.minio:minio:9.0.3")
+    implementation("software.amazon.awssdk:s3:2.55.6")
+
     implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc")
@@ -60,6 +62,10 @@ dependencies {
     implementation("org.apache.lucene:lucene-analysis-common:10.5.0")
     implementation("commons-validator:commons-validator:1.10.1")
     implementation(files("libs/VnCoreNLP/VnCoreNLP-Gradle-1.2.jar"))
+
+    implementation("org.hibernate.orm:hibernate-vector")
+
+    //implementation("org.hibernate.orm:hibernate-vector:7.4.7.Final")
 
     //implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     testImplementation("org.springframework.security:spring-security-test")
@@ -76,6 +82,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     runtimeOnly("org.postgresql:postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 }
 dependencyManagement {
     imports {

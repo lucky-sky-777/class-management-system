@@ -6,7 +6,7 @@ import com.mezon.classmanagement.backend.domain_document.component.vector.entity
 public class Vector3072Converter extends AbstractVectorConverter<Vector3072> {
 
 	@Override
-	protected Vector3072 createVector(float[] values) {
+	protected Vector3072 create(float[] values) {
 		return new Vector3072(values);
 	}
 

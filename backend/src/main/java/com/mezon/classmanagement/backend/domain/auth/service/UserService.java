@@ -5,12 +5,16 @@ import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
 import com.mezon.classmanagement.backend.domain.auth.repository.UserRepository;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.Vector;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -50,6 +54,15 @@ public class UserService {
 		User user = findByUsernameOrThrow(username);
 
 		user.setPasswordHash(passwordEncoder.encode(newPassword));
+
+		save(user);
+	}
+
+	@Transactional
+	public void updateEmbedding(String username, Vector1536 embedding) {
+		User user = findByUsernameOrThrow(username);
+
+		user.setEmbedding(embedding);
 
 		save(user);
 	}
@@ -138,6 +151,10 @@ public class UserService {
 		}
 	}
 
+	@Transactional(readOnly = true)
+	public Optional<User> findByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
 
 
 }

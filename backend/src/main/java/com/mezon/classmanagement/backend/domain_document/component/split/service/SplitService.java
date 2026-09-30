@@ -1,12 +1,14 @@
 package com.mezon.classmanagement.backend.domain_document.component.split.service;
 
+import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.SplitStrategy;
-import dev.langchain4j.data.document.DocumentSplitter;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -14,16 +16,20 @@ import java.util.Map;
 @Service
 public class SplitService {
 
-	Map<String, SplitStrategy> strategies;
+	Map<String, SplitStrategy> splitStrategyMap;
 
-	public DocumentSplitter getSplitter(SplitStrategy splitStrategy) {
-		SplitStrategy strategy = strategies.getOrDefault(splitStrategy.getName(), null);
+	public List<String> getChunkList(SplitStrategy splitStrategy, DocumentSource documentSource) {
+		SplitStrategy strategy = splitStrategyMap.getOrDefault(splitStrategy.getName(), null);
 
 		if (strategy == null) {
-			throw new RuntimeException("Splitter không được hỗ trợ");
+			throw new RuntimeException("SplitStrategy không được hỗ trợ");
 		}
 
-		return strategy.getSplitter();
+		try {
+			return strategy.getTextList(documentSource);
+		} catch (Exception e) {
+			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
 	}
 
 }

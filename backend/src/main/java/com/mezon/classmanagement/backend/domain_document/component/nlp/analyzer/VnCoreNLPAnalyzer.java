@@ -11,18 +11,21 @@ import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.springframework.stereotype.Component;
+import vn.pipeline.VnCoreNLP;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Component
 public class VnCoreNLPAnalyzer extends Analyzer {
 
-	VnCoreNLPTokenizer vnCoreNLPTokenizer;
+	VnCoreNLP vnCoreNLP;
 
 	CharArraySet VIETNAMESE_STOP_WORDS;
 
 	@Override
 	protected TokenStreamComponents createComponents(String fieldName) {
+		VnCoreNLPTokenizer vnCoreNLPTokenizer = new VnCoreNLPTokenizer(vnCoreNLP);
+
 		TokenStream filter = new LowerCaseFilter(vnCoreNLPTokenizer);
 
 		filter = new UrlFilter(filter);

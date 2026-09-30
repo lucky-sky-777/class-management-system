@@ -1,19 +1,18 @@
-package com.mezon.classmanagement.backend;
+package com.mezon.classmanagement.backend.chunking;
 
-import com.mezon.classmanagement.backend.common.constant.FileConstant;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByAllStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByLineStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByParagraphStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitBySentenceStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByWordStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphWithoutOverlapStrategy;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -23,11 +22,8 @@ public class DocumentChunkingTest {
 
 	ChunkService chunkService;
 
-	SplitByAllStrategy splitByAllStrategy;
 	SplitByParagraphStrategy splitByParagraphStrategy;
-	SplitByLineStrategy splitByLineStrategy;
-	SplitBySentenceStrategy splitBySentenceStrategy;
-	SplitByWordStrategy splitByWordStrategy;
+	SplitByParagraphWithoutOverlapStrategy splitByParagraphWithoutOverlapStrategy;
 
 //	@Test
 //	public void testToken() {
@@ -40,19 +36,33 @@ public class DocumentChunkingTest {
 //		list.forEach(System.out::println);
 //	}
 
+//	@Test
+//	public void testParagraph() {
+//		List<String> list = chunkService.getChunkListFromFilePath(
+//				"src/main/resources/triethocmaclenin.docx",
+//				splitByParagraphStrategy
+//		);
+//		System.out.println("begin with overlap");
+//		list.forEach(System.out::println);
+//		System.out.println("end with overlap");
+//	}
+
 	/**
 	 * Nên dùng cái này
 	 */
 	@Test
-	public void testParagraph() {
-		List<String> list = chunkService.getChunkListFromFilePath(
-				"src/main/resources/The-gioi-5000-nam-nhung-dieu-bi-an.pdf",
-				splitByParagraphStrategy
+	public void testParagraphWithoutOverlap() throws IOException {
+		ClassPathResource classPathResource = new ClassPathResource("triethocmaclenin.docx");
+		MockMultipartFile multipartFile = new MockMultipartFile("triethocmaclenin.docx", classPathResource.getInputStream());
+
+		List<String> chunkList = chunkService.getChunkListFromMultipartFile(
+				multipartFile,
+				splitByParagraphWithoutOverlapStrategy
 		);
 
-		System.out.println(FileConstant.AllowedMimeType.TXT);
-		System.out.println("paragraph");
-		list.forEach(System.out::println);
+		System.out.println("begin without overlap");
+		chunkList.forEach(System.out::println);
+		System.out.println("end without overlap");
 	}
 
 //	@Test
