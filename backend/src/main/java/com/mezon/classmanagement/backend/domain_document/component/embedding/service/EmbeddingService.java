@@ -92,7 +92,7 @@ public class EmbeddingService {
 		);
 	}
 
-	public List<Vector3072> embedMultipleMedia(List<MultipartFile> multipartFileList) throws Exception {
+	public List<Vector1536> embedMultipleMedia(List<MultipartFile> multipartFileList) throws Exception {
 		List<GeminiBatchMediaEmbeddingRequest.Item> itemList = new ArrayList<>();
 
 		for (MultipartFile multipartFile : multipartFileList) {
@@ -147,7 +147,8 @@ public class EmbeddingService {
 										prompt
 								)
 						)
-				)
+				),
+				1536
 		);
 
 		String jsonBody = objectMapper.writeValueAsString(request);
@@ -155,7 +156,7 @@ public class EmbeddingService {
 		return send(jsonBody);
 	}
 
-	public List<Vector3072> embedMultipleQueryText(List<String> contentList) throws Exception {
+	public List<Vector1536> embedMultipleQueryText(List<String> contentList) throws Exception {
 		List<String> promptList = new ArrayList<>();
 
 		for (String content : contentList) {
@@ -167,7 +168,7 @@ public class EmbeddingService {
 		return embedMultipleText(promptList);
 	}
 
-	public List<Vector3072> embedMultipleDocumentText(List<Pair<String, String>> titleAndContentList) throws Exception {
+	public List<Vector1536> embedMultipleDocumentText(List<Pair<String, String>> titleAndContentList) throws Exception {
 		List<String> promptList = new ArrayList<>();
 
 		for (Pair<String, String> titleAndContent : titleAndContentList) {
@@ -182,9 +183,9 @@ public class EmbeddingService {
 		return embedMultipleText(promptList);
 	}
 
-	private List<Vector3072> embedMultipleText(List<String> promptList) throws Exception {
+	private List<Vector1536> embedMultipleText(List<String> promptList) throws Exception {
 
-		List<Vector3072> allVectors = new ArrayList<>();
+		List<Vector1536> allVectors = new ArrayList<>();
 
 		int totalChunks = promptList.size();
 
@@ -197,7 +198,7 @@ public class EmbeddingService {
 			GeminiBatchTextEmbeddingRequest batchRequestBody = new GeminiBatchTextEmbeddingRequest(itemList);
 			String jsonBody = objectMapper.writeValueAsString(batchRequestBody);
 
-			List<Vector3072> batchResult = sendBatch(jsonBody);
+			List<Vector1536> batchResult = sendBatch(jsonBody);
 
 			allVectors.addAll(batchResult);
 
@@ -222,7 +223,8 @@ public class EmbeddingService {
 													chunkText
 											)
 									)
-							)
+							),
+							1536
 					)
 			);
 		}
@@ -266,7 +268,7 @@ public class EmbeddingService {
 		throw new RuntimeException(response.body());
 	}
 
-	private List<Vector3072> sendBatch(String json) throws Exception {
+	private List<Vector1536> sendBatch(String json) throws Exception {
 		HttpRequest request = buildRequest(
 				geminiEnv.batchApiUrl,
 				geminiEnv.apiKey,
@@ -277,9 +279,9 @@ public class EmbeddingService {
 
 		if (response.statusCode() == 200) {
 			EmbeddingBatchResponse batchResponse = objectMapper.readValue(response.body(), EmbeddingBatchResponse.class);
-			List<Vector3072> vectorList = new ArrayList<>();
+			List<Vector1536> vectorList = new ArrayList<>();
 			for (EmbeddingData embeddingData : batchResponse.embeddings()) {
-				vectorList.add(new Vector3072(convertListToArray(embeddingData.values())));
+				vectorList.add(new Vector1536(convertListToArray(embeddingData.values())));
 			}
 			return vectorList;
 		}

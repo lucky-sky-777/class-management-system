@@ -1,6 +1,8 @@
 package com.mezon.classmanagement.backend.domain.auth.service;
 
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.user.request.UpdateUserRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
@@ -47,6 +49,17 @@ public class UserService {
 		user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
 		return save(user);
+	}
+
+	@Transactional
+	public UserResponseDto update(Long userId, UpdateUserRequestDto request) {
+		User currentUser = findByUserIdOrThrow(userId);
+
+		userMapper.updateUserFromRequestDto(request, currentUser);
+
+		User responseUser = save(currentUser);
+
+		return userMapper.toUserResponseDto(responseUser);
 	}
 
 	@Transactional
