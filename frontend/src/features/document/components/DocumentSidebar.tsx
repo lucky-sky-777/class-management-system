@@ -7,8 +7,8 @@ interface DocumentSidebarProps {
   file: FileItem;
   onDownload: () => void;
   onToggleLike: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({

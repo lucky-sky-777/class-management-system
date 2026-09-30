@@ -56,8 +56,11 @@ export const DocumentPage = () => {
   // Render lúc mới vào trang
   if (isPageLoading) {
     return (
-      <div className="py-20 flex justify-center items-center">
-        <Loader2 className="animate-spin text-[var(--ink-3)]" size={32} />
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="animate-in fade-in duration-300 flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--warm-400)]"></div>
+          <p className="text-ink-2 text-sm font-medium">Đang tải...</p>
+        </div>
       </div>
     );
   }
