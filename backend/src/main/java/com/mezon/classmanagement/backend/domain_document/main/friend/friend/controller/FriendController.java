@@ -3,8 +3,6 @@ package com.mezon.classmanagement.backend.domain_document.main.friend.friend.con
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
-import com.mezon.classmanagement.backend.domain_document.main.friend.follower.dto.FollowerResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.friend.following.dto.FollowingResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.FriendResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.FriendSummaryResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.FriendshipStatusResponseDto;
@@ -20,7 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,58 +32,8 @@ public class FriendController {
     AuthService authService;
     JwtService jwtService;
 
-    @PostMapping("/requests/{targetUserId}")
-    public ResponseDTO<FriendshipStatusResponseDto> sendFriendRequest(
-            @PathVariable Long targetUserId
-    ) {
-        Long clientUserId = getClientUserId();
-        FriendshipStatusResponseDto response = friendService.sendFriendRequest(clientUserId, targetUserId);
-
-        return ResponseDTO.ok("Friend request processed successfully", response);
-    }
-
-    @PostMapping("/requests/{requesterUserId}/accept")
-    public ResponseDTO<FriendResponseDto> acceptFriendRequest(
-            @PathVariable Long requesterUserId
-    ) {
-        Long clientUserId = getClientUserId();
-        FriendResponseDto response = friendService.acceptFriendRequest(clientUserId, requesterUserId);
-
-        return ResponseDTO.ok("Friend request accepted successfully", response);
-    }
-
-    @DeleteMapping("/requests/{requesterUserId}/reject")
-    public ResponseDTO<Void> rejectFriendRequest(
-            @PathVariable Long requesterUserId
-    ) {
-        Long clientUserId = getClientUserId();
-        friendService.rejectFriendRequest(clientUserId, requesterUserId);
-
-        return ResponseDTO.ok("Friend request rejected successfully");
-    }
-
-    @DeleteMapping("/requests/{targetUserId}/cancel")
-    public ResponseDTO<Void> cancelFriendRequest(
-            @PathVariable Long targetUserId
-    ) {
-        Long clientUserId = getClientUserId();
-        friendService.cancelFriendRequest(clientUserId, targetUserId);
-
-        return ResponseDTO.ok("Sent friend request cancelled successfully");
-    }
-
-    @DeleteMapping("/{targetUserId}")
-    public ResponseDTO<Void> unfriend(
-            @PathVariable Long targetUserId
-    ) {
-        Long clientUserId = getClientUserId();
-        friendService.unfriend(clientUserId, targetUserId);
-
-        return ResponseDTO.ok("Unfriended successfully");
-    }
-
     @GetMapping
-    public ResponseDTO<Page<FriendResponseDto>> getFriendList(
+    public ResponseDTO<Page<FriendResponseDto>> getMyFriendList(
             @RequestParam(required = false) String query,
             @PageableDefault(size = 20) Pageable pageable
     ) {
@@ -96,24 +43,15 @@ public class FriendController {
         return ResponseDTO.ok("Fetch friend list successfully", response);
     }
 
-    @GetMapping("/requests/received")
-    public ResponseDTO<Page<FollowerResponseDto>> getReceivedRequests(
+    @GetMapping("/users/{userId}")
+    public ResponseDTO<Page<FriendResponseDto>> getUserFriendList(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String query,
             @PageableDefault(size = 20) Pageable pageable
     ) {
-        Long clientUserId = getClientUserId();
-        Page<FollowerResponseDto> response = friendService.getReceivedRequests(clientUserId, pageable);
+        Page<FriendResponseDto> response = friendService.getFriendList(userId, query, pageable);
 
-        return ResponseDTO.ok("Fetch received friend requests successfully", response);
-    }
-
-    @GetMapping("/requests/sent")
-    public ResponseDTO<Page<FollowingResponseDto>> getSentRequests(
-            @PageableDefault(size = 20) Pageable pageable
-    ) {
-        Long clientUserId = getClientUserId();
-        Page<FollowingResponseDto> response = friendService.getSentRequests(clientUserId, pageable);
-
-        return ResponseDTO.ok("Fetch sent friend requests successfully", response);
+        return ResponseDTO.ok("Fetch user friend list successfully", response);
     }
 
     @GetMapping("/status/{targetUserId}")
@@ -142,6 +80,16 @@ public class FriendController {
         MutualFriendResponseDto response = friendService.getMutualFriends(clientUserId, targetUserId);
 
         return ResponseDTO.ok("Fetch mutual friends successfully", response);
+    }
+
+    @DeleteMapping("/{targetUserId}")
+    public ResponseDTO<Void> unfriend(
+            @PathVariable Long targetUserId
+    ) {
+        Long clientUserId = getClientUserId();
+        friendService.unfriend(clientUserId, targetUserId);
+
+        return ResponseDTO.ok("Unfriended successfully");
     }
 
     private Long getClientUserId() {

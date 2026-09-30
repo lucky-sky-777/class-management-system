@@ -4,16 +4,13 @@ import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
-import com.mezon.classmanagement.backend.domain_document.main.friend.follower.entity.Follower;
-import com.mezon.classmanagement.backend.domain_document.main.friend.follower.mapper.FollowerMapper;
 import com.mezon.classmanagement.backend.domain_document.main.friend.follower.repository.FollowerRepository;
-import com.mezon.classmanagement.backend.domain_document.main.friend.following.entity.Following;
-import com.mezon.classmanagement.backend.domain_document.main.friend.following.mapper.FollowingMapper;
 import com.mezon.classmanagement.backend.domain_document.main.friend.following.repository.FollowingRepository;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.FriendResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.FriendSummaryResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.FriendshipStatus;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.FriendshipStatusResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.friend.friend.dto.MutualFriendResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.entity.Friend;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.mapper.FriendMapper;
 import com.mezon.classmanagement.backend.domain_document.main.friend.friend.repository.FriendRepository;
@@ -25,8 +22,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,12 +56,6 @@ public class FriendServiceTest {
     @Mock
     FriendMapper friendMapper;
 
-    @Mock
-    FollowerMapper followerMapper;
-
-    @Mock
-    FollowingMapper followingMapper;
-
     @InjectMocks
     FriendService friendService;
 
@@ -82,137 +78,96 @@ public class FriendServiceTest {
     }
 
     @Test
-    @DisplayName("Send friend request successfully creates following and follower")
-    void testSendFriendRequest_Success() {
-        when(userService.findByUserIdOrThrow(1L)).thenReturn(user1);
-        when(userService.findByUserIdOrThrow(2L)).thenReturn(user2);
-        when(friendRepository.existsByUser1_IdAndUser2_Id(1L, 2L)).thenReturn(false);
-        when(followingRepository.existsByUser_IdAndFollowing_Id(1L, 2L)).thenReturn(false);
-        when(followerRepository.existsByUser_IdAndFollower_Id(1L, 2L)).thenReturn(false);
+    @DisplayName("Get friendship status returns correct enum for all 5 states")
+    void testGetFriendshipStatus_AllStates() {
+        // 1. Self
+        FriendshipStatusResponseDto selfStatus = friendService.getFriendshipStatus(1L, 1L);
+        assertThat(selfStatus.getStatus()).isEqualTo(FriendshipStatus.SELF);
 
-        FriendshipStatusResponseDto result = friendService.sendFriendRequest(1L, 2L);
-
-        assertThat(result.getTargetUserId()).isEqualTo(2L);
-        assertThat(result.getStatus()).isEqualTo(FriendshipStatus.REQUEST_SENT);
-        verify(followingRepository).save(any(Following.class));
-        verify(followerRepository).save(any(Follower.class));
-    }
-
-    @Test
-    @DisplayName("Send friend request to oneself throws exception")
-    void testSendFriendRequest_ToSelf_ThrowsException() {
-        assertThatThrownBy(() -> friendService.sendFriendRequest(1L, 1L))
-                .isInstanceOf(GlobalException.class)
-                .hasMessageContaining("Cannot send friend request to yourself");
-    }
-
-    @Test
-    @DisplayName("Send friend request when already friends throws exception")
-    void testSendFriendRequest_AlreadyFriends_ThrowsException() {
-        when(userService.findByUserIdOrThrow(1L)).thenReturn(user1);
-        when(userService.findByUserIdOrThrow(2L)).thenReturn(user2);
+        // 2. Friend (mutual follow)
         when(friendRepository.existsByUser1_IdAndUser2_Id(1L, 2L)).thenReturn(true);
+        FriendshipStatusResponseDto friendStatus = friendService.getFriendshipStatus(1L, 2L);
+        assertThat(friendStatus.getStatus()).isEqualTo(FriendshipStatus.FRIEND);
 
-        assertThatThrownBy(() -> friendService.sendFriendRequest(1L, 2L))
-                .isInstanceOf(GlobalException.class)
-                .hasMessageContaining("Users are already friends");
-    }
-
-    @Test
-    @DisplayName("Send friend request when reverse request exists auto-accepts friendship")
-    void testSendFriendRequest_AutoMutualAccept() {
-        when(userService.findByUserIdOrThrow(1L)).thenReturn(user1);
-        when(userService.findByUserIdOrThrow(2L)).thenReturn(user2);
+        // 3. Following (1-way)
         when(friendRepository.existsByUser1_IdAndUser2_Id(1L, 2L)).thenReturn(false);
+        when(followingRepository.existsByUser_IdAndFollowing_Id(1L, 2L)).thenReturn(true);
+        when(followingRepository.existsByUser_IdAndFollowing_Id(2L, 1L)).thenReturn(false);
+        FriendshipStatusResponseDto followingStatus = friendService.getFriendshipStatus(1L, 2L);
+        assertThat(followingStatus.getStatus()).isEqualTo(FriendshipStatus.FOLLOWING);
+
+        // 4. Follower (1-way reverse)
         when(followingRepository.existsByUser_IdAndFollowing_Id(1L, 2L)).thenReturn(false);
-        when(followerRepository.existsByUser_IdAndFollower_Id(1L, 2L)).thenReturn(true);
+        when(followingRepository.existsByUser_IdAndFollowing_Id(2L, 1L)).thenReturn(true);
+        FriendshipStatusResponseDto followerStatus = friendService.getFriendshipStatus(1L, 2L);
+        assertThat(followerStatus.getStatus()).isEqualTo(FriendshipStatus.FOLLOWER);
 
-        FriendshipStatusResponseDto result = friendService.sendFriendRequest(1L, 2L);
-
-        assertThat(result.getTargetUserId()).isEqualTo(2L);
-        assertThat(result.getStatus()).isEqualTo(FriendshipStatus.FRIEND);
-        verify(followerRepository).deleteByUser_IdAndFollower_Id(1L, 2L);
-        verify(followingRepository).deleteByUser_IdAndFollowing_Id(2L, 1L);
-        verify(friendRepository).save(any(Friend.class));
+        // 5. None
+        when(followingRepository.existsByUser_IdAndFollowing_Id(2L, 1L)).thenReturn(false);
+        FriendshipStatusResponseDto noneStatus = friendService.getFriendshipStatus(1L, 2L);
+        assertThat(noneStatus.getStatus()).isEqualTo(FriendshipStatus.NONE);
     }
 
     @Test
-    @DisplayName("Accept friend request successfully creates Friend and deletes request")
-    void testAcceptFriendRequest_Success() {
-        Follower follower = Follower.builder()
-                .id(100L)
-                .user(user1)
-                .follower(user2)
-                .receivedAt(Instant.now())
-                .build();
+    @DisplayName("Get summary returns correct counts for friend, follower, and following")
+    void testGetSummary() {
+        when(friendRepository.countByUser1_IdOrUser2_Id(1L, 1L)).thenReturn(10L);
+        when(followerRepository.countByUser_Id(1L)).thenReturn(25L);
+        when(followingRepository.countByUser_Id(1L)).thenReturn(18L);
 
-        Friend savedFriend = Friend.builder()
-                .id(200L)
+        FriendSummaryResponseDto summary = friendService.getSummary(1L);
+
+        assertThat(summary.getFriendCount()).isEqualTo(10L);
+        assertThat(summary.getFollowerCount()).isEqualTo(25L);
+        assertThat(summary.getFollowingCount()).isEqualTo(18L);
+    }
+
+    @Test
+    @DisplayName("Get friend list with pagination and mapping")
+    void testGetFriendList() {
+        Friend friend = Friend.builder()
+                .id(100L)
                 .user1(user1)
                 .user2(user2)
                 .friendedAt(Instant.now())
                 .build();
 
-        when(followerRepository.findByUser_IdAndFollower_Id(1L, 2L)).thenReturn(Optional.of(follower));
-        when(friendRepository.existsByUser1_IdAndUser2_Id(1L, 2L)).thenReturn(false);
-        when(friendRepository.save(any(Friend.class))).thenReturn(savedFriend);
-        when(friendMapper.toFriendResponseDto(eq(savedFriend), eq(1L))).thenReturn(
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Friend> page = new PageImpl<>(List.of(friend));
+
+        when(friendRepository.findByUser1_IdOrUser2_Id(1L, 1L, pageable)).thenReturn(page);
+        when(friendMapper.toFriendResponseDto(friend, 1L)).thenReturn(
                 FriendResponseDto.builder()
-                        .id(200L)
+                        .id(100L)
                         .friend(UserResponseDto.builder().id(2L).username("user2").build())
-                        .friendedAt(savedFriend.getFriendedAt())
                         .build()
         );
 
-        FriendResponseDto response = friendService.acceptFriendRequest(1L, 2L);
+        Page<FriendResponseDto> result = friendService.getFriendList(1L, null, pageable);
 
-        assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(200L);
-        assertThat(response.getFriend().getId()).isEqualTo(2L);
-        verify(followerRepository).delete(follower);
-        verify(followingRepository).deleteByUser_IdAndFollowing_Id(2L, 1L);
-        verify(friendRepository).save(any(Friend.class));
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getFriend().getId()).isEqualTo(2L);
     }
 
     @Test
-    @DisplayName("Reject friend request deletes follower and following")
-    void testRejectFriendRequest_Success() {
-        Follower follower = Follower.builder()
-                .id(100L)
-                .user(user1)
-                .follower(user2)
-                .build();
+    @DisplayName("Get mutual friends returns users in common")
+    void testGetMutualFriends() {
+        when(friendRepository.findMutualFriends(1L, 2L)).thenReturn(List.of(user1));
+        when(friendMapper.toUserResponseDto(user1)).thenReturn(
+                UserResponseDto.builder().id(1L).username("user1").build()
+        );
 
-        when(followerRepository.findByUser_IdAndFollower_Id(1L, 2L)).thenReturn(Optional.of(follower));
+        MutualFriendResponseDto result = friendService.getMutualFriends(1L, 2L);
 
-        friendService.rejectFriendRequest(1L, 2L);
-
-        verify(followerRepository).delete(follower);
-        verify(followingRepository).deleteByUser_IdAndFollowing_Id(2L, 1L);
+        assertThat(result.getMutualCount()).isEqualTo(1L);
+        assertThat(result.getMutualFriends()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Cancel friend request deletes following and follower")
-    void testCancelFriendRequest_Success() {
-        Following following = Following.builder()
-                .id(101L)
-                .user(user1)
-                .following(user2)
-                .build();
-
-        when(followingRepository.findByUser_IdAndFollowing_Id(1L, 2L)).thenReturn(Optional.of(following));
-
-        friendService.cancelFriendRequest(1L, 2L);
-
-        verify(followingRepository).delete(following);
-        verify(followerRepository).deleteByUser_IdAndFollower_Id(2L, 1L);
-    }
-
-    @Test
-    @DisplayName("Unfriend removes friend record")
+    @DisplayName("Unfriend removes friendship and follow record")
     void testUnfriend_Success() {
         Friend friend = Friend.builder()
-                .id(201L)
+                .id(50L)
                 .user1(user1)
                 .user2(user2)
                 .build();
@@ -225,42 +180,13 @@ public class FriendServiceTest {
     }
 
     @Test
-    @DisplayName("Get friendship status returns correct enum for all cases")
-    void testGetFriendshipStatus() {
-        // Self
-        assertThat(friendService.getFriendshipStatus(1L, 1L).getStatus()).isEqualTo(FriendshipStatus.SELF);
+    @DisplayName("Unfriend when friendship not found throws exception")
+    void testUnfriend_NotFound_ThrowsException() {
+        when(friendRepository.findByUser1_IdAndUser2_Id(1L, 2L)).thenReturn(Optional.empty());
 
-        // Friend
-        when(friendRepository.existsByUser1_IdAndUser2_Id(1L, 2L)).thenReturn(true);
-        assertThat(friendService.getFriendshipStatus(1L, 2L).getStatus()).isEqualTo(FriendshipStatus.FRIEND);
-
-        // Sent
-        when(friendRepository.existsByUser1_IdAndUser2_Id(1L, 2L)).thenReturn(false);
-        when(followingRepository.existsByUser_IdAndFollowing_Id(1L, 2L)).thenReturn(true);
-        assertThat(friendService.getFriendshipStatus(1L, 2L).getStatus()).isEqualTo(FriendshipStatus.REQUEST_SENT);
-
-        // Received
-        when(followingRepository.existsByUser_IdAndFollowing_Id(1L, 2L)).thenReturn(false);
-        when(followerRepository.existsByUser_IdAndFollower_Id(1L, 2L)).thenReturn(true);
-        assertThat(friendService.getFriendshipStatus(1L, 2L).getStatus()).isEqualTo(FriendshipStatus.REQUEST_RECEIVED);
-
-        // None
-        when(followerRepository.existsByUser_IdAndFollower_Id(1L, 2L)).thenReturn(false);
-        assertThat(friendService.getFriendshipStatus(1L, 2L).getStatus()).isEqualTo(FriendshipStatus.NONE);
-    }
-
-    @Test
-    @DisplayName("Get summary returns correct counts")
-    void testGetSummary() {
-        when(friendRepository.countByUser1_IdOrUser2_Id(1L, 1L)).thenReturn(10L);
-        when(followerRepository.countByUser_Id(1L)).thenReturn(3L);
-        when(followingRepository.countByUser_Id(1L)).thenReturn(5L);
-
-        FriendSummaryResponseDto summary = friendService.getSummary(1L);
-
-        assertThat(summary.getFriendCount()).isEqualTo(10L);
-        assertThat(summary.getReceivedRequestCount()).isEqualTo(3L);
-        assertThat(summary.getSentRequestCount()).isEqualTo(5L);
+        assertThatThrownBy(() -> friendService.unfriend(1L, 2L))
+                .isInstanceOf(GlobalException.class)
+                .hasMessageContaining("Friendship not found");
     }
 
 }

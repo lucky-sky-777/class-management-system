@@ -14,8 +14,8 @@ import lombok.experimental.FieldDefaults;
 
 @JsonPropertyOrder(value = {
         "friend_count",
-        "received_request_count",
-        "sent_request_count"
+        "follower_count",
+        "following_count"
 })
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -30,10 +30,10 @@ public class FriendSummaryResponseDto {
     @JsonProperty(value = "friend_count")
     Long friendCount;
 
-    @JsonProperty(value = "received_request_count")
-    Long receivedRequestCount;
+    @JsonProperty(value = "follower_count")
+    Long followerCount;
 
-    @JsonProperty(value = "sent_request_count")
-    Long sentRequestCount;
+    @JsonProperty(value = "following_count")
+    Long followingCount;
 
 }
