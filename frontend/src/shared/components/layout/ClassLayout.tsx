@@ -4,11 +4,11 @@ export const ClassLayout = () => {
   const { classId } = useParams<{ classId: string }>();
 
   const menuItems = [
-    { path: "diagram", label: "Sơ đồ lớp" },
-    { path: "fund", label: "Quỹ lớp" },
-    { path: "emulation", label: "Thi đua" },
-    { path: "absent", label: "Nghỉ phép" },
-    { path: "activity", label: "Hoạt động" },
+    // { path: "diagram", label: "Sơ đồ lớp" },
+    // { path: "fund", label: "Quỹ lớp" },
+    // { path: "emulation", label: "Thi đua" },
+    // { path: "absent", label: "Nghỉ phép" },
+    // { path: "activity", label: "Hoạt động" },
     { path: "document", label: "Tài liệu" },
     { path: "members", label: "Thành viên" },
   ];

@@ -20,134 +20,134 @@ import { DocumentPage } from "@features/document/pages/DocumentPage";
  * Global application router configuration using React Router
  */
 export const router = createBrowserRouter([
-    {
-        path: "/login",
-        element: (
-            <EmptyLayout>
-                <LoginPage />
-            </EmptyLayout>
-        ),
-        handle: {
-            title: "Đăng nhập"
-        }
+  {
+    path: "/login",
+    element: (
+      <EmptyLayout>
+        <LoginPage />
+      </EmptyLayout>
+    ),
+    handle: {
+      title: "Đăng nhập",
     },
-    {
-        path: "/register",
-        element: (
-            <EmptyLayout>
-                <RegisterPage />
-            </EmptyLayout>
-        ),
-        handle: {
-            title: "Đăng ký"
-        }
+  },
+  {
+    path: "/register",
+    element: (
+      <EmptyLayout>
+        <RegisterPage />
+      </EmptyLayout>
+    ),
+    handle: {
+      title: "Đăng ký",
     },
-    {
-        path: "/oauth2-signin-redirect",
-        element: (
-            <EmptyLayout>
-                <OAuth2RedirectHandler />
-            </EmptyLayout>
-        ),
-        handle: {
-            title: "Đang chuyển hướng"
-        }
+  },
+  {
+    path: "/oauth2-signin-redirect",
+    element: (
+      <EmptyLayout>
+        <OAuth2RedirectHandler />
+      </EmptyLayout>
+    ),
+    handle: {
+      title: "Đang chuyển hướng",
     },
-    {
-        path: "/",
-        element: (
-            <ProtectedRoute>
-                <App />
-            </ProtectedRoute>
-        ),
+  },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
+    handle: {
+      title: "Trang chủ",
+    },
+    children: [
+      {
+        index: true,
+        element: <HomePageNew />, // Trang chủ mới
+        handle: { title: "Trang chủ" },
+      },
+      {
+        path: "groups",
+        element: <HomePage />, //nhóm học (lớp học)
         handle: {
-            title: "Trang chủ"
+          title: "Trang chủ",
         },
+      },
+      {
+        path: "change-password",
+        element: <ChangePasswordPage />,
+        handle: { title: "Đổi mật khẩu" },
+      },
+      {
+        path: "class/:classId",
+        element: <ClassLayout />,
         children: [
-            {
-                index: true,
-                element: <HomePageNew />, // Trang chủ mới
-                handle: { title: "Trang chủ" }
+          {
+            // index: true,
+            path: "diagram",
+            element: <ClassDiagram />,
+            handle: {
+              title: "Sơ đồ lớp",
             },
-            {
-                path: "groups",
-                element: <HomePage />, //nhóm học (lớp học)
-                handle: {
-                    title: "Trang chủ"
-                }
+          },
+          {
+            path: "absent",
+            element: <LeavePage />,
+            handle: {
+              title: "Nghỉ phép",
             },
-            {
-                path: "change-password",
-                element: <ChangePasswordPage />,
-                handle: { title: "Đổi mật khẩu" }
+          },
+          {
+            path: "emulation",
+            element: <Emulation />,
+            handle: {
+              title: "Thi đua",
             },
-            {
-                path: "class/:classId",
-                element: <ClassLayout />,
-                children: [
-                    {
-                        index: true,
-                        path: "diagram",
-                        element: <ClassDiagram />,
-                        handle: {
-                            title: "Sơ đồ lớp"
-                        }
-                    },
-                    {
-                        path: "absent",
-                        element: <LeavePage />,
-                        handle: {
-                            title: "Nghỉ phép"
-                        }
-                    },
-                    {
-                        path: "emulation",
-                        element: <Emulation />,
-                        handle: {
-                            title: "Thi đua"
-                        }
-                    },
-                    {
-                        path: "fund",
-                        element: <FundPage />,
-                        handle: {
-                            title: "Quỹ lớp"
-                        }
-                    },
-                    {
-                        path: "activity",
-                        element: <ActivityPage />,
-                        handle: {
-                            title: "Hoạt động"
-                        }
-                    },
-                    {
-                        path: "document",
-                        element: <DocumentPage/>,
-                        handle: {
-                            title: "Tài liệu"
-                        }
-                    },
-                    {
-                        path: "members",
-                        element: <MemberPage />,
-                        handle: {
-                            title: "Thành viên"
-                        }
-                    },
-                ],
+          },
+          {
+            path: "fund",
+            element: <FundPage />,
+            handle: {
+              title: "Quỹ lớp",
             },
+          },
+          {
+            path: "activity",
+            element: <ActivityPage />,
+            handle: {
+              title: "Hoạt động",
+            },
+          },
+          {
+            path: "document",
+            element: <DocumentPage />,
+            handle: {
+              title: "Tài liệu",
+            },
+          },
+          {
+            path: "members",
+            element: <MemberPage />,
+            handle: {
+              title: "Thành viên",
+            },
+          },
         ],
+      },
+    ],
+  },
+  {
+    path: "*",
+    element: (
+      <EmptyLayout>
+        <NotFoundPage />
+      </EmptyLayout>
+    ),
+    handle: {
+      title: "Không tìm thấy trang",
     },
-    {
-        path: "*",
-        element: (
-            <EmptyLayout>
-                <NotFoundPage />
-            </EmptyLayout>
-        ),
-        handle: {
-            title: "Không tìm thấy trang"
-        }
-    },
+  },
 ]);

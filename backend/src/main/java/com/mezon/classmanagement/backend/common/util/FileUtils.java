@@ -72,6 +72,7 @@ public final class FileUtils {
 
 	public static String getContent(String path) {
 		try {
+			TIKA.setMaxStringLength(1000000);
 			return TIKA.parseToString(new ClassPathResource(path).getInputStream());
 		} catch (Exception e) {
 			throw new RuntimeException();
@@ -123,6 +124,20 @@ public final class FileUtils {
 		} catch (IOException e) {
 			throw new RuntimeException("Cannot read resource: " + path, e);
 		}
+	}
+
+	public static String buildPath(String... args) {
+		StringBuilder stringBuilder = new StringBuilder();
+
+		for (int i = 0; i < args.length; i++) {
+			if (i == 0) {
+				stringBuilder.append(args[i]);
+			} else {
+				stringBuilder.append("/").append(args[i]);
+			}
+		}
+
+		return stringBuilder.toString();
 	}
 
 }

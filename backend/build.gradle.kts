@@ -23,8 +23,6 @@ extra["netty.version"] = "4.2.14.Final"
 val springCloudVersion by extra("2025.1.2")
 
 dependencies {
-    //implementation("org.apache.poi:poi-ooxml:5.4.1")
-    //implementation("org.apache.pdfbox:pdfbox:3.0.5")
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -50,6 +48,9 @@ dependencies {
     //implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.17.1")
     //implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
     implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.17.1-beta27")
+
+    implementation("io.minio:minio:9.0.3")
+    implementation("software.amazon.awssdk:s3:2.55.6")
 
     implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")

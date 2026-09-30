@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain_document.main.directory.entity;
 
+import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.CodeGenerator;
 import com.mezon.classmanagement.backend.common.util.DateTimeUtils;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
@@ -75,6 +76,15 @@ public class Directory {
 	@Column(name = "id", nullable = false)
 	Long id;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "type", nullable = false)
+	Type type;
+
+	public enum Type {
+		USER,
+		CLASS
+	}
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "belong_to_user_id", nullable = true)
 	User belongToUser;
@@ -85,6 +95,10 @@ public class Directory {
 
 	@Column(name = "name", nullable = false)
 	String name;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "creator_user_id", nullable = true)
+	User creator;
 
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
@@ -108,6 +122,9 @@ public class Directory {
 
 	@PrePersist
 	public void prePersist() {
+		if (type == null) {
+			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR);
+		}
 		if (status == null) {
 			status = Status.PENDING;
 		}

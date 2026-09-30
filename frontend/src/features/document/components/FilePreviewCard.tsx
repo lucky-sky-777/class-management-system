@@ -6,11 +6,17 @@ import type { FileItem } from "@/features/document/types";
 
 interface FilePreviewCardProps {
   file: FileItem;
+  onClick: () => void;
   onEdit: (id: string | number, newName: string) => void;
   onDelete: (id: string | number) => void;
 }
 
-export const FilePreviewCard: React.FC< FilePreviewCardProps> = ({ file, onDelete, onEdit }) => {
+export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
+  file,
+  onClick,
+  onDelete,
+  onEdit,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(file.name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,13 +53,14 @@ export const FilePreviewCard: React.FC< FilePreviewCardProps> = ({ file, onDelet
   };
 
   return (
-    <div 
-      className={`bg-[var(--bg-surface)] border ${isEditing ? 'border-[#00B4D8] shadow-md' : 'border-[var(--rule)]'} rounded-xl p-4 flex flex-col gap-3 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 w-full group relative`}
+    <div
+      onClick={() => !isEditing && onClick()}
+      className={`bg-[var(--bg-surface)] border ${isEditing ? "border-[#00B4D8] shadow-md" : "border-[var(--rule)]"} rounded-xl p-4 flex flex-col gap-3 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 w-full group relative`}
     >
       <div className="flex justify-between items-start">
         {/* Render icon tương ứng với loại file */}
         <DocumentIcon extension={file.fileExtension} size={32} />
-        
+
         {/* Nhóm 2 nút công cụ Sửa & Xóa */}
         {!isEditing && (
           <div className="flex items-center gap-1 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -71,7 +78,11 @@ export const FilePreviewCard: React.FC< FilePreviewCardProps> = ({ file, onDelet
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (window.confirm(`Bạn có chắc chắn muốn xóa file "${file.name}" không?`)) {
+                if (
+                  window.confirm(
+                    `Bạn có chắc chắn muốn xóa file "${file.name}" không?`,
+                  )
+                ) {
                   onDelete(file.id);
                 }
               }}
@@ -97,16 +108,21 @@ export const FilePreviewCard: React.FC< FilePreviewCardProps> = ({ file, onDelet
             className="w-full text-sm font-bold text-[var(--ink-1)] border border-[#00B4D8] rounded px-1 py-0.5 outline-none focus:ring-2 focus:ring-blue-100 transition-shadow bg-white"
           />
         ) : (
-          <h4 className="font-bold text-sm text-[var(--ink-1)] truncate" title={file.name}>
+          <h4
+            className="font-bold text-sm text-[var(--ink-1)] truncate"
+            title={file.name}
+          >
             {file.name}
           </h4>
         )}
-        
+
         {/* Thông tin phụ của File */}
         <div className="flex items-center gap-2 mt-1">
           <p className="text-[11px] text-[var(--ink-3)]">{file.size}</p>
           <span className="text-[11px] text-[var(--rule)]">•</span>
-          <p className="text-[11px] text-[var(--ink-3)] truncate">{file.uploader}</p>
+          <p className="text-[11px] text-[var(--ink-3)] truncate">
+            {file.uploader}
+          </p>
         </div>
       </div>
     </div>
