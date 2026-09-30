@@ -1,12 +1,7 @@
 package com.mezon.classmanagement.backend.chunking;
 
-import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByAllStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByLineStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitBySentenceStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByWordStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphWithoutOverlapStrategy;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +22,8 @@ public class DocumentChunkingTest {
 
 	ChunkService chunkService;
 
-	SplitByAllStrategy splitByAllStrategy;
 	SplitByParagraphStrategy splitByParagraphStrategy;
 	SplitByParagraphWithoutOverlapStrategy splitByParagraphWithoutOverlapStrategy;
-	SplitByLineStrategy splitByLineStrategy;
-	SplitBySentenceStrategy splitBySentenceStrategy;
-	SplitByWordStrategy splitByWordStrategy;
 
 //	@Test
 //	public void testToken() {
