@@ -9,21 +9,19 @@ import java.util.List;
 
 @Service
 public class KeywordModerationService {
-    //ds từ bị cấm
-    private final List<String> bannedWords;
 
     private final TextNormalizer textNormalizer;
+    private final AhoCorasickMatcher matcher;
 
     public KeywordModerationService() {
 
         this.textNormalizer = new TextNormalizer();
 
         try {
-
             ClassPathResource resource =
                     new ClassPathResource("banned_words.txt");
 
-            bannedWords = resource
+            List<String> bannedWords = resource
                     .getContentAsString(StandardCharsets.UTF_8)
                     .lines()
                     .map(String::trim)
@@ -32,8 +30,9 @@ public class KeywordModerationService {
                     .map(textNormalizer::normalize)
                     .toList();
 
-        } catch (Exception e) {
+            this.matcher = new AhoCorasickMatcher(bannedWords);
 
+        } catch (Exception e) {
             throw new RuntimeException(
                     "Không thể đọc file banned_words.txt",
                     e
@@ -41,18 +40,24 @@ public class KeywordModerationService {
         }
     }
 
-    public boolean isAllowed(String content) {
+    public boolean isAllowed(List<String> chunks) {
 
-        String text =
-                textNormalizer.normalize(content);
-
-        if (text.isBlank()) {
+        if (chunks == null || chunks.isEmpty()) {
             return false;
         }
 
-        for (String word : bannedWords) {
+        for (String chunk : chunks) {
 
-            if (text.contains(word)) {
+            String text = textNormalizer.normalize(chunk);
+
+            // Chunk rỗng thì bỏ qua
+            if (text.isBlank()) {
+                continue;
+            }
+
+            // Chỉ cần tìm thấy 1 keyword cấm
+            // trong bất kỳ chunk nào -> reject
+            if (matcher.containsAny(text)) {
                 return false;
             }
         }

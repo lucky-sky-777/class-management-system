@@ -66,6 +66,21 @@ public class ChunkService {
 		}
 	}
 
+	// lấy raw chunk
+	public List<String> getRawChunkListFromMultipartFile(
+			MultipartFile multipartFile,
+			SplitStrategy splitStrategy
+	) {
+		try {
+			Document document = FileUtils.toDocument(multipartFile);
+
+			return getChunkList(document, splitStrategy);
+
+		} catch (Exception e) {
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+
 	public List<String> getChunkListFromFilePathWithoutOverlap(
 			String filePath
 	) {
