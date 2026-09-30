@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthInternal } from '@features/auth/hooks/useAuthInternal';
+import { authApi } from '@features/auth/api';
+import { useFetchCurrentUser } from '@features/auth/hooks/useFetchCurrentUser';
 import { 
     User, 
     Lock, 
@@ -69,11 +71,14 @@ export const RegisterPage: React.FC = () => {
     const [localError, setLocalError] = useState<string | null>(null);
     const [showAllInterests, setShowAllInterests] = useState(false);
     const [showAllHobbies, setShowAllHobbies] = useState(false);
+    const [registeredUserId, setRegisteredUserId] = useState<number | null>(null);
+    const [registeredUsername, setRegisteredUsername] = useState<string | null>(null);
 
-    const { isLoading, error } = useAuthInternal();
+    const { signup, isLoading, error } = useAuthInternal();
+    const { refetch } = useFetchCurrentUser();
     const navigate = useNavigate();
 
-    const handleNextFromStep1 = (e: React.FormEvent) => {
+    const handleNextFromStep1 = async (e: React.FormEvent) => {
         e.preventDefault();
         setLocalError(null);
 
@@ -98,7 +103,27 @@ export const RegisterPage: React.FC = () => {
             return;
         }
 
-        setStep(2);
+        // Nếu đã đăng ký tài khoản này ở bước 1 trước đó (ví dụ user ấn back)
+        if (registeredUserId && registeredUsername === formData.username) {
+            setStep(2);
+            return;
+        }
+
+        const result = await signup({
+            username: formData.username,
+            password: formData.password,
+            display_name: formData.displayName,
+        });
+
+        if (result.success) {
+            if (result.userId) {
+                setRegisteredUserId(result.userId);
+            }
+            setRegisteredUsername(formData.username);
+            setStep(2);
+        } else {
+            setLocalError(result.error || 'Đăng ký không thành công, vui lòng thử lại');
+        }
     };
 
     const handleNextFromStep2 = (e: React.FormEvent) => {
@@ -121,13 +146,24 @@ export const RegisterPage: React.FC = () => {
         setStep(3);
     };
 
-    const handleCompleteStep3 = (e: React.FormEvent) => {
+    const handleCompleteStep3 = async (e: React.FormEvent) => {
         e.preventDefault();
         setLocalError(null);
 
-        // UI only - simulate success and navigate to login
-        console.log('Registration Data Submitted:', formData);
-        navigate('/login');
+        try {
+            if (registeredUserId) {
+                await authApi.updateUser(registeredUserId, {
+                    major: formData.major,
+                    phone: formData.phoneNumber,
+                    display_name: formData.displayName,
+                });
+            }
+            await refetch();
+            navigate('/');
+        } catch (err) {
+            console.error('Lỗi cập nhật hồ sơ:', err);
+            navigate('/');
+        }
     };
 
     const toggleInterest = (item: string) => {
@@ -387,9 +423,12 @@ export const RegisterPage: React.FC = () => {
 
                         <button
                             type="submit"
-                            className="btn btn-primary w-full py-3 font-semibold rounded-lg text-sm uppercase tracking-wide mt-2"
+                            disabled={isLoading}
+                            className={`btn btn-primary w-full py-3 font-semibold rounded-lg text-sm uppercase tracking-wide mt-2 ${
+                                isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                            }`}
                         >
-                            TIẾP TỤC
+                            {isLoading ? 'ĐANG XỬ LÝ...' : 'TIẾP TỤC'}
                         </button>
 
                         <div className="text-center pt-4 border-t border-rule">

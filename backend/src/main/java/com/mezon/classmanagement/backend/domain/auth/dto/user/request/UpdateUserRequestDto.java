@@ -22,16 +22,19 @@ import lombok.experimental.FieldDefaults;
 @DTO
 public class UpdateUserRequestDto {
 
-	@JsonProperty(value = "display_name")
-	String displayName;
+    @JsonProperty(value = "display_name")
+    String displayName;
 
-	@JsonProperty(value = "avatar_url")
-	String avatarURl;
+    @JsonProperty(value = "avatar_url")
+    String avatarUrl;
 
-	@JsonProperty(value = "school")
-	String school;
+    @JsonProperty(value = "phone")
+    String phone;
 
-	@JsonProperty(value = "major")
-	String major;
+    @JsonProperty(value = "school")
+    String school;
+
+    @JsonProperty(value = "major")
+    String major;
 
 }
