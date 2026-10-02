@@ -46,26 +46,13 @@ public class DirectoryService {
 	}
 
 	@Transactional
-	public void createForUser(Long creatorUserId, CreateDirectoryRequestDto request) {
-		Directory newDirectory = directoryMapper.toDirectory(request);
-
-		User user = User.create(creatorUserId);
-
-		newDirectory.setType(Directory.Type.USER);
-		newDirectory.setBelongToUser(user);
-
-		Directory responseDirectory = save(newDirectory);
-	}
-
-	@Transactional
 	public void createForClass(Long classId, Long creatorUserId, CreateDirectoryRequestDto request) {
 		Directory newDirectory = directoryMapper.toDirectory(request);
 
 		User creator = User.create(creatorUserId);
 		Class clazz = Class.create(classId);
 
-		newDirectory.setType(Directory.Type.CLASS);
-		newDirectory.setBelongToClass(clazz);
+		newDirectory.setClazz(clazz);
 		newDirectory.setCreator(creator);
 
 		Directory responseDirectory = save(newDirectory);
