@@ -8,6 +8,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
+// Unit Test kiểm tra chức năng kiểm duyệt keyword trong nội dung các chunk.
+
 public class KeywordModerationServiceTest {
 
     private final KeywordModerationService moderationService =
@@ -30,7 +33,7 @@ public class KeywordModerationServiceTest {
 
         List<String> chunks = List.of(
                 "Tài liệu học Java rất hữu ích",
-                "Đây là cẹc",
+                "Đây là á đù",
                 "Spring Boot là framework"
         );
 
@@ -43,7 +46,7 @@ public class KeywordModerationServiceTest {
         List<String> chunks = List.of(
                 "Tài liệu học Java rất hữu ích",
                 "Spring Boot là framework",
-                "Đây là cẹc"
+                "Đây là á đù"
         );
 
         assertFalse(moderationService.isAllowed(chunks));

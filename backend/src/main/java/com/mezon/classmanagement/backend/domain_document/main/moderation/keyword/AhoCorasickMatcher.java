@@ -14,6 +14,10 @@ public class AhoCorasickMatcher {
         Node failure;
 
         boolean isEnd;
+
+        String word; //lưu keyword đã match
+
+        List<String> output = new LinkedList<>();
     }
 
     private final Node root = new Node();
@@ -46,6 +50,7 @@ public class AhoCorasickMatcher {
             }
 
             current.isEnd = true;
+            current.word = keyword;
         }
     }
 
@@ -109,13 +114,145 @@ public class AhoCorasickMatcher {
                  * thì node hiện tại cũng được xem là match.
                  */
                 if (child.failure.isEnd) {
-                    child.isEnd = true;
+                    child.output.add(child.failure.word);
                 }
+
+                child.output.addAll(child.failure.output);
 
                 queue.add(child);
             }
         }
     }
+
+    public String findFirst(String text) {
+
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+
+        Node current = root;
+
+        for (int i = 0; i < text.length(); i++) {
+
+            char character = text.charAt(i);
+
+            // Dùng failure link khi không match
+            while (
+                    current != root
+                            && !current.children.containsKey(character)
+            ) {
+                current = current.failure;
+            }
+
+            // Di chuyển sang node tiếp theo
+            if (current.children.containsKey(character)) {
+                current = current.children.get(character);
+            }
+
+            // Tìm thấy keyword
+            if (current.isEnd) {
+
+                String word = current.word;
+
+                int start = i - word.length() + 1;
+                int end = i + 1;
+
+                boolean leftBoundary =
+                        start == 0
+                                || !Character.isLetterOrDigit(text.charAt(start - 1));
+
+                boolean rightBoundary =
+                        end == text.length()
+                                || !Character.isLetterOrDigit(text.charAt(end));
+
+                if (leftBoundary && rightBoundary) {
+                    return word;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public List<String> findAll(String text) {
+
+        List<String> matches = new LinkedList<>();
+
+        if (text == null || text.isEmpty()) {
+            return matches;
+        }
+
+        Node current = root;
+
+        for (int i = 0; i < text.length(); i++) {
+
+            char character = text.charAt(i);
+
+            // Dùng failure link khi không match
+            while (
+                    current != root
+                            && !current.children.containsKey(character)
+            ) {
+                current = current.failure;
+            }
+
+            // Di chuyển sang node tiếp theo
+            if (current.children.containsKey(character)) {
+                current = current.children.get(character);
+            }
+
+            // Keyword kết thúc tại node hiện tại
+            if (current.isEnd) {
+
+                String word = current.word;
+
+                int start = i - word.length() + 1;
+                int end = i + 1;
+
+                boolean leftBoundary =
+                        start == 0
+                                || !Character.isLetterOrDigit(
+                                text.charAt(start - 1)
+                        );
+
+                boolean rightBoundary =
+                        end == text.length()
+                                || !Character.isLetterOrDigit(
+                                text.charAt(end)
+                        );
+
+                if (leftBoundary && rightBoundary) {
+                    matches.add(word);
+                }
+            }
+
+            // Các keyword kết thúc qua failure link
+            for (String word : current.output) {
+
+                int start = i - word.length() + 1;
+                int end = i + 1;
+
+                boolean leftBoundary =
+                        start == 0
+                                || !Character.isLetterOrDigit(
+                                text.charAt(start - 1)
+                        );
+
+                boolean rightBoundary =
+                        end == text.length()
+                                || !Character.isLetterOrDigit(
+                                text.charAt(end)
+                        );
+
+                if (leftBoundary && rightBoundary) {
+                    matches.add(word);
+                }
+            }
+        }
+
+        return matches;
+    }
+
 
     /**
      * Kiểm tra text có chứa ít nhất một keyword bị cấm hay không.

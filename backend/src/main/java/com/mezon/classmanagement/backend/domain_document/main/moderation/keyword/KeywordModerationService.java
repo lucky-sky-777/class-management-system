@@ -41,7 +41,7 @@ public class KeywordModerationService {
     }
 
     public boolean isAllowed(List<String> chunks) {
-
+        boolean allowed = true;
         if (chunks == null || chunks.isEmpty()) {
             return false;
         }
@@ -55,13 +55,13 @@ public class KeywordModerationService {
                 continue;
             }
 
-            // Chỉ cần tìm thấy 1 keyword cấm
-            // trong bất kỳ chunk nào -> reject
-            if (matcher.containsAny(text)) {
+            List<String> matchedWords = matcher.findAll(text);
+
+            if (!matchedWords.isEmpty()) {
                 return false;
             }
         }
 
-        return true;
+        return allowed;
     }
 }
