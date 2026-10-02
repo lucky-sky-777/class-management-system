@@ -63,52 +63,88 @@ export const useAuthInternal = () => {
     [setUser],
   );
 
-  // đăng kí
-  const signup = useCallback(
-    async (username: string, password: string, displayname: string) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data: RegisterRequest = {
-          username,
-          password,
-          display_name: displayname,
-        };
-        const response = await authApi.signUp(data);
-        if (response.success && response.data) {
-          const authData = response.data as any;
+    // đăng kí
+    const signup = useCallback(
+        async (
+            requestOrUsername: RegisterRequest | string,
+            passwordParam?: string,
+            displayNameParam?: string,
+            emailParam?: string,
+            avatarUrlParam?: string
+        ): Promise<{ success: boolean; userId?: number; error?: string }> => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                let data: RegisterRequest;
+                if (typeof requestOrUsername === "string") {
+                    data = {
+                        username: requestOrUsername,
+                        password: passwordParam,
+                        display_name: displayNameParam,
+                        email: emailParam,
+                        avatar_url: avatarUrlParam,
+                    };
+                } else {
+                    data = requestOrUsername;
+                }
 
-          const userData: User = {
-            id: authData.id || 1,
-            username: data.username,
-            displayName: data.display_name,
-            type: UserType.INTERNAL,
-            avatarUrl: "",
-            joinedAt: new Date().toISOString(),
-            token: authData.accessToken,
-          };
+                const response = await authApi.signUp(data);
+                if (response.success && response.data) {
+                    const userId = response.data.user_id || response.data.id;
 
-          setUser(userData);
-          return true;
-        } else {
-          setError(response.message);
-          return false;
-        }
-      } catch (err) {
-        if (err instanceof ApiError) {
-          if (err.code === 409 || err.status === 409) {
-            setError("Tên đăng nhập đã tồn tại, vui lòng chọn tên khác");
-            return false
-          }
-          setError(err.message || "Lỗi đăng ký");
-        }
-        return false;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [setUser],
-  );
+                    // Tự động đăng nhập để lấy token nếu có password
+                    if (data.password) {
+                        try {
+                            const loginResponse = await authApi.signIn({
+                                username: data.username,
+                                password: data.password,
+                            });
+                            if (loginResponse.success && loginResponse.data) {
+                                const token = loginResponse.data;
+                                storage.set(AUTH_STORAGE_KEY.TOKEN, token.access_token);
+                                storage.set(AUTH_STORAGE_KEY.REFRESH, token.refresh_token);
+
+                                const userData: User = {
+                                    id: userId ? String(userId) : undefined,
+                                    username: data.username,
+                                    displayName: data.display_name,
+                                    type: UserType.INTERNAL,
+                                    avatarUrl: data.avatar_url || "",
+                                    joinedAt: new Date().toISOString(),
+                                    token: token.access_token,
+                                };
+                                setUser(userData);
+                            }
+                        } catch (loginErr) {
+                            console.warn("Auto login after registration failed:", loginErr);
+                        }
+                    }
+
+                    return { success: true, userId };
+                } else {
+                    const msg = response.message || "Đăng ký thất bại";
+                    setError(msg);
+                    return { success: false, error: msg };
+                }
+            } catch (err) {
+                let errorMsg = "Lỗi đăng ký";
+                if (err instanceof ApiError) {
+                    if (err.code === 409 || err.status === 409) {
+                        errorMsg = "Tên đăng nhập đã tồn tại, vui lòng chọn tên khác";
+                    } else {
+                        errorMsg = err.message || "Lỗi đăng ký";
+                    }
+                } else if (err instanceof Error) {
+                    errorMsg = err.message;
+                }
+                setError(errorMsg);
+                return { success: false, error: errorMsg };
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [setUser],
+    );
 
   // đăng xuất
   const logout = useCallback(async () => {

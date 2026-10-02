@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Arrays;
+
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Getter
 public abstract class BaseVector {
@@ -23,4 +25,8 @@ public abstract class BaseVector {
 
 	protected abstract boolean isValidDimension();
 
+	@Override
+	public String toString() {
+		return String.valueOf(values.length);
+	}
 }

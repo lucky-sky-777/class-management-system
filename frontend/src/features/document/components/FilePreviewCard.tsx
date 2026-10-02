@@ -7,8 +7,8 @@ import type { FileItem } from "@/features/document/types";
 interface FilePreviewCardProps {
   file: FileItem;
   onClick: () => void;
-  onEdit: (id: string | number, newName: string) => void;
-  onDelete: (id: string | number) => void;
+  onEdit?: (id: string | number, newName: string) => void;
+  onDelete?: (id: string | number) => void;
 }
 
 export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
@@ -37,7 +37,9 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
 
   const handleSave = () => {
     if (editName.trim() && editName.trim() !== file.name) {
-      onEdit(file.id, editName.trim());
+      if (onEdit) {
+        onEdit(file.id, editName.trim());
+      }
     } else {
       setEditName(file.name);
     }
@@ -58,39 +60,42 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
       className={`bg-[var(--bg-surface)] border ${isEditing ? "border-[#00B4D8] shadow-md" : "border-[var(--rule)]"} rounded-xl p-4 flex flex-col gap-3 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 w-full group relative`}
     >
       <div className="flex justify-between items-start">
-        {/* Render icon tương ứng với loại file */}
         <DocumentIcon extension={file.fileExtension} size={32} />
 
-        {/* Nhóm 2 nút công cụ Sửa & Xóa */}
-        {!isEditing && (
+        {/* CHỈ RENDER NHÓM NÚT NẾU CÓ TRUYỀN onEdit HOẶC onDelete */}
+        {!isEditing && (onEdit || onDelete) && (
           <div className="flex items-center gap-1 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsEditing(true);
-              }}
-              className="p-1.5 text-[var(--ink-3)] hover:text-[#00B4D8] hover:bg-[#E5F9FD] rounded-md transition-colors active:scale-95"
-              title="Đổi tên"
-            >
-              <Edit2 size={16} />
-            </button>
+            
+            {/* Chỉ hiện nút sửa nếu có hàm onEdit */}
+            {onEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
+                className="p-1.5 text-[var(--ink-3)] hover:text-[#00B4D8] hover:bg-[#E5F9FD] rounded-md transition-colors active:scale-95"
+                title="Đổi tên"
+              >
+                <Edit2 size={16} />
+              </button>
+            )}
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (
-                  window.confirm(
-                    `Bạn có chắc chắn muốn xóa file "${file.name}" không?`,
-                  )
-                ) {
-                  onDelete(file.id);
-                }
-              }}
-              className="p-1.5 text-[var(--ink-3)] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors active:scale-95"
-              title="Xóa file"
-            >
-              <Trash2 size={16} />
-            </button>
+            {/* Chỉ hiện nút xóa nếu có hàm onDelete */}
+            {onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm(`Bạn có chắc chắn muốn xóa file "${file.name}" không?`)) {
+                    onDelete(file.id);
+                  }
+                }}
+                className="p-1.5 text-[var(--ink-3)] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors active:scale-95"
+                title="Xóa file"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+            
           </div>
         )}
       </div>

@@ -16,7 +16,8 @@ export const useAuth = () => {
     }, [login]);
 
     const handleSignup = useCallback(async (username: string, password: string, displayname: string) => {
-        return await signup(username, password, displayname);
+        const res = await signup(username, password, displayname);
+        return res.success;
     }, [signup]);
 
     return {

@@ -44,28 +44,9 @@ import java.time.Instant;
 		name = "directories",
 		indexes = {
 				@Index(
-						name = "unique_index_directories_belong_to_user_id_name",
-						columnList = "belong_to_user_id, name",
-						unique = true,
-						options = "where \"belong_to_user_id\" is not null"
-				),
-				@Index(
-						name = "unique_index_directories_belong_to_class_id_name",
-						columnList = "belong_to_class_id, name",
-						unique = true,
-						options = "where \"belong_to_class_id\" is not null"
-				),
-				@Index(
-						name = "unique_index_directories_name_by_belong_to_user_id",
-						columnList = "name",
-						unique = true,
-						options = "where \"belong_to_user_id\" is not null"
-				),
-				@Index(
-						name = "unique_index_directories_name_by_belong_to_class_id",
-						columnList = "name",
-						unique = true,
-						options = "where \"belong_to_class_id\" is not null"
+						name = "unique_index_directories_class_id_name",
+						columnList = "class_id, name",
+						unique = true
 				)
 		}
 )
@@ -76,25 +57,15 @@ public class Directory {
 	@Column(name = "id", nullable = false)
 	Long id;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "type", nullable = false)
-	Type type;
-
-	public enum Type {
-		USER,
-		CLASS
-	}
-
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "belong_to_user_id", nullable = true)
-	User belongToUser;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "belong_to_class_id", nullable = true)
-	Class belongToClass;
+	@JoinColumn(name = "class_id", nullable = false)
+	Class clazz;
 
 	@Column(name = "name", nullable = false)
 	String name;
+
+	@Column(name = "slug", nullable = false)
+	String slug;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "creator_user_id", nullable = true)
@@ -102,32 +73,5 @@ public class Directory {
 
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "status", nullable = false)
-	Status status;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "actor_user_id", nullable = true)
-	User actor;
-
-	@Column(name = "acted_at", nullable = true)
-	Instant actedAt;
-
-	public enum Status {
-		PENDING,
-		APPROVED,
-		REJECTED
-	}
-
-	@PrePersist
-	public void prePersist() {
-		if (type == null) {
-			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR);
-		}
-		if (status == null) {
-			status = Status.PENDING;
-		}
-	}
 
 }

@@ -1,11 +1,12 @@
 import React from "react";
-import {
-  FileText,
-  Presentation,
-  FileImage,
-  FileVideo,
-  File,
-} from "lucide-react";
+import pdfIcon from "@/shared/components/icons/file_icon/pdf.png";
+import wordIcon from "@/shared/components/icons/file_icon/docx.png";
+import pptIcon from "@/shared/components/icons/file_icon/pptx.png";
+import pngIcon from "@/shared/components/icons/file_icon/png.png";
+import jpgIcon from "@/shared/components/icons/file_icon/jpg.png";
+import videoIcon from "@/shared/components/icons/file_icon/mp4.png";
+import defaultIcon from "@/shared/components/icons/file_icon/document.png";
+import txtIcon from "@/shared/components/icons/file_icon/txt.png";
 
 interface DocumentIconProps {
   extension: string;
@@ -18,63 +19,69 @@ export const DocumentIcon: React.FC<DocumentIconProps> = ({
   size = 16, // Kích thước mặc định nếu không truyền
   className = "",
 }) => {
-  // Trích xuất logic để trả về thẳng Component Icon thay vì thẻ JSX
   const getIconData = (ext: string) => {
     switch (ext.toLowerCase()) {
+      case "txt":
+        return {
+          iconSrc: txtIcon,
+          bgClass: "bg-gray-50",
+        };
       case "pdf":
         return {
-          IconComponent: FileText,
-          colorClass: "text-red-500",
+          iconSrc: pdfIcon,
           bgClass: "bg-red-50",
         };
       case "docx":
       case "doc":
         return {
-          IconComponent: FileText,
-          colorClass: "text-blue-500",
+          iconSrc: wordIcon,
           bgClass: "bg-blue-50",
         };
       case "pptx":
       case "ppt":
         return {
-          IconComponent: Presentation,
-          colorClass: "text-orange-500",
+          iconSrc: pptIcon,
           bgClass: "bg-orange-50",
         };
-      case "png":
       case "jpg":
+        return {
+          iconSrc: jpgIcon,
+          bgClass: "bg-green-50",
+        };
+      case "png":
       case "jpeg":
       case "webp":
         return {
-          IconComponent: FileImage,
-          colorClass: "text-green-500",
-          bgClass: "bg-green-50",
+          iconSrc: pngIcon,
+          bgClass: "bg-gray-50",
         };
       case "mp4":
       case "mov":
       case "avi":
         return {
-          IconComponent: FileVideo,
-          colorClass: "text-purple-500",
+          iconSrc: videoIcon,
           bgClass: "bg-purple-50",
         };
       default:
         return {
-          IconComponent: File,
-          colorClass: "text-[var(--ink-2)]",
+          iconSrc: defaultIcon,
           bgClass: "bg-[var(--bg-surface-3)]",
         };
     }
   };
 
-  const { IconComponent, colorClass, bgClass } = getIconData(extension);
+  const { iconSrc, bgClass } = getIconData(extension);
 
   return (
-    // Render khung nền và render Icon với size được truyền vào
     <div
-      className={`flex items-center justify-center p-2 rounded-[var(--r-sm)] shrink-0 ${bgClass} ${colorClass} ${className}`}
+      className={`flex items-center justify-center p-2 rounded-[var(--r-sm)] shrink-0 ${bgClass} ${className}`}
     >
-      <IconComponent size={size} />
+      <img
+        src={iconSrc}
+        alt={`${extension} icon`}
+        style={{ width: size, height: size }}
+        className="object-contain" // Đảm bảo ảnh không bị méo
+      />
     </div>
   );
 };

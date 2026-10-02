@@ -5,8 +5,10 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
     username: string;
-    display_name: string;
+    display_name?: string;
     password?: string;
+    email?: string;
+    avatar_url?: string;
 }
 
 export interface AuthResponse {
@@ -15,6 +17,8 @@ export interface AuthResponse {
 }
 
 export interface RegisterResponse {
+    user_id?: number;
+    id?: number;
     username: string;
 }
 
@@ -34,10 +38,20 @@ export interface UserResponse {
     avatar_url?: string;
     phone?: string;
     email?: string;
+    school?: string;
+    major?: string;
     joined_at?: string;
 }
 
 export interface ChangePasswordRequest {
-  old_password?: string;
-  new_password?: string;
+    old_password?: string;
+    new_password?: string;
+}
+
+export interface UpdateUserRequest {
+    display_name?: string;
+    avatar_url?: string;
+    school?: string;
+    major?: string;
+    phone?: string;
 }
