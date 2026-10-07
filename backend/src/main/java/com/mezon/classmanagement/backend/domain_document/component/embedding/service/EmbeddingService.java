@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.domain_document.component.embedding.se
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mezon.classmanagement.backend.common.constant.GeminiConstant;
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.env.GeminiEnv;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.common.util.GeminiPromptBuilder;
@@ -12,10 +13,7 @@ import com.mezon.classmanagement.backend.domain_document.component.embedding.dto
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.response.EmbeddingBatchResponse;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.response.EmbeddingData;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.response.EmbeddingResponse;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.Vector;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector3072;
-
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -31,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
+@SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Service
 @RequiredArgsConstructor
@@ -41,28 +40,10 @@ public class EmbeddingService {
 
 	GeminiEnv geminiEnv;
 
-	public void test() {
-	}
-
-	public String toVectorString(Vector3072 vector) {
-		return vector.toString();
-	}
-
-	public String toVectorString(Vector1536 vector) {
-		return vector.toString();
-	}
-
-	public float[] convertListToArray(List<Float> floatList) {
-		float[] floatArray = new float[floatList.size()];
-
-		for (int i = 0; i < floatList.size(); i++) {
-			floatArray[i] = floatList.get(i);
-		}
-
-		return floatArray;
-	}
-
-	public Vector1536 embedSingleMedia(byte[] mediaBytes, String mimeType) throws Exception {
+	/**
+	 * Tạo vector từ một Media (hình ảnh, âm thanh,...).
+	 */
+	public BaseVector embedSingleMedia(byte[] mediaBytes, String mimeType) throws Exception {
 		String base64Data = Base64.getEncoder().encodeToString(mediaBytes);
 
 		GeminiMediaEmbeddingRequest request = new GeminiMediaEmbeddingRequest(
@@ -83,16 +64,18 @@ public class EmbeddingService {
 		return send(jsonBody);
 	}
 
-	public Vector1536 embedSingleMedia(MultipartFile file) throws Exception {
+	// Tạo vector từ một Media (hình ảnh, âm thanh,...).
+	public BaseVector embedSingleMedia(MultipartFile file) throws Exception {
 		byte[] fileBytes = file.getBytes();
 
 		return embedSingleMedia(
 				fileBytes,
-				FileUtils.getMimeType(fileBytes)
+				FileUtils.detectMimeTypeFromMultipartFile(file)
 		);
 	}
 
-	public List<Vector1536> embedMultipleMedia(List<MultipartFile> multipartFileList) throws Exception {
+	// Tạo danh sách vector từ nhiều Media (hình ảnh, âm thanh,...).
+	public List<BaseVector> embedMultipleMedia(List<MultipartFile> multipartFileList) throws Exception {
 		List<GeminiBatchMediaEmbeddingRequest.Item> itemList = new ArrayList<>();
 
 		for (MultipartFile multipartFile : multipartFileList) {
@@ -103,7 +86,7 @@ public class EmbeddingService {
 									List.of(
 											new GeminiMediaEmbeddingRequest.Part(
 													new GeminiMediaEmbeddingRequest.InlineData(
-															FileUtils.getMimeType(multipartFile.getBytes()),
+															FileUtils.detectMimeTypeFromMultipartFile(multipartFile),
 															"base64"
 													)
 											)
@@ -126,19 +109,23 @@ public class EmbeddingService {
 	 * Text
 	 */
 
-	public Vector1536 embedSingleQueryText(String content) throws Exception {
+	// Tạo vector từ một đoạn văn bản.
+	// Dùng khi văn bản là một truy vấn (nội dung tìm kiếm, đặt câu hỏi,...).
+	public BaseVector embedSingleQueryText(String content) throws Exception {
 		String prompt = GeminiPromptBuilder.buildQueryPrompt(content);
 
 		return embedSingleText(prompt);
 	}
 
-	public Vector1536 embedSingleDocumentText(String title, String content) throws Exception {
+	// Tạo vector từ một đoạn văn bản.
+	// Dùng khi văn bản là một thông tin (nội dung trong tài liệu, câu trả lời,...).
+	public BaseVector embedSingleDocumentText(String title, String content) throws Exception {
 		String prompt = GeminiPromptBuilder.buildDocumentPrompt(title, content);
 
 		return embedSingleText(prompt);
 	}
 
-	private Vector1536 embedSingleText(String prompt) throws Exception {
+	private BaseVector embedSingleText(String prompt) throws Exception {
 		GeminiTextEmbeddingRequest request = new GeminiTextEmbeddingRequest(
 				GeminiConstant.Model.GEMINI_EMBEDDING_2.getName(),
 				new GeminiTextEmbeddingRequest.Content(
@@ -156,7 +143,7 @@ public class EmbeddingService {
 		return send(jsonBody);
 	}
 
-	public List<Vector1536> embedMultipleQueryText(List<String> contentList) throws Exception {
+	public List<BaseVector> embedMultipleQueryText(List<String> contentList) throws Exception {
 		List<String> promptList = new ArrayList<>();
 
 		for (String content : contentList) {
@@ -168,7 +155,7 @@ public class EmbeddingService {
 		return embedMultipleText(promptList);
 	}
 
-	public List<Vector1536> embedMultipleDocumentText(List<Pair<String, String>> titleAndContentList) throws Exception {
+	public List<BaseVector> embedMultipleDocumentText(List<Pair<String, String>> titleAndContentList) throws Exception {
 		List<String> promptList = new ArrayList<>();
 
 		for (Pair<String, String> titleAndContent : titleAndContentList) {
@@ -183,9 +170,9 @@ public class EmbeddingService {
 		return embedMultipleText(promptList);
 	}
 
-	private List<Vector1536> embedMultipleText(List<String> promptList) throws Exception {
+	private List<BaseVector> embedMultipleText(List<String> promptList) throws Exception {
 
-		List<Vector1536> allVectors = new ArrayList<>();
+		List<BaseVector> allVectors = new ArrayList<>();
 
 		int totalChunks = promptList.size();
 
@@ -198,7 +185,7 @@ public class EmbeddingService {
 			GeminiBatchTextEmbeddingRequest batchRequestBody = new GeminiBatchTextEmbeddingRequest(itemList);
 			String jsonBody = objectMapper.writeValueAsString(batchRequestBody);
 
-			List<Vector1536> batchResult = sendBatch(jsonBody);
+			List<BaseVector> batchResult = sendBatch(jsonBody);
 
 			allVectors.addAll(batchResult);
 
@@ -232,6 +219,16 @@ public class EmbeddingService {
 		return individualRequests;
 	}
 
+	private float[] convertListToArray(List<Float> floatList) {
+		float[] floatArray = new float[floatList.size()];
+
+		for (int i = 0; i < floatList.size(); i++) {
+			floatArray[i] = floatList.get(i);
+		}
+
+		return floatArray;
+	}
+
 //	public List<ChunkEmbeddingResult> processDocument(String fullText, int chunkSize, int chunkOverlap) throws Exception {
 //		List<ChunkEmbeddingResult> results = new ArrayList<>();
 //
@@ -251,7 +248,7 @@ public class EmbeddingService {
 //	private static final String MODEL_NAME = "models/gemini-embedding-2";
 
 
-	private Vector1536 send(String json) throws Exception {
+	private BaseVector send(String json) throws Exception {
 		HttpRequest request = buildRequest(
 				geminiEnv.apiUrl,
 				geminiEnv.apiKey,
@@ -262,13 +259,13 @@ public class EmbeddingService {
 
 		if (response.statusCode() == 200) {
 			EmbeddingResponse embedResponse = objectMapper.readValue(response.body(), EmbeddingResponse.class);
-			return new Vector1536(convertListToArray(embedResponse.embedding().values()));
+			return new BaseVector(convertListToArray(embedResponse.embedding().values()));
 		}
 
 		throw new RuntimeException(response.body());
 	}
 
-	private List<Vector1536> sendBatch(String json) throws Exception {
+	private List<BaseVector> sendBatch(String json) throws Exception {
 		HttpRequest request = buildRequest(
 				geminiEnv.batchApiUrl,
 				geminiEnv.apiKey,
@@ -279,9 +276,9 @@ public class EmbeddingService {
 
 		if (response.statusCode() == 200) {
 			EmbeddingBatchResponse batchResponse = objectMapper.readValue(response.body(), EmbeddingBatchResponse.class);
-			List<Vector1536> vectorList = new ArrayList<>();
+			List<BaseVector> vectorList = new ArrayList<>();
 			for (EmbeddingData embeddingData : batchResponse.embeddings()) {
-				vectorList.add(new Vector1536(convertListToArray(embeddingData.values())));
+				vectorList.add(new BaseVector(convertListToArray(embeddingData.values())));
 			}
 			return vectorList;
 		}

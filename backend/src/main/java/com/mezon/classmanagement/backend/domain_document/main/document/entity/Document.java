@@ -1,6 +1,5 @@
 package com.mezon.classmanagement.backend.domain_document.main.document.entity;
 
-import com.mezon.classmanagement.backend.common.constant.FileConstant;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;

@@ -1,5 +1,10 @@
-package com.mezon.classmanagement.backend.domain_document.component.tag.service;
+package com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service;
 
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
+import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
+import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.MultipartFileDocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.nlp.analyzer.VnCoreNLPAnalyzer;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +14,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -17,14 +23,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
 public class TagService {
 
+	ChunkService chunkService;
+	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
+
 	VnCoreNLPAnalyzer vnCoreNLPAnalyzer;
 	StandardAnalyzer standardAnalyzer = new StandardAnalyzer();
 
+	/**
+	 * Code mới viết từ đây
+	 */
+
+	@SuppressWarnings({WarningConstant.UNUSED})
+	public void placeHolder() {}
+
+	/**
+	 * Code mới viết đến đây
+	 */
+
+	@Deprecated
 	public List<String> extractTagsWithStandard(
 			String content,
 			int topK
@@ -32,11 +54,27 @@ public class TagService {
 		return getTagList(content, topK, standardAnalyzer);
 	}
 
+	@Deprecated
 	public List<String> extractTagsWithVnCoreNLP(
 			String content,
 			int topK
 	) throws Exception {
 		return getTagList(content, topK, vnCoreNLPAnalyzer);
+	}
+
+	public List<String> extractTagsWithVnCoreNLP(
+			MultipartFile multipartFile,
+			int topK
+	) throws Exception {
+		DocumentSource documentSource = new MultipartFileDocumentSource(multipartFile);
+
+		List<String> chunkList = chunkService
+				.getChunkList(
+						chunkByParagraphWithoutOverlapStrategy,
+						documentSource
+				);
+
+		return getTagListFromChunkList(chunkList, topK, vnCoreNLPAnalyzer);
 	}
 
 	public List<String> extractTagsWithVnCoreNLP(
@@ -46,7 +84,7 @@ public class TagService {
 		return getTagListFromChunkList(chunkList, topK, vnCoreNLPAnalyzer);
 	}
 
-	public List<String> getTagList(
+	private List<String> getTagList(
 			String content,
 			int topK,
 			Analyzer analyzer
@@ -58,7 +96,7 @@ public class TagService {
 		return getTopTagList(termFrequencies, topK);
 	}
 
-	public List<String> getTagListFromChunkList(
+	private List<String> getTagListFromChunkList(
 			List<String> chunkList,
 			int topK,
 			Analyzer analyzer

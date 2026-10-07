@@ -14,9 +14,4 @@ public class Vector1536 extends BaseVector {
 		super(values);
 	}
 
-	@Override
-	protected boolean isValidDimension() {
-		return getDimension() == DIMENSION;
-	}
-
 }

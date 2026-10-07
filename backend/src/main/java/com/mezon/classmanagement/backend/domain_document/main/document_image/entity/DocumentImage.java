@@ -3,7 +3,6 @@ package com.mezon.classmanagement.backend.domain_document.main.document_image.en
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
-import com.mezon.classmanagement.backend.domain_document.main.tag.tag.entity.Tag;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;

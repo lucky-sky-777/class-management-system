@@ -1,18 +1,26 @@
 package com.mezon.classmanagement.backend.common.util;
 
+import com.mezon.classmanagement.backend.common.constant.FileTypeUtils;
 import com.mezon.classmanagement.backend.domain_document.component.tika.parser.TikaImageMarkerParser;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
-import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.document.loader.FileSystemDocumentLoader;
 import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
 import org.apache.tika.Tika;
+import org.apache.tika.config.loader.TikaLoader;
+import org.apache.tika.detect.Detector;
+import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.ParseContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,38 +40,102 @@ public final class FileUtils {
 		return tmp;
 	}
 
-	public static String getMimeType(MultipartFile multipartFile) {
-		try {
-			return TIKA.detect(multipartFile.getBytes()).toLowerCase(Locale.ROOT);
-		} catch (Exception e) {
-			throw new RuntimeException();
+	public static Metadata setOriginalFileName(MultipartFile multipartFile) {
+		Metadata metadata = new Metadata();
+		String originalFileName = getName(multipartFile);
+
+		if (originalFileName != null) {
+			metadata.set(
+					TikaCoreProperties.RESOURCE_NAME_KEY,
+					originalFileName
+			);
+
+			return metadata;
+		}
+
+		return metadata;
+	}
+
+	public static Metadata setOriginalFileName(String originalFileName) {
+		Metadata metadata = new Metadata();
+
+		if (originalFileName != null) {
+			metadata.set(
+					TikaCoreProperties.RESOURCE_NAME_KEY,
+					originalFileName
+			);
+
+			return metadata;
+		}
+
+		return metadata;
+	}
+
+	@Deprecated
+	public static String detectMimeType2(MultipartFile file) throws IOException {
+		Detector detector = TIKA.getDetector();
+
+		Metadata metadata = setOriginalFileName(file);
+
+		try (TikaInputStream tikaInputStream = TikaInputStream.get(file.getInputStream())) {
+			MediaType mediaType = detector.detect(
+					tikaInputStream,
+					metadata,
+					new ParseContext()
+			);
+
+			return mediaType.toString();
 		}
 	}
 
-	public static String getMimeType(byte[] fileBytes) {
-		return TIKA.detect(fileBytes).toLowerCase(Locale.ROOT);
+	public static String detectMimeTypeFromInputStream(InputStream inputStream, String originalFileName) throws Exception {
+		Metadata metadata = setOriginalFileName(originalFileName);
+		return detectMimeType(inputStream, metadata);
 	}
 
-	public static String getMimeType(String extension) {
-		return TIKA.detect("file." + extension).toLowerCase(Locale.ROOT);
+	public static String detectMimeTypeFromMultipartFile(MultipartFile file) throws Exception {
+		Metadata metadata = setOriginalFileName(file);
+		return detectMimeType(file.getInputStream(), metadata);
+	}
+
+	public static String detectMimeType(String extension) {
+		if (!FileTypeUtils.isValidExtension(extension.toLowerCase(Locale.ROOT))) {
+			//FileTypeUtils.invalidExtension();
+			throw new RuntimeException();
+		}
+		return TIKA.detect("file." + extension);
+	}
+
+	private static String detectMimeType(InputStream inputStream, Metadata metadata) throws Exception {
+		Detector detector = TikaLoader.loadDefault().loadDetectors();
+
+		try (TikaInputStream tikaInputStream = TikaInputStream.get(inputStream)) {
+			MediaType type = detector.detect(
+					tikaInputStream,
+					metadata,
+					new ParseContext()
+			);
+
+			return type.toString();
+		}
 	}
 
 	public static String getExtension(MultipartFile multipartFile) {
 		String fileName = getName(multipartFile);
 
 		return fileName
-				.substring(
-						fileName.lastIndexOf(".") + 1
-				)
+				.substring(fileName.lastIndexOf(".") + 1)
 				.toLowerCase(Locale.ROOT);
 	}
 
 	public static String getName(MultipartFile multipartFile) {
 		String fileName = multipartFile.getOriginalFilename();
-		if (fileName == null || fileName.isEmpty()) {
+
+		if (fileName == null || fileName.isBlank()) {
 			return createFileNameFromTimestamp();
 		}
-		return multipartFile.getOriginalFilename();
+
+		return fileName;
 	}
 
 	public static String createFileNameFromTimestamp() {
@@ -113,7 +185,7 @@ public final class FileUtils {
 		}
 	}
 
-	public static String getFileNameFromMetadata(Metadata metadata) {
+	public static String getFileNameFromMetadata(dev.langchain4j.data.document.Metadata metadata) {
 		return metadata.getString("file_name");
 	}
 

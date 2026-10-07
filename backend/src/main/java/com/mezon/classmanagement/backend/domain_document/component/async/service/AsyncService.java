@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain_document.component.async.servic
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,7 +18,7 @@ public class AsyncService {
 	UserService userService;
 
 	@Async
-	public void updateUserEmbedding(String username, Vector1536 embedding) {
+	public void updateUserEmbedding(String username, BaseVector embedding) {
 		userService.updateEmbedding(username, embedding);
 	}
 

@@ -7,7 +7,7 @@ import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
 import com.mezon.classmanagement.backend.domain.auth.repository.UserRepository;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.Vector;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -72,10 +72,10 @@ public class UserService {
 	}
 
 	@Transactional
-	public void updateEmbedding(String username, Vector1536 embedding) {
+	public void updateEmbedding(String username, BaseVector embedding) {
 		User user = findByUsernameOrThrow(username);
 
-		user.setEmbedding(embedding);
+		user.setEmbedding((Vector1536) embedding);
 
 		save(user);
 	}

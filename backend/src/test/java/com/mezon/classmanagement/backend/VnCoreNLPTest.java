@@ -1,16 +1,12 @@
 package com.mezon.classmanagement.backend;
 
-import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatter;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatterPipeline;
-import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.impl.GeminiChunkFormatter;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.ChunkStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.MultipartFileDocumentSource;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphWithoutOverlapStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.tag.service.TagService;
+import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

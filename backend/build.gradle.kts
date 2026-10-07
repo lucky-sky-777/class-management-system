@@ -40,21 +40,24 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.6.3")
 
     implementation("org.apache.poi:poi:5.5.1")
-    implementation("org.apache.tika:tika:3.3.1")
+    implementation("org.apache.tika:tika:4.0.0")
+    implementation("org.apache.tika:tika-serialization:4.1.0")
+    implementation("org.apache.tika:tika-core:4.1.0")
     implementation("dev.langchain4j:langchain4j:1.17.1")
     //implementation("dev.langchain4j:langchain4j-core:1.17.1")
     implementation("dev.langchain4j:langchain4j-open-ai:1.17.1")
     //implementation("dev.langchain4j:langchain4j-easy-rag:1.17.1-beta27")
-    //implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.17.1")
+    implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.17.1")
     //implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
     implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.17.1-beta27")
 
     implementation("io.minio:minio:9.0.3")
     implementation("software.amazon.awssdk:s3:2.55.6")
+    implementation("com.google.guava:guava:33.7.2-jre")
 
     implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
-    implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc")
+    //implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc")
 
     implementation("ai.djl.sentencepiece:sentencepiece:0.36.0")
     implementation("org.apache.lucene:lucene-core:10.5.0")
@@ -79,6 +82,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     annotationProcessor("org.projectlombok:lombok")
+    //implementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     runtimeOnly("org.postgresql:postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

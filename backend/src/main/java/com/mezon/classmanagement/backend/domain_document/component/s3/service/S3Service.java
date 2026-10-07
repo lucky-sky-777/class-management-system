@@ -18,7 +18,6 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.UUID;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -31,7 +30,7 @@ public class S3Service {
 		return !bucketExists(bucketName);
 	}
 
-	private boolean bucketExists(String bucketName) {
+	public boolean bucketExists(String bucketName) {
 		try {
 			s3Client.headBucket(
 					HeadBucketRequest.builder()
@@ -72,12 +71,10 @@ public class S3Service {
 	public String uploadFileToPath(
 			MultipartFile file,
 			String bucketName,
-			String targetPath
+			String targetPath,
+			String storageFileName
 	) throws Exception {
 		throwIfBucketNotExists(bucketName);
-
-		String originalFilename = file.getOriginalFilename();
-		String storageFileName = UUID.randomUUID().toString();
 
 		if (StringUtils.hasText(targetPath)) {
 			targetPath = ensureForwardSlash(targetPath);
@@ -128,7 +125,7 @@ public class S3Service {
 					PutObjectRequest.builder()
 							.bucket(bucketName)
 							.key(directoryName)
-							.contentType(FileUtils.getMimeType(multipartFile))
+							.contentType(FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
 							.build(),
 					RequestBody.fromInputStream(
 							inputStream,

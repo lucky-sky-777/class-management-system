@@ -7,7 +7,7 @@ import com.mezon.classmanagement.backend.domain_document.component.chunk.service
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.service.IngestService;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.TextRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -66,9 +66,9 @@ public class DocumentController {
 	public void embed(
 			@RequestParam String text
 	) throws Exception {
-		Vector1536 vector3072 = embeddingService.embedSingleQueryText(text);
+		BaseVector vector3072 = embeddingService.embedSingleQueryText(text);
 
-		System.out.println(embeddingService.toVectorString(vector3072));
+		//System.out.println(embeddingService.toVectorString(vector3072));
 	}
 
 	@PostMapping("/token")

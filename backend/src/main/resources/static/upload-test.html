@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+
+    <div>
+        <p>http://localhost:8080/<span><input id="endpointInput" placeholder="endpoint" value="api/document-tags"/></span></p>
+    </div>
+
+    <div>
+        <label>File</label>
+
+        <input
+                type="file"
+                id="fileInput"
+        >
+    </div>
+
+    <button onclick="uploadFile()">
+        Upload
+    </button>
+
+    <div id="result"></div>
+
+</div>
+</body>
+
+<script>
+
+    async function uploadFile() {
+
+        const endpointInput = document.getElementById("endpointInput");
+        const fileInput = document.getElementById("fileInput");
+        const result = document.getElementById("result");
+
+        if (fileInput.files.length === 0) {
+            result.innerText = "Vui lòng chọn file";
+            return;
+        }
+
+        const file = fileInput.files[0];
+
+        const formData = new FormData();
+
+        formData.append("multipartFile", file);
+
+        try {
+
+            const response = await fetch(
+                "http://localhost:8080/" + endpointInput.value,
+                {
+                    method: "GET",
+                    body: formData
+                }
+            );
+
+            const data = await response.text();
+
+            if (!response.ok) {
+                console.error(data);
+                result.innerText = data;
+                return;
+            }
+
+            result.innerText = data;
+
+        } catch (error) {
+
+            result.innerText = "fail";
+        }
+    }
+
+</script>
+
+</html>
