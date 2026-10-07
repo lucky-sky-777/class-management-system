@@ -110,9 +110,16 @@ public class S3Service {
 	public void createDirectory(
 			String bucketName,
 			String directoryName
-	) throws Exception {
+	) {
 		directoryName = ensureForwardSlash(directoryName);
-		createEmptyFile(bucketName, directoryName);
+		try {
+			createEmptyFile(bucketName, directoryName);
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR,
+					"Can not create Directory"
+			);
+		}
 	}
 
 	public void createFile(
@@ -135,7 +142,7 @@ public class S3Service {
 		}
 	}
 
-	public void createEmptyFile(
+	private void createEmptyFile(
 			String bucketName,
 			String directoryName
 	) throws Exception {

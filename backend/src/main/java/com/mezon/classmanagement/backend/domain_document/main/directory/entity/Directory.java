@@ -3,6 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.main.directory.entity;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.CodeGenerator;
 import com.mezon.classmanagement.backend.common.util.DateTimeUtils;
+import com.mezon.classmanagement.backend.common.util.SlugGenerator;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
@@ -28,7 +29,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.generator.EventType;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -71,7 +74,13 @@ public class Directory {
 	@JoinColumn(name = "creator_user_id", nullable = true)
 	User creator;
 
+	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
+
+	@PrePersist
+	public void prePersist() {
+		slug = SlugGenerator.generate(name);
+	}
 
 }
