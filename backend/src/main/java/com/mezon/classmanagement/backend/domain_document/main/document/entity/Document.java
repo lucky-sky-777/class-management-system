@@ -6,6 +6,8 @@ import com.mezon.classmanagement.backend.domain_document.component.vector.entity
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -13,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -57,7 +60,7 @@ public class Document {
 	@Column(name = "id", nullable = false)
 	Long id;
 
-	@Column(name = "key", nullable = false)
+	@Column(name = "key", nullable = true)
 	String key;
 
 	@Column(name = "title", nullable = false)
@@ -65,9 +68,6 @@ public class Document {
 
 	@Column(name = "description", nullable = true)
 	String description;
-
-	@Column(name = "is_image", nullable = false)
-	Boolean isImage;
 
 	@Column(name = "file_name", nullable = false)
 	String fileName;
@@ -86,5 +86,22 @@ public class Document {
 
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "status", nullable = false)
+	Status status;
+
+	public enum Status {
+		UPLOADING,
+		UPLOADED,
+		ERROR
+	}
+
+	@PrePersist
+	public void prePersist() {
+		if (embedding == null) {
+			embedding = new Vector1536();
+		}
+	}
 
 }
