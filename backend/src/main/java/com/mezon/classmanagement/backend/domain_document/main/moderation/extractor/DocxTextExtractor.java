@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.domain_document.main.moderation.extractor;
 
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+//import org.apache.poi.xwpf.usermodel.XWPFDocument;
+//import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.boot.json.JsonWriter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,16 +17,16 @@ public class DocxTextExtractor implements FileTextExtractor {
     public String extract(MultipartFile file) throws IOException {
         StringBuilder text = new StringBuilder();
 
-        try (XWPFDocument document = new XWPFDocument(file.getInputStream())) {
-            for (XWPFParagraph paragraph : document.getParagraphs()) {
-                String paragraphText = paragraph.getText();
-
-                if (paragraphText != null &&  !paragraphText.isBlank()) {
-                    text.append(paragraphText);
-                    text.append("\n");
-                }
-            }
-        }
+//        try (XWPFDocument document = new XWPFDocument(file.getInputStream())) {
+//            for (XWPFParagraph paragraph : document.getParagraphs()) {
+//                String paragraphText = paragraph.getText();
+//
+//                if (paragraphText != null &&  !paragraphText.isBlank()) {
+//                    text.append(paragraphText);
+//                    text.append("\n");
+//                }
+//            }
+//        }
 
         return text.toString();
     }

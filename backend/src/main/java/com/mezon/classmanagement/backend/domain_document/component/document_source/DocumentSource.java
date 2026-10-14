@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.Set;
 
 public abstract class DocumentSource {
@@ -13,7 +14,8 @@ public abstract class DocumentSource {
 	public static final Set<Class<?>> ALLOWED_SOURCE_TYPES = Set.of(
 			String.class,
 			MultipartFile.class,
-			File.class
+			File.class,
+			InputStream.class
 	);
 
 	@Getter

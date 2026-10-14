@@ -1,6 +1,8 @@
 package com.mezon.classmanagement.backend.chunking;
 
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
+import com.mezon.classmanagement.backend.domain_document.component.parser.CustomDocumentParser;
+import com.mezon.classmanagement.backend.domain_document.component.parser.impl.TikaV4XDocumentParser;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphWithoutOverlapStrategy;
 import lombok.AccessLevel;
@@ -63,6 +65,23 @@ public class DocumentChunkingTest {
 		System.out.println("begin without overlap");
 		chunkList.forEach(System.out::println);
 		System.out.println("end without overlap");
+	}
+
+	@Test
+	public void testCustomParser() throws Exception {
+		ClassPathResource classPathResource = new ClassPathResource("triethocmaclenin.docx");
+		MockMultipartFile multipartFile = new MockMultipartFile(
+				"triethocmaclenin.docx",
+				classPathResource.getInputStream()
+		);
+
+		CustomDocumentParser parser = new TikaV4XDocumentParser();
+
+		String path = "";
+
+
+
+		System.out.println(path);
 	}
 
 //	@Test

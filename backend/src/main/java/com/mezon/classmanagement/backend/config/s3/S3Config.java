@@ -30,6 +30,7 @@ public class S3Config {
 		public static final String UPLOAD = FileUtils.buildPath("upload");
 		public static final String UPLOAD_USER = FileUtils.buildPath(UPLOAD, "user");
 		public static final String UPLOAD_CLASS = FileUtils.buildPath(UPLOAD, "class");
+		public static final String UPLOAD_TEMP = FileUtils.buildPath(UPLOAD, "temp");
 	}
 
 	@Bean

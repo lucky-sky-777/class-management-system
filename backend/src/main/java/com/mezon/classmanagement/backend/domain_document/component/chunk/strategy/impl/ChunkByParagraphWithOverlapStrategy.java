@@ -29,11 +29,6 @@ public class ChunkByParagraphWithOverlapStrategy implements ChunkStrategy {
 	}
 
 	@Override
-	public List<String> format(List<String> textList) {
-		return List.of();
-	}
-
-	@Override
 	public List<String> getChunkList(DocumentSource documentSource) throws Exception {
 		return splitService.getChunkList(
 				splitByParagraphStrategy,

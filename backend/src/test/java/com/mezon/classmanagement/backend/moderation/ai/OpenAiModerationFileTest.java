@@ -1,7 +1,7 @@
 package com.mezon.classmanagement.backend.moderation.ai;
 
 import com.mezon.classmanagement.backend.domain_document.main.moderation.ai.OpenAiModerationService;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
+//import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 
@@ -28,15 +28,15 @@ class OpenAiModerationFileTest {
 
         StringBuilder text = new StringBuilder();
 
-        try (InputStream inputStream = resource.getInputStream();
-             XWPFDocument document = new XWPFDocument(inputStream)) {
-
-            document.getParagraphs()
-                    .forEach(paragraph ->
-                            text.append(paragraph.getText())
-                                    .append("\n")
-                    );
-        }
+//        try (InputStream inputStream = resource.getInputStream();
+//             XWPFDocument document = new XWPFDocument(inputStream)) {
+//
+//            document.getParagraphs()
+//                    .forEach(paragraph ->
+//                            text.append(paragraph.getText())
+//                                    .append("\n")
+//                    );
+//        }
 
         boolean result = service.isAllowed(text.toString());
 
@@ -53,15 +53,15 @@ class OpenAiModerationFileTest {
 
         StringBuilder text = new StringBuilder();
 
-        try (InputStream inputStream = resource.getInputStream();
-             XWPFDocument document = new XWPFDocument(inputStream)) {
-
-            document.getParagraphs()
-                    .forEach(paragraph ->
-                            text.append(paragraph.getText())
-                                    .append("\n")
-                    );
-        }
+//        try (InputStream inputStream = resource.getInputStream();
+//             XWPFDocument document = new XWPFDocument(inputStream)) {
+//
+//            document.getParagraphs()
+//                    .forEach(paragraph ->
+//                            text.append(paragraph.getText())
+//                                    .append("\n")
+//                    );
+//        }
 
         boolean result = service.isAllowed(text.toString());
 

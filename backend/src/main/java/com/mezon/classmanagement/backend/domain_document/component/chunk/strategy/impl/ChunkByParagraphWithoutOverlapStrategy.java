@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl;
 
+import com.mezon.classmanagement.backend.common.misc.Nameable;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.builder.ChunkListBuilder;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.ChunkStrategy;
@@ -26,11 +27,6 @@ public class ChunkByParagraphWithoutOverlapStrategy implements ChunkStrategy {
 	@Override
 	public String getName() {
 		return NAME;
-	}
-
-	@Override
-	public List<String> format(List<String> textList) {
-		return List.of();
 	}
 
 	@Override

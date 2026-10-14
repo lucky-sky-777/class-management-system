@@ -15,12 +15,12 @@ import dev.langchain4j.data.segment.TextSegment;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.apache.poi.hwpf.HWPFDocument;
-import org.apache.poi.hwpf.extractor.WordExtractor;
-import org.apache.poi.ooxml.POIXMLProperties;
-import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+//import org.apache.poi.hwpf.HWPFDocument;
+//import org.apache.poi.hwpf.extractor.WordExtractor;
+//import org.apache.poi.ooxml.POIXMLProperties;
+//import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
+//import org.apache.poi.xwpf.usermodel.XWPFDocument;
+//import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -108,33 +108,33 @@ public class ChunkService {
 	}
 
 
-	@Deprecated
-	public List<String> getChunkListFromFilePath(
-			String filePath,
-			DocumentSplitter documentSplitter
-	) {
-		try {
-			FileInputStream fis = new FileInputStream(filePath);
-
-			XWPFDocument document = new XWPFDocument(fis);
-			XWPFWordExtractor wordExtractor = new XWPFWordExtractor(document);
-			POIXMLProperties.CoreProperties props =
-					document.getProperties().getCoreProperties();
-
-			HWPFDocument document1 = new HWPFDocument(fis);
-			WordExtractor wordExtractor1 = new WordExtractor(document1);
-
-			System.out.println(props.getCreator());
-			System.out.println(props.getLastModifiedByUser());
-
-			for (XWPFParagraph paragraph : document.getParagraphs()) {
-				System.out.println(" - " + paragraph.getText());
-			}
-
-			document.close();
-		} catch (Exception ignored) {
-		}
-		return null;
-	}
+//	@Deprecated
+//	public List<String> getChunkListFromFilePath(
+//			String tempFilePath,
+//			DocumentSplitter documentSplitter
+//	) {
+//		try {
+//			FileInputStream fis = new FileInputStream(tempFilePath);
+//
+//			XWPFDocument document = new XWPFDocument(fis);
+//			XWPFWordExtractor wordExtractor = new XWPFWordExtractor(document);
+//			POIXMLProperties.CoreProperties props =
+//					document.getProperties().getCoreProperties();
+//
+//			HWPFDocument document1 = new HWPFDocument(fis);
+//			WordExtractor wordExtractor1 = new WordExtractor(document1);
+//
+//			System.out.println(props.getCreator());
+//			System.out.println(props.getLastModifiedByUser());
+//
+//			for (XWPFParagraph paragraph : document.getParagraphs()) {
+//				System.out.println(" - " + paragraph.getText());
+//			}
+//
+//			document.close();
+//		} catch (Exception ignored) {
+//		}
+//		return null;
+//	}
 
 }
