@@ -103,7 +103,7 @@ public class TopicService {
         return topicRepository
                 .findById(id)
                 .orElseThrow(() ->
-                        new GlobalException(GlobalException.Type.NOT_FOUND, "Topic not found")
+                        new GlobalException(GlobalException.Type.NOT_EXISTS, "Topic not found")
                 );
     }
 }

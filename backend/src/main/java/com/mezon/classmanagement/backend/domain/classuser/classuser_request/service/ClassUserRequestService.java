@@ -209,7 +209,7 @@ public class ClassUserRequestService {
 
 	private void throwIfEmptyList(List<ClassUserRequest> classUserRequestList) {
 		if (classUserRequestList.isEmpty()) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Join class request not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Join class request not found");
 		}
 	}
 

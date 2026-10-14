@@ -44,4 +44,17 @@ public class AsyncConfig {
 		return executor;
 	}
 
+	@Bean("documentExecutor")
+	public Executor documentExecutor() {
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+		executor.setCorePoolSize(2);
+		executor.setMaxPoolSize(5);
+		executor.setQueueCapacity(100);
+		executor.setThreadNamePrefix("document-");
+		executor.initialize();
+
+		return executor;
+	}
+
 }

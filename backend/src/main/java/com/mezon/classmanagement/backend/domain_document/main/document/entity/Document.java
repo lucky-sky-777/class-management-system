@@ -3,6 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.main.document.entity;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.directory_document.entity.DirectoryDocument;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -24,7 +25,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.generator.EventType;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -102,6 +105,12 @@ public class Document {
 		if (embedding == null) {
 			embedding = new Vector1536();
 		}
+	}
+
+	public static Document create(Long id) {
+		return Document.builder()
+				.id(id)
+				.build();
 	}
 
 }

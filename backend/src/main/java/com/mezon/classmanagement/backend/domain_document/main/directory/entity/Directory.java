@@ -8,6 +8,7 @@ import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.directory_document.entity.DirectoryDocument;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -81,6 +82,12 @@ public class Directory {
 	@PrePersist
 	public void prePersist() {
 		slug = SlugGenerator.generate(name);
+	}
+
+	public static Directory create(Long id) {
+		return Directory.builder()
+				.id(id)
+				.build();
 	}
 
 }

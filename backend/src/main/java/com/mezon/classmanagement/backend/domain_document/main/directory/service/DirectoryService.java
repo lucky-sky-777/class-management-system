@@ -107,6 +107,33 @@ public class DirectoryService {
 	}
 
 	@Transactional(readOnly = true)
+	public boolean existsById(Long id) {
+		return directoryRepository.existsById(id);
+	}
+
+	@Transactional(readOnly = true)
+	public Directory findByIdOrThrow(Long id) {
+		return directoryRepository
+				.findById(id)
+				.orElseThrow(() ->
+						new GlobalException(
+								GlobalException.Type.NOT_EXISTS,
+								"Directory not exists"
+						)
+				);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfNotExistsById(Long id) {
+		if (!existsById(id)) {
+			throw new GlobalException(
+					GlobalException.Type.NOT_EXISTS,
+					"Directory not exists"
+			);
+		}
+	}
+
+	@Transactional(readOnly = true)
 	public List<DirectoryResponseDto> getByClassId(Long classId) {
 		return directoryRepository.getByClazz_Id(classId);
 	}

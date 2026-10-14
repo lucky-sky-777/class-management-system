@@ -141,7 +141,7 @@ public class FundService {
 		return fundRepository
 				.findByClazz_IdAndId(classId, fundId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "Fund not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "Fund not found")
 				);
 	}
 

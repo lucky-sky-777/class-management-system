@@ -142,7 +142,7 @@ public class GroupUserService {
 		return groupUserRepository
 				.findByClazz_IdAndUser_Id(classId, userId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "Group user not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "Group user not found")
 				);
 	}
 
@@ -151,7 +151,7 @@ public class GroupUserService {
 		return groupUserRepository
 				.findByClazz_IdAndGroup_IdAndUser_Id(classId, groupId, userId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "Group user not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "Group user not found")
 				);
 	}
 
@@ -160,7 +160,7 @@ public class GroupUserService {
 		return groupUserRepository
 				.findByClazz_IdAndGroup_IdAndDeskAndDeskPosition(classId ,groupId, desk, deskPosition)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "Group user not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "Group user not found")
 				);
 	}
 
@@ -189,7 +189,7 @@ public class GroupUserService {
 	@Transactional(readOnly = true)
 	public void throwIfExistsByClassIdAndGroupIdAndUserId(Long classId, Long groupId, Long userId) {
 		if (existsByClassIdAndGroupIdAndUserid(classId, groupId, userId)) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Group user exists");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Group user exists");
 		}
 	}
 
