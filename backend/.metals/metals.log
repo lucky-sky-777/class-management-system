@@ -1,0 +1,71 @@
+2026.10.14 11:43:51 INFO  Tracing is disabled for protocol LSP. To enable tracing of incoming and outgoing JSON messages, create an empty file at k:\NCKH\class-management-system\backend\.metals\lsp.trace.json or C:\Users\duykh\AppData\Local\scalameta\metals\cache\lsp.trace.json
+2026.10.14 11:43:55 INFO  logging to files K:\NCKH\class-management-system\backend\.metals\metals.log
+2026.10.14 11:43:55 INFO  Started: Metals version 1.6.9 in folders 'K:\NCKH\class-management-system\backend' for client Visual Studio Code 1.141.0.
+2026.10.14 11:43:55 INFO  Memory monitor started
+2026.10.14 11:43:59 WARN  Using H2 2.5.250 which is newer than the version Flyway has been verified with. The latest verified version of H2 is 2.3.232.
+2026.10.14 11:44:00 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java. Using fallback presentation compiler.
+2026.10.14 11:46:04 WARN  no build target for: K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java
+2026.10.14 11:46:07 INFO  time: code lens generation in 2.66s
+2026.10.14 11:46:31 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java. Using fallback presentation compiler.
+2026.10.14 11:46:36 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java. Using fallback presentation compiler.
+2026.10.14 11:47:57 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java. Using fallback presentation compiler.
+2026.10.14 11:53:28 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java. Using fallback presentation compiler.
+2026.10.14 11:54:18 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java. Using fallback presentation compiler.
+thg 10 14, 2026 11:54:18 SA org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 14
+2026.10.14 11:54:22 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\controller\DocumentTagController.java. Using fallback presentation compiler.
+2026.10.14 11:54:22 WARN  no build target for: K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java
+2026.10.14 11:54:22 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:54:23 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:54:24 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:54:25 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+thg 10 14, 2026 11:54:26 SA org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 22
+2026.10.14 11:54:25 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:54:28 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:54:41 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:54:47 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:55:15 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:55:15 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:55:15 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:55:15 WARN  no build target for: K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java
+2026.10.14 11:55:15 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:55:16 WARN  no build target for: K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java
+2026.10.14 11:55:37 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:56:53 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:02 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:03 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+thg 10 14, 2026 11:57:03 SA org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 68
+2026.10.14 11:57:03 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:03 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:06 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:10 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:11 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:11 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:11 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:12 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:12 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:15 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:17 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:17 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 11:57:23 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+thg 10 14, 2026 11:57:26 SA org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 80
+thg 10 14, 2026 11:57:35 SA org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 81
+2026.10.14 12:01:06 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 12:01:41 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+thg 10 14, 2026 12:01:43 CH org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 82
+2026.10.14 12:01:43 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+thg 10 14, 2026 12:01:43 CH org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 83
+thg 10 14, 2026 12:01:43 CH org.eclipse.lsp4j.jsonrpc.RemoteEndpoint handleCancellation
+WARNING: Unmatched cancel notification for request id 84
+2026.10.14 12:01:43 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 12:01:43 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 12:01:43 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 12:01:44 INFO  no build target found for K:\NCKH\class-management-system\backend\src\main\java\com\mezon\classmanagement\backend\domain_document\component\document_tag\tag\entity\Tag.java. Using fallback presentation compiler.
+2026.10.14 12:01:47 INFO  time: code lens generation in 3.2s
+2026.10.14 12:01:52 INFO  time: code lens generation in 8.23s

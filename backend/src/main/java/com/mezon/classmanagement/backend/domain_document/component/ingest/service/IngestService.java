@@ -11,6 +11,7 @@ import com.mezon.classmanagement.backend.domain_document.component.chunk.strateg
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.FileDocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
+import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
@@ -40,6 +41,7 @@ public class IngestService {
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
 	ChunkByParagraphWithOverlapStrategy chunkByParagraphWithOverlapStrategy;
 	FileProducer fileProducer;
+	TagService tagService;
 
 	public void ingest(MultipartFile file) {
 		try {
@@ -73,7 +75,11 @@ public class IngestService {
 							documentSource
 					);
 
-			chunkList.forEach(System.out::println);
+			try {
+				tagService.autoTag(originalFileName, chunkList);
+			} catch (Exception e) {
+				System.out.println("Auto-tag failed (khong chan ingest): " + e.getMessage());
+			}
 
 
 

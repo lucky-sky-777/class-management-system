@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mezon.classmanagement.backend.common.util.SlugGenerator;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
@@ -42,7 +43,6 @@ import java.time.Instant;
 		}
 )
 public class Tag {
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id", nullable = false)
@@ -53,6 +53,7 @@ public class Tag {
 
 	@Column(name = "slug", nullable = false)
 	String slug;
+
 
 	@JdbcTypeCode(value = SqlTypes.VECTOR)
 	@Convert(converter = Vector1536Converter.class)
