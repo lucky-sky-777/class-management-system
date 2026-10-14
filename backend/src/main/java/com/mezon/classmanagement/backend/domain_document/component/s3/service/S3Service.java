@@ -12,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -87,6 +89,43 @@ public class S3Service {
 		createFile(bucketName, objectName, file);
 
 		return objectName;
+	}
+
+	public boolean exists() {
+		return false;
+	}
+
+	public InputStream getTempFile(String fileName) {
+		return s3Client.getObject(
+				GetObjectRequest.builder()
+						.bucket(S3Config.Bucket.ROOT)
+						.key(
+								FileUtils
+										.buildPath(
+												S3Config.Directory.UPLOAD_TEMP,
+												fileName
+										)
+						)
+						.build()
+		);
+	}
+
+	public void deleteTempFile(String fileName) {
+		deleteFile(S3Config.Bucket.ROOT, S3Config.Directory.UPLOAD_TEMP, fileName);
+	}
+
+	public void deleteFile(String bucketName, String directoryName, String fileName) {
+		s3Client.deleteObject(
+				DeleteObjectRequest.builder()
+						.bucket(bucketName)
+						.key(
+								FileUtils.buildPath(
+										directoryName,
+										fileName
+								)
+						)
+						.build()
+		);
 	}
 
 	public void createUserDirectory(

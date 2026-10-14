@@ -19,7 +19,7 @@ public class FileConsumer {
 	@RabbitListener(queues = RabbitConfig.FILE_QUEUE)
 	public void receive(RabbitIngestRequest message) {
 
-		ingestService.ingest(message.filePath());
+		ingestService.ingest(message.tempFilePath(), message.originalFileName());
 
 	}
 

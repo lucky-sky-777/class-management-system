@@ -21,6 +21,7 @@ repositories {
 extra["tomcat.version"] = "11.0.22"
 extra["netty.version"] = "4.2.14.Final"
 val springCloudVersion by extra("2025.1.2")
+val tikaVersion by extra("4.1.0")
 
 dependencies {
 
@@ -40,16 +41,17 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.6.3")
 
     implementation("org.apache.poi:poi:5.5.1")
-    implementation("org.apache.tika:tika:4.0.0")
-    implementation("org.apache.tika:tika-serialization:4.1.0")
-    implementation("org.apache.tika:tika-core:4.1.0")
-    implementation("dev.langchain4j:langchain4j:1.17.1")
-    //implementation("dev.langchain4j:langchain4j-core:1.17.1")
-    implementation("dev.langchain4j:langchain4j-open-ai:1.17.1")
+    implementation("org.apache.tika:tika:$tikaVersion")
+    implementation("org.apache.tika:tika-serialization:$tikaVersion")
+    implementation("org.apache.tika:tika-core:$tikaVersion")
+    implementation("org.apache.tika:tika-parsers-standard-package:${tikaVersion}")
+    implementation("dev.langchain4j:langchain4j:1.21.0")
+    implementation("dev.langchain4j:langchain4j-core:1.21.0")
+    implementation("dev.langchain4j:langchain4j-open-ai:1.21.0")
     //implementation("dev.langchain4j:langchain4j-easy-rag:1.17.1-beta27")
-    implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.17.1")
+    implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.21.0")
     //implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
-    implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.17.1-beta27")
+    //implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.21.0-beta31")
 
     implementation("io.minio:minio:9.0.3")
     implementation("software.amazon.awssdk:s3:2.55.6")

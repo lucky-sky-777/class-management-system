@@ -15,8 +15,8 @@ public class FileProducer {
 
 	RabbitTemplate rabbitTemplate;
 
-	public void send(String filePath) {
-		RabbitIngestRequest message = new RabbitIngestRequest(filePath);
+	public void send(String tempFilePath, String originalFileName) {
+		RabbitIngestRequest message = new RabbitIngestRequest(tempFilePath, originalFileName);
 
 		rabbitTemplate.convertAndSend(
 				RabbitConfig.FILE_QUEUE,

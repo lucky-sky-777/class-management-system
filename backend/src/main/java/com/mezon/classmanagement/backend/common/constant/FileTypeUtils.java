@@ -146,7 +146,7 @@ public final class FileTypeUtils {
 		return biMap.get(extension);
 	}
 
-	private static Set<String> getStringConstants(Class<?> clazz) {
+	public static Set<String> getStringConstants(Class<?> clazz) {
 		return Arrays.stream(clazz.getDeclaredFields())
 				/* public */.filter(field -> Modifier.isPublic(field.getModifiers()))
 				/* static */.filter(field -> Modifier.isStatic(field.getModifiers()))

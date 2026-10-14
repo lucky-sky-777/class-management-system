@@ -1,5 +1,7 @@
 package com.mezon.classmanagement.backend;
 
+import com.mezon.classmanagement.backend.common.constant.FileTypeUtils;
+import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatter;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatterPipeline;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
@@ -44,6 +46,8 @@ public class VnCoreNLPTest {
 						documentSource
 				);
 
+		chunkList.forEach(System.out::println);
+
 		ChunkFormatter chunkFormatter = new ChunkFormatterPipeline(
 				List.of(
 						//new GeminiChunkFormatter()
@@ -52,7 +56,7 @@ public class VnCoreNLPTest {
 		Metadata metadata = documentSource.toDocument().metadata();
 		List<String> formattedChunkList = chunkFormatter.formatList(
 				chunkList,
-				metadata.put("fileName", multipartFile.getName())
+				metadata.put("fileName", multipartFile.getOriginalFilename())
 		);
 
 		List<String> tagList = tagService.extractTagsWithVnCoreNLP(formattedChunkList, 20);
@@ -72,15 +76,21 @@ public class VnCoreNLPTest {
 //		System.out.println("\n==========");
 	}
 
-//	@Test
-//	public void wsegTest2() throws Exception {
-//		String fileName = "triethocmaclenin.docx";
-//
-//		List<String> tagList = tagService.extractTagsWithVnCoreNLP(FileUtils.getContent(fileName), 20);
-//
-//		System.out.println("==========\n");
-//		tagList.forEach(System.out::println);
-//		System.out.println("\n==========");
-//	}
+	//@Test
+	public void wsegTest2() throws Exception {
+		String fileName = "triethocmaclenin.docx";
+
+		List<String> tagList = tagService.extractTagsWithVnCoreNLP(FileUtils.getContent(fileName), 20);
+
+		System.out.println("==========\n");
+		tagList.forEach(System.out::println);
+		System.out.println("\n==========");
+	}
+
+	@Test
+	public void tika() {
+		System.out.println(FileTypeUtils.getStringConstants(FileTypeUtils.AllowedExtension.class).size());
+		System.out.println(FileTypeUtils.getStringConstants(FileTypeUtils.AllowedExtension.class).size());
+	}
 
 }

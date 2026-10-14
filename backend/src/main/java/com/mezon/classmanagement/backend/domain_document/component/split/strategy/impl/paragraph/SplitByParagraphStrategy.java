@@ -8,10 +8,15 @@ import com.mezon.classmanagement.backend.domain_document.component.split.strateg
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.document_splitter.impl.DocumentSplitterByParagraphWithOverlapStrategy;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@RequiredArgsConstructor
 @Component(value = SplitByParagraphStrategy.NAME)
 public class SplitByParagraphStrategy implements SplitStrategy {
 
