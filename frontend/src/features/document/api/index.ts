@@ -7,7 +7,7 @@ import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
 
 export const classDocumentsAPI = {
-  //api directoty (thư mục)
+  //api directory (thư mục)
   getFolders: async (
     classId: string | number,
   ): Promise<ResponseDTO<FolderItem[]>> => {
