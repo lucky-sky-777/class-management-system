@@ -1,6 +1,8 @@
 package com.mezon.classmanagement.backend.domain_document.component.embedding.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.genai.Client;
+import com.google.genai.types.EmbedContentResponse;
 import com.mezon.classmanagement.backend.common.constant.GeminiConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.env.GeminiEnv;

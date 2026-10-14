@@ -14,7 +14,9 @@ import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.util.Pair;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.List;
 
@@ -44,6 +46,30 @@ public class EmbeddingTest {
 		System.out.println(vector2.length);
 
 		System.out.println(EmbeddingUtils.cosine(vector.getValues(), vector2));
+	}
+
+	@Test
+	public void testDir() {
+		System.out.println(System.getProperty("user.dir"));
+	}
+
+	@Test
+	public void embedMediaTest() throws Exception {
+		String fileName = "dog.png";
+		ClassPathResource classPathResource = new ClassPathResource(fileName);
+		MockMultipartFile multipartFile = new MockMultipartFile(fileName, classPathResource.getInputStream());
+
+		String query1 = "an image of a dog";
+		String query2 = "java spring boot";
+
+		BaseVector query1Vector = embeddingService.embedSingleQueryText(query1);
+		BaseVector query2Vector = embeddingService.embedSingleQueryText(query2);
+		BaseVector resultVector = embeddingService.embedSingleMedia(multipartFile);
+
+		float cosine1 = EmbeddingUtils.cosine(query1Vector.getValues(), resultVector.getValues());
+		float cosine2 = EmbeddingUtils.cosine(query2Vector.getValues(), resultVector.getValues());
+
+		System.out.println(cosine1 + " - " + cosine2);
 	}
 
 //	@Test
