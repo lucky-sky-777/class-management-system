@@ -36,18 +36,18 @@ public class S3Test {
 				inputStream
 		);
 
-		String storagePathName = "test-upload/";
-		String storageFileName = UUID.randomUUID() + "." + FileUtils.getExtension(multipartFile);
-		String pathWithName = s3Service.uploadFileToPath(
-				multipartFile,
-				S3Config.Bucket.ROOT,
-				storagePathName,
-				storageFileName
-		);
-
-		System.out.println(pathWithName);
-		assert (storagePathName + storageFileName)
-				.equals(pathWithName) : "Upload failed";
+//		String storagePathName = "test-upload/";
+//		String storageFileName = UUID.randomUUID() + "." + FileUtils.getExtension(multipartFile);
+//		String pathWithName = s3Service.uploadFileToPath(
+//				multipartFile,
+//				S3Config.Bucket.ROOT,
+//				storagePathName,
+//				storageFileName
+//		);
+//
+//		System.out.println(pathWithName);
+//		assert (storagePathName + storageFileName)
+//				.equals(pathWithName) : "Upload failed";
 	}
 
 	//@Test

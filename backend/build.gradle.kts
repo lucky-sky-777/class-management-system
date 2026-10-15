@@ -22,6 +22,7 @@ extra["tomcat.version"] = "11.0.22"
 extra["netty.version"] = "4.2.14.Final"
 val springCloudVersion by extra("2025.1.2")
 val tikaVersion by extra("4.1.0")
+val springAiVersion by extra("2.0.1")
 
 dependencies {
 
@@ -69,6 +70,9 @@ dependencies {
     implementation(files("libs/VnCoreNLP/VnCoreNLP-Gradle-1.2.jar"))
 
     implementation("org.hibernate.orm:hibernate-vector")
+    implementation("com.pgvector:pgvector:0.1.6")
+
+    implementation("com.google.genai:google-genai:1.76.0")
 
     //implementation("org.hibernate.orm:hibernate-vector:7.4.7.Final")
 
@@ -94,6 +98,7 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
+        mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
     }
 }
 

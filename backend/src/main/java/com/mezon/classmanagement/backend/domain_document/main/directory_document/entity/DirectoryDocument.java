@@ -61,4 +61,10 @@ public class DirectoryDocument {
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
 
+	public static DirectoryDocument create(Long id) {
+		return DirectoryDocument.builder()
+				.id(id)
+				.build();
+	}
+
 }

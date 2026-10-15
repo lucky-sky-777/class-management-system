@@ -126,7 +126,7 @@ public class ActivityService {
 		return activityRepository
 				.findByClazz_IdAndId(classId, activityId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "Activity not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "Activity not found")
 				);
 	}
 

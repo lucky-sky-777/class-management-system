@@ -207,7 +207,7 @@ public class FundPaymentService {
 
 	private void throwIfEmptyList(List<FundPayment> fundPaymentList) {
 		if (fundPaymentList.isEmpty()) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Fund payment not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Fund payment not found");
 		}
 	}
 

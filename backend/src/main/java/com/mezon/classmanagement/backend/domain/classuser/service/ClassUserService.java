@@ -160,7 +160,7 @@ public class ClassUserService {
 	public ClassUser findByClassIdAndUserIdOrThrow(Long classId, Long userId) {
 		return classUserRepository
 				.findByClazz_IdAndUser_Id(classId, userId)
-				.orElseThrow(() -> new GlobalException(GlobalException.Type.NOT_FOUND, "Class user not found"));
+				.orElseThrow(() -> new GlobalException(GlobalException.Type.NOT_EXISTS, "Class user not found"));
 	}
 
 	/**

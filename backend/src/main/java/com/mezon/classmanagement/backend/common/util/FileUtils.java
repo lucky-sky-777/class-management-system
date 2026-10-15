@@ -44,24 +44,24 @@ public final class FileUtils {
 		return tmp;
 	}
 
-	public static String createS3TempFile(
-			S3Service s3Service,
-			MultipartFile multipartFile
-	) throws Exception {
-		@SuppressWarnings({})
-		String directorySlashName = s3Service.uploadFileToPath(
-				multipartFile,
-				S3Config.Bucket.ROOT,
-				buildPath(
-						S3Config.Directory.UPLOAD_TEMP
-				),
-				UUID.randomUUID()
-						+ "."
-						+ FileTypeUtils.getExtension(detectMimeTypeFromMultipartFile(multipartFile))
-		);
-
-		return directorySlashName;
-	}
+//	public static String createS3TempFile(
+//			S3Service s3Service,
+//			MultipartFile multipartFile
+//	) throws Exception {
+//		@SuppressWarnings({})
+//		String directorySlashName = s3Service.uploadFileToPath(
+//				multipartFile,
+//				S3Config.Bucket.ROOT,
+//				buildPath(
+//						S3Config.Directory.UPLOAD_TEMP
+//				),
+//				UUID.randomUUID()
+//						+ "."
+//						+ FileTypeUtils.getExtension(detectMimeTypeFromMultipartFile(multipartFile))
+//		);
+//
+//		return directorySlashName;
+//	}
 
 	public static Metadata setOriginalFileName(MultipartFile multipartFile) {
 		Metadata metadata = new Metadata();
@@ -176,8 +176,14 @@ public final class FileUtils {
 			return "";
 		}
 
+		int dotIndex = fileName.lastIndexOf(".");
+
+		if (dotIndex == 0) {
+			return "";
+		}
+
 		return fileName
-				.substring(fileName.lastIndexOf(".") + 1)
+				.substring(dotIndex + 1)
 				.toLowerCase(Locale.ROOT);
 	}
 

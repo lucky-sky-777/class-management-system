@@ -2,18 +2,22 @@ package com.mezon.classmanagement.backend.domain_document.component.ingest.servi
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
-import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatter;
-import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatterPipeline;
-import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.impl.GeminiChunkFormatter;
+import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithOverlapStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
+import com.mezon.classmanagement.backend.domain_document.component.document_chunk.service.DocumentChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
-import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.FileDocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
+import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
+import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import com.mezon.classmanagement.backend.domain_document.rabbitmq.FileProducer;
@@ -21,13 +25,13 @@ import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -35,7 +39,10 @@ import java.util.List;
 @Service
 public class IngestService {
 
+	EmbeddingService embeddingService;
+	DirectoryService directoryService;
 	DocumentService documentService;
+	DocumentChunkService documentChunkService;
 	S3Service s3Service;
 	ChunkService chunkService;
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
@@ -43,22 +50,47 @@ public class IngestService {
 	FileProducer fileProducer;
 	TagService tagService;
 
-	public void ingest(MultipartFile file) {
-		try {
-			String tmp = FileUtils.createS3TempFile(s3Service, file);
+	@Async("documentExecutor")
+	public void ingest(
+			Long classId,
+			Long directoryId,
+			Long documentId,
+			Path tempFile,
+			Metadata metadata,
+			String documentKey
+	) {
+		try (InputStream inputStream = Files.newInputStream(tempFile)) {
+			Directory directory = directoryService.findByIdOrThrow(directoryId);
+
+			String uploadedFilePath = s3Service.uploadFileToPath(
+					inputStream,
+					metadata,
+					S3Config.Bucket.ROOT,
+					FileUtils.buildPath(
+							S3Config.Directory.UPLOAD_CLASS,
+							String.valueOf(classId),
+							directory.getSlug()
+					),
+					documentKey + "." + metadata.getString("fileExtension")
+			);
 
 			fileProducer.send(
-					tmp,
-					file.getOriginalFilename()
+					classId,
+					documentId,
+					uploadedFilePath,
+					metadata.getString("fileName")
 			);
 		} catch (Exception e) {
 			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR
+					GlobalException.Type.INTERNAL_SERVER_ERROR,
+					e.getMessage()
 			);
 		}
 	}
 
 	public void ingest(
+			Long classId,
+			Long documentId,
 			String filePath,
 			String originalFileName
 	) {
@@ -66,7 +98,7 @@ public class IngestService {
 				"Start ingest: " + filePath
 		);
 
-		try (InputStream inputStream = s3Service.getTempFile(FileUtils.getName(filePath))) {
+		try (InputStream inputStream = s3Service.getFile(filePath)) {
 			DocumentSource documentSource = new InputStreamDocumentSource(inputStream);
 
 			List<String> chunkList = chunkService
@@ -76,12 +108,41 @@ public class IngestService {
 					);
 
 			try {
-				tagService.autoTag(originalFileName, chunkList);
+				tagService.autoTag(documentId, chunkList);
 			} catch (Exception e) {
 				System.out.println("Auto-tag failed (khong chan ingest): " + e.getMessage());
 			}
 
+			List<DocumentChunk> documentChunkList = new ArrayList<>();
+			List<BaseVector> embeddingList = embeddingService
+					.embedMultipleDocumentText(
+							originalFileName,
+							chunkList
+					);
+			for (short i = 0; i < chunkList.size(); i++) {
+				documentChunkList.add(
+						DocumentChunk
+								.builder()
+								.document(Document.create(documentId))
+								.index(i)
+								.content(chunkList.get(i))
+								.embedding(
+										new Vector1536(
+												embeddingList.get(i).getValues()
+										)
+								)
+								.build()
+				);
+			}
 
+			documentChunkService.insertBatch(documentChunkList);
+
+			documentService.updateInternal(
+					documentId,
+					new InternalUpdateDocumentRequestDto(
+							Document.Status.UPLOADED
+					)
+			);
 
 //			List<String> formattedChunkList = new ChunkFormatterPipeline(
 //					List.of(
@@ -91,7 +152,6 @@ public class IngestService {
 //					chunkList,
 //					new Metadata().put("fileName", originalFileName)
 //			);
-
 
 
 			System.out.println("Ingest completed");

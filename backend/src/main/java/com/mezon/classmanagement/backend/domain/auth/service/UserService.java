@@ -95,7 +95,7 @@ public class UserService {
 		return userRepository
 				.findById(userId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found")
 				);
 	}
 
@@ -104,7 +104,7 @@ public class UserService {
 		return userRepository
 				.findByUsername(username)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found")
 				);
 	}
 
@@ -113,7 +113,7 @@ public class UserService {
 		return userRepository
 				.findByProviderId(providerId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found")
 				);
 	}
 
@@ -148,7 +148,7 @@ public class UserService {
 	@Transactional
 	public void throwIfNotExistsByUsername(String username) {
 		if (!existsByUsername(username)) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "User not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found");
 		}
 	}
 
@@ -160,7 +160,7 @@ public class UserService {
 
 	public void throwIfNotExistsById(Long id) {
 		if (!existsById(id)) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "User not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found");
 		}
 	}
 

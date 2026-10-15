@@ -165,13 +165,13 @@ public class TagService {
 	}
 
 	@Transactional
-	public void autoTag(String fileName, List<String> chunkList) throws Exception {
+	public void autoTag(Long documentId, List<String> chunkList) throws Exception {
 		Document document = documentRepository
-				.findByFileName(fileName)
+				.findById(documentId)
 				.orElse(null);
 
-		if(document == null) {
-			System.out.println("Skip auto-tag. Document not found: " + fileName);
+		if (document == null) {
+			System.out.println("Skip auto-tag. Document not found: " + documentId);
 			return;
 		}
 
@@ -179,7 +179,7 @@ public class TagService {
 
 		Long[] tags = findOrCreateIds(tagsName);
 
-		replaceTags(document.getId(),tags );
+		replaceTags(document.getId(), tags);
 	}
 
 	/**

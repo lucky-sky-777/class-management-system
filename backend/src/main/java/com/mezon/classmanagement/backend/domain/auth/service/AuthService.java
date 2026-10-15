@@ -2,7 +2,6 @@ package com.mezon.classmanagement.backend.domain.auth.service;
 
 import com.mezon.classmanagement.backend.common.constant.ForgotPasswordConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
-import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.EmailService;
 import com.mezon.classmanagement.backend.domain.auth.dto.changepassword.ChangePasswordRequestDto;
@@ -23,7 +22,6 @@ import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.MezonUser;
 import com.mezon.classmanagement.backend.domain.auth.oauth2.entity.OAuthUser;
 import com.mezon.classmanagement.backend.domain_document.component.async.service.AsyncService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
-import dev.langchain4j.data.embedding.Embedding;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -36,8 +34,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.PrintStream;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -252,7 +248,7 @@ public class AuthService {
 	public void forgotPassword(ForgotPasswordRequestDto request) {
 		User user = userService.findByEmail(request.getEmail())
 				.orElseThrow(() -> new GlobalException(
-						GlobalException.Type.NOT_FOUND,
+						GlobalException.Type.NOT_EXISTS,
 						"Email chưa được đăng ký tài khoản"
 				));
 

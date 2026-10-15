@@ -21,7 +21,7 @@ public final class UserProviderMapper {
 		User.Provider provider = mappings.getOrDefault(userProvider.toLowerCase(Locale.ROOT), null);
 
 		if (provider == null) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "User provider not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "User provider not found");
 		}
 
 		return provider;

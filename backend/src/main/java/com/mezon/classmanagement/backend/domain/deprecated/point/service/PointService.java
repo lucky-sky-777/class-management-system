@@ -230,7 +230,7 @@ public class PointService {
 		return pointRepository
 				.findByClazz_IdAndId(classId, pointId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "Point not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "Point not found")
 				);
 	}
 

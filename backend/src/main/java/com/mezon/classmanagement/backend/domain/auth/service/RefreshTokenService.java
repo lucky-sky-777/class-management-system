@@ -47,7 +47,7 @@ public class RefreshTokenService {
         return refreshTokenRepository
                 .findByJti(jti)
                 .orElseThrow(() ->
-                        new GlobalException(GlobalException.Type.NOT_FOUND, "Refresh token not found")
+                        new GlobalException(GlobalException.Type.NOT_EXISTS, "Refresh token not found")
                 );
     }
 

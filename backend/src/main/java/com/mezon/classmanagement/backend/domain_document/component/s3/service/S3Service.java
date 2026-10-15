@@ -3,6 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.component.s3.service;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
+import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -18,6 +19,7 @@ import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
+import java.awt.im.InputContext;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
@@ -71,7 +73,8 @@ public class S3Service {
 	}
 
 	public String uploadFileToPath(
-			MultipartFile file,
+			InputStream inputStream,
+			Metadata metadata,
 			String bucketName,
 			String targetPath,
 			String storageFileName
@@ -86,7 +89,7 @@ public class S3Service {
 
 		String objectName = targetPath + storageFileName;
 
-		createFile(bucketName, objectName, file);
+		createFile(bucketName, objectName, inputStream, metadata);
 
 		return objectName;
 	}
@@ -106,6 +109,15 @@ public class S3Service {
 												fileName
 										)
 						)
+						.build()
+		);
+	}
+
+	public InputStream getFile(String filePath) {
+		return s3Client.getObject(
+				GetObjectRequest.builder()
+						.bucket(S3Config.Bucket.ROOT)
+						.key(filePath)
 						.build()
 		);
 	}
@@ -164,18 +176,19 @@ public class S3Service {
 	public void createFile(
 			String bucketName,
 			String directoryName,
-			MultipartFile multipartFile
+			InputStream inputStream,
+			Metadata metadata
 	) throws Exception {
-		try (InputStream inputStream = multipartFile.getInputStream()) {
+		try (inputStream) {
 			s3Client.putObject(
 					PutObjectRequest.builder()
 							.bucket(bucketName)
 							.key(directoryName)
-							.contentType(FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
+							.contentType(metadata.getString("fileMimeType"))
 							.build(),
 					RequestBody.fromInputStream(
 							inputStream,
-							multipartFile.getSize()
+							metadata.getLong("fileSize")
 					)
 			);
 		}
