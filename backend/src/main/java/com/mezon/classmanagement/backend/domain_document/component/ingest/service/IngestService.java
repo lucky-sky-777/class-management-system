@@ -8,6 +8,7 @@ import com.mezon.classmanagement.backend.domain_document.component.chunk.strateg
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.service.DocumentChunkService;
+import com.mezon.classmanagement.backend.domain_document.component.document_metadata.service.DocumentMetadataService;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
@@ -49,6 +50,8 @@ public class IngestService {
 	ChunkByParagraphWithOverlapStrategy chunkByParagraphWithOverlapStrategy;
 	FileProducer fileProducer;
 	TagService tagService;
+
+	DocumentMetadataService documentMetadataService;
 
 	@Async("documentExecutor")
 	public void ingest(
@@ -136,6 +139,13 @@ public class IngestService {
 			}
 
 			documentChunkService.insertBatch(documentChunkList);
+
+			// metadata
+			try {
+				documentMetadataService.extractAndSave(documentId, originalFileName, filePath);
+			} catch (Exception e) {
+				System.out.println("Extract metadata failed (khong chan ingest): " + e.getMessage());
+			}
 
 			documentService.updateInternal(
 					documentId,

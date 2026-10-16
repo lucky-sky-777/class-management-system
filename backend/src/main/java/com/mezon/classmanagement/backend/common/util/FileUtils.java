@@ -246,6 +246,10 @@ public final class FileUtils {
 		return new TikaV4XDocumentParser().parse(new FileInputStream(file));
 	}
 
+	public static Document toDocumentWithMetadata(InputStream inputStream) throws Exception {
+		return new TikaV4XDocumentParser().parseWithMetadata(inputStream);
+	}
+
 //	public static Document toDocument(String tempFilePath) throws Exception {
 //		try {
 //			return FileSystemDocumentLoader.loadDocument(

@@ -68,7 +68,7 @@ public class Tag {
 		if (embedding == null) {
 			embedding = new Vector1536();
 		}
-		slug = SlugGenerator.generate(name);
+		// slug = SlugGenerator.generate(name);
 	}
 
 }

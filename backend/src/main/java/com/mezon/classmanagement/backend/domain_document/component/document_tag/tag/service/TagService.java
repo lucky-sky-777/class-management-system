@@ -22,6 +22,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -66,13 +67,13 @@ public class TagService {
 			throw new GlobalException(GlobalException.Type.ALREADY_EXISTS, "Tag already exists");
 		}
 
-		return tagRepository.save(Tag.builder().name(name.trim()).build());
+		return tagRepository.saveAndFlush(Tag.builder().name(name.trim()).slug(slug).build());
 	}
 
 
 	public void delete(Long tagId) {
 		if(!tagRepository.existsById(tagId)) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND,"Tag not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS,"Tag not found");
 		}
 
 		tagRepository.deleteById(tagId);
@@ -93,7 +94,7 @@ public class TagService {
 	@Transactional
 	public void replaceTags(Long documentId, Long[] tagIds) {
 		if(!documentRepository.existsById(documentId)) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND,"Document not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS,"Document not found");
 		}
 
 		Long[] safeTagIds = sanitize(tagIds);
@@ -129,7 +130,7 @@ public class TagService {
 			return;
 		}
 		if (tagRepository.findByIdIn(List.of(tagIds)).size() != tagIds.length) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Some tags do not exist");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Some tags do not exist");
 		}
 
 	}
@@ -140,7 +141,7 @@ public class TagService {
 			return new Long[0];
 		}
 
-		List<Long> idList = new ArrayList<>();
+		Map<String, Long> slugToId = new LinkedHashMap<>();
 
 		for (String name : tagNames) {
 
@@ -153,15 +154,30 @@ public class TagService {
 				continue;
 			}
 
-			Tag tag = tagRepository.findBySlug(slug)
-					.orElseGet(() -> create(name));
+			// đã xử lý slug này rồi -> bỏ qua
+			if (slugToId.containsKey(slug)) {
+				continue;
+			}
 
-			idList.add(tag.getId());
+			slugToId.put(slug, findOrCreateIdBySlug(name, slug));
 		}
 
-		return idList.stream()
+		return slugToId.values().stream()
 				.distinct()
 				.toArray(Long[]::new);
+	}
+
+
+	// khóa slug trước khi check-and-insert -> chống race condition giữa các thread
+	private Long findOrCreateIdBySlug(String name, String slug) {
+		tagRepository.lockSlug(slug);
+
+		Optional<Tag> existing = tagRepository.findBySlug(slug);
+		if (existing.isPresent()) {
+			return existing.get().getId();
+		}
+
+		return create(name).getId();
 	}
 
 	@Transactional
