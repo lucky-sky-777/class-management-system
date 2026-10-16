@@ -18,3 +18,13 @@ export interface FileItem {
   isLiked?: boolean;
   fileUrl?: string;
 }
+
+export interface CreateDirectoryRequestDto {
+  name: string;
+}
+
+export interface Message {
+  id: string;
+  sender: "user" | "ai";
+  text: string;
+}

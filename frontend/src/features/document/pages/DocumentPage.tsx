@@ -1,6 +1,7 @@
 // src/features/classDocuments/pages/ClassDocumentsTab.tsx
 import React, { useState } from "react";
 import { Loader2, FolderOpen } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { useClassDocuments } from "@features/document/hooks/useClassDocuments";
 import { useDocumentDetail } from "@features/document/hooks/useDocumentDetail";
 import { DocumentToolbar } from "@features/document/components/DocumentToolbar";
@@ -12,6 +13,7 @@ import type { FileItem } from "@features/document/types";
 import { DocumentViewerModal } from "@features/document/components/DocumentViewerModal";
 
 export const DocumentPage = () => {
+  const { classId } = useParams();
   const {
     folders,
     recentFiles,
@@ -27,7 +29,7 @@ export const DocumentPage = () => {
     handleDeleteFolder,
     handleRenameFile,
     handleDeleteFile,
-  } = useClassDocuments();
+  } = useClassDocuments(classId);
 
   //  State điều hướng: Đang xem chi tiết file nào? (null = đang ở danh sách)
   const [selectedFileId, setSelectedFileId] = useState<string | number | null>(
