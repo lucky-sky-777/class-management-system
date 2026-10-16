@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.domain_document.main.rag;
+package com.mezon.classmanagement.backend.domain_document.main.rag.service;
 
 import java.io.IOException;
 import java.net.URI;
@@ -7,18 +7,25 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mezon.classmanagement.backend.common.env.GeminiEnv;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class GeminiRagService {
 
     private static final String GEMINI_API_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
 
     private final HttpClient httpClient;
     private final String apiKey;
 
     // Constructor mặc định dùng cho Production
-    public GeminiRagService(String apiKey) {
-        this(apiKey, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
+    @Autowired
+    public GeminiRagService(GeminiEnv geminiEnv) {
+        this(geminiEnv.apiKey, HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
     }
 
     // Constructor tiêm HttpClient dùng cho Unit Test
@@ -38,11 +45,12 @@ public class GeminiRagService {
         }
 
         String systemInstruction =
-                "Bạn là trợ lý RAG chuyên biệt. Chỉ trả lời dựa trên dữ liệu ngữ cảnh được cấp. " +
-                        "Nếu ngữ cảnh không chứa thông tin, hãy thông báo rằng tài liệu không cung cấp thông tin thay vì tự tạo câu trả lời.";
+                "Bạn là một trợ lý ảo chuyên nghiệp. Nhiệm vụ của bạn là trả lời câu hỏi trực tiếp, tự nhiên và gãy gọn dựa HOÀN TOÀN vào tài liệu được cung cấp. " +
+                        "Tuyệt đối KHÔNG sử dụng các câu mào đầu như 'Dựa trên ngữ cảnh được cung cấp' hay 'Theo tài liệu'. Hãy vào thẳng câu trả lời. " +
+                        "Nếu tài liệu không chứa thông tin để trả lời, chỉ cần đáp ngắn gọn: 'Tài liệu hiện tại không đề cập đến thông tin này.'";
 
         String userPrompt = String.format(
-                "--- NGỮ CẢNH CUNG CẤP ---\n%s\n--- CÂU HỎI ---\n%s\n\nHãy trả lời câu hỏi trên dựa trên ngữ cảnh đã cung cấp.",
+                "TÀI LIỆU:\n%s\n\nCÂU HỎI:\n%s\n\nTRẢ LỜI:",
                 contextBuilder.toString().trim(),
                 question.trim()
         );
@@ -78,7 +86,17 @@ public class GeminiRagService {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() == 200) {
-            return response.body();
+            // Dùng ObjectMapper của Spring Boot để đọc JSON
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(response.body());
+
+            // Trích xuất chính xác đường dẫn: candidates[0].content.parts[0].text
+            String answerText = rootNode.path("candidates").get(0)
+                    .path("content")
+                    .path("parts").get(0)
+                    .path("text").asText();
+
+            return answerText;
         } else {
             throw new RuntimeException("Lỗi gọi Gemini API (HTTP " + response.statusCode() + "): " + response.body());
         }

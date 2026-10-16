@@ -1,16 +1,14 @@
 package com.mezon.classmanagement.backend;
 
-import com.mezon.classmanagement.backend.common.env.GeminiEnv;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.ChunkStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.MultipartFileDocumentSource;
-import com.mezon.classmanagement.domain_document.main.rag.GeminiRagService;
+import com.mezon.classmanagement.backend.domain_document.main.rag.service.GeminiRagService;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
@@ -23,7 +21,7 @@ import java.util.List;
 public class GeminiRagServiceTest {
 
     @Autowired
-    GeminiEnv geminiEnv;
+    GeminiRagService geminiRagService;
 
     // Inject các Service chia chunk tương tự như VnCoreNLPTest
     @Autowired
@@ -35,7 +33,7 @@ public class GeminiRagServiceTest {
     @Test
     public void askGeminiRagWithRealFileTest() throws Exception {
         // 1. Khởi tạo service Gemini API
-        GeminiRagService geminiRagService = new GeminiRagService(geminiEnv.apiKey);
+//        GeminiRagService geminiRagService = new GeminiRagService(geminiEnv.apiKey);
 
         // 2. Đọc file thật từ resources
         String fileName = "triethocmaclenin.docx";
@@ -58,7 +56,7 @@ public class GeminiRagServiceTest {
         List<String> contextChunks = chunkList.size() > 10 ? chunkList.subList(0, 10) : chunkList;
 
         // 4. Đặt câu hỏi dựa trên nội dung bạn biết chắc chắn có trong file
-        String question = "Danh sách tác giả của cuốn giáo trình này là ai?";
+        String question = "Nêu tóm tắt khái niệm của triết học và đối tượng của nó?";
 
         // 5. Gọi thực thi
         System.out.println("Đang gửi câu hỏi và ngữ cảnh (context) tới Gemini API...");
