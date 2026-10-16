@@ -1,7 +1,9 @@
 package com.mezon.classmanagement.backend.domain_document.main.directory.entity;
 
+import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.CodeGenerator;
 import com.mezon.classmanagement.backend.common.util.DateTimeUtils;
+import com.mezon.classmanagement.backend.common.util.SlugGenerator;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.component.vector.converter.impl.Vector1536Converter;
@@ -27,7 +29,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.generator.EventType;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -43,28 +47,9 @@ import java.time.Instant;
 		name = "directories",
 		indexes = {
 				@Index(
-						name = "unique_index_directories_belong_to_user_id_name",
-						columnList = "belong_to_user_id, name",
-						unique = true,
-						options = "where \"belong_to_user_id\" is not null"
-				),
-				@Index(
-						name = "unique_index_directories_belong_to_class_id_name",
-						columnList = "belong_to_class_id, name",
-						unique = true,
-						options = "where \"belong_to_class_id\" is not null"
-				),
-				@Index(
-						name = "unique_index_directories_name_by_belong_to_user_id",
-						columnList = "name",
-						unique = true,
-						options = "where \"belong_to_user_id\" is not null"
-				),
-				@Index(
-						name = "unique_index_directories_name_by_belong_to_class_id",
-						columnList = "name",
-						unique = true,
-						options = "where \"belong_to_class_id\" is not null"
+						name = "unique_index_directories_class_id_name",
+						columnList = "class_id, name",
+						unique = true
 				)
 		}
 )
@@ -76,41 +61,26 @@ public class Directory {
 	Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "belong_to_user_id", nullable = true)
-	User belongToUser;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "belong_to_class_id", nullable = true)
-	Class belongToClass;
+	@JoinColumn(name = "class_id", nullable = false)
+	Class clazz;
 
 	@Column(name = "name", nullable = false)
 	String name;
 
+	@Column(name = "slug", nullable = false)
+	String slug;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "creator_user_id", nullable = true)
+	User creator;
+
+	@Generated(event = EventType.INSERT)
 	@Column(name = "created_at", nullable = false, insertable = false, updatable = false)
 	Instant createdAt;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "status", nullable = false)
-	Status status;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "actor_user_id", nullable = true)
-	User actor;
-
-	@Column(name = "acted_at", nullable = true)
-	Instant actedAt;
-
-	public enum Status {
-		PENDING,
-		APPROVED,
-		REJECTED
-	}
-
 	@PrePersist
 	public void prePersist() {
-		if (status == null) {
-			status = Status.PENDING;
-		}
+		slug = SlugGenerator.generate(name);
 	}
 
 }

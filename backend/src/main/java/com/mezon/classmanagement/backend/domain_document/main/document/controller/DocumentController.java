@@ -6,9 +6,11 @@ import com.mezon.classmanagement.backend.common.validator.FileValidator;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.service.IngestService;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.SplitByParagraphStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector3072;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.validator.ValidFile;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.TextRequest;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,8 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RestController
 @RequestMapping("/api/documents")
+@RestController
 public class DocumentController {
 
 	IngestService ingestService;
@@ -38,10 +40,11 @@ public class DocumentController {
 			consumes = MediaType.MULTIPART_FORM_DATA_VALUE
 	)
 	public void upload(
-			@RequestParam MultipartFile file
+			@ValidFile
+			@RequestParam MultipartFile multipartFile,
+			CreateDocumentRequestDto request
 	) {
-		FileValidator.validateFileType(file);
-		ingestService.ingest(file);
+		ingestService.ingest(multipartFile);
 	}
 
 	@PostMapping(
@@ -66,9 +69,9 @@ public class DocumentController {
 	public void embed(
 			@RequestParam String text
 	) throws Exception {
-		Vector3072 vector3072 = embeddingService.embedSingleQueryText(text);
+		BaseVector vector3072 = embeddingService.embedSingleQueryText(text);
 
-		System.out.println(embeddingService.toVectorString(vector3072));
+		//System.out.println(embeddingService.toVectorString(vector3072));
 	}
 
 	@PostMapping("/token")

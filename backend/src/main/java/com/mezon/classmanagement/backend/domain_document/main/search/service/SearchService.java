@@ -3,7 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.main.search.service;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.repository.DocumentChunkRepository;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector3072;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,13 +24,13 @@ public class SearchService {
 			Long classId,
 			String query
 	) throws Exception {
-		Vector3072 queryEmbedding = embeddingService.embedSingleQueryText(query);
+		BaseVector queryEmbedding = embeddingService.embedSingleQueryText(query);
 
-		String vectorString =
-				embeddingService
-						.toVectorString(
-								queryEmbedding
-						);
+		String vectorString = "";
+//				embeddingService
+//						.toVectorString(
+//								queryEmbedding
+//						);
 
 		return chunkRepository.searchSimilarChunks(
 				classId,

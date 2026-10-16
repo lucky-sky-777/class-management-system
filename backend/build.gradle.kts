@@ -21,9 +21,9 @@ repositories {
 extra["tomcat.version"] = "11.0.22"
 extra["netty.version"] = "4.2.14.Final"
 val springCloudVersion by extra("2025.1.2")
+val tikaVersion by extra("4.1.0")
 
 dependencies {
-
 
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -41,18 +41,25 @@ dependencies {
     implementation("org.mapstruct:mapstruct:1.6.3")
 
     implementation("org.apache.poi:poi:5.5.1")
-    implementation("org.apache.tika:tika:3.3.1")
-    implementation("dev.langchain4j:langchain4j:1.17.1")
-    //implementation("dev.langchain4j:langchain4j-core:1.17.1")
-    implementation("dev.langchain4j:langchain4j-open-ai:1.17.1")
+    implementation("org.apache.tika:tika:$tikaVersion")
+    implementation("org.apache.tika:tika-serialization:$tikaVersion")
+    implementation("org.apache.tika:tika-core:$tikaVersion")
+    implementation("org.apache.tika:tika-parsers-standard-package:${tikaVersion}")
+    implementation("dev.langchain4j:langchain4j:1.21.0")
+    implementation("dev.langchain4j:langchain4j-core:1.21.0")
+    implementation("dev.langchain4j:langchain4j-open-ai:1.21.0")
     //implementation("dev.langchain4j:langchain4j-easy-rag:1.17.1-beta27")
-    //implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.17.1")
+    implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.21.0")
     //implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
-    implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.17.1-beta27")
+    //implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.21.0-beta31")
+
+    implementation("io.minio:minio:9.0.3")
+    implementation("software.amazon.awssdk:s3:2.55.6")
+    implementation("com.google.guava:guava:33.7.2-jre")
 
     implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
-    implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc")
+    //implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc")
 
     implementation("ai.djl.sentencepiece:sentencepiece:0.36.0")
     implementation("org.apache.lucene:lucene-core:10.5.0")
@@ -60,6 +67,10 @@ dependencies {
     implementation("org.apache.lucene:lucene-analysis-common:10.5.0")
     implementation("commons-validator:commons-validator:1.10.1")
     implementation(files("libs/VnCoreNLP/VnCoreNLP-Gradle-1.2.jar"))
+
+    implementation("org.hibernate.orm:hibernate-vector")
+
+    //implementation("org.hibernate.orm:hibernate-vector:7.4.7.Final")
 
     //implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     testImplementation("org.springframework.security:spring-security-test")
@@ -73,9 +84,12 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     annotationProcessor("org.projectlombok:lombok")
+    //implementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     runtimeOnly("org.postgresql:postgresql")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 }
 dependencyManagement {
     imports {

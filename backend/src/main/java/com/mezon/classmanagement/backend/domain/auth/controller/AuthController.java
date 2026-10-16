@@ -2,6 +2,8 @@ package com.mezon.classmanagement.backend.domain.auth.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.auth.dto.changepassword.ChangePasswordRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.forgotpassword.ForgotPasswordRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.forgotpassword.ResetPasswordRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signin.SignInResponseDto;
 import com.mezon.classmanagement.backend.domain.auth.dto.signout.SignOutResponseDto;
@@ -122,6 +124,17 @@ public class AuthController {
 		return ResponseDTO.ok(
 				"Đổi mật khẩu thành công"
 		);
+	}
+	@PostMapping("/forgot-password")
+	public ResponseDTO<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequestDto request) {
+		authService.forgotPassword(request);
+		return ResponseDTO.ok("Mã xác nhận đã được gửi đến email");
+	}
+
+	@PostMapping("/reset-password")
+	public ResponseDTO<Void> resetPassword(@Valid @RequestBody ResetPasswordRequestDto request) {
+		authService.resetPassword(request);
+		return ResponseDTO.ok("Đặt lại mật khẩu thành công");
 	}
 
 }
