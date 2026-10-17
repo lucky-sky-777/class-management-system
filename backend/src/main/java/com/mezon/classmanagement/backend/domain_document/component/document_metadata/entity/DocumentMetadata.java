@@ -38,7 +38,7 @@ public class DocumentMetadata {
     Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id", nullable = false)
+    @JoinColumn(name = "document_id", nullable = false, unique = true)
     Document document;
 
     @JdbcTypeCode(SqlTypes.JSON)

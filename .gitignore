@@ -3,3 +3,8 @@ GEMINI.md
 .codegraph/
 .vscode
 .env
+
+# build & tool cache
+.metals/
+*.log
+hs_err_pid*
