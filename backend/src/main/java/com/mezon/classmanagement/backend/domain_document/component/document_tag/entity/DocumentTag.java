@@ -32,7 +32,14 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-		name = "document_tags"
+		name = "document_tags",
+		indexes = {
+				@Index(
+						name = "unique_document_tags_document_id",
+						columnList = "document_id",
+						unique = true
+				)
+		}
 )
 public class DocumentTag {
 

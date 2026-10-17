@@ -7,6 +7,6 @@ import java.util.Optional;
 
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
-	Optional<Document> findByKey(String key);
+    Optional<Document> findByKey(String key);
 
 }
