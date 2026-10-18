@@ -24,7 +24,7 @@ public class SearchTest {
 	SearchService searchService;
 
 	private void search(String query, float[] queryEmbedding) {
-		List<DocumentChunk> documentChunkList = searchService.searchAll(queryEmbedding);
+		List<DocumentChunk> documentChunkList = searchService.searchAll(queryEmbedding, 5);
 
 		System.out.println("nội dung tìm kiếm: " + query);
 

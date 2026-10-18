@@ -50,9 +50,9 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 	""", nativeQuery = true
 	)
 	List<DocumentChunk> searchInOneDocument(
-			Long documentId,
-			float[] embedding,
-			int limit
+			@Param("documentId") Long documentId,
+			@Param("embedding") float[] embedding,
+			@Param("limit") int limit
 	);
 
 }

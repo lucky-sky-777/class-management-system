@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class RagAnswerResponseDto {
-    private  String question;
-    private  String answer;
+	private String question;
+	private String answer;
 }
