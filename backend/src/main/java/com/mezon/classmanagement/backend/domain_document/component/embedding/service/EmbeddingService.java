@@ -64,7 +64,8 @@ public class EmbeddingService {
 										)
 								)
 						)
-				)
+				),
+				1536
 		);
 
 		String jsonBody = objectMapper.writeValueAsString(request);
@@ -119,10 +120,17 @@ public class EmbeddingService {
 
 	// Tạo vector từ một đoạn văn bản.
 	// Dùng khi văn bản là một truy vấn (nội dung tìm kiếm, đặt câu hỏi,...).
-	public BaseVector embedSingleQueryText(String content) throws Exception {
+	public BaseVector embedSingleQueryText(String content) {
 		String prompt = GeminiPromptBuilder.buildQueryPrompt(content);
 
-		return embedSingleText(prompt);
+		try {
+			return embedSingleText(prompt);
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR,
+					e.getMessage()
+			);
+		}
 	}
 
 	// Tạo vector từ một đoạn văn bản.

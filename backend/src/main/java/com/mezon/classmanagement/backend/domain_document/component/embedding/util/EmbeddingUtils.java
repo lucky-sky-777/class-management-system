@@ -85,8 +85,6 @@ public class EmbeddingUtils {
 		final double[] normA = new double[1];
 		final double[] normB = new double[2];
 
-		AtomicDouble atomicDouble = new AtomicDouble(0.0d);
-
 		IntStream
 				.range(0, a.length)
 				.parallel()

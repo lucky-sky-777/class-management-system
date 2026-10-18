@@ -3,6 +3,8 @@ package com.mezon.classmanagement.backend.domain_document.component.ingest.servi
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
+import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatterPipeline;
+import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.impl.GeminiChunkFormatter;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithOverlapStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
@@ -109,7 +111,14 @@ public class IngestService {
 			List<BaseVector> embeddingList = embeddingService
 					.embedMultipleDocumentText(
 							originalFileName,
-							chunkList
+							new ChunkFormatterPipeline(
+									List.of(
+											new GeminiChunkFormatter()
+									)
+							).formatList(
+									chunkList,
+									new Metadata().put("fileName", originalFileName)
+							)
 					);
 			for (short i = 0; i < chunkList.size(); i++) {
 				documentChunkList.add(
@@ -136,14 +145,14 @@ public class IngestService {
 					)
 			);
 
-//			List<String> formattedChunkList = new ChunkFormatterPipeline(
-//					List.of(
-//							new GeminiChunkFormatter()
-//					)
-//			).formatList(
-//					chunkList,
-//					new Metadata().put("fileName", originalFileName)
-//			);
+			List<String> formattedChunkList = new ChunkFormatterPipeline(
+					List.of(
+							new GeminiChunkFormatter()
+					)
+			).formatList(
+					chunkList,
+					new Metadata().put("fileName", originalFileName)
+			);
 
 
 			System.out.println("Ingest completed");

@@ -1,5 +1,9 @@
 package com.mezon.classmanagement.backend.embedding;
 
+import com.google.genai.Client;
+import com.google.genai.types.ContentEmbedding;
+import com.google.genai.types.EmbedContentConfig;
+import com.google.genai.types.EmbedContentResponse;
 import com.mezon.classmanagement.backend.common.env.GeminiEnv;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
 import com.mezon.classmanagement.backend.common.util.GeminiPromptBuilder;
@@ -51,6 +55,12 @@ public class EmbeddingTest {
 	@Test
 	public void testDir() {
 		System.out.println(System.getProperty("user.dir"));
+		Client client = new Client();
+		EmbedContentConfig config = EmbedContentConfig.builder().outputDimensionality(1536).build();
+		EmbedContentResponse response = client.models.embedContent("gemini-embedding-2", "spring boot", config);
+		List<ContentEmbedding> embeddings = response.embeddings().get();
+		List<Float> v1 = embeddings.get(0).values().get();
+		System.out.println(v1.size());
 	}
 
 	@Test
@@ -59,17 +69,24 @@ public class EmbeddingTest {
 		ClassPathResource classPathResource = new ClassPathResource(fileName);
 		MockMultipartFile multipartFile = new MockMultipartFile(fileName, classPathResource.getInputStream());
 
-		String query1 = "an image of a dog";
-		String query2 = "java spring boot";
+		String query1 = "dog";
+		String query2 = "cat";
+		String query3 = "java";
 
 		BaseVector query1Vector = embeddingService.embedSingleQueryText(query1);
 		BaseVector query2Vector = embeddingService.embedSingleQueryText(query2);
+		BaseVector query3Vector = embeddingService.embedSingleQueryText(query3);
 		BaseVector resultVector = embeddingService.embedSingleMedia(multipartFile);
 
 		float cosine1 = EmbeddingUtils.cosine(query1Vector.getValues(), resultVector.getValues());
 		float cosine2 = EmbeddingUtils.cosine(query2Vector.getValues(), resultVector.getValues());
+		float cosine3 = EmbeddingUtils.cosine(query3Vector.getValues(), resultVector.getValues());
 
-		System.out.println(cosine1 + " - " + cosine2);
+		System.out.println(cosine1 + " - " + cosine2 + " - " + cosine3);
+
+		assert cosine1 > 0.6 : "required > 0.6, got: " + cosine1;
+		assert cosine2 < 0.6 : "required < 0.6, got: " + cosine2;
+		assert cosine3 < 0.6 : "required < 0.6, got: " + cosine3;
 	}
 
 //	@Test

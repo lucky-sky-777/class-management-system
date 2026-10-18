@@ -18,25 +18,53 @@ public class SearchService {
 
 	EmbeddingService embeddingService;
 
-	DocumentChunkRepository chunkRepository;
+	DocumentChunkRepository documentChunkRepository;
 
-	public List<DocumentChunk> search(
-			Long classId,
+	public enum SearchRange {
+		SYSTEM,
+		CLASS
+	}
+
+//	public List<DocumentChunk> search(String query, SearchRange searchRange, Long... classId) {
+//		return switch (searchRange) {
+//			case SYSTEM -> searchAll(query);
+//			case CLASS -> searchClass(classId[0], query, 5);
+//		};
+//	}
+
+	public List<DocumentChunk> searchAll(
 			String query
-	) throws Exception {
-		BaseVector queryEmbedding = embeddingService.embedSingleQueryText(query);
+	) {
+		BaseVector queryVector = embeddingService.embedSingleQueryText(query);
+		float[] queryEmbedding = queryVector.getValues();
 
-		String vectorString = "";
-//				embeddingService
-//						.toVectorString(
-//								queryEmbedding
-//						);
+		return searchAll(queryEmbedding);
+	}
 
-		return chunkRepository.searchSimilarChunks(
-				classId,
-				vectorString,
-				5
+	public List<DocumentChunk> searchAll(
+			float[] queryEmbedding
+	) {
+		return searchAll(queryEmbedding, 5);
+	}
+
+	public List<DocumentChunk> searchAll(
+			float[] queryEmbedding,
+			int limit
+	) {
+		return documentChunkRepository.searchInAllSystemDocument(
+				queryEmbedding,
+				limit
 		);
 	}
+
+	public List<DocumentChunk> searchClass(Long classId, String query, int limit) {
+		BaseVector queryVector = embeddingService.embedSingleQueryText(query);
+		float[] queryEmbedding = queryVector.getValues();
+		return documentChunkRepository.searchInAllClassDocument(classId, queryEmbedding, limit);
+	}
+
+//	public List<DocumentChunk> searchDocument() {
+//		//
+//	}
 
 }

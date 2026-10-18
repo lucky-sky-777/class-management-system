@@ -28,7 +28,8 @@ public class GeminiRequestBodyTest {
 										)
 								)
 						)
-				)
+				),
+				1536
 		);
 
 		String json = objectMapper.writeValueAsString(request);
