@@ -84,7 +84,8 @@ public class GeminiRequestBodyTest {
 										"text"
 								)
 						)
-				)
+				),
+				1536
 		);
 
 		String json = objectMapper.writeValueAsString(request);
@@ -104,7 +105,8 @@ public class GeminiRequestBodyTest {
 														"text"
 												)
 										)
-								)
+								),
+								1536
 						),
 						new GeminiBatchTextEmbeddingRequest.Item(
 								GeminiConstant.Model.GEMINI_EMBEDDING_2.getName(),
@@ -114,7 +116,8 @@ public class GeminiRequestBodyTest {
 														"text"
 												)
 										)
-								)
+								),
+								1536
 						)
 				)
 		);

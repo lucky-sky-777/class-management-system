@@ -123,7 +123,7 @@ public class GroupService {
         return groupRepository
                 .findByClazz_IdAndId(classId, groupId)
                 .orElseThrow(() ->
-                        new GlobalException(GlobalException.Type.NOT_FOUND, "Group not found")
+                        new GlobalException(GlobalException.Type.NOT_EXISTS, "Group not found")
                 );
     }
 
@@ -139,7 +139,7 @@ public class GroupService {
     @Transactional(readOnly = true)
     public void throwIfNotExistsByClassIdAndGroupId(Long classId, Long groupId) {
         if (!existsByClassIdAndGroupId(classId, groupId)) {
-            throw new GlobalException(GlobalException.Type.NOT_FOUND, "Group not found");
+            throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Group not found");
         }
     }
 

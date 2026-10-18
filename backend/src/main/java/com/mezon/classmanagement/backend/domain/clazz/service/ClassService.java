@@ -237,7 +237,7 @@ public class ClassService {
 		return classRepository
 				.findById(id)
 				.orElseThrow(() ->
-                        new GlobalException(GlobalException.Type.NOT_FOUND, "Class not found")
+                        new GlobalException(GlobalException.Type.NOT_EXISTS, "Class not found")
                 );
     }
 
@@ -246,7 +246,7 @@ public class ClassService {
         return classRepository
                 .findByCode(code)
                 .orElseThrow(() ->
-                        new GlobalException(GlobalException.Type.NOT_FOUND, "Class not found")
+                        new GlobalException(GlobalException.Type.NOT_EXISTS, "Class not found")
                 );
     }
 
@@ -262,7 +262,7 @@ public class ClassService {
     @Transactional(readOnly = true)
     public void throwIfNotExistsById(Long id) {
         if (!existsById(id)) {
-            throw new GlobalException(GlobalException.Type.NOT_FOUND, "Class not found");
+            throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Class not found");
         }
     }
 

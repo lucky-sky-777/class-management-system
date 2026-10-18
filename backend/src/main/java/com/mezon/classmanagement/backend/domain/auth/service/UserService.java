@@ -1,16 +1,22 @@
 package com.mezon.classmanagement.backend.domain.auth.service;
 
 import com.mezon.classmanagement.backend.domain.auth.dto.signup.SignUpRequestDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.user.UserResponseDto;
+import com.mezon.classmanagement.backend.domain.auth.dto.user.request.UpdateUserRequestDto;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.domain.auth.mapper.UserMapper;
 import com.mezon.classmanagement.backend.domain.auth.repository.UserRepository;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -46,10 +52,30 @@ public class UserService {
 	}
 
 	@Transactional
+	public UserResponseDto update(Long userId, UpdateUserRequestDto request) {
+		User currentUser = findByUserIdOrThrow(userId);
+
+		userMapper.updateUserFromRequestDto(request, currentUser);
+
+		User responseUser = save(currentUser);
+
+		return userMapper.toUserResponseDto(responseUser);
+	}
+
+	@Transactional
 	public void updatePassword(String username, String newPassword) {
 		User user = findByUsernameOrThrow(username);
 
 		user.setPasswordHash(passwordEncoder.encode(newPassword));
+
+		save(user);
+	}
+
+	@Transactional
+	public void updateEmbedding(String username, BaseVector embedding) {
+		User user = findByUsernameOrThrow(username);
+
+		user.setEmbedding((Vector1536) embedding);
 
 		save(user);
 	}
@@ -69,7 +95,7 @@ public class UserService {
 		return userRepository
 				.findById(userId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found")
 				);
 	}
 
@@ -78,7 +104,7 @@ public class UserService {
 		return userRepository
 				.findByUsername(username)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found")
 				);
 	}
 
@@ -87,7 +113,7 @@ public class UserService {
 		return userRepository
 				.findByProviderId(providerId)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "User not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found")
 				);
 	}
 
@@ -122,7 +148,7 @@ public class UserService {
 	@Transactional
 	public void throwIfNotExistsByUsername(String username) {
 		if (!existsByUsername(username)) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "User not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found");
 		}
 	}
 
@@ -134,10 +160,14 @@ public class UserService {
 
 	public void throwIfNotExistsById(Long id) {
 		if (!existsById(id)) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "User not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "User not found");
 		}
 	}
 
+	@Transactional(readOnly = true)
+	public Optional<User> findByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
 
 
 }

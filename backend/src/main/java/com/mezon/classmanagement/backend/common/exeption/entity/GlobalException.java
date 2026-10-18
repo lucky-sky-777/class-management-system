@@ -48,12 +48,13 @@ public class GlobalException extends RuntimeException {
 	@AllArgsConstructor
 	public enum Type {
 
-		NOT_FOUND(HttpStatus.NOT_FOUND.value()),
+		NOT_EXISTS(HttpStatus.NOT_FOUND.value()),
 		ALREADY_EXISTS(HttpStatus.CONFLICT.value()),
 		INVALID_AUTHENTICATION(HttpStatus.UNAUTHORIZED.value()),
-		FORBIDDEN(HttpStatus.FORBIDDEN.value()),
+		PERMISSION_DENIED(HttpStatus.FORBIDDEN.value()),
 		INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value()),
-		INVALID_REQUEST(HttpStatus.BAD_REQUEST.value());
+		INVALID_REQUEST(HttpStatus.BAD_REQUEST.value()),
+		TOO_MANY_REQUEST(HttpStatus.TOO_MANY_REQUESTS.value());
 
 		int code;
 

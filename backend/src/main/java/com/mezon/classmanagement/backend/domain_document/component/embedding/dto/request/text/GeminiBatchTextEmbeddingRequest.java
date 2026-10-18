@@ -10,6 +10,8 @@ public record GeminiBatchTextEmbeddingRequest(
 ) {
 	public record Item(
 			String model,
-			GeminiTextEmbeddingRequest.Content content
+			GeminiTextEmbeddingRequest.Content content,
+			@JsonProperty(value = "output_dimensionality")
+			Integer outputDimensionality
 	) {}
 }

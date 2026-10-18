@@ -1,6 +1,15 @@
 import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
-import type { LoginRequest, RegisterRequest, AuthResponse, RegisterResponse, SignOutResponse, UserResponse, ChangePasswordRequest } from "@features/auth/types";
+import type { 
+    LoginRequest, 
+    RegisterRequest, 
+    AuthResponse, 
+    RegisterResponse, 
+    SignOutResponse, 
+    UserResponse, 
+    ChangePasswordRequest,
+    UpdateUserRequest 
+} from "@features/auth/types";
 
 export const authApi = {
     signIn: async (data: LoginRequest): Promise<ResponseDTO<AuthResponse>> => {
@@ -9,6 +18,10 @@ export const authApi = {
 
     signUp: async (data: RegisterRequest): Promise<ResponseDTO<RegisterResponse>> => {
         return apiClient.post<ResponseDTO<RegisterResponse>>("/auth/signup", data);
+    },
+
+    updateUser: async (userId: number | string, data: UpdateUserRequest): Promise<ResponseDTO<UserResponse>> => {
+        return apiClient.patch<ResponseDTO<UserResponse>>(`/users/${userId}`, data);
     },
 
     signOut: async (accesstoken: string, refreshtoken: string): Promise<ResponseDTO<SignOutResponse>> => {

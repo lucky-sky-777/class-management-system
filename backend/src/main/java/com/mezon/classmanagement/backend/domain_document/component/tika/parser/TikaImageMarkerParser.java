@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.domain_document.component.tika.handler.
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.Metadata;
+import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 
@@ -21,7 +22,7 @@ public class TikaImageMarkerParser implements DocumentParser {
 			ImageMarkerContentHandler handler = new ImageMarkerContentHandler();
 
 			// Tika bắt đầu đọc file và kích hoạt các sự kiện cho Handler xử lý
-			parser.parse(inputStream, handler, tikaMetadata, context);
+			parser.parse(TikaInputStream.get(inputStream), handler, tikaMetadata, context);
 
 			// Lấy nội dung đã được chèn thẻ [[IMAGE_ID:...]]
 			String finalContent = handler.getParsedText();

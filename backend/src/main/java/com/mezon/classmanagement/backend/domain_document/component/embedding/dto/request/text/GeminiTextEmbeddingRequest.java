@@ -9,7 +9,10 @@ public record GeminiTextEmbeddingRequest(
 		String model,
 
 		@JsonProperty(value = "content")
-		Content content
+		Content content,
+
+		@JsonProperty(value = "output_dimensionality")
+		Integer outputDimensionality
 ) {
 	public record Content(
 			@JsonProperty(value = "parts")

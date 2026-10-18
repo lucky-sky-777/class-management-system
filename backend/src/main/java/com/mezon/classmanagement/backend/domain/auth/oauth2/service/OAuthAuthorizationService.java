@@ -70,7 +70,7 @@ public class OAuthAuthorizationService {
 		return oAuthAuthorizationRepository
 				.findByOriginAndCode(origin, code)
 				.orElseThrow(() ->
-						new GlobalException(GlobalException.Type.NOT_FOUND, "OAuth authorization code not found")
+						new GlobalException(GlobalException.Type.NOT_EXISTS, "OAuth authorization code not found")
 				);
 	}
 

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+
+    <div>
+        <p>http://localhost:8080/<span><input id="endpointInput" placeholder="endpoint" value="api/classes/1/directories/5/documents"/></span></p>
+    </div>
+
+    <div>
+        <label>File</label>
+
+        <input
+                type="file"
+                id="fileInput"
+        >
+
+        <label for="directoryIdInput">Directory Name:</label>
+        <input
+                type="number"
+                id="directoryIdInput"
+                placeholder="Nhập directory_id"
+        />
+
+        <label for="tokenInput">Bearer Token:</label>
+        <input
+                id="tokenInput"
+                placeholder="Nhập access token"
+        />
+    </div>
+
+    <button onclick="uploadFile()">
+        Upload
+    </button>
+
+    <div id="result"></div>
+
+</div>
+</body>
+
+<script>
+
+    async function uploadFile() {
+        const endpointInput = document.getElementById("endpointInput");
+        const fileInput = document.getElementById("fileInput");
+        const tokenInput = document.getElementById("tokenInput");
+        const result = document.getElementById("result");
+
+        if (fileInput.files.length === 0) {
+            result.innerText = "Vui lòng chọn file";
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const token = tokenInput.value.trim();
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const request = {
+            title: "Tài liệu Java",
+            description: "Tài liệu học tập"
+        };
+
+        formData.append(
+            "request",
+            new Blob(
+                [JSON.stringify(request)],
+                { type: "application/json" }
+            )
+        );
+
+        try {
+            const endpoint = endpointInput.value
+                .trim()
+                .replace(/^\/+/, "");
+
+            const headers = {};
+
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(
+                "http://localhost:8080/" + endpoint,
+                {
+                    method: "POST",
+                    headers: headers,
+                    body: formData
+                }
+            );
+
+            const data = await response.text();
+
+            if (!response.ok) {
+                console.error(data);
+                result.innerText = data;
+                return;
+            }
+
+            result.innerText = data;
+
+        } catch (error) {
+            console.error(error);
+            result.innerText = "fail";
+        }
+    }
+
+</script>
+
+</html>

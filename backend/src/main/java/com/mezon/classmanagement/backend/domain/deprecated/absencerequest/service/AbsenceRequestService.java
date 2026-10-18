@@ -199,7 +199,7 @@ public class AbsenceRequestService {
 
 	private void throwIfEmptyList(List<AbsenceRequest> absenceRequestList) {
 		if (absenceRequestList.isEmpty()) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Absence request not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Absence request not found");
 		}
 	}
 

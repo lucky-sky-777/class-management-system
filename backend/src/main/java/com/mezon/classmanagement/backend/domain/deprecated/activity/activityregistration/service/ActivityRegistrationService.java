@@ -251,7 +251,7 @@ public class ActivityRegistrationService {
 
 	private void throwIfEmptyList(List<ActivityRegistration> activityRegistrationList) {
 		if (activityRegistrationList.isEmpty()) {
-			throw new GlobalException(GlobalException.Type.NOT_FOUND, "Activity registration not found");
+			throw new GlobalException(GlobalException.Type.NOT_EXISTS, "Activity registration not found");
 		}
 	}
 
