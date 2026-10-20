@@ -119,6 +119,42 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     }
   };
 
+  // Trong src/features/classDocuments/hooks/useClassDocuments.ts
+
+  const handleUploadDocument = async (
+    folderId: string | number,
+    files: File[],
+    description?: string,
+  ) => {
+    if (!classId) return;
+
+    try {
+      setIsLoading(true);
+
+      // Lặp qua danh sách file đã chọn để tải lên từng file
+      for (const file of files) {
+        await classDocumentsAPI.uploadDocument(classId, folderId, file, {
+          title: file.name,
+          description: description || "",
+        });
+      }
+
+      // Refresh lại danh sách file
+      if (currentFolder && currentFolder.id === folderId) {
+        const files = await classDocumentsAPI.getFilesInFolder(folderId);
+        setFolderFiles(files);
+      } else {
+        const filesRes = await classDocumentsAPI.getRecentFiles();
+        setRecentFiles(filesRes || []);
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải lên tài liệu:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRenameFile = async (id: string | number, newName: string) => {
     try {
       await classDocumentsAPI.renameFile(id, newName);
@@ -174,5 +210,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     handleDeleteFolder,
     handleDeleteFile,
     handleRenameFile,
+    handleUploadDocument,
   };
 };

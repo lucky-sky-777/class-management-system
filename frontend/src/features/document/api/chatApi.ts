@@ -1,15 +1,22 @@
+import { apiClient } from "@services/api-client";
+import type { ResponseDTO } from "@shared/types";
+import type { RagAnswerResponseDto } from "@/features/document/types"; // Điều chỉnh path phù hợp
+
 export const chatApi = {
   /**
-   * Gửi tin nhắn cho AI và nhận câu trả lời
+   * Gửi tài liệu và câu hỏi lên AI sử dụng RAG
    */
-  sendMessage: async (text: string, fileName: string): Promise<string> => {
-    // Giả lập độ trễ mạng 1.5 giây
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(
-          "Đây là phản hồi mẫu từ AI. Mình đang phân tích tài liệu để tìm câu trả lời tốt nhất cho bạn. Chức năng này sẽ được nối với Backend trong tương lai!",
-        );
-      }, 1500);
-    });
+  askQuestion: async (
+    question: string,
+    file: File,
+  ): Promise<ResponseDTO<RagAnswerResponseDto>> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("question", question);
+
+    return apiClient.post<ResponseDTO<RagAnswerResponseDto>>(
+      "/rag/ask",
+      formData,
+    );
   },
 };

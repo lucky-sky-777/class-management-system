@@ -2,6 +2,8 @@ import type {
   FolderItem,
   FileItem,
   CreateDirectoryRequestDto,
+  CreateDocumentRequestDto,
+  DocumentResponseDto,
 } from "@features/document/types";
 import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
@@ -39,6 +41,37 @@ export const classDocumentsAPI = {
     return apiClient.delete<ResponseDTO<void>>(`/directories/${directoryId}`);
   },
 
+  // --- API DOCUMENT (TÀI LIỆU) ---
+  uploadDocument: async (
+    classId: number | string,
+    directoryId: number | string,
+    file: File,
+    request: CreateDocumentRequestDto = {},
+  ): Promise<ResponseDTO<DocumentResponseDto>> => {
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    const payload = {
+      title: request.title || file.name,
+      description: request.description || "",
+    };
+
+    const requestBlob = new Blob([JSON.stringify(payload)], {
+      type: "application/json",
+    });
+    formData.append("request", requestBlob);
+
+    return apiClient.post<ResponseDTO<DocumentResponseDto>>(
+      `/classes/${classId}/directories/${directoryId}/documents`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+  },
   getRecentFiles: async (): Promise<FileItem[]> => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     return [

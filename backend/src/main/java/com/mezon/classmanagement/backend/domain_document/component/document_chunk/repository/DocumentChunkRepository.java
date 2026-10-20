@@ -55,4 +55,5 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 			@Param("limit") int limit
 	);
 
+	List<DocumentChunk> findByDocument_IdOrderByIndexAsc(Long documentId);
 }
