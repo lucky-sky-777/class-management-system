@@ -20,15 +20,17 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 	List<Document> getAll();
 
 	@Query(value = """
-	select *
-	from documents d
-	where d.id in (
-		select dd.id
-		from directory_documents dd
-		where dd.directory_id = :directoryId
-	)
-	""", nativeQuery = true)
-	List<Document> findByDirectoryId(@Param("directoryId") Long directoryId);
+    SELECT d.*
+    FROM documents d
+    WHERE d.id IN (
+        SELECT dd.document_id
+        FROM directory_documents dd
+        WHERE dd.directory_id = :directoryId
+    )
+    """, nativeQuery = true)
+	List<Document> findByDirectoryId(
+			@Param("directoryId") Long directoryId
+	);
 
 //	@Query("""
 //

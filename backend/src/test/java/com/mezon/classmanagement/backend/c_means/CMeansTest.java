@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.config.EmbeddingConfig;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.config.CMeansConfig;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.RecommendationModelRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.DocumentClusterMembership;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationCluster;
@@ -13,6 +14,7 @@ import com.mezon.classmanagement.backend.domain_document.main.c_means.repository
 import com.mezon.classmanagement.backend.domain_document.main.c_means.repository.RecommendationModelRepository;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.FuzzyCMeansService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.util.CMeansUtils;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import lombok.AccessLevel;
@@ -34,9 +36,6 @@ public class CMeansTest {
 	FuzzyCMeansService fuzzyCMeansService;
 	RecommendationModelService recommendationModelService;
 	DocumentService documentService;
-
-
-
 	RecommendationModelRepository recommendationModelRepository;
 
 	RecommendationClusterRepository recommendationClusterRepository;
@@ -46,81 +45,35 @@ public class CMeansTest {
 
 	@Test
 	public void test() {
-		List<Document> documentList = documentService.getAll();
-
-		if (documentList.isEmpty()) {
-			throw new IllegalStateException("Không có tài liệu để huấn luyện");
-		}
-
-		List<Long> documentIdList = new ArrayList<>();
-		List<float[]> embeddingList = new ArrayList<>();
-
-		for (Document document : documentList) {
-			if (document.getEmbedding() == null || document.getEmbedding().getValues() == null) {
-				throw new IllegalStateException(
-						"Tài liệu chưa có embedding: " + document.getId()
-				);
-			}
-
-			float[] embedding = document.getEmbedding().getValues();
-
-			if (embedding.length != EmbeddingConfig.EMBEDDING_DIMENSION) {
-				throw new IllegalStateException(
-						"Embedding không đúng 1536 chiều, documentId: "
-								+ document.getId()
-				);
-			}
-
-			documentIdList.add(document.getId());
-			embeddingList.add(embedding);
-		}
+		DocumentEmbeddingList documentEmbeddingList = documentService.getEmbeddingList();
 
 		// 1. Huấn luyện Fuzzy C-Means
 		FuzzyCMeansService.FcmTrainingResult result =
-				fuzzyCMeansService.train(EmbeddingUtils.toDoubleList(embeddingList));
+				fuzzyCMeansService.train(EmbeddingUtils.toDoubleList(documentEmbeddingList.embeddingList()));
 
 		double[][] memberships = result.membershipMatrix();
 		List<double[]> centers = result.centerList();
 		int[] dominantCluster = result.dominantCluster();
 
-		int documentCount = documentIdList.size();
+		int documentCount = documentEmbeddingList.idList().size();
 		int clusterCount = centers.size();
 
-		if (memberships.length != documentCount || dominantCluster.length != documentCount || clusterCount == 0) {
-			throw new IllegalStateException(
-					"Kết quả huấn luyện không khớp với dữ liệu đầu vào"
-			);
-		}
+		CMeansUtils.validateTrainingResult(result, documentCount);
+		CMeansUtils.validateMembership(memberships, clusterCount);
 
-		for (double[] membership : memberships) {
-			if (membership == null || membership.length != clusterCount) {
-				throw new IllegalStateException(
-						"Ma trận membership không hợp lệ"
-				);
-			}
-		}
-
-		// 2. Lưu thông tin mô hình trước để lấy model.id
 		RecommendationModel model = recommendationModelService.create(
 				new RecommendationModelRequestDto(clusterCount, RecommendationModel.Status.TRAINING)
 		);
-
 
 		// 3. Lưu các tâm cụm để lấy cluster.id
 		List<RecommendationCluster> clusterList =
 				new ArrayList<>(clusterCount);
 
-		for (int clusterIndex = 0;
-		     clusterIndex < clusterCount;
-		     clusterIndex++) {
+		for (int clusterIndex = 0; clusterIndex < clusterCount; clusterIndex++) {
 
 			double[] center = centers.get(clusterIndex);
 
-			if (center.length != EmbeddingConfig.EMBEDDING_DIMENSION) {
-				throw new IllegalStateException(
-						"Tâm cụm không đúng 1536 chiều: " + clusterIndex
-				);
-			}
+			CMeansUtils.validateCenter(center, clusterIndex);
 
 			RecommendationCluster cluster =
 					RecommendationCluster.builder()
@@ -143,7 +96,7 @@ public class CMeansTest {
 				new ArrayList<>(SAVE_BATCH_SIZE);
 
 		for (int i = 0; i < documentCount; i++) {
-			Long documentId = documentIdList.get(i);
+			Long documentId = documentEmbeddingList.idList().get(i);
 
 			double[] membershipOfDocument = memberships[i];
 			int dominant = dominantCluster[i];

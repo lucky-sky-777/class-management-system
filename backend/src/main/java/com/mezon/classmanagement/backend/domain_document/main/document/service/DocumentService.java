@@ -2,16 +2,19 @@ package com.mezon.classmanagement.backend.domain_document.main.document.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
+import com.mezon.classmanagement.backend.config.EmbeddingConfig;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
 import com.mezon.classmanagement.backend.domain_document.main.directory_document.service.DirectoryDocumentService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentIdAndEmbeddingResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
@@ -29,6 +32,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -164,6 +168,40 @@ public class DocumentService {
 						"Document not exists"
 				)
 		);
+	}
+
+	@Transactional
+	public DocumentEmbeddingList getEmbeddingList() {
+		List<Document> documentList = getAll();
+
+		if (documentList.isEmpty()) {
+			throw new IllegalStateException("Không có tài liệu để huấn luyện");
+		}
+
+		List<Long> idList = new ArrayList<>();
+		List<float[]> embeddingList = new ArrayList<>();
+
+		for (Document document : documentList) {
+			if (document.getEmbedding() == null || document.getEmbedding().getValues() == null) {
+				throw new IllegalStateException(
+						"Tài liệu chưa có embedding: " + document.getId()
+				);
+			}
+
+			float[] embedding = document.getEmbedding().getValues();
+
+			if (embedding.length != EmbeddingConfig.EMBEDDING_DIMENSION) {
+				throw new IllegalStateException(
+						"Embedding không đúng 1536 chiều, documentId: "
+								+ document.getId()
+				);
+			}
+
+			idList.add(document.getId());
+			embeddingList.add(embedding);
+		}
+
+		return new DocumentEmbeddingList(idList, embeddingList);
 	}
 
 	@Transactional(readOnly = true)
