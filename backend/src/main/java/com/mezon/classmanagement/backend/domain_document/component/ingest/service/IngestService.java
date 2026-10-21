@@ -10,8 +10,10 @@ import com.mezon.classmanagement.backend.domain_document.component.chunk.strateg
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.service.DocumentChunkService;
+import com.mezon.classmanagement.backend.domain_document.component.document_metadata.service.DocumentMetadataService;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
+import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.IngestRequest;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.RabbitIngestRequest;
@@ -33,6 +35,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -61,6 +66,12 @@ public class IngestService {
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
 	ChunkByParagraphWithOverlapStrategy chunkByParagraphWithOverlapStrategy;
 	FileProducer fileProducer;
+//	TagService tagService;
+
+//	DocumentMetadataService documentMetadataService;
+
+
+//	private static final Logger log = LoggerFactory.getLogger(IngestService.class);
 
 	Queue<IngestRequest> ingestRequestQueue = new ArrayDeque<>();
 
@@ -116,6 +127,15 @@ public class IngestService {
 		Document document = documentService.create(
 				creatorUserId, directoryId, metadata
 		);
+
+//		try {
+//			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
+//			documentMetadataService.saveMetadata(document.getId(), metadataMap);
+//		} catch (Exception e) {
+//			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
+//		}
+
+
 
 		// 4. Tiếp theo: xử lý bất đồng bộ
 		ingestAsync(
@@ -177,6 +197,12 @@ public class IngestService {
 							chunkByParagraphWithOverlapStrategy,
 							documentSource
 					);
+
+//			try {
+//				tagService.autoTag(request.documentId(), chunkList);
+//			} catch (Exception e) {
+//				log.warn("Auto-tag failed (khong chan ingest), documentId={}", request.documentId(), e);
+//			}
 
 			List<DocumentChunk> documentChunkList = new ArrayList<>();
 			List<BaseVector> embeddingList = embeddingService

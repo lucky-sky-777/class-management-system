@@ -2,7 +2,6 @@ import type {
   FolderItem,
   FileItem,
   CreateDirectoryRequestDto,
-  CreateDocumentRequestDto,
   DocumentResponseDto,
 } from "@features/document/types";
 import { apiClient } from "@services/api-client";
@@ -42,36 +41,47 @@ export const classDocumentsAPI = {
   },
 
   // --- API DOCUMENT (TÀI LIỆU) ---
-  uploadDocument: async (
-    classId: number | string,
-    directoryId: number | string,
-    file: File,
-    request: CreateDocumentRequestDto = {},
-  ): Promise<ResponseDTO<DocumentResponseDto>> => {
+  getDocumentsByDirectory: async (
+    classId: string | number,
+    directoryId: string | number,
+  ): Promise<ResponseDTO<DocumentResponseDto[]>> => {
+    return apiClient.get(
+      `/classes/${classId}/directories/${directoryId}/documents`,
+    );
+  },
+
+  uploadDocuments: async (
+    classId: string | number,
+    directoryId: string | number,
+    files: File[],
+  ): Promise<ResponseDTO<string>> => {
     const formData = new FormData();
 
-    formData.append("file", file);
-
-    const payload = {
-      title: request.title || file.name,
-      description: request.description || "",
-    };
-
-    const requestBlob = new Blob([JSON.stringify(payload)], {
-      type: "application/json",
+    files.forEach((file) => {
+      formData.append("files", file);
     });
-    formData.append("request", requestBlob);
 
-    return apiClient.post<ResponseDTO<DocumentResponseDto>>(
+    return apiClient.post(
       `/classes/${classId}/directories/${directoryId}/documents`,
       formData,
+    );
+  },
+
+  getFileBlob: async (
+    classId: string | number,
+    directoryId: string | number,
+    documentId: string | number,
+  ): Promise<Blob> => {
+    return apiClient.get(
+      `/classes/${classId}/directories/${directoryId}/documents/${documentId}/file`,
       {
-        headers: {
-          "Content-Type": "multipart/form-data",
+        axiosConfig: {
+          responseType: "blob", // Bắt buộc để Axios không parse nhầm sang JSON
         },
       },
     );
   },
+
   getRecentFiles: async (): Promise<FileItem[]> => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     return [
