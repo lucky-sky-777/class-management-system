@@ -69,6 +69,19 @@ public class DocumentController {
 		}
 	}
 
+	@GetMapping
+	public ResponseDTO<List<DocumentResponseDto>> getList(
+			@PathVariable Long classId,
+			@PathVariable Long directoryId
+	) {
+		List<DocumentResponseDto> responseList = documentService.getList(classId, directoryId);
+
+		return ResponseDTO.ok(
+				"Get document list successful",
+				responseList
+		);
+	}
+
 	@GetMapping("/{documentId}/file")
 	public ResponseEntity<StreamingResponseBody> readFile(
 			@PathVariable Long classId,

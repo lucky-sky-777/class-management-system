@@ -1,7 +1,10 @@
 package com.mezon.classmanagement.backend.c_means;
 
 import com.mezon.classmanagement.backend.config.EmbeddingConfig;
+import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.config.CMeansConfig;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.RecommendationModelRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.DocumentClusterMembership;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationCluster;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationModel;
@@ -9,6 +12,7 @@ import com.mezon.classmanagement.backend.domain_document.main.c_means.repository
 import com.mezon.classmanagement.backend.domain_document.main.c_means.repository.RecommendationClusterRepository;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.repository.RecommendationModelRepository;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.FuzzyCMeansService;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import lombok.AccessLevel;
@@ -28,39 +32,10 @@ import java.util.List;
 public class CMeansTest {
 
 	FuzzyCMeansService fuzzyCMeansService;
+	RecommendationModelService recommendationModelService;
 	DocumentService documentService;
 
-	public float[] toFloatArray(double[] vector) {
-		float[] result = new float[vector.length];
 
-		for (int i = 0; i < vector.length; i++) {
-			result[i] = (float) vector[i];
-		}
-
-		return result;
-	}
-
-	public double[] toDoubleArray(float[] vector) {
-		double[] result = new double[vector.length];
-
-		for (int i = 0; i < vector.length; i++) {
-			result[i] = vector[i];
-		}
-
-		return result;
-	}
-
-	public List<double[]> toDoubleList(
-			List<float[]> embeddings) {
-
-		List<double[]> result = new ArrayList<>(embeddings.size());
-
-		for (float[] embedding : embeddings) {
-			result.add(toDoubleArray(embedding));
-		}
-
-		return result;
-	}
 
 	RecommendationModelRepository recommendationModelRepository;
 
@@ -102,7 +77,7 @@ public class CMeansTest {
 
 		// 1. Huấn luyện Fuzzy C-Means
 		FuzzyCMeansService.FcmTrainingResult result =
-				fuzzyCMeansService.train(toDoubleList(embeddingList));
+				fuzzyCMeansService.train(EmbeddingUtils.toDoubleList(embeddingList));
 
 		double[][] memberships = result.membershipMatrix();
 		List<double[]> centers = result.centerList();
@@ -126,18 +101,10 @@ public class CMeansTest {
 		}
 
 		// 2. Lưu thông tin mô hình trước để lấy model.id
-		RecommendationModel model = RecommendationModel.builder()
-				.embeddingModel(EmbeddingConfig.EMBEDDING_MODEL)
-				.embeddingDimension(EmbeddingConfig.EMBEDDING_DIMENSION)
-				.clusterCount(clusterCount)
-				.fuzziness(2.0)
-				.minIterations(5)
-				.maxIterations(100)
-				.convergenceDelta(1e-6)
-				.status(RecommendationModel.Status.TRAINING)
-				.build();
+		RecommendationModel model = recommendationModelService.create(
+				new RecommendationModelRequestDto(clusterCount, RecommendationModel.Status.TRAINING)
+		);
 
-		model = recommendationModelRepository.saveAndFlush(model);
 
 		// 3. Lưu các tâm cụm để lấy cluster.id
 		List<RecommendationCluster> clusterList =
@@ -160,7 +127,7 @@ public class CMeansTest {
 							.model(model)
 							.clusterIndex(clusterIndex)
 							.centerEmbedding(
-									new Vector1536(toFloatArray(center))
+									new Vector1536(EmbeddingUtils.toFloatArray(center))
 							)
 							.build();
 
@@ -230,10 +197,8 @@ public class CMeansTest {
 		}
 
 		// 5. Chỉ đánh dấu READY sau khi lưu xong kết quả
-		model.setStatus(RecommendationModel.Status.READY);
-		model.setTrainedAt(Instant.now());
 
-		recommendationModelRepository.save(model);
+		recommendationModelService.update(model.getId(), RecommendationModel.Status.READY);
 
 		System.out.println("Huấn luyện Fuzzy C-Means hoàn tất.");
 		System.out.println("Model ID: " + model.getId());

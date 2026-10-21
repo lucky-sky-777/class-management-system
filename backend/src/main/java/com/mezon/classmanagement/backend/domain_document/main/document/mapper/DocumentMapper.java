@@ -11,6 +11,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import java.util.List;
+
 @Mapper(config = MapStructConfig.class)
 public interface DocumentMapper {
 
@@ -18,6 +20,12 @@ public interface DocumentMapper {
 
 	@Mapping(source = "creator.id", target = "creatorUserId")
 	DocumentResponseDto toDocumentResponseDto(Document document);
+
+	default List<DocumentResponseDto> toDocumentResponseDtoList(List<Document> documentList) {
+		return documentList.stream()
+				.map(this::toDocumentResponseDto)
+				.toList();
+	}
 
 	@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 	void updateDocumentFromRequestDto(InternalUpdateDocumentRequestDto internalUpdateDocumentRequestDto, @MappingTarget Document document);

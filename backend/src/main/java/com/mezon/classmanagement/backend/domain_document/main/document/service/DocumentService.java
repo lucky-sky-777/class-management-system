@@ -171,6 +171,13 @@ public class DocumentService {
 		return documentRepository.findAll();
 	}
 
+	@Transactional
+	public List<DocumentResponseDto> getList(Long classId, Long directoryId) {
+		List<Document> documentList = documentRepository.findByDirectoryId(directoryId);
+
+		return documentMapper.toDocumentResponseDtoList(documentList);
+	}
+
 	@Transactional(readOnly = true)
 	public Document findByIdOrThrow(Long id) {
 		return documentRepository.findById(id).orElseThrow(() ->

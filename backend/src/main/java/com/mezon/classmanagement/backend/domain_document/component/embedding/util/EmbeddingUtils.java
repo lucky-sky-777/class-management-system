@@ -3,11 +3,42 @@ package com.mezon.classmanagement.backend.domain_document.component.embedding.ut
 import com.google.common.util.concurrent.AtomicDouble;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
 @SuppressWarnings(value = {WarningConstant.UNUSED, WarningConstant.SPELL_CHECKING_INSPECTION})
 public class EmbeddingUtils {
+
+	public static float[] toFloatArray(double[] vector) {
+		float[] result = new float[vector.length];
+
+		for (int i = 0; i < vector.length; i++) {
+			result[i] = (float) vector[i];
+		}
+
+		return result;
+	}
+
+	public static double[] toDoubleArray(float[] vector) {
+		double[] result = new double[vector.length];
+
+		for (int i = 0; i < vector.length; i++) {
+			result[i] = vector[i];
+		}
+
+		return result;
+	}
+
+	public static List<double[]> toDoubleList(List<float[]> embeddings) {
+		List<double[]> result = new ArrayList<>(embeddings.size());
+
+		for (float[] embedding : embeddings) {
+			result.add(toDoubleArray(embedding));
+		}
+
+		return result;
+	}
 
 	public static float cosinePercent(float cosine) {
 		return cosine * 100.0f;
