@@ -2,9 +2,12 @@ package com.mezon.classmanagement.backend.domain_document.main.document.service;
 
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
+import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
+import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
 import com.mezon.classmanagement.backend.domain_document.main.directory_document.service.DirectoryDocumentService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
@@ -25,6 +28,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,6 +60,21 @@ public class DocumentService {
 	EmbeddingService embeddingService;
 	DocumentRepository documentRepository;
 	DocumentMapper documentMapper;
+	S3Service s3Service;
+
+	@Transactional
+	public InputStream openStream(Long classId, Long directoryId, Document document) {
+		Directory directory = directoryService.findByIdOrThrow(directoryId);
+
+		return s3Service.getFile(
+				FileUtils.buildPath(
+						S3Config.Directory.UPLOAD_CLASS,
+						String.valueOf(classId),
+						directory.getSlug(),
+						document.getKey() + "." + document.getFileExtension()
+				)
+		);
+	}
 
 	@Transactional
 	public Document create(
