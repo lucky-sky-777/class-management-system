@@ -250,10 +250,10 @@ public final class FileUtils {
 		return new TikaV4XDocumentParser().parseWithMetadata(inputStream);
 	}
 
-//	public static Document toDocument(String tempFilePath) throws Exception {
+//	public static Document toDocument(String filePathInS3) throws Exception {
 //		try {
 //			return FileSystemDocumentLoader.loadDocument(
-//					Paths.get(tempFilePath),
+//					Paths.get(filePathInS3),
 //					new TikaImageMarkerParser()
 //			);
 //		} catch (Exception e) {
@@ -262,12 +262,12 @@ public final class FileUtils {
 //	}
 //
 //	public static Document toDocumentWithParser(
-//			String tempFilePath,
+//			String filePathInS3,
 //			DocumentParser documentParser
 //	) throws Exception {
 //		try {
 //			return FileSystemDocumentLoader.loadDocument(
-//					Paths.get(tempFilePath),
+//					Paths.get(filePathInS3),
 //					documentParser
 //			);
 //		} catch (Exception e) {

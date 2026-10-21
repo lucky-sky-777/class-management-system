@@ -18,6 +18,11 @@ interface DocumentToolbarProps {
   onGoToRoot: () => void;
   onSearch: (term: string) => void;
   onCreateFolder: (name: string) => void;
+  onUploadDocument?: (
+    folderId: string,
+    files: File[],
+    description: string,
+  ) => Promise<void>;
 }
 
 export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
@@ -26,6 +31,7 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
   onGoToRoot,
   onSearch,
   onCreateFolder,
+  onUploadDocument,
 }) => {
   const [isUpLoadModalOpen, setIsUpLoadModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
@@ -77,7 +83,10 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
           </div>
 
           {/* 3. Nút Tạo thư mục */}
-          <button onClick={() => setIsCreateFolderModalOpen(true)} className="flex items-center gap-1.5 px-3 py-2 sm:py-1.5 text-sm font-semibold text-[var(--primary)] border border-[var(--primary)] rounded-[var(--r-md)] hover:bg-[var(--primary-fill)] transition-colors bg-white active:scale-95">
+          <button
+            onClick={() => setIsCreateFolderModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 sm:py-1.5 text-sm font-semibold text-[var(--primary)] border border-[var(--primary)] rounded-[var(--r-md)] hover:bg-[var(--primary-fill)] transition-colors bg-white active:scale-95"
+          >
             <Plus size={16} />
             <span className="hidden sm:inline">Tạo thư mục</span>
             <span className="sm:hidden">Thư mục</span>
@@ -97,9 +106,11 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
         isOpen={isUpLoadModalOpen}
         onClose={() => setIsUpLoadModalOpen(false)}
         folders={folders}
+        defaultFolderId={currentFolder?.id}
+        onUpload={onUploadDocument}
       />
 
-      <CreateFolderModal 
+      <CreateFolderModal
         isOpen={isCreateFolderModalOpen}
         onClose={() => setIsCreateFolderModalOpen(false)}
         onSubmit={onCreateFolder}

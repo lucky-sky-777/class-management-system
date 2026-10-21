@@ -1,14 +1,77 @@
-import type { FolderItem, FileItem } from "@features/document/types";
+import type {
+  FolderItem,
+  FileItem,
+  CreateDirectoryRequestDto,
+  CreateDocumentRequestDto,
+  DocumentResponseDto,
+} from "@features/document/types";
+import { apiClient } from "@services/api-client";
+import type { ResponseDTO } from "@shared/types";
 
 export const classDocumentsAPI = {
-  getFolders: async (): Promise<FolderItem[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return [
-      { id: 1, name: "Tài liệu tham khảo", itemCount: 5 },
-      { id: 2, name: "Báo cáo cuối kì", itemCount: 9 },
-    ];
+  //api directory (thư mục)
+  getFolders: async (
+    classId: string | number,
+  ): Promise<ResponseDTO<FolderItem[]>> => {
+    return apiClient.get(`/directories/classes/${classId}`);
   },
 
+  createFolder: async (
+    classId: number | string,
+    data: CreateDirectoryRequestDto,
+  ): Promise<ResponseDTO<FolderItem>> => {
+    return apiClient.post<ResponseDTO<FolderItem>>(
+      `/directories/classes/${classId}`,
+      data,
+    );
+  },
+
+  renameFolder: async (
+    directoryId: number | string,
+    newName: string,
+  ): Promise<ResponseDTO<void>> => {
+    return apiClient.patch<ResponseDTO<void>>(`/directories/${directoryId}`, {
+      name: newName,
+    });
+  },
+
+  deleteFolder: async (
+    directoryId: number | string,
+  ): Promise<ResponseDTO<void>> => {
+    return apiClient.delete<ResponseDTO<void>>(`/directories/${directoryId}`);
+  },
+
+  // --- API DOCUMENT (TÀI LIỆU) ---
+  uploadDocument: async (
+    classId: number | string,
+    directoryId: number | string,
+    file: File,
+    request: CreateDocumentRequestDto = {},
+  ): Promise<ResponseDTO<DocumentResponseDto>> => {
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    const payload = {
+      title: request.title || file.name,
+      description: request.description || "",
+    };
+
+    const requestBlob = new Blob([JSON.stringify(payload)], {
+      type: "application/json",
+    });
+    formData.append("request", requestBlob);
+
+    return apiClient.post<ResponseDTO<DocumentResponseDto>>(
+      `/classes/${classId}/directories/${directoryId}/documents`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+  },
   getRecentFiles: async (): Promise<FileItem[]> => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     return [
@@ -39,10 +102,34 @@ export const classDocumentsAPI = {
   getFilesInFolder: async (folderId: string | number): Promise<FileItem[]> => {
     await new Promise((resolve) => setTimeout(resolve, 400)); // Giả lập độ trễ mạng
     return [
-      { id: 101, name: "Tài liệu hướng dẫn.pdf", size: "2.5 MB", uploader: "Giáo viên", fileExtension: "pdf" },
-      { id: 102, name: "Danh sách nhóm.xlsx", size: "1.1 MB", uploader: "Giáo viên", fileExtension: "xlsx" },
-      { id: 103, name: "Slide bài giảng.pptx", size: "15 MB", uploader: "Giáo viên", fileExtension: "pptx" },
-      { id: 104, name: "Source code tham khảo.zip", size: "45 MB", uploader: "Giáo viên", fileExtension: "zip" },
+      {
+        id: 101,
+        name: "Tài liệu hướng dẫn.pdf",
+        size: "2.5 MB",
+        uploader: "Giáo viên",
+        fileExtension: "pdf",
+      },
+      {
+        id: 102,
+        name: "Danh sách nhóm.xlsx",
+        size: "1.1 MB",
+        uploader: "Giáo viên",
+        fileExtension: "xlsx",
+      },
+      {
+        id: 103,
+        name: "Slide bài giảng.pptx",
+        size: "15 MB",
+        uploader: "Giáo viên",
+        fileExtension: "pptx",
+      },
+      {
+        id: 104,
+        name: "Source code tham khảo.zip",
+        size: "45 MB",
+        uploader: "Giáo viên",
+        fileExtension: "zip",
+      },
     ];
   },
 
@@ -57,36 +144,19 @@ export const classDocumentsAPI = {
       fileExtension: "docx",
       downloads: 125,
       likes: 10,
-      description: "Tài liệu nghiên cứu khoa học sinh viên năm học 2026 - 2027. Đề tài Xây dựng nền tảng chia sẻ tài liệu và học nhóm sinh viên",
+      description:
+        "Tài liệu nghiên cứu khoa học sinh viên năm học 2026 - 2027. Đề tài Xây dựng nền tảng chia sẻ tài liệu và học nhóm sinh viên",
       tags: ["NCKHSV 26-27", "QNU"],
       isLiked: false,
-      fileUrl: "https://docs.google.com/gview?url=https://calibre-ebook.com/downloads/demos/demo.docx&embedded=true",
+      fileUrl:
+        "https://docs.google.com/gview?url=https://calibre-ebook.com/downloads/demos/demo.docx&embedded=true",
     };
-  },
-
-  createFolder: async (name: string): Promise<FolderItem> => {
-    await new Promise((resolve) => setTimeout(resolve, 400)); // Giả lập mạng
-    return {
-      id: Date.now(), // Sinh ID ngẫu nhiên tạm thời
-      name: name,
-      itemCount: 0, 
-    };
-  },
-
-  renameFolder: async (id: string | number, newName: string): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Giả lập mạng
-    // Thực tế sẽ gọi axios.put(...) ở đây
-  },
-
-  deleteFolder: async (id: string | number): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 300)); // Giả lập gọi mạng
-    // Thực tế sẽ gọi axios.delete(...)
   },
 
   renameFile: async (id: string | number, newName: string): Promise<void> => {
     await new Promise((resolve) => setTimeout(resolve, 300));
   },
-  
+
   deleteFile: async (id: string | number): Promise<void> => {
     await new Promise((resolve) => setTimeout(resolve, 300));
   },

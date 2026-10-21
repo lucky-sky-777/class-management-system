@@ -1,7 +1,8 @@
 // src/features/document/components/DocumentViewerModal.tsx
-import React from "react";
-import { ArrowLeft, Heart, Share2, Download } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowLeft, Heart, Share2, Download, Sparkles } from "lucide-react";
 import type { FileItem } from "@/features/document/types";
+import { DocumentAIChatSidebar } from "@/features/document/components/DocumentAIChatSidebar";
 
 interface DocumentViewerModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface DocumentViewerModalProps {
   file: FileItem;
   onDownload: () => void;
   onToggleLike: () => void;
+  onOpenAI?: () => void;
 }
 
 export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
@@ -18,6 +20,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
   onDownload,
   onToggleLike,
 }) => {
+  const [isAIOpen, setIsAIOpen] = useState(false);
   if (!isOpen) return null;
 
   return (
@@ -64,6 +67,14 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
           <div className="w-px h-6 bg-[#333] hidden sm:block mx-1"></div>
 
           <button
+            onClick={() => setIsAIOpen(true)}
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)] hover:shadow-[0_0_20px_rgba(124,58,237,0.5)]"
+          >
+            <Sparkles size={16} />
+            <span className="hidden sm:inline">Hỏi đáp AI</span>
+          </button>
+
+          <button
             onClick={onDownload}
             className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#2D68FE] hover:bg-[#1A56EB] text-white rounded-lg text-sm font-semibold transition-colors"
           >
@@ -86,6 +97,12 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
             Tài liệu này không có nội dung hiển thị hoặc đường dẫn bị lỗi.
           </div>
         )}
+
+        <DocumentAIChatSidebar 
+          isOpen={isAIOpen} 
+          onClose={() => setIsAIOpen(false)} 
+          fileName={file.name}
+        />
       </div>
     </div>
   );

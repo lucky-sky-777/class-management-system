@@ -293,7 +293,7 @@ public class TagService {
 			while (tokenStream.incrementToken()) {
 				String term = charTermAttr.toString().trim();
 
-				if (term.length() > 2 && term.chars().anyMatch(Character::isLetter)) {
+				if (term.length() > 2 && !term.chars().allMatch(Character::isDigit)) {
 					termFrequencyMap.merge(term, 1, Integer::sum);
 				}
 

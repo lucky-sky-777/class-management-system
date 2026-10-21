@@ -110,11 +110,11 @@ public class ChunkService {
 
 //	@Deprecated
 //	public List<String> getChunkListFromFilePath(
-//			String tempFilePath,
+//			String filePathInS3,
 //			DocumentSplitter documentSplitter
 //	) {
 //		try {
-//			FileInputStream fis = new FileInputStream(tempFilePath);
+//			FileInputStream fis = new FileInputStream(filePathInS3);
 //
 //			XWPFDocument document = new XWPFDocument(fis);
 //			XWPFWordExtractor wordExtractor = new XWPFWordExtractor(document);

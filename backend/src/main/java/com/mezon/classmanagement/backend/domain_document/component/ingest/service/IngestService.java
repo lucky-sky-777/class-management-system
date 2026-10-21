@@ -1,8 +1,10 @@
 package com.mezon.classmanagement.backend.domain_document.component.ingest.service;
 
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
-import com.mezon.classmanagement.backend.config.s3.S3Config;
+import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.ChunkFormatterPipeline;
+import com.mezon.classmanagement.backend.domain_document.component.chunk.formatter.impl.GeminiChunkFormatter;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithOverlapStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
@@ -13,6 +15,8 @@ import com.mezon.classmanagement.backend.domain_document.component.document_sour
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
+import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.IngestRequest;
+import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.RabbitIngestRequest;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
@@ -20,6 +24,7 @@ import com.mezon.classmanagement.backend.domain_document.main.directory.entity.D
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
+import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import com.mezon.classmanagement.backend.domain_document.rabbitmq.FileProducer;
 import dev.langchain4j.data.document.Metadata;
@@ -28,13 +33,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+@SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
@@ -44,6 +60,7 @@ public class IngestService {
 	DirectoryService directoryService;
 	DocumentService documentService;
 	DocumentChunkService documentChunkService;
+	DocumentMapper documentMapper;
 	S3Service s3Service;
 	ChunkService chunkService;
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
@@ -53,35 +70,110 @@ public class IngestService {
 
 	DocumentMetadataService documentMetadataService;
 
-	@Async("documentExecutor")
-	public void ingest(
+
+
+	private static final Logger log = LoggerFactory.getLogger(IngestService.class);
+
+
+	Queue<IngestRequest> ingestRequestQueue = new ArrayDeque<>();
+
+	@Transactional
+	public void ingestMultiple(List<IngestRequest> ingestRequestList) {
+		for (IngestRequest curr : ingestRequestList) {
+			ingestSingle(
+					curr.creatorUserId(),
+					curr.classId(),
+					curr.directoryId(),
+					curr.multipartFile()
+			);
+		}
+	}
+
+	@Transactional
+	public void ingestSingle(
+			Long creatorUserId,
 			Long classId,
 			Long directoryId,
-			Long documentId,
+			MultipartFile multipartFile
+	) {
+		Directory directory = directoryService.findByIdOrThrow(directoryId);
+
+		// 1. Tạo file tạm trên server
+		Path tempFile;
+		try {
+			tempFile = Files.createTempFile("document-", ".tmp");
+			multipartFile.transferTo(tempFile);
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR,
+					e.getMessage()
+			);
+		}
+
+		// 2. Trích xuất metadata
+		Metadata metadata;
+		try {
+			metadata = new Metadata()
+					.put("fileName", multipartFile.getOriginalFilename())
+					.put("fileExtension", FileUtils.getExtension(multipartFile))
+					.put("fileMimeType", FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
+					.put("fileSize", multipartFile.getSize());
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR,
+					e.getMessage()
+			);
+		}
+
+		// 3. Tạo Document trên database
+		Document document = documentService.create(
+				creatorUserId, directoryId, metadata
+		);
+
+		try {
+			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
+			documentMetadataService.saveMetadata(document.getId(), metadataMap);
+		} catch (Exception e) {
+			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
+		}
+
+
+
+		// 4. Tiếp theo: xử lý bất đồng bộ
+		ingestAsync(
+				classId,
+				directory,
+				document,
+				tempFile,
+				metadata
+		);
+
+	}
+
+	@Async("documentExecutor")
+	protected void ingestAsync(
+			Long classId,
+			Directory directory,
+			Document document,
 			Path tempFile,
-			Metadata metadata,
-			String documentKey
+			Metadata metadata
 	) {
 		try (InputStream inputStream = Files.newInputStream(tempFile)) {
-			Directory directory = directoryService.findByIdOrThrow(directoryId);
-
-			String uploadedFilePath = s3Service.uploadFileToPath(
+			String uploadedFilePath = s3Service.uploadFileToClass(
+					classId,
+					directory,
+					document,
 					inputStream,
-					metadata,
-					S3Config.Bucket.ROOT,
-					FileUtils.buildPath(
-							S3Config.Directory.UPLOAD_CLASS,
-							String.valueOf(classId),
-							directory.getSlug()
-					),
-					documentKey + "." + metadata.getString("fileExtension")
+					metadata
 			);
 
 			fileProducer.send(
-					classId,
-					documentId,
-					uploadedFilePath,
-					metadata.getString("fileName")
+					new RabbitIngestRequest(
+							classId,
+							document.getId(),
+							uploadedFilePath,
+							metadata.getString("fileName")
+					)
 			);
 		} catch (Exception e) {
 			throw new GlobalException(
@@ -91,17 +183,15 @@ public class IngestService {
 		}
 	}
 
-	public void ingest(
-			Long classId,
-			Long documentId,
-			String filePath,
-			String originalFileName
+	@Transactional
+	public void ingestFromRabbit(
+			RabbitIngestRequest request
 	) {
 		System.out.println(
-				"Start ingest: " + filePath
+				"Start ingest: " + request.filePathInS3()
 		);
 
-		try (InputStream inputStream = s3Service.getFile(filePath)) {
+		try (InputStream inputStream = s3Service.getFile(request.filePathInS3())) {
 			DocumentSource documentSource = new InputStreamDocumentSource(inputStream);
 
 			List<String> chunkList = chunkService
@@ -111,22 +201,29 @@ public class IngestService {
 					);
 
 			try {
-				tagService.autoTag(documentId, chunkList);
+				tagService.autoTag(request.documentId(), chunkList);
 			} catch (Exception e) {
-				System.out.println("Auto-tag failed (khong chan ingest): " + e.getMessage());
+				log.warn("Auto-tag failed (khong chan ingest), documentId={}", request.documentId(), e);
 			}
 
 			List<DocumentChunk> documentChunkList = new ArrayList<>();
 			List<BaseVector> embeddingList = embeddingService
 					.embedMultipleDocumentText(
-							originalFileName,
-							chunkList
+					request.originalFileName(),
+							new ChunkFormatterPipeline(
+									List.of(
+											new GeminiChunkFormatter()
+									)
+							).formatList(
+									chunkList,
+									new Metadata().put("fileName", request.originalFileName())
+							)
 					);
 			for (short i = 0; i < chunkList.size(); i++) {
 				documentChunkList.add(
 						DocumentChunk
 								.builder()
-								.document(Document.create(documentId))
+								.document(Document.create(request.documentId()))
 								.index(i)
 								.content(chunkList.get(i))
 								.embedding(
@@ -140,28 +237,12 @@ public class IngestService {
 
 			documentChunkService.insertBatch(documentChunkList);
 
-			// metadata
-			try {
-				documentMetadataService.extractAndSave(documentId, originalFileName, filePath);
-			} catch (Exception e) {
-				System.out.println("Extract metadata failed (khong chan ingest): " + e.getMessage());
-			}
-
 			documentService.updateInternal(
-					documentId,
+					request.documentId(),
 					new InternalUpdateDocumentRequestDto(
 							Document.Status.UPLOADED
 					)
 			);
-
-//			List<String> formattedChunkList = new ChunkFormatterPipeline(
-//					List.of(
-//							new GeminiChunkFormatter()
-//					)
-//			).formatList(
-//					chunkList,
-//					new Metadata().put("fileName", originalFileName)
-//			);
 
 
 			System.out.println("Ingest completed");
@@ -173,7 +254,7 @@ public class IngestService {
 		}
 
 		try {
-			s3Service.deleteTempFile(FileUtils.getName(filePath));
+			s3Service.deleteTempFile(FileUtils.getName(request.filePathInS3()));
 		} catch (Exception e) {
 			throw new GlobalException(
 					GlobalException.Type.INTERNAL_SERVER_ERROR

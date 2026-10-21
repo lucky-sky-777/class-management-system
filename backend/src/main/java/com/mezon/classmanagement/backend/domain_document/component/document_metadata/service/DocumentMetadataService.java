@@ -12,11 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.InputStream;
 import java.util.HashMap;
 
 import java.util.Map;
 import java.util.Optional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -24,6 +29,9 @@ import java.util.Optional;
 public class DocumentMetadataService {
     DocumentMetadataRepository  documentMetadataRepository;
     DocumentRepository  documentRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(DocumentMetadataService.class);
+
 
     S3Service s3Service;
 
@@ -60,14 +68,18 @@ public class DocumentMetadataService {
         return documentMetadataRepository.findByDocument_Id(documentId);
     }
 
-    @Transactional
-    public void extractAndSave(Long documentId, String originalFileName, String filePath) {
-        try (InputStream inputStream = s3Service.getFile(filePath)) {
 
-            dev.langchain4j.data.document.Document document = FileUtils.toDocumentWithMetadata(inputStream);
+    public Map<String, Object> extract(MultipartFile multipartFile) {
+        Map<String, Object> metadataMap = new HashMap<>();
+
+        metadataMap.put("file_name", multipartFile.getOriginalFilename());
+        metadataMap.put("file_size", multipartFile.getSize());
+        metadataMap.put("mime_type", multipartFile.getContentType());
+
+        try (InputStream inputStream = multipartFile.getInputStream()) {
+            dev.langchain4j.data.document.Document document =
+                    FileUtils.toDocumentWithMetadata(inputStream);
             dev.langchain4j.data.document.Metadata langchainMetadata = document.metadata();
-
-            Map<String, Object> metadataMap = new HashMap<>();
 
             String author = langchainMetadata.getString("dc:creator");
             if (author == null || author.isBlank()) {
@@ -98,12 +110,10 @@ public class DocumentMetadataService {
                 metadataMap.put("modified_date", modified);
             }
 
-            metadataMap.put("file_name", originalFileName);
-
-            saveMetadata(documentId, metadataMap);
-
         } catch (Exception e) {
-            System.out.println("Extract metadata failed (khong chan ingest): " + e.getMessage());
+            log.warn("Tika extract metadata failed", e);
         }
+
+        return metadataMap;
     }
 }

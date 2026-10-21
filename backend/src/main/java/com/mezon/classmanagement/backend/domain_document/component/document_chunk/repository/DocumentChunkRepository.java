@@ -11,29 +11,49 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 
 	@Query(value = """
 	SELECT *
-	FROM document_chunks
-	WHERE document_id IN (
-		SELECT id
-		FROM documents
-		WHERE class_id = :classId
-	)
-	ORDER BY embedding <=> CAST(:embedding AS vector)
+	FROM document_chunks dc
+	ORDER BY dc.embedding <=> CAST(:embedding AS vector) ASC
 	LIMIT :limit
 	""", nativeQuery = true
 	)
-	List<DocumentChunk> searchSimilarChunks(
+	List<DocumentChunk> searchInAllSystemDocument(
+			float[] embedding,
+			int limit
+	);
+
+	@Query(value = """
+    SELECT dc.*
+    FROM document_chunks dc
+    WHERE EXISTS (
+        SELECT 1
+        FROM directory_documents dd
+        JOIN directories d
+        	ON d.id = dd.directory_id
+        WHERE dd.document_id = dc.document_id
+        	AND d.class_id = :classId
+    )
+    ORDER BY dc.embedding <=> CAST(:embedding AS vector) ASC
+    LIMIT :limit
+    """, nativeQuery = true)
+	List<DocumentChunk> searchInAllClassDocument(
 			@Param("classId") Long classId,
-			@Param("embedding") String embedding,
+			@Param("embedding") float[] embedding,
 			@Param("limit") int limit
 	);
 
-	@Query("""
-	SELECT c
-	FROM DocumentChunk c
-	ORDER BY cosine_distance(c.embedding, :embedding)
-	""")
-	List<DocumentChunk> search(
-			@Param("embedding") float[] embedding
+	@Query(value = """
+	SELECT *
+	FROM document_chunks dc
+	WHERE dc.document_id = :documentId
+	ORDER BY dc.embedding <=> CAST(:embedding AS vector) ASC
+	LIMIT :limit
+	""", nativeQuery = true
+	)
+	List<DocumentChunk> searchInOneDocument(
+			@Param("documentId") Long documentId,
+			@Param("embedding") float[] embedding,
+			@Param("limit") int limit
 	);
 
+	List<DocumentChunk> findByDocument_IdOrderByIndexAsc(Long documentId);
 }
