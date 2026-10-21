@@ -38,11 +38,11 @@ public class DocumentResponseDto {
 	@JsonProperty(value = "id")
 	Long id;
 
-	@SuppressWarnings({"all"})
-	// bỏ qua cái này nha
-	// để tạm dùng nội bộ thôi
-	// do chưa có cách xử lý
-	String key;
+//	@SuppressWarnings({"all"})
+//	// bỏ qua cái này nha
+//	// để tạm dùng nội bộ thôi
+//	// do chưa có cách xử lý
+//	String key;
 
 	@JsonProperty(value = "title")
 	String title;
