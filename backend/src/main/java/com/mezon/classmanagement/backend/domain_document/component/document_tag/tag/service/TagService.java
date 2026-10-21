@@ -25,6 +25,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -180,8 +181,8 @@ public class TagService {
 		return create(name).getId();
 	}
 
-	@Transactional
-	public void autoTag(Long documentId, List<String> chunkList) throws Exception {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void autoTag(Long documentId, List<String> chunkList) throws Exception {
 		Document document = documentRepository
 				.findById(documentId)
 				.orElse(null);

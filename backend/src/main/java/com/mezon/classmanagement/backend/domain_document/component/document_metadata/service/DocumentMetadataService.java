@@ -16,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.HashMap;
-
 import java.util.Map;
 import java.util.Optional;
 
@@ -67,7 +66,6 @@ public class DocumentMetadataService {
     public Optional<DocumentMetadata> getMetadata(Long documentId) {
         return documentMetadataRepository.findByDocument_Id(documentId);
     }
-
 
     public Map<String, Object> extract(MultipartFile multipartFile) {
         Map<String, Object> metadataMap = new HashMap<>();
