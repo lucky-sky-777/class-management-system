@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Loader2, FolderOpen } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useClassDocuments } from "@features/document/hooks/useClassDocuments";
-import { useDocumentDetail } from "@features/document/hooks/useDocumentDetail";
 import { DocumentToolbar } from "@features/document/components/DocumentToolbar";
 import { FolderCard } from "@features/document/components/FolderCard";
 import { FilePreviewCard } from "@features/document/components/FilePreviewCard";
@@ -11,6 +10,7 @@ import { DocumentPreview } from "@features/document/components/DocumentPreview";
 import { DocumentSidebar } from "@features/document/components/DocumentSidebar";
 import type { FileItem } from "@features/document/types";
 import { DocumentViewerModal } from "@features/document/components/DocumentViewerModal";
+import { classDocumentsAPI } from "@features/document/api";
 
 export const DocumentPage = () => {
   const { classId } = useParams();
@@ -32,31 +32,52 @@ export const DocumentPage = () => {
     handleUploadDocument,
   } = useClassDocuments(classId);
 
-  //  State điều hướng: Đang xem chi tiết file nào? (null = đang ở danh sách)
-  const [selectedFileId, setSelectedFileId] = useState<string | number | null>(
-    null,
-  );
+  // Lưu trực tiếp file được chọn từ danh sách thay vì gọi hook mock
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
-  // Hook quản lý chi tiết 1 file cụ thể
-  const {
-    fileDetail,
-    isLoading: isFileDetailLoading,
-    handleToggleLike,
-    handleDownload,
-  } = useDocumentDetail(selectedFileId);
 
-  // Hàm xử lý khi bấm vào 1 file
+  // Click vào file từ danh sách
   const handleOpenFile = (file: FileItem) => {
-    setSelectedFileId(file.id);
+    setSelectedFile(file);
   };
 
-  // Hàm xử lý khi bấm nút "Gốc" trên Toolbar
+  // Trở về trang gốc
   const handleToolbarGoToRoot = () => {
-    setSelectedFileId(null); // Thoát khỏi chế độ xem file
-    handleGoToRoot(); // Trở về trang gốc
+    setSelectedFile(null);
+    handleGoToRoot();
   };
 
-  // Render lúc mới vào trang
+  // Tải file trực tiếp qua blob
+  const handleDownloadFile = async () => {
+    if (!classId || !selectedFile) return;
+    try {
+      const blob = await classDocumentsAPI.getFileBlob(
+        classId,
+        currentFolder?.id ?? 0,
+        selectedFile.id,
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = selectedFile.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Lỗi khi tải file:", err);
+      alert("Không thể tải tài liệu về máy.");
+    }
+  };
+
+  const handleToggleLike = () => {
+    if (!selectedFile) return;
+    setSelectedFile((prev) =>
+      prev ? { ...prev, isLiked: !prev.isLiked } : null,
+    );
+  };
+
+  // Màn hình loading khi vào trang
   if (isPageLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
@@ -79,32 +100,29 @@ export const DocumentPage = () => {
         onUploadDocument={handleUploadDocument}
       />
 
-      {/* ĐIỀU KIỆN 1: Nếu ĐANG XEM FILE -> Render trang Chi tiết 2 cột */}
-      {selectedFileId && fileDetail ? (
-        isFileDetailLoading ? (
-          <div className="py-20 flex justify-center items-center">
-            <Loader2 className="animate-spin text-[var(--ink-3)]" size={32} />
-          </div>
-        ) : (
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <DocumentPreview
-              file={fileDetail}
-              onOpenFullScreen={() => setIsViewerOpen(true)}
-            />
-            <DocumentSidebar
-              file={fileDetail}
-              onDownload={handleDownload}
-              onToggleLike={handleToggleLike}
-              onEdit={() => console.log("Mở form edit chi tiết")}
-              onDelete={() => {
-                if (window.confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) {
-                  handleDeleteFile(fileDetail.id);
-                  setSelectedFileId(null); // Xóa xong thì quay ra ngoài
-                }
-              }}
-            />
-          </div>
-        )
+      {/* ĐIỀU KIỆN 1: Nếu ĐANG XEM FILE -> Hiển thị Preview thật */}
+      {selectedFile ? (
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <DocumentPreview
+            key={selectedFile.id}
+            file={selectedFile}
+            directoryId={currentFolder?.id ?? 0}
+            onOpenFullScreen={() => setIsViewerOpen(true)}
+            onToggleLike={handleToggleLike}
+          />
+          <DocumentSidebar
+            file={selectedFile}
+            onDownload={handleDownloadFile}
+            onToggleLike={handleToggleLike}
+            onEdit={() => console.log("Mở form edit chi tiết")}
+            onDelete={() => {
+              if (window.confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) {
+                handleDeleteFile(selectedFile.id);
+                setSelectedFile(null);
+              }
+            }}
+          />
+        </div>
       ) : /* ĐIỀU KIỆN 2: Nếu KHÔNG ở trong thư mục nào -> Render trang Gốc */
       !currentFolder ? (
         <>
@@ -137,9 +155,9 @@ export const DocumentPage = () => {
                   <FilePreviewCard
                     key={file.id}
                     file={file}
-                    onClick={() => handleOpenFile(file)} // Click mở file
-                    onEdit={handleRenameFile} // Edit inline
-                    onDelete={handleDeleteFile} // Xóa file
+                    onClick={() => handleOpenFile(file)}
+                    onEdit={handleRenameFile}
+                    onDelete={handleDeleteFile}
                   />
                 ))}
               </div>
@@ -147,7 +165,7 @@ export const DocumentPage = () => {
           )}
         </>
       ) : (
-        /* ĐIỀU KIỆN 3: Nếu ĐANG Ở TRONG THƯ MỤC -> Render danh sách file của thư mục đó */
+        /* ĐIỀU KIỆN 3: Nếu ĐANG Ở TRONG THƯ MỤC -> Render danh sách file thư mục */
         <section className="animate-in fade-in slide-in-from-right-4 duration-300">
           {isFolderLoading ? (
             <div className="py-10 flex justify-center items-center">
@@ -162,9 +180,9 @@ export const DocumentPage = () => {
                 <FilePreviewCard
                   key={file.id}
                   file={file}
-                  onClick={() => handleOpenFile(file)} // Click mở file
-                  onEdit={handleRenameFile} // Edit inline
-                  onDelete={handleDeleteFile} // Xóa file
+                  onClick={() => handleOpenFile(file)}
+                  onEdit={handleRenameFile}
+                  onDelete={handleDeleteFile}
                 />
               ))}
             </div>
@@ -179,12 +197,15 @@ export const DocumentPage = () => {
         </section>
       )}
 
-      {fileDetail && (
+      {/* Modal xem toàn màn hình */}
+      {selectedFile && isViewerOpen && (
         <DocumentViewerModal
+          key={`viewer-${selectedFile.id}`}
           isOpen={isViewerOpen}
           onClose={() => setIsViewerOpen(false)}
-          file={fileDetail}
-          onDownload={handleDownload}
+          file={selectedFile}
+          directoryId={currentFolder?.id ?? 0}
+          onDownload={handleDownloadFile}
           onToggleLike={handleToggleLike}
         />
       )}
