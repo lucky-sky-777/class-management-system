@@ -3,13 +3,15 @@ package com.mezon.classmanagement.backend.domain_document.component.s3.service;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
+import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
+import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
+import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
@@ -19,7 +21,6 @@ import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
-import java.awt.im.InputContext;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
@@ -70,6 +71,26 @@ public class S3Service {
 		if (bucketNotExists(bucketName)) {
 			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, "Internal server error");
 		}
+	}
+
+	public String uploadFileToClass(
+			Long classId,
+			Directory directory,
+			Document document,
+			InputStream inputStream,
+			Metadata metadata
+	) throws Exception {
+		return uploadFileToPath(
+				inputStream,
+				metadata,
+				S3Config.Bucket.ROOT,
+				FileUtils.buildPath(
+						S3Config.Directory.UPLOAD_CLASS,
+						String.valueOf(classId),
+						directory.getSlug()
+				),
+				document.getKey() + "." + metadata.getString("fileExtension")
+		);
 	}
 
 	public String uploadFileToPath(
@@ -126,7 +147,11 @@ public class S3Service {
 		deleteFile(S3Config.Bucket.ROOT, S3Config.Directory.UPLOAD_TEMP, fileName);
 	}
 
-	public void deleteFile(String bucketName, String directoryName, String fileName) {
+	public void deleteFile(
+			String bucketName,
+			String directoryName,
+			String fileName
+	) {
 		s3Client.deleteObject(
 				DeleteObjectRequest.builder()
 						.bucket(bucketName)

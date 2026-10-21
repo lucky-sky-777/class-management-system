@@ -13,6 +13,7 @@ import com.mezon.classmanagement.backend.domain_document.main.document.dto.respo
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
 import com.mezon.classmanagement.backend.domain_document.main.document.repository.DocumentRepository;
+import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,6 +25,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -54,6 +56,34 @@ public class DocumentService {
 	EmbeddingService embeddingService;
 	DocumentRepository documentRepository;
 	DocumentMapper documentMapper;
+
+	@Transactional
+	public Document create(
+			Long creatorUserId,
+			Long directoryId,
+			Metadata metadata
+	) {
+		directoryService.throwIfNotExistsById(directoryId);
+
+		Document newDocument = new Document();
+
+		newDocument.setKey(UUID.randomUUID().toString());
+		newDocument.setTitle(metadata.getString("fileName"));
+		newDocument.setFileName(metadata.getString("fileName"));
+		newDocument.setFileExtension(metadata.getString("fileExtension"));
+		newDocument.setCreator(User.create(creatorUserId));
+		newDocument.setStatus(Document.Status.UPLOADING);
+
+		Document responseDocument = save(newDocument);
+
+		applicationEventPublisher.publishEvent(
+				new DocumentCreatedEvent(
+						directoryId, responseDocument.getId()
+				)
+		);
+
+		return responseDocument;
+	}
 
 	@Transactional
 	public DocumentResponseDto create(
@@ -115,6 +145,11 @@ public class DocumentService {
 						"Document not exists"
 				)
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public List<Document> getAll() {
+		return documentRepository.findAll();
 	}
 
 	@Transactional(readOnly = true)
