@@ -1,4 +1,4 @@
-// src/features/classDocuments/pages/ClassDocumentsTab.tsx
+// src/features/classDocuments/pages/DocumentPage.tsx
 import React, { useState } from "react";
 import { Loader2, FolderOpen } from "lucide-react";
 import { useParams } from "react-router-dom";
@@ -29,6 +29,7 @@ export const DocumentPage = () => {
     handleDeleteFolder,
     handleRenameFile,
     handleDeleteFile,
+    handleUploadDocument,
   } = useClassDocuments(classId);
 
   //  State điều hướng: Đang xem chi tiết file nào? (null = đang ở danh sách)
@@ -75,6 +76,7 @@ export const DocumentPage = () => {
         onGoToRoot={handleToolbarGoToRoot}
         onSearch={handleSearch}
         onCreateFolder={handleCreateFolder}
+        onUploadDocument={handleUploadDocument}
       />
 
       {/* ĐIỀU KIỆN 1: Nếu ĐANG XEM FILE -> Render trang Chi tiết 2 cột */}

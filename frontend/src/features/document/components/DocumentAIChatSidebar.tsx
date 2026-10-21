@@ -5,13 +5,13 @@ import { useDocumentAIChat } from "../hooks/useDocumentAIChat";
 interface DocumentAIChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  fileName: string;
+  file: File | null;
 }
 
 export const DocumentAIChatSidebar: React.FC<DocumentAIChatSidebarProps> = ({
   isOpen,
   onClose,
-  fileName,
+  file,
 }) => {
   const {
     input,
@@ -21,7 +21,7 @@ export const DocumentAIChatSidebar: React.FC<DocumentAIChatSidebarProps> = ({
     messagesEndRef,
     handleSend,
     handleKeyDown,
-  } = useDocumentAIChat(fileName);
+  } = useDocumentAIChat(file);
 
   return (
     <>
