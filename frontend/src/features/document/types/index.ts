@@ -38,9 +38,14 @@ export interface CreateDocumentRequestDto {
 // DTO nhận về sau khi upload tài liệu thành công
 export interface DocumentResponseDto {
   id: number;
-  name: string;
-  fileUrl?: string;
+  title: string;
+  fileName: string;
   fileExtension?: string;
+  description?: string;
+  key?: string;
+  status?: "UPLOADING" | "UPLOADED" | "ERROR";
+  createdAt?: string;
+  fileUrl?: string;
   size?: number | string;
   [key: string]: unknown;
 }
