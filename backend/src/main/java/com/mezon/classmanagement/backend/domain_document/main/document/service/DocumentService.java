@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain_document.main.document.service;
 
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.config.EmbeddingConfig;
@@ -14,6 +15,7 @@ import com.mezon.classmanagement.backend.domain_document.main.directory.service.
 import com.mezon.classmanagement.backend.domain_document.main.directory_document.service.DirectoryDocumentService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentIdAndEmbeddingResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
@@ -34,8 +36,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
+@SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
@@ -137,6 +141,23 @@ public class DocumentService {
 	}
 
 	@Transactional
+	public void delete(Long clientUserId, Long classId, Long directoryId, List<Long> documentIdList) {
+		for (DocumentCreatorUserIdResponseDto dto : documentRepository.getCreatorUserIdListByDocumentIdList(documentIdList)) {
+			if (!Objects.equals(clientUserId, dto.getCreatorUserId())) {
+				throw new GlobalException(
+						GlobalException.Type.PERMISSION_DENIED,
+						"Bạn không có quyền xóa file với ID: " + dto.getDocumentId()
+				);
+			}
+		}
+		for (Long id : documentIdList) {
+			throwIfNotExistsById(id);
+		}
+
+		documentRepository.deleteAllByIdInBatch(documentIdList);
+	}
+
+	@Transactional
 	public void updateInternal(Long id, InternalUpdateDocumentRequestDto request) {
 		Document currentDocument = findByIdOrThrow(id);
 
@@ -158,6 +179,11 @@ public class DocumentService {
 	@Transactional
 	public Document save(Document document) {
 		return documentRepository.save(document);
+	}
+
+	@Transactional
+	public void delete(Document document) {
+		documentRepository.delete(document);
 	}
 
 	@Transactional(readOnly = true)
@@ -224,6 +250,21 @@ public class DocumentService {
 						"Document not exists"
 				)
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public boolean existsById(Long id) {
+		return documentRepository.existsById(id);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfNotExistsById(Long id) {
+		if (!existsById(id)) {
+			throw new GlobalException(
+					GlobalException.Type.NOT_EXISTS,
+					"Document not exists"
+			);
+		}
 	}
 
 }

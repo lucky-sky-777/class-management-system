@@ -20,6 +20,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,6 +68,38 @@ public class DocumentController {
 					"Chỉ nhận tối đa 500 MB mỗi yêu cầu"
 			);
 		}
+	}
+
+	@GetMapping("/{documentId}/download")
+	public ResponseEntity<StreamingResponseBody> download(
+			@PathVariable Long classId,
+			@PathVariable Long directoryId,
+			@PathVariable Long documentId
+	) {
+		Document document = documentService.findByIdOrThrow(documentId);
+
+		StreamingResponseBody body = outputStream -> {
+			try (InputStream inputStream =
+						 documentService.openStream(classId, directoryId, document)) {
+				inputStream.transferTo(outputStream);
+			}
+		};
+
+		ContentDisposition disposition =
+				ContentDisposition.attachment()
+						.filename(
+								document.getFileName(),
+								StandardCharsets.UTF_8
+						)
+						.build();
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.header(
+						HttpHeaders.CONTENT_DISPOSITION,
+						disposition.toString()
+				)
+				.body(body);
 	}
 
 	@GetMapping
@@ -139,6 +172,11 @@ public class DocumentController {
 		ingestService.ingestMultiple(ingestRequestList);
 
 		return ResponseDTO.ok("Đã tiếp nhận yêu cầu");
+	}
+
+	@GetMapping("/{documentId}")
+	public ResponseDTO<Void> delete() {
+		//
 	}
 
 //	@PostMapping(

@@ -54,7 +54,7 @@ public class DocumentResponseDto {
 	String fileName;
 
 	@JsonProperty(value = "creator_user_id")
-	String creatorUserId;
+	Long creatorUserId;
 
 	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")

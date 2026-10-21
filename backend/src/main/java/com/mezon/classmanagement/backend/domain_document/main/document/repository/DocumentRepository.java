@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain_document.main.document.repository;
 
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,14 +28,24 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         FROM directory_documents dd
         WHERE dd.directory_id = :directoryId
     )
+    order by d.created_at desc
     """, nativeQuery = true)
 	List<Document> findByDirectoryId(
 			@Param("directoryId") Long directoryId
 	);
 
-//	@Query("""
-//
-//	""")
-//	List<DocumentResponseDto> getByDirectoryId(Long directoryId);
+	@Query("""
+	select new com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto(
+		d.id,
+		d.creator.id
+	)
+	from Document d
+	where d.id in (
+		:documentIdList
+	)
+	""")
+	List<DocumentCreatorUserIdResponseDto> getCreatorUserIdListByDocumentIdList(
+			@Param("documentIdList") List<Long> dcocumentIdList
+	);
 
 }
