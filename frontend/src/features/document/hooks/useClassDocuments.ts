@@ -1,6 +1,10 @@
 // src/features/classDocuments/hooks/useClassDocuments.ts
 import { useState, useEffect, useCallback, useRef } from "react";
-import { classDocumentsAPI } from "@/features/document/api";
+import {
+  classDocumentsAPI,
+  formatBytes,
+  getExtension,
+} from "@/features/document/api";
 import type { FolderItem, FileItem } from "@/features/document/types";
 
 export const useClassDocuments = (classId: string | number | undefined) => {
@@ -18,12 +22,22 @@ export const useClassDocuments = (classId: string | number | undefined) => {
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
-  const hasFetched = useRef(false);
+  // Lưu classId đã fetch gần nhất thay vì dùng boolean cờ chết
+  const lastClassIdRef = useRef<string | number | undefined>(undefined);
 
   const fetchRootData = useCallback(async () => {
-    if (hasFetched.current) return;
     if (!classId) return;
+
+    // Nếu đã fetch xong cho chính classId này rồi thì không fetch lại
+    if (lastClassIdRef.current === classId) return;
+
     setIsLoading(true);
+    // Reset toàn bộ state dữ liệu của lớp cũ
+    setCurrentFolder(null);
+    setFolderFiles([]);
+    setFolders([]);
+    setRecentFiles([]);
+
     try {
       const [foldersRes, filesRes] = await Promise.all([
         classDocumentsAPI.getFolders(classId),
@@ -31,28 +45,23 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       ]);
 
       setFolders(foldersRes.data || []);
-
-      // nếu getRecentFiles gọi API thật và trả về ResponseDTO thì cũng thêm .data
       setRecentFiles(filesRes || []);
 
-      hasFetched.current = true;
+      // Đánh dấu đã fetch thành công cho classId hiện tại
+      lastClassIdRef.current = classId;
     } catch (error) {
-      console.error("Lỗi:", error);
+      console.error("Lỗi khi tải dữ liệu trang gốc:", error);
     } finally {
       setIsLoading(false);
     }
   }, [classId]);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchRootData();
-    });
+    fetchRootData();
   }, [fetchRootData]);
 
-  // LOGIC: Mở một thư mục
-  // Helper ánh xạ từ DocumentResponseDto của Backend sang FileItem của UI (nếu cần đổi tên field)
+  // LOGIC: Ánh xạ từ DTO của Backend sang FileItem giao diện
   const mapDtoToFileItem = (dto: any): FileItem => {
-    // 1. Tên file: ưu tiên title hoặc file_name
     const fullName =
       dto.title ||
       dto.file_name ||
@@ -60,25 +69,27 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       dto.name ||
       "Tài liệu không tên";
 
-    // 2. Phần mở rộng: tự bóc tách từ tên file (ví dụ "abc.pdf" -> "pdf")
-    const extractedExt = fullName.includes(".")
-      ? fullName.split(".").pop()?.toLowerCase() || "file"
-      : "file";
+    const rawMime = dto.mime_type || dto.mimeType || dto.metadata?.mime_type;
+    const resolvedExt = (
+      dto.file_extension ||
+      dto.fileExtension ||
+      getExtension(fullName, rawMime)
+    )
+      .replace(".", "")
+      .toLowerCase();
 
-    // 3. Dung lượng: kiểm tra nếu backend có trả về (size / file_size)
-    let formattedSize = "--";
-    const rawSize = dto.file_size ?? dto.size ?? dto.fileSize;
-    if (rawSize !== undefined && rawSize !== null && !isNaN(Number(rawSize))) {
-      formattedSize = `${(Number(rawSize) / (1024 * 1024)).toFixed(1)} MB`;
-    }
+    const rawSize =
+      dto.file_size ?? dto.size ?? dto.fileSize ?? dto.metadata?.file_size;
+    const formattedSize =
+      rawSize !== undefined && rawSize !== null ? formatBytes(rawSize) : "--";
 
-    // 4. Ngày tạo: Backend trả về chuỗi "08:41, 21/10/2026"
     const createdDate = dto.created_at || dto.createdAt;
 
-    // 5. Xử lý từ khóa (tags): chuẩn hóa nếu backend trả về string hoặc array
     let parsedTags: string[] = [];
     if (Array.isArray(dto.tags)) {
-      parsedTags = dto.tags;
+      parsedTags = dto.tags.map((t: any) =>
+        typeof t === "string" ? t : t.name,
+      );
     } else if (typeof dto.tags === "string" && dto.tags.trim()) {
       parsedTags = dto.tags.split(",").map((t: string) => t.trim());
     }
@@ -92,26 +103,25 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         dto.creatorName ||
         dto.uploader ||
         `User ${dto.creator_user_id || ""}`.trim() ||
-        "Người dùng",
-      uploadDate: createdDate || undefined,
-      fileExtension: (
-        dto.file_extension ||
-        dto.fileExtension ||
-        extractedExt
-      ).replace(".", ""),
+        "Bạn đăng",
+      uploadDate: createdDate || "Vừa xong",
+      fileExtension: resolvedExt,
       isLiked: Boolean(dto.is_liked || dto.isLiked),
-
-      // Các trường bổ sung cho DocumentSidebar:
       description: dto.description || "",
       downloads: dto.downloads ?? dto.download_count ?? dto.downloadCount ?? 0,
       likes: dto.likes ?? dto.like_count ?? dto.likesCount ?? 0,
       tags: parsedTags,
+      rawMetadata: dto.metadata || {
+        file_name: fullName,
+        file_size: rawSize,
+        mime_type: rawMime,
+      },
     };
   };
 
-  // Trong useClassDocuments:
+  // Mở thư mục
   const handleOpenFolder = async (folder: FolderItem) => {
-    if (!classId) return;
+    if (!classId || !folder?.id) return;
     setCurrentFolder(folder);
     setIsFolderLoading(true);
 
@@ -120,7 +130,8 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         classId,
         folder.id,
       );
-      const documents = (res.data || []).map(mapDtoToFileItem);
+      const rawList = res.data || [];
+      const documents = rawList.map(mapDtoToFileItem);
       setFolderFiles(documents);
     } catch (error) {
       console.error("Lỗi khi tải danh sách tài liệu trong thư mục:", error);
@@ -144,10 +155,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         itemCount: 0,
       };
 
-      setFolders((prevFolders) => {
-        const safePrevFolders = Array.isArray(prevFolders) ? prevFolders : [];
-        return [...safePrevFolders, newFolder];
-      });
+      setFolders((prevFolders) => [...(prevFolders || []), newFolder]);
     } catch (error) {
       console.error("Lỗi khi tạo thư mục:", error);
     }
@@ -157,14 +165,12 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     try {
       await classDocumentsAPI.renameFolder(id, newName);
 
-      // 1. Cập nhật tên trong danh sách thư mục ngoài màn hình Gốc
       setFolders((prevFolders) =>
         prevFolders.map((folder) =>
           folder.id === id ? { ...folder, name: newName } : folder,
         ),
       );
 
-      // 2. Nếu đang đứng BÊN TRONG thư mục đó thì cập nhật luôn Breadcrumbs
       if (currentFolder?.id === id) {
         setCurrentFolder((prev) => (prev ? { ...prev, name: newName } : null));
       }
@@ -177,12 +183,10 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     try {
       await classDocumentsAPI.deleteFolder(id);
 
-      // Xóa thư mục khỏi danh sách hiện tại
       setFolders((prevFolders) =>
         prevFolders.filter((folder) => folder.id !== id),
       );
 
-      // Nếu người dùng bằng cách nào đó đang ở trong thư mục bị xóa, đẩy họ ra ngoài Gốc
       if (currentFolder?.id === id) {
         handleGoToRoot();
       }
@@ -201,7 +205,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       setIsLoading(true);
       await classDocumentsAPI.uploadDocuments(classId, folderId, files);
 
-      // Load lại danh sách file thật từ backend
       const res = await classDocumentsAPI.getDocumentsByDirectory(
         classId,
         folderId,
@@ -215,7 +218,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     }
   };
 
-  // LOGIC: Lấy file từ backend về render xem trước
   const handleViewFile = async (
     file: FileItem,
     directoryId?: string | number,
@@ -231,7 +233,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       setIsPreviewLoading(true);
       setViewingFile(file);
 
-      // Thu hồi URL cũ nếu có trước khi tạo cái mới
       if (previewBlobUrl) {
         URL.revokeObjectURL(previewBlobUrl);
         setPreviewBlobUrl(null);
@@ -253,7 +254,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     }
   };
 
-  // Đóng Modal xem trước và giải phóng RAM
   const handleCloseViewer = () => {
     if (previewBlobUrl) {
       URL.revokeObjectURL(previewBlobUrl);
@@ -292,10 +292,9 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     }
   };
 
-  // Trở về thư mục gốc
   const handleGoToRoot = () => {
     setCurrentFolder(null);
-    setFolderFiles([]); // Xóa data tạm
+    setFolderFiles([]);
   };
 
   const handleSearch = (term: string) => {

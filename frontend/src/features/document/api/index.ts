@@ -3,12 +3,53 @@ import type {
   FileItem,
   CreateDirectoryRequestDto,
   DocumentResponseDto,
+  DocumentMetadataResponseDto,
+  TagResponse,
 } from "@features/document/types";
 import { apiClient } from "@services/api-client";
 import type { ResponseDTO } from "@shared/types";
 
+// Helper tính dung lượng từ byte
+export const formatBytes = (bytes?: number | string): string => {
+  if (!bytes) return "0 B";
+  const num = typeof bytes === "string" ? parseFloat(bytes) : bytes;
+  if (isNaN(num)) return String(bytes);
+
+  const units = ["B", "KB", "MB", "GB"];
+  let size = num;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+  return `${size.toFixed(1)} ${units[unitIndex]}`;
+};
+
+// Helper trích xuất phần mở rộng thông minh
+export const getExtension = (fileName?: string, mimeType?: string): string => {
+  if (mimeType) {
+    const mime = mimeType.toLowerCase();
+    if (mime.includes("pdf")) return "pdf";
+    if (mime.includes("wordprocessingml") || mime.includes("msword"))
+      return "docx";
+    if (mime.includes("presentationml") || mime.includes("powerpoint"))
+      return "pptx";
+    if (mime.includes("spreadsheetml") || mime.includes("excel")) return "xlsx";
+    if (mime.includes("image/png")) return "png";
+    if (mime.includes("image/jpeg") || mime.includes("image/jpg")) return "jpg";
+    if (mime.includes("zip") || mime.includes("compressed")) return "zip";
+  }
+
+  if (fileName && fileName.includes(".")) {
+    const ext = fileName.split(".").pop()?.trim().toLowerCase();
+    if (ext) return ext;
+  }
+
+  return "file";
+};
+
 export const classDocumentsAPI = {
-  //api directory (thư mục)
+  // --- DIRECTORY ---
   getFolders: async (
     classId: string | number,
   ): Promise<ResponseDTO<FolderItem[]>> => {
@@ -40,7 +81,7 @@ export const classDocumentsAPI = {
     return apiClient.delete<ResponseDTO<void>>(`/directories/${directoryId}`);
   },
 
-  // --- API DOCUMENT (TÀI LIỆU) ---
+  // --- DOCUMENT ---
   getDocumentsByDirectory: async (
     classId: string | number,
     directoryId: string | number,
@@ -56,7 +97,6 @@ export const classDocumentsAPI = {
     files: File[],
   ): Promise<ResponseDTO<string>> => {
     const formData = new FormData();
-
     files.forEach((file) => {
       formData.append("files", file);
     });
@@ -76,90 +116,77 @@ export const classDocumentsAPI = {
       `/classes/${classId}/directories/${directoryId}/documents/${documentId}/file`,
       {
         axiosConfig: {
-          responseType: "blob", // Bắt buộc để Axios không parse nhầm sang JSON
+          responseType: "blob",
         },
       },
     );
   },
 
-  getRecentFiles: async (): Promise<FileItem[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return [
-      {
-        id: 1,
-        name: "NCKHSV 26-27.pdf",
-        size: "71.4 MB",
-        uploader: "Bạn đăng",
-        fileExtension: "pdf",
-      },
-      {
-        id: 2,
-        name: "Tài liệu đặc tả.docx",
-        size: "50.1 MB",
-        uploader: "Bạn đăng",
-        fileExtension: "docx",
-      },
-      {
-        id: 3,
-        name: "NCKHSV 26-27.pptx",
-        size: "171.4 MB",
-        uploader: "Bạn đăng",
-        fileExtension: "pptx",
-      },
-    ];
+  getDocumentMetadata: async (
+    documentId: string | number,
+  ): Promise<ResponseDTO<DocumentMetadataResponseDto>> => {
+    return apiClient.get(`/documents/${documentId}/metadata`);
   },
 
-  getFilesInFolder: async (folderId: string | number): Promise<FileItem[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 400)); // Giả lập độ trễ mạng
-    return [
-      {
-        id: 101,
-        name: "Tài liệu hướng dẫn.pdf",
-        size: "2.5 MB",
-        uploader: "Giáo viên",
-        fileExtension: "pdf",
-      },
-      {
-        id: 102,
-        name: "Danh sách nhóm.xlsx",
-        size: "1.1 MB",
-        uploader: "Giáo viên",
-        fileExtension: "xlsx",
-      },
-      {
-        id: 103,
-        name: "Slide bài giảng.pptx",
-        size: "15 MB",
-        uploader: "Giáo viên",
-        fileExtension: "pptx",
-      },
-      {
-        id: 104,
-        name: "Source code tham khảo.zip",
-        size: "45 MB",
-        uploader: "Giáo viên",
-        fileExtension: "zip",
-      },
-    ];
+  getDocumentTags: async (
+    documentId: string | number,
+  ): Promise<ResponseDTO<TagResponse[]>> => {
+    return apiClient.get(`/document-tags/${documentId}/tags`);
   },
 
-  getFileDetail: async (fileId: string | number): Promise<FileItem> => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
+  // --- GỘP THÔNG TIN CẦN THIẾT CHO SIDEBAR/PREVIEW ---
+  getFileDetail: async (
+    fileId: string | number,
+    baseFile?: Partial<FileItem> | null,
+  ): Promise<FileItem> => {
+    const [metaRes, tagRes] = await Promise.allSettled([
+      classDocumentsAPI.getDocumentMetadata(fileId),
+      classDocumentsAPI.getDocumentTags(fileId),
+    ]);
+
+    // Trích xuất metadata cần thiết: file_size, mime_type
+    const metaPayload: any =
+      metaRes.status === "fulfilled" ? metaRes.value?.data : null;
+    const metadataObj = metaPayload?.metadata || metaPayload;
+
+    // Trích xuất danh sách tags
+    const tagPayload: any =
+      tagRes.status === "fulfilled" ? tagRes.value?.data : null;
+    const rawTags = Array.isArray(tagPayload)
+      ? tagPayload
+      : tagPayload?.data || [];
+    const tagList = Array.isArray(rawTags)
+      ? rawTags.map((t: any) => (typeof t === "string" ? t : t.name))
+      : [];
+
+    const resolvedName = baseFile?.name || metadataObj?.file_name || "Tài liệu";
+
+    // Tính dung lượng: ưu tiên từ metadata backend -> file ban đầu
+    const resolvedSize = metadataObj?.file_size
+      ? formatBytes(metadataObj.file_size)
+      : baseFile?.size || "--";
+
+    // Tính đuôi file: kết hợp tên và mime_type
+    const resolvedExtension = getExtension(
+      resolvedName,
+      metadataObj?.mime_type || baseFile?.fileExtension,
+    );
+
     return {
       id: fileId,
-      name: "NCKHSV 26-27.docx",
-      size: "7.1 MB",
-      uploader: "Phong Hào",
-      uploadDate: "20/07/2026",
-      fileExtension: "docx",
-      downloads: 125,
-      likes: 10,
-      description:
-        "Tài liệu nghiên cứu khoa học sinh viên năm học 2026 - 2027. Đề tài Xây dựng nền tảng chia sẻ tài liệu và học nhóm sinh viên",
-      tags: ["NCKHSV 26-27", "QNU"],
-      isLiked: false,
-      fileUrl:
-        "https://docs.google.com/gview?url=https://calibre-ebook.com/downloads/demos/demo.docx&embedded=true",
+      name: resolvedName,
+      size: resolvedSize,
+      fileExtension: resolvedExtension,
+      // Lấy toàn bộ thông tin thực tế từ file đã click
+      uploader: baseFile?.uploader || "Người dùng",
+      uploadDate: baseFile?.uploadDate || "--",
+      downloads: baseFile?.downloads ?? 0,
+      likes: baseFile?.likes ?? 0,
+      description: baseFile?.description || "",
+      isLiked: baseFile?.isLiked ?? false,
+      fileUrl: baseFile?.fileUrl,
+      // Gộp tags (ưu tiên tags mới từ API)
+      tags: tagList.length > 0 ? tagList : baseFile?.tags || [],
     };
   },
 
@@ -169,5 +196,47 @@ export const classDocumentsAPI = {
 
   deleteFile: async (id: string | number): Promise<void> => {
     await new Promise((resolve) => setTimeout(resolve, 300));
+  },
+
+  getRecentFiles: async (): Promise<FileItem[]> => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return [
+      {
+        id: 1,
+        name: "NCKHSV 26-27.pdf",
+        size: "71.4 MB",
+        uploader: "Đặng Phong Hào",
+        uploadDate: "21/10/2026",
+        fileExtension: "pdf",
+        downloads: 12,
+        likes: 5,
+        description: "Báo cáo nghiên cứu khoa học sinh viên",
+        tags: ["Nghiên cứu", "Báo cáo"],
+      },
+      {
+        id: 2,
+        name: "Tài liệu đặc tả.docx",
+        size: "50.1 MB",
+        uploader: "Đặng Phong Hào",
+        uploadDate: "22/10/2026",
+        fileExtension: "docx",
+        downloads: 8,
+        likes: 3,
+        description: "Tài liệu đặc tả yêu cầu phần mềm",
+        tags: ["SRS", "Thiết kế"],
+      },
+      {
+        id: 3,
+        name: "NCKHSV 26-27.pptx",
+        size: "171.4 MB",
+        uploader: "Đặng Phong Hào",
+        uploadDate: "25/10/2026",
+        fileExtension: "pptx",
+        downloads: 20,
+        likes: 9,
+        description: "Slide thuyết trình tổng kết",
+        tags: ["Slide", "Thuyết trình"],
+      },
+    ];
   },
 };
