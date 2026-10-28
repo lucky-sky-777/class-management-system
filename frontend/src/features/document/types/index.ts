@@ -17,6 +17,7 @@ export interface FileItem {
   tags?: string[];
   isLiked?: boolean;
   fileUrl?: string;
+  rawMetadata?: DocumentRawMetadata;
 }
 
 export interface CreateDirectoryRequestDto {
@@ -61,4 +62,28 @@ export interface RagAnswerResponseDto {
   question?: string;
   answer: string;
   sources?: string[];
+}
+
+export interface ApiResponse<T> {
+  code?: number;
+  message: string;
+  data: T;
+}
+
+export interface DocumentRawMetadata {
+  file_name?: string;
+  file_size?: number;
+  mime_type?: string;
+  [key: string]: unknown;
+}
+
+export interface DocumentMetadataResponseDto {
+  document_id: number;
+  metadata: DocumentRawMetadata;
+}
+
+export interface TagResponse {
+  id: number;
+  name: string;
+  slug: string;
 }

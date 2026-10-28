@@ -1,6 +1,12 @@
-// src/features/document/components/DocumentSidebar.tsx
 import React from "react";
-import { HardDrive, Download, Heart, Edit2, Trash2 } from "lucide-react";
+import {
+  HardDrive,
+  Download,
+  Heart,
+  Edit2,
+  Trash2,
+  FileCode,
+} from "lucide-react";
 import type { FileItem } from "@/features/document/types";
 
 interface DocumentSidebarProps {
@@ -27,6 +33,7 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
         </h3>
 
         <div className="flex flex-col gap-3 text-sm">
+          {/* Dung lượng */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-[var(--ink-2)]">
               <HardDrive size={18} /> <span>Dung lượng</span>
@@ -36,6 +43,19 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
             </span>
           </div>
 
+          {/* Định dạng MIME nếu có từ metadata */}
+          {file.rawMetadata?.mime_type && (
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2 text-[var(--ink-2)]">
+                <FileCode size={18} /> <span>Định dạng</span>
+              </div>
+              <span className="font-semibold text-[var(--ink-1)] uppercase">
+                {file.fileExtension}
+              </span>
+            </div>
+          )}
+
+          {/* Lượt tải xuống */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-[var(--ink-2)]">
               <Download size={18} /> <span>Lượt tải xuống</span>
@@ -45,6 +65,7 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
             </span>
           </div>
 
+          {/* Yêu thích */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-[var(--ink-2)]">
               <Heart
@@ -59,6 +80,31 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
           </div>
         </div>
 
+        {/* Khối Metadata chi tiết
+        {file.rawMetadata && (
+          <div className="mt-4 pt-3 border-t border-[var(--rule)]">
+            <h4 className="text-xs font-bold text-[var(--ink-3)] uppercase tracking-wider mb-2">
+              Metadata hệ thống
+            </h4>
+            <div className="bg-[var(--bg-surface-2)] p-2.5 rounded-lg text-xs space-y-1.5 break-all">
+              <div>
+                <span className="text-[var(--ink-3)]">File gốc: </span>
+                <span className="font-medium text-[var(--ink-1)]">
+                  {file.rawMetadata.file_name}
+                </span>
+              </div>
+              {file.rawMetadata.mime_type && (
+                <div>
+                  <span className="text-[var(--ink-3)]">MIME: </span>
+                  <span className="font-mono text-[var(--ink-2)] text-[11px]">
+                    {file.rawMetadata.mime_type}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )} */}
+
         <hr className="my-5 border-[var(--rule)]" />
 
         {/* Mô tả */}
@@ -71,7 +117,7 @@ export const DocumentSidebar: React.FC<DocumentSidebarProps> = ({
           </p>
         </div>
 
-        {/* Từ khóa */}
+        {/* Từ khóa (Tags từ backend) */}
         <div>
           <h4 className="text-xs font-bold text-[var(--ink-3)] uppercase tracking-wider mb-2">
             Từ khóa

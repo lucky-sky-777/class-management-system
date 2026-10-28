@@ -1,6 +1,8 @@
 // src/features/document/components/DocumentAIChatSidebar.tsx
 import React from "react";
-import { X, Send, Bot, User, Sparkles } from "lucide-react";
+import { X, Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useDocumentAIChat } from "../hooks/useDocumentAIChat";
 import type { FileItem } from "@/features/document/types";
 
@@ -9,6 +11,14 @@ interface DocumentAIChatSidebarProps {
   onClose: () => void;
   file: FileItem | null;
 }
+
+// Helper tách 'node' khỏi props để không truyền vào thẻ DOM và triệt tiêu lỗi ESLint no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const cleanProps = <T extends Record<string, any>>(props: T) => {
+  const { node, ...rest } = props;
+  void node;
+  return rest;
+};
 
 // 1. Component con chứa toàn bộ logic chat và state của hook
 const DocumentAIChatContent: React.FC<{
@@ -32,7 +42,7 @@ const DocumentAIChatContent: React.FC<{
         <div className="flex items-center gap-2 text-white font-semibold min-w-0">
           <Sparkles size={20} className="text-purple-500 shrink-0" />
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold">Trợ lý AI</span>
+            <span className="text-sm font-semibold text-white">Trợ lý AI</span>
             {file?.name && (
               <span className="text-[11px] text-gray-400 truncate max-w-[240px]">
                 {file.name}
@@ -69,28 +79,157 @@ const DocumentAIChatContent: React.FC<{
                 <Bot size={16} className="text-white" />
               )}
             </div>
+
+            {/* Bubble tin nhắn: Chữ Bot được set text-[#E4E4E7] nền #222 tương phản rõ nét */}
             <div
-              className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-line ${
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                 msg.sender === "user"
-                  ? "bg-[#2D68FE] text-white rounded-tr-sm"
-                  : "bg-[#222] text-gray-200 rounded-tl-sm"
+                  ? "bg-[#2D68FE] text-white rounded-tr-sm whitespace-pre-wrap"
+                  : "bg-[#222] text-[#E4E4E7] rounded-tl-sm border border-[#333]/50 overflow-hidden"
               }`}
             >
-              {msg.text}
+              {msg.sender === "user" ? (
+                msg.text
+              ) : (
+                <div className="markdown-content space-y-2 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 text-[#E4E4E7]">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      // Headings
+                      h1: (props) => (
+                        <h1
+                          className="text-base font-bold text-white mt-3 mb-1"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      h2: (props) => (
+                        <h2
+                          className="text-sm font-bold text-white mt-2.5 mb-1"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      h3: (props) => (
+                        <h3
+                          className="text-xs font-semibold text-purple-400 mt-2 mb-1 uppercase tracking-wider"
+                          {...cleanProps(props)}
+                        />
+                      ),
+
+                      // Paragraph & Lists: Màu sáng rõ rệt text-gray-100
+                      p: (props) => (
+                        <p
+                          className="leading-relaxed mb-2 last:mb-0 text-gray-100"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      ul: (props) => (
+                        <ul
+                          className="list-disc pl-5 space-y-1 mb-2 text-gray-100"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      ol: (props) => (
+                        <ol
+                          className="list-decimal pl-5 space-y-1 mb-2 text-gray-100"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      li: (props) => (
+                        <li
+                          className="pl-0.5 leading-normal text-gray-100"
+                          {...cleanProps(props)}
+                        />
+                      ),
+
+                      // Emphasis
+                      strong: (props) => (
+                        <strong
+                          className="font-semibold text-white"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      em: (props) => (
+                        <em
+                          className="text-gray-300 italic"
+                          {...cleanProps(props)}
+                        />
+                      ),
+
+                      // Code & Inline Code
+                      code: (props) => {
+                        const { className, children, ...restProps } =
+                          cleanProps(props);
+                        const isBlock = /language-/.test(className || "");
+                        return isBlock ? (
+                          <pre className="bg-[#161616] border border-[#333] rounded-lg p-3 my-2 overflow-x-auto text-xs text-gray-200 font-mono">
+                            <code className={className} {...restProps}>
+                              {children}
+                            </code>
+                          </pre>
+                        ) : (
+                          <code
+                            className="bg-[#181818] text-purple-300 border border-[#333] rounded px-1.5 py-0.5 text-xs font-mono"
+                            {...restProps}
+                          >
+                            {children}
+                          </code>
+                        );
+                      },
+
+                      // Table
+                      table: (props) => (
+                        <div className="overflow-x-auto my-2 rounded-lg border border-[#333]">
+                          <table
+                            className="w-full text-left text-xs border-collapse"
+                            {...cleanProps(props)}
+                          />
+                        </div>
+                      ),
+                      thead: (props) => (
+                        <thead
+                          className="bg-[#181818] border-b border-[#333] text-gray-100 font-medium"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      th: (props) => (
+                        <th
+                          className="px-3 py-2 border-r border-[#333] last:border-none"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      td: (props) => (
+                        <td
+                          className="px-3 py-2 border-t border-r border-[#333] last:border-none text-gray-200"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                      hr: (props) => (
+                        <hr
+                          className="border-[#333] my-3"
+                          {...cleanProps(props)}
+                        />
+                      ),
+                    }}
+                  >
+                    {msg.text}
+                  </ReactMarkdown>
+                </div>
+              )}
             </div>
           </div>
         ))}
 
-        {/* Hiệu ứng loading */}
+        {/* Hiệu ứng loading: "Đang suy nghĩ..." */}
         {isLoading && (
-          <div className="flex gap-3 flex-row">
+          <div className="flex gap-3 flex-row items-center">
             <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
               <Bot size={16} className="text-white" />
             </div>
-            <div className="bg-[#222] rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1">
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+            <div className="bg-[#222] border border-[#333]/50 rounded-2xl rounded-tl-sm px-4 py-2.5 flex items-center gap-2">
+              <Loader2 size={15} className="text-purple-400 animate-spin" />
+              <span className="text-xs text-gray-300 font-medium animate-pulse tracking-wide">
+                Đang suy nghĩ...
+              </span>
             </div>
           </div>
         )}
@@ -105,7 +244,7 @@ const DocumentAIChatContent: React.FC<{
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Hỏi AI về tài liệu này..."
-            className="w-full bg-transparent text-white text-sm px-4 py-3 max-h-32 outline-none resize-none overflow-y-auto"
+            className="w-full bg-transparent text-white text-sm px-4 py-3 max-h-32 outline-none resize-none overflow-y-auto placeholder:text-gray-500"
             rows={1}
           />
           <button
@@ -145,11 +284,10 @@ export const DocumentAIChatSidebar: React.FC<DocumentAIChatSidebarProps> = ({
 
       {/* Container Drawer */}
       <div
-        className={`fixed top-[60px] right-0 bottom-0 w-full sm:w-[400px] bg-[#0A0A0A] border-l border-[#222] z-[102] flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed top-[60px] right-0 bottom-0 w-full sm:w-[420px] bg-[#0A0A0A] border-l border-[#222] z-[102] flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* key={file?.id} đảm bảo khi chọn sang file khác thì hội thoại tự động làm mới từ đầu */}
         <DocumentAIChatContent
           key={file?.id ?? "empty"}
           file={file}
