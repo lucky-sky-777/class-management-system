@@ -201,7 +201,7 @@ public class AuthService {
 	@Transactional
 	public UserResponseDto getCurrentUser(Authentication authentication) {
 		Long userId = jwtService.extractUserIdFromAuthentication(authentication);
-		User user = userService.findByUserIdOrThrow(userId);
+		User user = userService.findByIdOrThrow(userId);
 		return userMapper.toUserResponseDto(user);
 	}
 

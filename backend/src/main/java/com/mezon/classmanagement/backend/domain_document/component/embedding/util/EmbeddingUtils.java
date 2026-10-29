@@ -297,4 +297,46 @@ public class EmbeddingUtils {
 		return Math.sqrt(sum);
 	}
 
+	/**
+	 * d(a, b) = sqrt(sigma(1, n) * pow(a_i - b_i))
+	 * @param a vector a
+	 * @param b vector b
+	 */
+	public static float euclideanDistance(float[] a, float[] b) {
+		if (a.length != b.length) {
+			throw new IllegalArgumentException("Vectors must have the same dimension");
+		}
+
+		double sum = 0.0;
+
+		for (int i = 0; i < a.length; i++) {
+			double diff = ((double) a[i]) - ((double) b[i]);
+			sum += diff * diff;
+		}
+
+		return (float) Math.sqrt(sum);
+	}
+
+	/**
+	 *
+	 * @param distances
+	 * @param k
+	 * @param m
+	 * @return
+	 */
+	public static float membership(List<Float> distances, int k, double m) {
+		double sum = 0.0;
+
+		for (int j = 0; j < distances.size(); j++) {
+			if (distances.get(j) == 0.0f) {
+				return j == k ? 1.0f : 0.0f;
+			}
+
+			double ratio = (double) distances.get(k) / (double) distances.get(j);
+			sum += Math.pow(ratio, 2.0 / (m - 1.0));
+		}
+
+		return (float) (1.0 / sum);
+	}
+
 }

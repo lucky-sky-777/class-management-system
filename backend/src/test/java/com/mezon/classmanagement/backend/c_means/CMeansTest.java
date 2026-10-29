@@ -1,21 +1,19 @@
 package com.mezon.classmanagement.backend.c_means;
 
-import com.mezon.classmanagement.backend.config.EmbeddingConfig;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
-import com.mezon.classmanagement.backend.domain_document.main.c_means.config.CMeansConfig;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.FcmTrainingResult;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.RecommendationModelRequestDto;
-import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.DocumentClusterMembership;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationCluster;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationModel;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.repository.DocumentClusterMembershipRepository;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.repository.RecommendationClusterRepository;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.repository.RecommendationModelRepository;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.service.DocumentClusterMembershipService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.FuzzyCMeansService;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationClusterService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.util.CMeansUtils;
-import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -34,7 +30,9 @@ import java.util.List;
 public class CMeansTest {
 
 	FuzzyCMeansService fuzzyCMeansService;
+	RecommendationClusterService recommendationClusterService;
 	RecommendationModelService recommendationModelService;
+	DocumentClusterMembershipService documentClusterMembershipService;
 	DocumentService documentService;
 	RecommendationModelRepository recommendationModelRepository;
 
@@ -48,15 +46,19 @@ public class CMeansTest {
 		DocumentEmbeddingList documentEmbeddingList = documentService.getEmbeddingList();
 
 		// 1. Huấn luyện Fuzzy C-Means
-		FuzzyCMeansService.FcmTrainingResult result =
-				fuzzyCMeansService.train(EmbeddingUtils.toDoubleList(documentEmbeddingList.embeddingList()));
+		FcmTrainingResult result = fuzzyCMeansService
+				.train(
+						EmbeddingUtils.toDoubleList(
+								documentEmbeddingList.embeddingList()
+						)
+				);
 
 		double[][] memberships = result.membershipMatrix();
-		List<double[]> centers = result.centerList();
+		List<double[]> centerList = result.centerList();
 		int[] dominantCluster = result.dominantCluster();
 
 		int documentCount = documentEmbeddingList.idList().size();
-		int clusterCount = centers.size();
+		int clusterCount = centerList.size();
 
 		CMeansUtils.validateTrainingResult(result, documentCount);
 		CMeansUtils.validateMembership(memberships, clusterCount);
@@ -66,88 +68,22 @@ public class CMeansTest {
 		);
 
 		// 3. Lưu các tâm cụm để lấy cluster.id
-		List<RecommendationCluster> clusterList =
-				new ArrayList<>(clusterCount);
 
-		for (int clusterIndex = 0; clusterIndex < clusterCount; clusterIndex++) {
-
-			double[] center = centers.get(clusterIndex);
-
-			CMeansUtils.validateCenter(center, clusterIndex);
-
-			RecommendationCluster cluster =
-					RecommendationCluster.builder()
-							.model(model)
-							.clusterIndex(clusterIndex)
-							.centerEmbedding(
-									new Vector1536(EmbeddingUtils.toFloatArray(center))
-							)
-							.build();
-
-			clusterList.add(cluster);
-		}
-
-		List<RecommendationCluster> savedClusters =
-				recommendationClusterRepository.saveAllAndFlush(clusterList);
+		List<RecommendationCluster> savedClusters = recommendationClusterService
+				.createList(clusterCount, centerList, model);
 
 		// 4. Lưu mức độ thuộc cụm của từng tài liệu theo từng cluster.
 		// Mỗi tài liệu có clusterCount bản ghi membership.
-		List<DocumentClusterMembership> membershipBatch =
-				new ArrayList<>(SAVE_BATCH_SIZE);
 
-		for (int i = 0; i < documentCount; i++) {
-			Long documentId = documentEmbeddingList.idList().get(i);
-
-			double[] membershipOfDocument = memberships[i];
-			int dominant = dominantCluster[i];
-
-			if (dominant < 0 || dominant >= clusterCount) {
-				throw new IllegalStateException(
-						"Dominant cluster không hợp lệ cho documentId: "
-								+ documentId
+		documentClusterMembershipService
+				.create(
+						savedClusters,
+						clusterCount,
+						documentCount,
+						documentEmbeddingList,
+						memberships,
+						dominantCluster
 				);
-			}
-
-			for (int clusterIndex = 0;
-			     clusterIndex < clusterCount;
-			     clusterIndex++) {
-
-				double membership = membershipOfDocument[clusterIndex];
-
-				if (!Double.isFinite(membership)
-						|| membership < 0.0
-						|| membership > 1.0) {
-					throw new IllegalStateException(
-							"Membership không hợp lệ, documentId: "
-									+ documentId
-					);
-				}
-
-				DocumentClusterMembership item =
-						DocumentClusterMembership.builder()
-								.documentId(Document.builder().id(documentId).build())
-								.clusterId(
-										RecommendationCluster.builder().id(savedClusters.get(clusterIndex).getId()).build()
-								)
-								.membership(membership)
-								.build();
-
-				membershipBatch.add(item);
-
-				// Lưu theo từng lô để hạn chế bộ nhớ sử dụng
-				if (membershipBatch.size() >= SAVE_BATCH_SIZE) {
-					documentClusterMembershipRepository
-							.saveAll(membershipBatch);
-
-					membershipBatch.clear();
-				}
-			}
-		}
-
-		// Lưu các bản ghi còn lại
-		if (!membershipBatch.isEmpty()) {
-			documentClusterMembershipRepository.saveAll(membershipBatch);
-		}
 
 		// 5. Chỉ đánh dấu READY sau khi lưu xong kết quả
 

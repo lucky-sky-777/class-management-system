@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DirectoryRepository extends JpaRepository<Directory, Long> {
@@ -18,6 +19,14 @@ public interface DirectoryRepository extends JpaRepository<Directory, Long> {
     """, nativeQuery = true
 	)
 	void lockSlug(String slug);
+
+	@Query(value = """
+    SELECT pg_advisory_xact_lock(
+    	hashtextextended('directories:class_id:slug:' || :classId :slug, 0)
+    )
+    """, nativeQuery = true
+	)
+	void lockClassIdAndSlug(Long classId, String slug);
 
 	@Query(value = """
 	select new com.mezon.classmanagement.backend.domain_document.main.directory.dto.DirectoryResponseDto(
@@ -36,6 +45,12 @@ public interface DirectoryRepository extends JpaRepository<Directory, Long> {
 	""")
 	List<DirectoryResponseDto> getByClazz_Id(Long classId);
 
+	boolean existsByClazz_IdAndId(Long classId, Long id);
+
+	Optional<Directory> findByClazz_IdAndId(Long classId, Long id);
+
 	boolean existsBySlug(String slug);
+
+	boolean existsByClazz_IdAndSlug(Long classId, String slug);
 
 }

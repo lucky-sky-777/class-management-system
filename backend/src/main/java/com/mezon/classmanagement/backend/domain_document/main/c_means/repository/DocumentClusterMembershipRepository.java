@@ -13,9 +13,9 @@ import java.util.List;
 public interface DocumentClusterMembershipRepository
 		extends JpaRepository<DocumentClusterMembership, Long> {
 
-	List<DocumentClusterMembership>
-	findAllByClusterIdOrderByMembershipDesc(Long clusterId);
+	List<DocumentClusterMembership> findAllByCluster_IdOrderByMembershipDesc(Long clusterId);
+	List<DocumentClusterMembership> findTop10ByCluster_IdOrderByMembershipDesc(Long clusterId);
 
 	List<DocumentClusterMembership>
-	findAllByDocumentId(Long documentId);
+	findAllByDocument_Id(Long documentId);
 }

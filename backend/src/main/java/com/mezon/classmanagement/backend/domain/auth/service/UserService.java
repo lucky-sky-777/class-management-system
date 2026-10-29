@@ -53,7 +53,7 @@ public class UserService {
 
 	@Transactional
 	public UserResponseDto update(Long userId, UpdateUserRequestDto request) {
-		User currentUser = findByUserIdOrThrow(userId);
+		User currentUser = findByIdOrThrow(userId);
 
 		userMapper.updateUserFromRequestDto(request, currentUser);
 
@@ -91,7 +91,7 @@ public class UserService {
 	}
 
 	@Transactional(readOnly = true)
-	public User findByUserIdOrThrow(Long userId) {
+	public User findByIdOrThrow(Long userId) {
 		return userRepository
 				.findById(userId)
 				.orElseThrow(() ->

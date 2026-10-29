@@ -56,4 +56,13 @@ public class RecommendationModelService {
 				);
 	}
 
+	@Transactional(readOnly = true)
+	public RecommendationModel findLatestReadyModelOrThrow() {
+		return recommendationModelRepository
+				.findLatestReadyModel()
+				.orElseThrow(()->
+						new GlobalException(GlobalException.Type.NOT_EXISTS)
+				);
+	}
+
 }

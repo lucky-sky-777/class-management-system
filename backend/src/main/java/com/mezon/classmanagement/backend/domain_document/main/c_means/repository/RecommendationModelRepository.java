@@ -13,6 +13,8 @@ public interface RecommendationModelRepository
 			RecommendationModel.Status status
 	);
 
+	Optional<RecommendationModel> findTopByOrderByTrainedAtDesc();
+
 	default Optional<RecommendationModel> findLatestReadyModel() {
 		return findTopByStatusAndTrainedAtIsNotNullOrderByTrainedAtDesc(
 				RecommendationModel.Status.READY

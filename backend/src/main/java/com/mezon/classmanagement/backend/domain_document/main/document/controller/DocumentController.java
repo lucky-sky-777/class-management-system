@@ -9,6 +9,7 @@ import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.IngestRequest;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.service.IngestService;
 import com.mezon.classmanagement.backend.domain_document.component.validator.ValidFile;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.DeleteDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -174,9 +176,20 @@ public class DocumentController {
 		return ResponseDTO.ok("Đã tiếp nhận yêu cầu");
 	}
 
-	@GetMapping("/{documentId}")
-	public ResponseDTO<Void> delete() {
-		//
+	@DeleteMapping
+	public ResponseDTO<Void> delete(
+			@PathVariable Long classId,
+			@PathVariable Long directoryId,
+			@RequestBody DeleteDocumentRequestDto request
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
+		documentService.delete(clientUserId, classId, directoryId, request);
+
+		return ResponseDTO.ok(
+				"Delete document(s) successful"
+		);
 	}
 
 //	@PostMapping(

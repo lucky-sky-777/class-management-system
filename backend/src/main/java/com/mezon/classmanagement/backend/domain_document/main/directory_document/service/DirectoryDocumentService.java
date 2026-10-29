@@ -11,6 +11,8 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
@@ -33,6 +35,11 @@ public class DirectoryDocumentService {
 		);
 
 		directoryDocumentRepository.save(directoryDocument);
+	}
+
+	@Transactional
+	public List<Long> getDocumentIdListByDirectoryId(Long directoryId) {
+		return directoryDocumentRepository.getDocumentIdListByDirectoryId(directoryId);
 	}
 
 	@Transactional(readOnly = true)

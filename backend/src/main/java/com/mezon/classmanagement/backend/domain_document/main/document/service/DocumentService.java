@@ -14,6 +14,7 @@ import com.mezon.classmanagement.backend.domain_document.main.directory.entity.D
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
 import com.mezon.classmanagement.backend.domain_document.main.directory_document.service.DirectoryDocumentService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.DeleteDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentIdAndEmbeddingResponseDto;
@@ -35,8 +36,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
@@ -67,6 +70,7 @@ public class DocumentService {
 	DirectoryService directoryService;
 	EmbeddingService embeddingService;
 	DocumentRepository documentRepository;
+	DirectoryDocumentService directoryDocumentService;
 	DocumentMapper documentMapper;
 	S3Service s3Service;
 
@@ -141,20 +145,50 @@ public class DocumentService {
 	}
 
 	@Transactional
-	public void delete(Long clientUserId, Long classId, Long directoryId, List<Long> documentIdList) {
-		for (DocumentCreatorUserIdResponseDto dto : documentRepository.getCreatorUserIdListByDocumentIdList(documentIdList)) {
-			if (!Objects.equals(clientUserId, dto.getCreatorUserId())) {
-				throw new GlobalException(
-						GlobalException.Type.PERMISSION_DENIED,
-						"Bạn không có quyền xóa file với ID: " + dto.getDocumentId()
-				);
+	public void delete(Long clientUserId, Long classId, Long directoryId, DeleteDocumentRequestDto request) {
+		Directory directory = directoryService.findByClassIdAndIdOrThrow(classId, directoryId);
+
+		Set<Long> documentIdListByCreatorAndClassAndDirectory = new HashSet<>(
+				documentRepository.getDocumentIdListByCreatorAndClassAndDirectory(
+						clientUserId,
+						classId,
+						directoryId
+				)
+		);
+		if (!documentIdListByCreatorAndClassAndDirectory.containsAll(request.getDocumentIdList())) {
+			List<Long> invalidDocumentIdList = new ArrayList<>(request.getDocumentIdList());
+			invalidDocumentIdList.removeAll(documentIdListByCreatorAndClassAndDirectory);
+
+			int index = 0;
+
+			StringBuilder sb = new StringBuilder();
+			sb.append("[");
+			for (Long id : invalidDocumentIdList) {
+				if (index++ == 0) {
+					sb.append(id);
+				} else {
+					sb.append(", ").append(id);
+				}
 			}
-		}
-		for (Long id : documentIdList) {
-			throwIfNotExistsById(id);
+			sb.append("]");
+
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Bạn không có quyền xóa các file với các ID sau: " + sb
+			);
 		}
 
-		documentRepository.deleteAllByIdInBatch(documentIdList);
+		List<Document> documentList = documentRepository.findAllById(request.getDocumentIdList());
+
+		for (Document document : documentList) {
+			s3Service.deleteClassFile(
+					classId,
+					directory.getSlug(),
+					document.getKey() + "." + document.getFileExtension()
+			);
+		}
+
+		documentRepository.deleteAllByIdInBatch(request.getDocumentIdList());
 	}
 
 	@Transactional

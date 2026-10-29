@@ -11,5 +11,9 @@ public class CMeansConfig {
 	public static final double DELTA = 1e-6;
 
 	public static final double FUZZINESS = 2.0;
+
+	public static final boolean SOFT = true;
+
+	public static final long SEED = 42L;
 	
 }

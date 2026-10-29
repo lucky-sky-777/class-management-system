@@ -35,11 +35,11 @@ public class DocumentClusterMembership {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "document_id", nullable = false)
-	Document documentId;
+	Document document;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "cluster_id", nullable = false)
-	RecommendationCluster clusterId;
+	RecommendationCluster cluster;
 
 	@Column(name = "membership", nullable = false)
 	Double membership;

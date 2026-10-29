@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
@@ -35,17 +36,27 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 	);
 
 	@Query("""
-	select new com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto(
-		d.id,
-		d.creator.id
-	)
+    SELECT DISTINCT dd.document.id
+    FROM DirectoryDocument dd
+    JOIN dd.directory directory
+    JOIN dd.document document
+    WHERE document.creator.id = :creatorUserId
+        AND directory.clazz.id = :classId
+        AND directory.id = :directoryId
+    """)
+	List<Long> getDocumentIdListByCreatorAndClassAndDirectory(
+			@Param("creatorUserId") Long creatorUserId,
+			@Param("classId") Long classId,
+			@Param("directoryId") Long directoryId
+	);
+
+	@Query("""
+	select d.key
 	from Document d
-	where d.id in (
-		:documentIdList
-	)
+	where d.id in :documentIdList
 	""")
-	List<DocumentCreatorUserIdResponseDto> getCreatorUserIdListByDocumentIdList(
-			@Param("documentIdList") List<Long> dcocumentIdList
+	List<String> getDocumentKeyListByDocumentIdList(
+			@Param("documentIdList") List<Long> documentIdList
 	);
 
 }
