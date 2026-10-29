@@ -11,6 +11,7 @@ import { DocumentSidebar } from "@features/document/components/DocumentSidebar";
 import type { FileItem } from "@features/document/types";
 import { DocumentViewerModal } from "@features/document/components/DocumentViewerModal";
 import { classDocumentsAPI } from "@features/document/api";
+import { useDocumentDetail } from "@features/document/hooks/useDocumentDetail";
 
 export const DocumentPage = () => {
   const { classId } = useParams();
@@ -36,6 +37,15 @@ export const DocumentPage = () => {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
 
+  // 1. KÍCH HOẠT HOOK ĐỂ GỌI METADATA & TAGS TỪ BACKEND
+  const { fileDetail } = useDocumentDetail(
+    selectedFile ? selectedFile.id : null,
+    selectedFile,
+  );
+
+  // Ưu tiên dùng dữ liệu đã fetch metadata & tags đầy đủ
+  const activeFile = fileDetail || selectedFile;
+
   // Click vào file từ danh sách
   const handleOpenFile = (file: FileItem) => {
     setSelectedFile(file);
@@ -47,19 +57,18 @@ export const DocumentPage = () => {
     handleGoToRoot();
   };
 
-  // Tải file trực tiếp qua blob
   const handleDownloadFile = async () => {
-    if (!classId || !selectedFile) return;
+    if (!classId || !activeFile) return;
     try {
       const blob = await classDocumentsAPI.getFileBlob(
         classId,
         currentFolder?.id ?? 0,
-        selectedFile.id,
+        activeFile.id,
       );
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = selectedFile.name;
+      a.download = activeFile.name;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -101,23 +110,23 @@ export const DocumentPage = () => {
       />
 
       {/* ĐIỀU KIỆN 1: Nếu ĐANG XEM FILE -> Hiển thị Preview thật */}
-      {selectedFile ? (
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {activeFile ? (
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           <DocumentPreview
-            key={selectedFile.id}
-            file={selectedFile}
+            key={activeFile.id}
+            file={activeFile}
             directoryId={currentFolder?.id ?? 0}
             onOpenFullScreen={() => setIsViewerOpen(true)}
             onToggleLike={handleToggleLike}
           />
           <DocumentSidebar
-            file={selectedFile}
+            file={activeFile}
             onDownload={handleDownloadFile}
             onToggleLike={handleToggleLike}
-            onEdit={() => console.log("Mở form edit chi tiết")}
+            onEdit={() => console.log("Edit")}
             onDelete={() => {
               if (window.confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) {
-                handleDeleteFile(selectedFile.id);
+                handleDeleteFile(activeFile.id);
                 setSelectedFile(null);
               }
             }}
@@ -198,12 +207,12 @@ export const DocumentPage = () => {
       )}
 
       {/* Modal xem toàn màn hình */}
-      {selectedFile && isViewerOpen && (
+      {activeFile && isViewerOpen && (
         <DocumentViewerModal
-          key={`viewer-${selectedFile.id}`}
+          key={`viewer-${activeFile.id}`}
           isOpen={isViewerOpen}
           onClose={() => setIsViewerOpen(false)}
-          file={selectedFile}
+          file={activeFile}
           directoryId={currentFolder?.id ?? 0}
           onDownload={handleDownloadFile}
           onToggleLike={handleToggleLike}
