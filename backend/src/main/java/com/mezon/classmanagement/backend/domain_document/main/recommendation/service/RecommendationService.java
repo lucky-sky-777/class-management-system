@@ -12,6 +12,8 @@ import com.mezon.classmanagement.backend.domain_document.main.c_means.service.Do
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationClusterService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
+import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -28,6 +30,7 @@ import java.util.List;
 public class RecommendationService {
 
 	UserService userService;
+	DocumentService documentService;
 	RecommendationClusterService recommendationClusterService;
 	RecommendationModelService recommendationModelService;
 	DocumentClusterMembershipService documentClusterMembershipService;
@@ -64,10 +67,8 @@ public class RecommendationService {
 						getBestClusterIndex(micro_ukList)
 				);
 
-		List<DocumentClusterMembership> top10Document = documentClusterMembershipService
-				.find10BestDocument(bestCluster.getId());
-
-		return List.of();
+		return documentService
+				.findTopPublicDocumentInCluster(bestCluster.getId(), 5);
 	}
 
 	private int getBestClusterIndex(List<Float> membershipList) {
@@ -141,7 +142,7 @@ public class RecommendationService {
 	 *
 	 * @param d_uList Danh sách khoảng cách từ embedding của User
 	 *                <p>đến từng tâm cụm
-	 * @param m
+	 * @param m fuzziness
 	 * @return
 	 */
 	private List<Float> getMicro_ukList(

@@ -3,6 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.main.document.reposito
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -58,5 +59,31 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 	List<String> getDocumentKeyListByDocumentIdList(
 			@Param("documentIdList") List<Long> documentIdList
 	);
+
+	@Query(value = """
+	select document
+	from DirectoryDocument dd
+	join dd.directory directory
+	join dd.document document
+	where document.id in :documentIdList
+		and directory.clazz.privacy <> 'PRIVATE'
+	""")
+	List<Document> findAllByIdInAndClassNotPrivate(List<Long> documentIdList);
+
+	@Query("""
+    select document
+    from DocumentClusterMembership dcm
+    join dcm.document document
+    where dcm.cluster.id = :clusterId
+        and exists (
+            select dd.id
+            from DirectoryDocument dd
+            join dd.directory directory
+            where dd.document.id = document.id
+                and directory.clazz.privacy = 'PUBLIC'
+        )
+    order by dcm.membership desc
+    """)
+	List<Document> findAllByClusterIdAndPublicClass(Long clusterId, Pageable pageable);
 
 }

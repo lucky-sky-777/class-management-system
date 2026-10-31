@@ -51,7 +51,7 @@ public class DocumentController {
 	IngestService ingestService;
 
 	private void ensureFileCountPerRequest(List<MultipartFile> multipartFileList) {
-		if (multipartFileList.size() > 100) {
+		if (multipartFileList.size() > 2000) {
 			throw new GlobalException(
 					GlobalException.Type.INVALID_REQUEST,
 					"Chỉ nhận tối đa 100 file mỗi yêu cầu"

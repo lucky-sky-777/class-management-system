@@ -10,10 +10,8 @@ import com.mezon.classmanagement.backend.domain_document.component.chunk.strateg
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.service.DocumentChunkService;
-import com.mezon.classmanagement.backend.domain_document.component.document_metadata.service.DocumentMetadataService;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
-import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.IngestRequest;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.RabbitIngestRequest;
@@ -31,24 +29,21 @@ import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -75,58 +70,70 @@ public class IngestService {
 
 	Queue<IngestRequest> ingestRequestQueue = new ArrayDeque<>();
 
-	@Transactional
+	private record PreparedData(
+			IngestRequest ingestRequest,
+			Path tempPath,
+			Metadata metadata
+	) {}
+
 	public void ingestMultiple(List<IngestRequest> ingestRequestList) {
-		for (IngestRequest curr : ingestRequestList) {
-			ingestSingle(
-					curr.creatorUserId(),
-					curr.classId(),
-					curr.directoryId(),
-					curr.multipartFile()
+		List<String> failedFileList = new ArrayList<>();
+		List<PreparedData> dataList = new ArrayList<>();
+
+		Iterator<IngestRequest> ingestRequestIterator = ingestRequestList.iterator();
+		while (ingestRequestIterator.hasNext()) {
+			IngestRequest request = ingestRequestIterator.next();
+			MultipartFile multipartFile = request.multipartFile();
+
+			Path tempPath;
+			try {
+				tempPath = Files.createTempFile("document-", ".tmp");
+				multipartFile.transferTo(tempPath);
+
+				dataList.add(
+						new PreparedData(
+								request,
+								tempPath,
+								new Metadata()
+										.put("fileName", multipartFile.getOriginalFilename())
+										.put("fileExtension", FileUtils.getExtension(multipartFile))
+										.put("fileMimeType", FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
+										.put("fileSize", multipartFile.getSize())
+						)
+				);
+			} catch (Exception e) {
+				System.out.println(
+						"Không thể tạo file tạm: "
+								+ request.multipartFile().getOriginalFilename()
+				);
+				System.out.println(e.getMessage());
+
+				failedFileList.add(request.multipartFile().getOriginalFilename());
+				ingestRequestIterator.remove();
+			}
+		}
+
+		for (PreparedData data : dataList) {
+			IngestRequest request = data.ingestRequest();
+
+			ingestAsync(
+					request.classId(),
+					request.directoryId(),
+					request.creatorUserId(),
+					data.tempPath(),
+					data.metadata()
 			);
 		}
 	}
 
+	@Deprecated(forRemoval = true)
 	@Transactional
 	public void ingestSingle(
 			Long creatorUserId,
 			Long classId,
-			Long directoryId,
-			MultipartFile multipartFile
+			Long directoryId
 	) {
-		Directory directory = directoryService.findByIdOrThrow(directoryId);
 
-		// 1. Tạo file tạm trên server
-		Path tempFile;
-		try {
-			tempFile = Files.createTempFile("document-", ".tmp");
-			multipartFile.transferTo(tempFile);
-		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR,
-					e.getMessage()
-			);
-		}
-
-		// 2. Trích xuất metadata
-		Metadata metadata;
-		try {
-			metadata = new Metadata()
-					.put("fileName", multipartFile.getOriginalFilename())
-					.put("fileExtension", FileUtils.getExtension(multipartFile))
-					.put("fileMimeType", FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
-					.put("fileSize", multipartFile.getSize());
-		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR,
-					e.getMessage()
-			);
-		}
-
-		// 3. Tạo Document trên database
-		Document document = documentService.create(
-				creatorUserId, directoryId, metadata
-		);
 
 //		try {
 //			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
@@ -136,26 +143,39 @@ public class IngestService {
 //		}
 
 
-
 		// 4. Tiếp theo: xử lý bất đồng bộ
-		ingestAsync(
-				classId,
-				directory,
-				document,
-				tempFile,
-				metadata
-		);
+//		ingestAsync(
+//				classId,
+//				directory,
+//				document,
+//				tempFile.toString(),
+//				metadata
+//		);
 
 	}
 
 	@Async("documentExecutor")
 	protected void ingestAsync(
 			Long classId,
-			Directory directory,
-			Document document,
+			Long directoryId,
+			Long creatorUserId,
 			Path tempFile,
 			Metadata metadata
 	) {
+		Directory directory = directoryService.findByIdOrThrow(directoryId);
+
+		Document document;
+		try {
+			document = documentService.create(
+					creatorUserId, directoryId, metadata
+			);
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR,
+					e.getMessage()
+			);
+		}
+
 		try (InputStream inputStream = Files.newInputStream(tempFile)) {
 			String uploadedFilePath = s3Service.uploadFileToClass(
 					classId,
@@ -173,6 +193,15 @@ public class IngestService {
 							metadata.getString("fileName")
 					)
 			);
+
+//			ingestFromRabbit(
+//					new RabbitIngestRequest(
+//							classId,
+//							document.getId(),
+//							uploadedFilePath,
+//							metadata.getString("fileName")
+//					)
+//			);
 		} catch (Exception e) {
 			throw new GlobalException(
 					GlobalException.Type.INTERNAL_SERVER_ERROR,
@@ -186,7 +215,7 @@ public class IngestService {
 			RabbitIngestRequest request
 	) {
 		System.out.println(
-				"Start ingest: " + request.filePathInS3()
+				"Start ingest: " + request.originalFileName()
 		);
 
 		try (InputStream inputStream = s3Service.getFile(request.filePathInS3())) {
@@ -207,7 +236,7 @@ public class IngestService {
 			List<DocumentChunk> documentChunkList = new ArrayList<>();
 			List<BaseVector> embeddingList = embeddingService
 					.embedMultipleDocumentText(
-					request.originalFileName(),
+							request.originalFileName(),
 							new ChunkFormatterPipeline(
 									List.of(
 											new GeminiChunkFormatter()
@@ -235,15 +264,29 @@ public class IngestService {
 
 			documentChunkService.insertBatch(documentChunkList);
 
+			String documentHeader;
+			if (documentChunkList.size() >= 2) {
+				documentHeader = documentChunkList
+						.get(0).getContent() + " " + documentChunkList.get(1).getContent();
+			} else {
+				documentHeader = documentChunkList.getFirst().getContent();
+			}
+			Vector1536 embedding = new Vector1536(
+					embeddingService
+							.embedSingleDocumentText(
+									request.originalFileName(),
+									documentHeader
+							)
+							.getValues());
 			documentService.updateInternal(
 					request.documentId(),
 					new InternalUpdateDocumentRequestDto(
-							Document.Status.UPLOADED
+							Document.Status.UPLOADED,
+							embedding
 					)
 			);
 
-
-			System.out.println("Ingest completed");
+			System.out.println("Ingest completed: " + request.originalFileName());
 		} catch (Exception e) {
 			throw new GlobalException(
 					GlobalException.Type.INTERNAL_SERVER_ERROR,
@@ -251,13 +294,13 @@ public class IngestService {
 			);
 		}
 
-		try {
-			s3Service.deleteTempFile(FileUtils.getName(request.filePathInS3()));
-		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR
-			);
-		}
+//		try {
+//			s3Service.deleteTempFile(FileUtils.getName(request.filePathInS3()));
+//		} catch (Exception e) {
+//			throw new GlobalException(
+//					GlobalException.Type.INTERNAL_SERVER_ERROR
+//			);
+//		}
 	}
 
 }

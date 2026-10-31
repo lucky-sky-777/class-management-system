@@ -8,6 +8,7 @@ import com.mezon.classmanagement.backend.domain_document.main.document.entity.Do
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,6 +95,15 @@ public class DocumentClusterMembershipService {
 	public List<DocumentClusterMembership> find10BestDocument(Long clusterId) {
 		return documentClusterMembershipRepository
 				.findTop10ByCluster_IdOrderByMembershipDesc(clusterId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<DocumentClusterMembership> find10BestPublicDocument(Long clusterId) {
+		return documentClusterMembershipRepository
+				.findByClusterAndClassNotPrivate(
+						clusterId,
+						PageRequest.of(0, 10)
+				);
 	}
 
 }

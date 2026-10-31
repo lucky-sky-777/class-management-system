@@ -50,7 +50,7 @@ public class AsyncConfig {
 
 		executor.setCorePoolSize(2);
 		executor.setMaxPoolSize(5);
-		executor.setQueueCapacity(100);
+		executor.setQueueCapacity(500);
 		executor.setThreadNamePrefix("document-");
 		executor.initialize();
 

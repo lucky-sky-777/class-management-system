@@ -7,6 +7,7 @@ import com.mezon.classmanagement.backend.common.constant.GeminiConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.env.GeminiEnv;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
+import com.mezon.classmanagement.backend.common.service.ApiKeyService;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.common.util.GeminiPromptBuilder;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.request.media.GeminiBatchMediaEmbeddingRequest;
@@ -30,12 +31,13 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Service
 @RequiredArgsConstructor
+@Service
 public class EmbeddingService {
 
 	ObjectMapper objectMapper;
@@ -285,15 +287,10 @@ public class EmbeddingService {
 		return apiKeys.get(index);
 	}
 
-	private void status429() {
-		throw new GlobalException(
-				GlobalException.Type.TOO_MANY_REQUEST,
-				"Too many request"
-		);
-	}
+	ApiKeyService apiKeyService;
 
 	private BaseVector send(String json) throws Exception {
-		String key = nextApiKey();
+		String key = apiKeyService.nextApiKey();
 		System.out.println(key);
 
 		HttpRequest request = buildRequest(
@@ -309,14 +306,15 @@ public class EmbeddingService {
 			return new BaseVector(convertListToArray(embedResponse.embedding().values()));
 		}
 		if (response.statusCode() == 429) {
-			status429();
+			apiKeyService.rateLimit(key);
+			return send(json);
 		}
 
 		throw new RuntimeException(response.body());
 	}
 
 	private List<BaseVector> sendBatch(String json) throws Exception {
-		String key = nextApiKey();
+		String key = apiKeyService.nextApiKey();
 		System.out.println(key);
 
 		HttpRequest request = buildRequest(
@@ -336,7 +334,8 @@ public class EmbeddingService {
 			return vectorList;
 		}
 		if (response.statusCode() == 429) {
-			status429();
+			apiKeyService.rateLimit(key);
+			return sendBatch(json);
 		}
 
 		throw new RuntimeException(response.body());

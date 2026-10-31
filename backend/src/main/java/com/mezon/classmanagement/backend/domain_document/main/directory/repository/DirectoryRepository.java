@@ -22,7 +22,7 @@ public interface DirectoryRepository extends JpaRepository<Directory, Long> {
 
 	@Query(value = """
     SELECT pg_advisory_xact_lock(
-    	hashtextextended('directories:class_id:slug:' || :classId :slug, 0)
+    	hashtextextended('directories:classId:' || :classId || ':slug' || :slug, 0)
     )
     """, nativeQuery = true
 	)

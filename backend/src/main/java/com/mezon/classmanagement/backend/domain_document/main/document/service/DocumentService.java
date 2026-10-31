@@ -27,6 +27,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -196,23 +197,19 @@ public class DocumentService {
 		Document currentDocument = findByIdOrThrow(id);
 
 		documentMapper.updateDocumentFromRequestDto(request, currentDocument);
+
 		try {
-			if (currentDocument.getDescription() != null && !currentDocument.getDescription().isBlank()) {
-				currentDocument.setEmbedding(
-						new Vector1536(
-								embeddingService.embedSingleDocumentText(
-										currentDocument.getTitle(),
-										currentDocument.getDescription()
-								).getValues()
-						)
-				);
-			}
-		} catch (Exception e) {}
+			currentDocument.setEmbedding(
+					request.getEmbedding()
+			);
+		} catch (Exception e) {
+			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
 	}
 
 	@Transactional
 	public Document save(Document document) {
-		return documentRepository.save(document);
+		return documentRepository.saveAndFlush(document);
 	}
 
 	@Transactional
@@ -299,6 +296,13 @@ public class DocumentService {
 					"Document not exists"
 			);
 		}
+	}
+
+	public List<DocumentResponseDto> findTopPublicDocumentInCluster(Long clusterId, int limit) {
+		return documentMapper.toDocumentResponseDtoList(
+				documentRepository.findAllByClusterIdAndPublicClass(
+						clusterId, PageRequest.of(0, limit))
+		);
 	}
 
 }

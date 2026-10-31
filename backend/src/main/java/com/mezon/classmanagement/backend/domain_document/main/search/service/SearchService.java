@@ -21,6 +21,16 @@ public class SearchService {
 	EmbeddingService embeddingService;
 	DocumentChunkRepository documentChunkRepository;
 
+	/*
+	 * Chức năng tìm kiếm viết ở đây
+	 */
+
+	//////////
+
+	/*
+	 * Mấy hàm ở dươi dùng cho RAG
+	 */
+
 	/**
 	 * Tìm trong tất cả tài liệu trên hệ thống
 	 *

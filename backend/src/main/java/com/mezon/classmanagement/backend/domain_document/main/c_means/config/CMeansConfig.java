@@ -2,7 +2,7 @@ package com.mezon.classmanagement.backend.domain_document.main.c_means.config;
 
 public class CMeansConfig {
 
-	public static final int CLUSTER_COUNT = 2;
+	public static final int CLUSTER_COUNT = 20;
 
 	public static final int MIN_ITERATIONS = 5;
 
