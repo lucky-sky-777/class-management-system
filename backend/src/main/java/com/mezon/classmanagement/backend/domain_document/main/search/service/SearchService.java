@@ -28,7 +28,7 @@ public class SearchService {
 	//////////
 
 	/*
-	 * Mấy hàm ở dươi dùng cho RAG
+	 * Mấy hàm ở dưới dùng cho RAG
 	 */
 
 	/**
