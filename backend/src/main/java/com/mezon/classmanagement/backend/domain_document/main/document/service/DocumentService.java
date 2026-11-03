@@ -71,6 +71,46 @@ public class DocumentService {
 	DocumentMapper documentMapper;
 	S3Service s3Service;
 
+	@Transactional(readOnly = true)
+	public boolean isPublicAndExists(Long id) {
+		return documentRepository.isPublic(id);
+	}
+
+	@Transactional
+	public boolean isPrivateAndExists(Long id) {
+		return documentRepository.isPublic(id);
+	}
+
+	@Transactional
+	public boolean isPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
+		return documentRepository.isPublicOrInAnyClassJoinedByUser(documentId, userId);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfNotIsPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
+		if (!isPublicOrInAnyClassJoinedByUser(documentId, userId)) {
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Đây là tài liệu riêng tư hoặc không tồn tại"
+			);
+		}
+	}
+
+	@Transactional
+	public boolean existsInAnyClassJoinedByUser(Long documentId, Long userId) {
+		return documentRepository.existsInAnyClassJoinedByUser(documentId, userId);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfNotIsPublicAndExists(Long id) {
+		if (!isPublicAndExists(id)) {
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Đây là tài liệu riêng tư hoặc không tồn tại"
+			);
+		}
+	}
+
 	@Transactional
 	public InputStream openStream(
 			Long classId,

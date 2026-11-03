@@ -11,6 +11,61 @@ import java.util.Optional;
 
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
+	@Query("""
+    SELECT CASE WHEN COUNT(dd) > 0 THEN true ELSE false END
+    FROM DirectoryDocument dd
+    JOIN dd.directory directory
+    WHERE dd.document.id = :documentId
+        AND directory.clazz.privacy = 'PRIVATE'
+    """)
+	boolean isPrivate(@Param("documentId") Long documentId);
+
+	@Query("""
+    SELECT CASE WHEN COUNT(dd) > 0 THEN true ELSE false END
+    FROM DirectoryDocument dd
+    JOIN dd.directory directory
+    WHERE dd.document.id = :documentId
+        AND EXISTS (
+            SELECT cu.id
+            FROM ClassUser cu
+            WHERE cu.clazz.id = directory.clazz.id
+                AND cu.user.id = :userId
+        )
+    """)
+	boolean existsInAnyClassJoinedByUser(
+			@Param("documentId") Long documentId,
+			@Param("userId") Long userId
+	);
+
+	@Query("""
+    SELECT CASE WHEN COUNT(dd) > 0 THEN true ELSE false END
+    FROM DirectoryDocument dd
+    JOIN dd.directory directory
+    WHERE dd.document.id = :documentId
+        AND (
+            directory.clazz.privacy = 'PUBLIC'
+            OR EXISTS (
+                SELECT cu.id
+                FROM ClassUser cu
+                WHERE cu.clazz.id = directory.clazz.id
+                    AND cu.user.id = :userId
+            )
+        )
+    """)
+	boolean isPublicOrInAnyClassJoinedByUser(
+			@Param("documentId") Long documentId,
+			@Param("userId") Long userId
+	);
+
+	@Query("""
+    SELECT CASE WHEN COUNT(dd) > 0 THEN true ELSE false END
+    FROM DirectoryDocument dd
+    JOIN dd.directory directory
+    WHERE dd.document.id = :documentId
+        AND directory.clazz.privacy = 'PUBLIC'
+    """)
+	boolean isPublic(@Param("documentId") Long documentId);
+
     Optional<Document> findByKey(String key);
 
 	List<Document> findAllByStatus(Document.Status status);

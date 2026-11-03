@@ -29,7 +29,6 @@ import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +37,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -74,7 +72,8 @@ public class IngestService {
 			IngestRequest ingestRequest,
 			Path tempPath,
 			Metadata metadata
-	) {}
+	) {
+	}
 
 	public void ingestMultiple(List<IngestRequest> ingestRequestList) {
 		List<String> failedFileList = new ArrayList<>();
@@ -167,8 +166,10 @@ public class IngestService {
 			Path tempFile,
 			Metadata metadata
 	) {
+		// 1. Tìm thư mục
 		Directory directory = directoryService.findByIdOrThrow(directoryId);
 
+		// 2. Tạo document ở database
 		Document document;
 		try {
 			document = documentService.create(
@@ -181,6 +182,7 @@ public class IngestService {
 			);
 		}
 
+		// 3. Tải file lên cloud
 		try (InputStream inputStream = Files.newInputStream(tempFile)) {
 			String uploadedFilePath = s3Service.uploadFileToClass(
 					classId,
@@ -198,7 +200,6 @@ public class IngestService {
 							metadata.getString("fileName")
 					)
 			);
-
 		} catch (Exception e) {
 			tryDeleteDocument(document.getId());
 		}
@@ -211,12 +212,14 @@ public class IngestService {
 				"Start ingest: " + request.originalFileName()
 		);
 
+		// 1. Lấy file từ cloud
 		try (InputStream inputStream = s3Service.getFile(request.filePathInS3())) {
-			DocumentSource documentSource = new InputStreamDocumentSource(inputStream);
 
+			// 2. Tạo danh sách chunk
+			DocumentSource documentSource = new InputStreamDocumentSource(inputStream);
 			List<String> chunkList;
 			try {
-				 chunkList = chunkService
+				chunkList = chunkService
 						.getChunkList(
 								chunkByParagraphWithOverlapStrategy,
 								documentSource
@@ -226,6 +229,7 @@ public class IngestService {
 				return;
 			}
 
+			// 3. Tạo danh sách vector từ danh sách chunk
 			List<BaseVector> embeddingList;
 			try {
 				embeddingList = embeddingService
@@ -245,6 +249,7 @@ public class IngestService {
 				return;
 			}
 
+			// 5. Tạo và lưu danh sách DocumentChunk vào database
 			List<DocumentChunk> documentChunkList;
 			try {
 				documentChunkList = new ArrayList<>();
@@ -269,6 +274,8 @@ public class IngestService {
 				return;
 			}
 
+			// 6. Lấy tối đa 2 chunk đầu tiên từ danh sách chunk
+			// và tạo vector đại diện cho tài liệu từ 2 chunk đó
 			String documentHeader;
 			try {
 				if (chunkList.size() >= 2) {
@@ -296,6 +303,7 @@ public class IngestService {
 				return;
 			}
 
+			// 7. Đánh dấu document là đã upload
 			try {
 				documentService.updateInternal(
 						request.documentId(),
@@ -311,6 +319,19 @@ public class IngestService {
 
 			System.out.println("Ingest completed: " + request.originalFileName());
 		} catch (Exception e) {
+			try {
+				documentService.updateInternal(
+						request.documentId(),
+						new InternalUpdateDocumentRequestDto(
+								Document.Status.ERROR,
+								null
+						)
+				);
+			} catch (Exception e1) {
+				e.addSuppressed(e1);
+				return;
+			}
+
 			throw new GlobalException(
 					GlobalException.Type.INTERNAL_SERVER_ERROR,
 					e.getMessage() + e.getLocalizedMessage()
@@ -331,7 +352,12 @@ public class IngestService {
 								null
 						)
 				);
-			} catch (Exception ignored) {}
+			} catch (Exception e) {
+				throw new GlobalException(
+						GlobalException.Type.INTERNAL_SERVER_ERROR,
+						e.getMessage()
+				);
+			}
 		}
 	}
 
