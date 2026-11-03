@@ -1,6 +1,8 @@
 package com.mezon.classmanagement.backend.c_means;
 
+import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
+import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.FcmTrainingResult;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.RecommendationModelRequestDto;
@@ -14,7 +16,9 @@ import com.mezon.classmanagement.backend.domain_document.main.c_means.service.Fu
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationClusterService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.util.CMeansUtils;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.service.RecommendationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,6 +33,7 @@ import java.util.List;
 @SpringBootTest
 public class CMeansTest {
 
+	EmbeddingService embeddingService;
 	FuzzyCMeansService fuzzyCMeansService;
 	RecommendationClusterService recommendationClusterService;
 	RecommendationModelService recommendationModelService;
@@ -38,11 +43,34 @@ public class CMeansTest {
 
 	RecommendationClusterRepository recommendationClusterRepository;
 	DocumentClusterMembershipRepository documentClusterMembershipRepository;
+	RecommendationService recommendationService;
 
 	private static final int SAVE_BATCH_SIZE = 1000;
 
 	@Test
-	public void test() {
+	public void testApiKey() {
+		embeddingService.ping();
+	}
+
+	@Test
+	public void tesRCM() throws Exception {
+		String text1 = "lập trình java";
+		String text2 = "cá chìa vôi mắt đơn";
+
+		Vector1536 x_u = new Vector1536(
+				embeddingService
+				.embedSingleQueryText(text2).getValues()
+		);
+
+		List<DocumentResponseDto> r = recommendationService.get2(x_u);
+
+		r.forEach(item -> {
+			System.out.println(item.getFileName());
+		});
+	}
+
+	@Test
+	public void testTrain() {
 		DocumentEmbeddingList documentEmbeddingList = documentService.getEmbeddingList();
 
 		// 1. Huấn luyện Fuzzy C-Means
@@ -50,7 +78,8 @@ public class CMeansTest {
 				.train(
 						EmbeddingUtils.toDoubleList(
 								documentEmbeddingList.embeddingList()
-						)
+						),
+						2
 				);
 
 		double[][] memberships = result.membershipMatrix();

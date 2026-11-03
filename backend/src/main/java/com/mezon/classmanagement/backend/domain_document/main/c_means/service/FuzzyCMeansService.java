@@ -31,14 +31,18 @@ import java.util.List;
 @Service
 public class FuzzyCMeansService {
 
+	public FcmTrainingResult train(List<double[]> embeddingList) {
+		return train(embeddingList, CMeansConfig.CLUSTER_COUNT);
+	}
+
 	/**
 	 * Huấn luyện mô hình phân cụm
 	 *
 	 * @param embeddingList danh sách các vector cần phân cụm
 	 * @return {@code FcmTrainingResult} - record kết quả phân cụm
 	 */
-	public FcmTrainingResult train(List<double[]> embeddingList) {
-		validate(embeddingList);
+	public FcmTrainingResult train(List<double[]> embeddingList, int C) {
+		validate(embeddingList, C);
 
 		/*
 		 * [0.1, 0.5, 0.9]
@@ -77,7 +81,7 @@ public class FuzzyCMeansService {
 		 * khởi tạo mô hình Fuzzy C-Means
 		 */
 		FuzzyCMeans<NumberVector> fcm = new FuzzyCMeans<>(
-				CMeansConfig.CLUSTER_COUNT,
+				C,
 				CMeansConfig.MIN_ITERATIONS,
 				CMeansConfig.MAX_ITERATIONS,
 				CMeansConfig.DELTA,
@@ -134,7 +138,7 @@ public class FuzzyCMeansService {
 		 * - tổng các giá trị trên mỗi hàng bằng 1
 		 * - giá trị U_i_j biểu thị mức độ vector i thuộc về cụm j
 		 */
-		double[][] membershipMatrix = initializeMembershipMatrix(embeddingList.size(), vectorRelation, clustering);
+		double[][] membershipMatrix = initializeMembershipMatrix(embeddingList.size(), vectorRelation, clustering, C);
 
 		/*
 		 * khởi tạo danh sách tâm cụm
@@ -163,7 +167,7 @@ public class FuzzyCMeansService {
 		 *
 		 * dominantCluster = [1, 2, 3, 1]
 		 */
-		int[] dominantCluster = findDominantClusters(membershipMatrix);
+		int[] dominantCluster = findDominantClusters(membershipMatrix, C);
 
 		return new FcmTrainingResult(
 				List.copyOf(centerList),
@@ -175,10 +179,10 @@ public class FuzzyCMeansService {
 	private double[][] initializeMembershipMatrix(
 			int embeddingCount,
 			Relation<NumberVector> vectorRelation,
-			Clustering<MeanModel> clustering
-
+			Clustering<MeanModel> clustering,
+			int c
 	) {
-		double[][] membershipMatrix = new double[embeddingCount][CMeansConfig.CLUSTER_COUNT];
+		double[][] membershipMatrix = new double[embeddingCount][c];
 
 		/*
 		 * trích xuất danh sách các mảng membership từ kết quả phân cụm
@@ -234,14 +238,15 @@ public class FuzzyCMeansService {
 	 * @return {@code int[]} danh sách cụm vượt trội
 	 */
 	private int[] findDominantClusters(
-			double[][] membershipMatrix
+			double[][] membershipMatrix,
+			int c
 	) {
 		int[] result = new int[membershipMatrix.length];
 
 		for (int i = 0; i < result.length; i++) {
 			int best = 0;
 
-			for (int j = 1; j < CMeansConfig.CLUSTER_COUNT; j++) {
+			for (int j = 1; j < c; j++) {
 				if (membershipMatrix[i][j] > membershipMatrix[i][best]) {
 					best = j;
 				}
@@ -283,8 +288,10 @@ public class FuzzyCMeansService {
 		);
 	}
 
-	private void validate(List<double[]> input) {
-		if (input == null || input.size() < CMeansConfig.CLUSTER_COUNT) {
+
+
+	private void validate(List<double[]> input, int c) {
+		if (input == null || input.size() < c) {
 			throw new IllegalArgumentException(
 					"Số embedding phải lớn hơn hoặc bằng số cụm."
 			);

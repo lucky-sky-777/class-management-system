@@ -62,7 +62,7 @@ public class RecommendationClusterService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<RecommendationCluster> findByRecommendationModelIdOrThrow(
+	public List<RecommendationCluster> findAllByRecommendationModelId(
 			Long recommendationModelId
 	) {
 		return repository

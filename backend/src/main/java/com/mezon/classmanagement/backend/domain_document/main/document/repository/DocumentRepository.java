@@ -1,7 +1,5 @@
 package com.mezon.classmanagement.backend.domain_document.main.document.repository;
 
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,11 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     Optional<Document> findByKey(String key);
+
+	List<Document> findAllByStatus(Document.Status status);
 
 	@Query(value = """
 		SELECT id, embedding
@@ -74,7 +73,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     select document
     from DocumentClusterMembership dcm
     join dcm.document document
-    where dcm.cluster.id = :clusterId
+    where dcm.cluster.id in :clusterIdList
         and exists (
             select dd.id
             from DirectoryDocument dd
@@ -84,6 +83,22 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         )
     order by dcm.membership desc
     """)
-	List<Document> findAllByClusterIdAndPublicClass(Long clusterId, Pageable pageable);
+	List<Document> findAllByClusterIdInAndPublicClass(List<Long> clusterIdList, Pageable pageable);
+
+	@Query("""
+    select document
+    from DocumentClusterMembership dcm
+    join dcm.document document
+    where dcm.cluster.model.id = :modelId and dcm.cluster.clusterIndex = :clusterIndex
+        and exists (
+            select dd.id
+            from DirectoryDocument dd
+            join dd.directory directory
+            where dd.document.id = document.id
+                and directory.clazz.privacy = 'PUBLIC'
+        )
+    order by dcm.membership desc
+    """)
+	List<Document> findAllInClusterIndexByModelIdAndPublicClass(Integer clusterIndex, Long modelId, Pageable pageable);
 
 }

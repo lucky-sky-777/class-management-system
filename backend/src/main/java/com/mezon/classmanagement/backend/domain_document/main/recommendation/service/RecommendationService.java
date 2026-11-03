@@ -1,19 +1,18 @@
 package com.mezon.classmanagement.backend.domain_document.main.recommendation.service;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
-import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
-import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.DocumentClusterMembership;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationCluster;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationModel;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.DocumentClusterMembershipService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationClusterService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.DistanceFromUserToClusterCenter;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.MembershipOfUserWithCluster;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -35,53 +34,91 @@ public class RecommendationService {
 	RecommendationModelService recommendationModelService;
 	DocumentClusterMembershipService documentClusterMembershipService;
 
-	public List<DocumentResponseDto> getDocumentRecommendationList(Long userId) {
-		User user = userService.findByIdOrThrow(userId);
-
-		Vector1536 x_u = user.getEmbedding();
-
+	public List<DocumentResponseDto> get2(Vector1536 x_u) {
 		RecommendationModel latestModel = recommendationModelService
 				.findLatestReadyModelOrThrow();
 
 		/*
 		 * Tất cả tâm cụm
 		 */
-		List<Vector1536> cList = getCList(latestModel.getId());
+		List<RecommendationCluster> cList = getCList(latestModel.getId());
+		System.out.println("danh sach tam cum");
+		cList.forEach(item -> System.out.println(item.getCenterEmbedding().getValues().length));
 
 		/*
 		 * Khoảng cách từ User đến từng tâm cụm
 		 */
-		List<Float> d_uList = getD_uList(x_u, cList);
+		List<DistanceFromUserToClusterCenter> d_uList = getD_uList(x_u, cList);
+		System.out.println("khoang cach user den tung tam cum");
+		d_uList.sort((o1, o2) -> o2.distance().compareTo(o1.distance()));
+		d_uList.forEach(item -> System.out.println(item.distance()));
 
 		/*
-		 * Mức độ thuộc cụm của User với mỗi tâm cụm
+		 * Mức độ thuộc cụm của User với mỗi cụm
 		 */
-		List<Float> micro_ukList = getMicro_ukList(d_uList, latestModel.getFuzziness());
+		List<MembershipOfUserWithCluster> micro_ukList = getMicro_ukList(d_uList, latestModel.getFuzziness());
+		System.out.println("muc do thuoc cum cua user voi moi cum");
+		micro_ukList.sort((o1, o2) -> o2.membership().compareTo(o1.membership()));
+		micro_ukList.forEach(item -> System.out.println(item.membership()));
 
-		/*
-		 * Cluster liên quan nhất với User
-		 */
-		RecommendationCluster bestCluster = recommendationClusterService
-				.findByRecommendationModelIdAndClusterIndexOrThrow(
-						latestModel.getId(),
-						getBestClusterIndex(micro_ukList)
-				);
+		List<DocumentResponseDto> topDocumentList1 = new ArrayList<>(
+				documentService
+						.findTopPublicDocumentInClusterIndexByModelId(
+								micro_ukList.get(0).clusterIndex(),
+								latestModel.getId(),
+								2
+						)
+		);
 
-		return documentService
-				.findTopPublicDocumentInCluster(bestCluster.getId(), 5);
+		List<DocumentResponseDto> topDocumentList2 = new ArrayList<>(
+				documentService
+						.findTopPublicDocumentInClusterIndexByModelId(
+								micro_ukList.get(1).clusterIndex(),
+								latestModel.getId(),
+								2
+						)
+		);
+
+		topDocumentList1.addAll(topDocumentList2);
+
+		return topDocumentList1;
 	}
 
-	private int getBestClusterIndex(List<Float> membershipList) {
-		int maxIndex = 0;
-		Float maxValue = membershipList.getFirst();
-		for (int i = 1; i < membershipList.size(); i++) {
-			if (membershipList.get(i) > maxValue) {
-				maxIndex = i;
-				maxValue = membershipList.get(i);
-			}
-		}
-		return maxIndex;
-	}
+//	public List<DocumentResponseDto> getDocumentRecommendationList(Long userId) {
+//		User user = userService.findByIdOrThrow(userId);
+//
+//		Vector1536 x_u = user.getEmbedding();
+//
+//		RecommendationModel latestModel = recommendationModelService
+//				.findLatestReadyModelOrThrow();
+//
+//		/*
+//		 * Tất cả tâm cụm
+//		 */
+//		List<Vector1536> cList = getCList(latestModel.getId());
+//
+//		/*
+//		 * Khoảng cách từ User đến từng tâm cụm
+//		 */
+//		List<Float> d_uList = getD_uList(x_u, cList);
+//
+//		/*
+//		 * Mức độ thuộc cụm của User với mỗi tâm cụm
+//		 */
+//		List<Float> micro_ukList = getMicro_ukList(d_uList, latestModel.getFuzziness());
+//
+//		/*
+//		 * Cluster liên quan nhất với User
+//		 */
+//		RecommendationCluster bestCluster = recommendationClusterService
+//				.findByRecommendationModelIdAndClusterIndexOrThrow(
+//						latestModel.getId(),
+//						getBestClusterIndex(micro_ukList)
+//				);
+//
+//		return documentService
+//				.findTopPublicDocumentInCluster(bestCluster.getId(), 5);
+//	}
 
 	/*
 	 * Bước 1: Tính mức độ thuộc cụm của User
@@ -94,12 +131,9 @@ public class RecommendationService {
 	 *
 	 * @return {@code List<Vector1536>} Danh sách tâm cụm
 	 */
-	private List<Vector1536> getCList(Long recommendationModelId) {
+	private List<RecommendationCluster> getCList(Long recommendationModelId) {
 		return recommendationClusterService
-				.findByRecommendationModelIdOrThrow(recommendationModelId)
-				.stream()
-				.map(RecommendationCluster::getCenterEmbedding)
-				.toList();
+				.findAllByRecommendationModelId(recommendationModelId);
 	}
 
 	/**
@@ -113,23 +147,29 @@ public class RecommendationService {
 	 * <p>
 	 *
 	 * @param x_u   embedding của user
-	 * @param cList danh sách embedding của các tâm cụm
+	 * @param cList danh sách các tâm cụm
 	 * @return {@code List<Float>} Danh sách khoảng cách từ embedding của user {@code x_u}
 	 * <p>
 	 * đến mỗi embedding của các tâm cụm {@code cList}
 	 */
-	private List<Float> getD_uList(
+	private List<DistanceFromUserToClusterCenter> getD_uList(
 			Vector1536 x_u,
-			List<Vector1536> cList
+			List<RecommendationCluster> cList
 	) {
 		int cListSize = cList.size();
-		List<Float> d_uList = new ArrayList<>(cListSize);
+		List<DistanceFromUserToClusterCenter> d_uList = new ArrayList<>(cListSize);
 
-		for (Vector1536 vector1536 : cList) {
-			d_uList.add(EmbeddingUtils.euclideanDistance(
-					x_u.getValues(),
-					vector1536.getValues()
-			));
+		for (RecommendationCluster c : cList) {
+			d_uList.add(
+					new DistanceFromUserToClusterCenter(
+							x_u,
+							c.getClusterIndex(),
+							EmbeddingUtils.euclideanDistance(
+									x_u.getValues(),
+									c.getCenterEmbedding().getValues()
+							)
+					)
+			);
 		}
 
 		return d_uList;
@@ -145,16 +185,24 @@ public class RecommendationService {
 	 * @param m fuzziness
 	 * @return
 	 */
-	private List<Float> getMicro_ukList(
-			List<Float> d_uList,
+	private List<MembershipOfUserWithCluster> getMicro_ukList(
+			List<DistanceFromUserToClusterCenter> d_uList,
 			double m
 	) {
 		int d_uListSize = d_uList.size();
-		List<Float> micro_ukList = new ArrayList<>(d_uListSize);
+		List<MembershipOfUserWithCluster> micro_ukList = new ArrayList<>(d_uListSize);
 
-		for (int k = 0; k < d_uListSize; k++) {
+		for (DistanceFromUserToClusterCenter d_u : d_uList) {
 			micro_ukList.add(
-					EmbeddingUtils.membership(d_uList, k, m)
+					new MembershipOfUserWithCluster(
+							d_u.userEmbedding(),
+							d_u.clusterIndex(),
+							EmbeddingUtils.membership(
+									d_uList,
+									d_u.clusterIndex(),
+									m
+							)
+					)
 			);
 		}
 

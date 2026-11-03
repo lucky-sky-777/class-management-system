@@ -70,7 +70,7 @@ public class IngestService {
 
 	Queue<IngestRequest> ingestRequestQueue = new ArrayDeque<>();
 
-	private record PreparedData(
+	public record PreparedData(
 			IngestRequest ingestRequest,
 			Path tempPath,
 			Metadata metadata
@@ -113,7 +113,12 @@ public class IngestService {
 			}
 		}
 
-		for (PreparedData data : dataList) {
+		ingestAsync(dataList);
+	}
+
+	@Async("documentExecutor")
+	protected void ingestAsync(List<PreparedData> preparedDataList) {
+		for (PreparedData data : preparedDataList) {
 			IngestRequest request = data.ingestRequest();
 
 			ingestAsync(
@@ -194,23 +199,11 @@ public class IngestService {
 					)
 			);
 
-//			ingestFromRabbit(
-//					new RabbitIngestRequest(
-//							classId,
-//							document.getId(),
-//							uploadedFilePath,
-//							metadata.getString("fileName")
-//					)
-//			);
 		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR,
-					e.getMessage()
-			);
+			tryDeleteDocument(document.getId());
 		}
 	}
 
-	@Transactional
 	public void ingestFromRabbit(
 			RabbitIngestRequest request
 	) {
@@ -221,70 +214,100 @@ public class IngestService {
 		try (InputStream inputStream = s3Service.getFile(request.filePathInS3())) {
 			DocumentSource documentSource = new InputStreamDocumentSource(inputStream);
 
-			List<String> chunkList = chunkService
-					.getChunkList(
-							chunkByParagraphWithOverlapStrategy,
-							documentSource
-					);
-
-//			try {
-//				tagService.autoTag(request.documentId(), chunkList);
-//			} catch (Exception e) {
-//				log.warn("Auto-tag failed (khong chan ingest), documentId={}", request.documentId(), e);
-//			}
-
-			List<DocumentChunk> documentChunkList = new ArrayList<>();
-			List<BaseVector> embeddingList = embeddingService
-					.embedMultipleDocumentText(
-							request.originalFileName(),
-							new ChunkFormatterPipeline(
-									List.of(
-											new GeminiChunkFormatter()
-									)
-							).formatList(
-									chunkList,
-									new Metadata().put("fileName", request.originalFileName())
-							)
-					);
-			for (short i = 0; i < chunkList.size(); i++) {
-				documentChunkList.add(
-						DocumentChunk
-								.builder()
-								.document(Document.create(request.documentId()))
-								.index(i)
-								.content(chunkList.get(i))
-								.embedding(
-										new Vector1536(
-												embeddingList.get(i).getValues()
-										)
-								)
-								.build()
-				);
+			List<String> chunkList;
+			try {
+				 chunkList = chunkService
+						.getChunkList(
+								chunkByParagraphWithOverlapStrategy,
+								documentSource
+						);
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
 			}
 
-			documentChunkService.insertBatch(documentChunkList);
+			List<BaseVector> embeddingList;
+			try {
+				embeddingList = embeddingService
+						.embedMultipleDocumentText(
+								request.originalFileName(),
+								new ChunkFormatterPipeline(
+										List.of(
+												new GeminiChunkFormatter()
+										)
+								).formatList(
+										chunkList,
+										new Metadata().put("fileName", request.originalFileName())
+								)
+						);
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
+
+			List<DocumentChunk> documentChunkList;
+			try {
+				documentChunkList = new ArrayList<>();
+				for (short i = 0; i < chunkList.size(); i++) {
+					documentChunkList.add(
+							DocumentChunk
+									.builder()
+									.document(Document.create(request.documentId()))
+									.index(i)
+									.content(chunkList.get(i))
+									.embedding(
+											new Vector1536(
+													embeddingList.get(i).getValues()
+											)
+									)
+									.build()
+					);
+				}
+				documentChunkService.insertBatch(documentChunkList);
+			} catch (Exception out) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
 
 			String documentHeader;
-			if (documentChunkList.size() >= 2) {
-				documentHeader = documentChunkList
-						.get(0).getContent() + " " + documentChunkList.get(1).getContent();
-			} else {
-				documentHeader = documentChunkList.getFirst().getContent();
+			try {
+				if (chunkList.size() >= 2) {
+					documentHeader = chunkList
+							.get(0) + " " + chunkList.get(1);
+				} else {
+					documentHeader = chunkList.getFirst();
+				}
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
 			}
-			Vector1536 embedding = new Vector1536(
-					embeddingService
-							.embedSingleDocumentText(
-									request.originalFileName(),
-									documentHeader
-							)
-							.getValues());
-			documentService.updateInternal(
-					request.documentId(),
-					new InternalUpdateDocumentRequestDto(
-							Document.Status.UPLOADED,
-							embedding
-					)
-			);
+
+			Vector1536 embedding;
+			try {
+				embedding = new Vector1536(
+						embeddingService
+								.embedSingleDocumentText(
+										request.originalFileName(),
+										documentHeader
+								)
+								.getValues());
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
+
+			try {
+				documentService.updateInternal(
+						request.documentId(),
+						new InternalUpdateDocumentRequestDto(
+								Document.Status.UPLOADED,
+								embedding
+						)
+				);
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
 
 			System.out.println("Ingest completed: " + request.originalFileName());
 		} catch (Exception e) {
@@ -294,13 +317,22 @@ public class IngestService {
 			);
 		}
 
-//		try {
-//			s3Service.deleteTempFile(FileUtils.getName(request.filePathInS3()));
-//		} catch (Exception e) {
-//			throw new GlobalException(
-//					GlobalException.Type.INTERNAL_SERVER_ERROR
-//			);
-//		}
+	}
+
+	public void tryDeleteDocument(Long documentId) {
+		try {
+			documentService.delete(Document.create(documentId));
+		} catch (Exception out) {
+			try {
+				documentService.updateInternal(
+						documentId,
+						new InternalUpdateDocumentRequestDto(
+								Document.Status.ERROR,
+								null
+						)
+				);
+			} catch (Exception ignored) {}
+		}
 	}
 
 }

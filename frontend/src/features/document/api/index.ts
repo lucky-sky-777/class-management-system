@@ -53,32 +53,34 @@ export const classDocumentsAPI = {
   getFolders: async (
     classId: string | number,
   ): Promise<ResponseDTO<FolderItem[]>> => {
-    return apiClient.get(`/directories/classes/${classId}`);
+    return apiClient.get(`/classes/${classId}/directories`);
   },
 
   createFolder: async (
-    classId: number | string,
+      classId: string | number,
     data: CreateDirectoryRequestDto,
   ): Promise<ResponseDTO<FolderItem>> => {
     return apiClient.post<ResponseDTO<FolderItem>>(
-      `/directories/classes/${classId}`,
+      `/classes/${classId}/directories`,
       data,
     );
   },
 
   renameFolder: async (
+      classId: string | number,
     directoryId: number | string,
     newName: string,
   ): Promise<ResponseDTO<void>> => {
-    return apiClient.patch<ResponseDTO<void>>(`/directories/${directoryId}`, {
+    return apiClient.patch<ResponseDTO<void>>(`/classes/${classId}/directories/${directoryId}`, {
       name: newName,
     });
   },
 
   deleteFolder: async (
+      classId: string | number,
     directoryId: number | string,
   ): Promise<ResponseDTO<void>> => {
-    return apiClient.delete<ResponseDTO<void>>(`/directories/${directoryId}`);
+    return apiClient.delete<ResponseDTO<void>>(`/classes/${classId}/directories/${directoryId}`);
   },
 
   // --- DOCUMENT ---

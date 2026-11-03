@@ -8,7 +8,6 @@ import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
@@ -16,8 +15,6 @@ import com.mezon.classmanagement.backend.domain_document.main.directory_document
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.DeleteDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentCreatorUserIdResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentIdAndEmbeddingResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
@@ -39,7 +36,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -76,7 +72,11 @@ public class DocumentService {
 	S3Service s3Service;
 
 	@Transactional
-	public InputStream openStream(Long classId, Long directoryId, Document document) {
+	public InputStream openStream(
+			Long classId,
+			Long directoryId,
+			Document document
+	) {
 		Directory directory = directoryService.findByIdOrThrow(directoryId);
 
 		return s3Service.getFile(
@@ -146,7 +146,12 @@ public class DocumentService {
 	}
 
 	@Transactional
-	public void delete(Long clientUserId, Long classId, Long directoryId, DeleteDocumentRequestDto request) {
+	public void delete(
+			Long clientUserId,
+			Long classId,
+			Long directoryId,
+			DeleteDocumentRequestDto request
+	) {
 		Directory directory = directoryService.findByClassIdAndIdOrThrow(classId, directoryId);
 
 		Set<Long> documentIdListByCreatorAndClassAndDirectory = new HashSet<>(
@@ -193,7 +198,10 @@ public class DocumentService {
 	}
 
 	@Transactional
-	public void updateInternal(Long id, InternalUpdateDocumentRequestDto request) {
+	public void updateInternal(
+			Long id,
+			InternalUpdateDocumentRequestDto request
+	) {
 		Document currentDocument = findByIdOrThrow(id);
 
 		documentMapper.updateDocumentFromRequestDto(request, currentDocument);
@@ -229,7 +237,7 @@ public class DocumentService {
 
 	@Transactional
 	public DocumentEmbeddingList getEmbeddingList() {
-		List<Document> documentList = getAll();
+		List<Document> documentList = getAllByUploaded();
 
 		if (documentList.isEmpty()) {
 			throw new IllegalStateException("Không có tài liệu để huấn luyện");
@@ -262,12 +270,15 @@ public class DocumentService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<Document> getAll() {
-		return documentRepository.findAll();
+	public List<Document> getAllByUploaded() {
+		return documentRepository.findAllByStatus(Document.Status.UPLOADED);
 	}
 
 	@Transactional
-	public List<DocumentResponseDto> getList(Long classId, Long directoryId) {
+	public List<DocumentResponseDto> getList(
+			Long classId,
+			Long directoryId
+	) {
 		List<Document> documentList = documentRepository.findByDirectoryId(directoryId);
 
 		return documentMapper.toDocumentResponseDtoList(documentList);
@@ -298,10 +309,26 @@ public class DocumentService {
 		}
 	}
 
-	public List<DocumentResponseDto> findTopPublicDocumentInCluster(Long clusterId, int limit) {
+	@Transactional
+	public List<DocumentResponseDto> findTopPublicDocumentInClusterIndexByModelId(
+			Integer clusterIndex,
+			Long modelId,
+			int limit
+	) {
 		return documentMapper.toDocumentResponseDtoList(
-				documentRepository.findAllByClusterIdAndPublicClass(
-						clusterId, PageRequest.of(0, limit))
+				documentRepository.findAllInClusterIndexByModelIdAndPublicClass(
+						clusterIndex, modelId, PageRequest.of(0, limit))
+		);
+	}
+
+	@Transactional
+	public List<DocumentResponseDto> findTopPublicDocumentInClusterList(
+			List<Long> clusterIdList,
+			int limit
+	) {
+		return documentMapper.toDocumentResponseDtoList(
+				documentRepository.findAllByClusterIdInAndPublicClass(
+						clusterIdList, PageRequest.of(0, limit))
 		);
 	}
 

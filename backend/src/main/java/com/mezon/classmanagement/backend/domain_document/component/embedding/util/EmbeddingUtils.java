@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.domain_document.component.embedding.ut
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.DistanceFromUserToClusterCenter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -324,15 +325,31 @@ public class EmbeddingUtils {
 	 * @param m
 	 * @return
 	 */
-	public static float membership(List<Float> distances, int k, double m) {
-		double sum = 0.0;
+	public static float membership(List<DistanceFromUserToClusterCenter> distances, int k, double m) {
+		float d_k = -1.0f;
+		boolean foundK = false;
 
-		for (int j = 0; j < distances.size(); j++) {
-			if (distances.get(j) == 0.0f) {
-				return j == k ? 1.0f : 0.0f;
+		// Bước 1: Tìm d_k và kiểm tra trường hợp đặc biệt (distance == 0)
+		for (DistanceFromUserToClusterCenter d : distances) {
+			if (d.clusterIndex() == k) {
+				d_k = d.distance();
+				foundK = true;
 			}
 
-			double ratio = (double) distances.get(k) / (double) distances.get(j);
+			// Nếu có bất kỳ cụm nào có khoảng cách = 0
+			if (d.distance() == 0.0f) {
+				return d.clusterIndex() == k ? 1.0f : 0.0f;
+			}
+		}
+
+		if (!foundK) {
+			throw new IllegalArgumentException("Không tìm thấy clusterIndex = " + k + " trong danh sách.");
+		}
+
+		// Bước 2: Tính tổng sum khi tất cả khoảng cách đều > 0
+		double sum = 0.0;
+		for (DistanceFromUserToClusterCenter d : distances) {
+			double ratio = (double) d_k / (double) d.distance();
 			sum += Math.pow(ratio, 2.0 / (m - 1.0));
 		}
 

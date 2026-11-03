@@ -162,8 +162,9 @@ export const useClassDocuments = (classId: string | number | undefined) => {
   };
 
   const handleRenameFolder = async (id: string | number, newName: string) => {
+    if (!classId) return;
     try {
-      await classDocumentsAPI.renameFolder(id, newName);
+      await classDocumentsAPI.renameFolder(classId, id, newName);
 
       setFolders((prevFolders) =>
         prevFolders.map((folder) =>
@@ -180,8 +181,9 @@ export const useClassDocuments = (classId: string | number | undefined) => {
   };
 
   const handleDeleteFolder = async (id: string | number) => {
+    if (!classId) return;
     try {
-      await classDocumentsAPI.deleteFolder(id);
+      await classDocumentsAPI.deleteFolder(classId, id);
 
       setFolders((prevFolders) =>
         prevFolders.filter((folder) => folder.id !== id),
