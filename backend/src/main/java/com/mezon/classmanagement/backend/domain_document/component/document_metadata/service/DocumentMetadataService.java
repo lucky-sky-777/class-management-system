@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
@@ -18,6 +19,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +32,15 @@ public class DocumentMetadataService {
     DocumentMetadataRepository  documentMetadataRepository;
     DocumentRepository  documentRepository;
 
+    S3Service s3Service;
+
     private static final Logger log = LoggerFactory.getLogger(DocumentMetadataService.class);
 
+    private static final Set<String> EDITABLE_FIELDS = Set.of(
+            "author"
+    );
 
-    S3Service s3Service;
+    private static final int MAX_TEXT_LENGTH = 255;
 
     @Transactional
     public void saveMetadata(Long documentId, Map<String, Object> metadata){
@@ -41,7 +49,7 @@ public class DocumentMetadataService {
                 .orElse(null);
 
         if(document == null){
-            System.out.println("Skip metadata. Document not found: " + documentId);
+            log.warn("Skip metadata. Document not found: {}", documentId);
             return;
         }
 
@@ -67,12 +75,94 @@ public class DocumentMetadataService {
         return documentMetadataRepository.findByDocument_Id(documentId);
     }
 
+    @Transactional
+    public void patchMetadata(Long documentId, Map<String, Object> patch) {
+        if (patch == null || patch.isEmpty()) {
+            throw new GlobalException(
+                    GlobalException.Type.INVALID_REQUEST,
+                    "Metadata patch is empty"
+            );
+        }
+
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new GlobalException(
+                        GlobalException.Type.NOT_EXISTS,
+                        "Document not found"
+                ));
+
+        Set<String> rejected = new TreeSet<>();
+        for (String key : patch.keySet()) {
+            if (!EDITABLE_FIELDS.contains(key)) {
+                rejected.add(key);
+            }
+        }
+        if (!rejected.isEmpty()) {
+            throw new GlobalException(
+                    GlobalException.Type.INVALID_REQUEST,
+                    "Fields are not editable: " + rejected
+                            + ". Allowed fields: " + EDITABLE_FIELDS
+            );
+        }
+
+        for (Map.Entry<String, Object> entry : patch.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (!(value instanceof String text)) {
+                throw new GlobalException(
+                        GlobalException.Type.INVALID_REQUEST,
+                        "Field '" + key + "' must be a string"
+                );
+            }
+            if (text.isBlank()) {
+                throw new GlobalException(
+                        GlobalException.Type.INVALID_REQUEST,
+                        "Field '" + key + "' must not be blank"
+                );
+            }
+            if (text.length() > MAX_TEXT_LENGTH) {
+                throw new GlobalException(
+                        GlobalException.Type.INVALID_REQUEST,
+                        "Field '" + key + "' exceeds " + MAX_TEXT_LENGTH + " characters"
+                );
+            }
+        }
+
+        Map<String, Object> merged = new HashMap<>();
+
+        documentMetadataRepository.findByDocument_Id(documentId)
+                .ifPresent(existing -> merged.putAll(existing.getMetadata()));
+
+        merged.putAll(patch);
+
+        saveMetadata(document.getId(), merged);
+    }
+
+    @Transactional
+    public void deleteMetadata(Long documentId) {
+        DocumentMetadata documentMetadata = documentMetadataRepository
+                .findByDocument_Id(documentId)
+                .orElseThrow(() -> new GlobalException(
+                        GlobalException.Type.NOT_EXISTS,
+                        "Metadata not found"
+                ));
+
+        documentMetadataRepository.delete(documentMetadata);
+    }
+
     public Map<String, Object> extract(MultipartFile multipartFile) {
         Map<String, Object> metadataMap = new HashMap<>();
 
         metadataMap.put("file_name", multipartFile.getOriginalFilename());
         metadataMap.put("file_size", multipartFile.getSize());
-        metadataMap.put("mime_type", multipartFile.getContentType());
+
+        try {
+            metadataMap.put("mime_type",
+                    FileUtils.detectMimeTypeFromMultipartFile(multipartFile));
+        } catch (Exception e) {
+            log.warn("Detect mime type failed, fallback to content-type header", e);
+            metadataMap.put("mime_type", multipartFile.getContentType());
+        }
 
         try (InputStream inputStream = multipartFile.getInputStream()) {
             dev.langchain4j.data.document.Document document =

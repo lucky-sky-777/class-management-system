@@ -66,12 +66,14 @@ public class IngestService {
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
 	ChunkByParagraphWithOverlapStrategy chunkByParagraphWithOverlapStrategy;
 	FileProducer fileProducer;
-//	TagService tagService;
+	TagService tagService;
 
-//	DocumentMetadataService documentMetadataService;
+	DocumentMetadataService documentMetadataService;
 
 
-//	private static final Logger log = LoggerFactory.getLogger(IngestService.class);
+
+	private static final Logger log = LoggerFactory.getLogger(IngestService.class);
+
 
 	Queue<IngestRequest> ingestRequestQueue = new ArrayDeque<>();
 
@@ -128,14 +130,12 @@ public class IngestService {
 				creatorUserId, directoryId, metadata
 		);
 
-//		try {
-//			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
-//			documentMetadataService.saveMetadata(document.getId(), metadataMap);
-//		} catch (Exception e) {
-//			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
-//		}
-
-
+		try {
+			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
+			documentMetadataService.saveMetadata(document.getId(), metadataMap);
+		} catch (Exception e) {
+			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
+		}
 
 		// 4. Tiếp theo: xử lý bất đồng bộ
 		ingestAsync(
@@ -198,11 +198,11 @@ public class IngestService {
 							documentSource
 					);
 
-//			try {
-//				tagService.autoTag(request.documentId(), chunkList);
-//			} catch (Exception e) {
-//				log.warn("Auto-tag failed (khong chan ingest), documentId={}", request.documentId(), e);
-//			}
+			try {
+				tagService.autoTag(request.documentId(), chunkList);
+			} catch (Exception e) {
+				log.warn("Auto-tag failed (khong chan ingest), documentId={}", request.documentId(), e);
+			}
 
 			List<DocumentChunk> documentChunkList = new ArrayList<>();
 			List<BaseVector> embeddingList = embeddingService

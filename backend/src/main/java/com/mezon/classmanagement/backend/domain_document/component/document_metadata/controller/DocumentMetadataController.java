@@ -7,10 +7,9 @@ import com.mezon.classmanagement.backend.domain_document.component.document_meta
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
@@ -46,5 +45,36 @@ public class DocumentMetadataController {
                 data
         );
     }
+
+    @PatchMapping("/{documentId}/metadata")
+    public ResponseDTO<Void> patchMetadata(
+            @PathVariable
+            Long documentId,
+
+            @RequestBody
+            Map<String, Object> metadata
+    ) {
+        documentMetadataService.patchMetadata(documentId, metadata);
+
+        return ResponseDTO.ok(
+                "Update metadata successful",
+                null
+        );
+    }
+
+    @DeleteMapping("/{documentId}/metadata")
+    public ResponseDTO<Void> deleteMetadata(
+            @PathVariable
+            Long documentId
+    ) {
+        documentMetadataService.deleteMetadata(documentId);
+
+        return ResponseDTO.ok(
+                "Delete metadata successful",
+                null
+        );
+    }
+
+
 
 }
