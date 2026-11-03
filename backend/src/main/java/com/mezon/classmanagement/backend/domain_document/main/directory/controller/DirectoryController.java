@@ -24,7 +24,8 @@ import java.util.List;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RequestMapping("/api/directories")
+@RequestMapping("/api/classes/{classId}/directories")
+//@RequestMapping("/api/directories")
 @RestController
 public class DirectoryController {
 
@@ -34,7 +35,8 @@ public class DirectoryController {
 	DirectoryService directoryService;
 
 	@Public
-	@PostMapping("/classes/{classId}")
+	@PostMapping
+	//@PostMapping("/classes/{classId}")
 	public ResponseDTO<DirectoryResponseDto> create(
 			@PathVariable Long classId,
 			@RequestBody CreateDirectoryRequestDto request
@@ -64,7 +66,8 @@ public class DirectoryController {
 		//
 	}
 
-	@GetMapping("/classes/{classId}")
+	@GetMapping
+	//@GetMapping("/classes/{classId}")
 	public ResponseDTO<List<DirectoryResponseDto>> getList(
 			@PathVariable Long classId
 	) {

@@ -9,6 +9,7 @@ import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.IngestRequest;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.service.IngestService;
 import com.mezon.classmanagement.backend.domain_document.component.validator.ValidFile;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.DeleteDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
@@ -20,9 +21,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,7 +51,7 @@ public class DocumentController {
 	IngestService ingestService;
 
 	private void ensureFileCountPerRequest(List<MultipartFile> multipartFileList) {
-		if (multipartFileList.size() > 100) {
+		if (multipartFileList.size() > 2000) {
 			throw new GlobalException(
 					GlobalException.Type.INVALID_REQUEST,
 					"Chỉ nhận tối đa 100 file mỗi yêu cầu"
@@ -67,6 +70,51 @@ public class DocumentController {
 					"Chỉ nhận tối đa 500 MB mỗi yêu cầu"
 			);
 		}
+	}
+
+	@GetMapping("/{documentId}/download")
+	public ResponseEntity<StreamingResponseBody> download(
+			@PathVariable Long classId,
+			@PathVariable Long directoryId,
+			@PathVariable Long documentId
+	) {
+		Document document = documentService.findByIdOrThrow(documentId);
+
+		StreamingResponseBody body = outputStream -> {
+			try (InputStream inputStream =
+						 documentService.openStream(classId, directoryId, document)) {
+				inputStream.transferTo(outputStream);
+			}
+		};
+
+		ContentDisposition disposition =
+				ContentDisposition.attachment()
+						.filename(
+								document.getFileName(),
+								StandardCharsets.UTF_8
+						)
+						.build();
+
+		return ResponseEntity.ok()
+				.contentType(MediaType.APPLICATION_OCTET_STREAM)
+				.header(
+						HttpHeaders.CONTENT_DISPOSITION,
+						disposition.toString()
+				)
+				.body(body);
+	}
+
+	@GetMapping
+	public ResponseDTO<List<DocumentResponseDto>> getList(
+			@PathVariable Long classId,
+			@PathVariable Long directoryId
+	) {
+		List<DocumentResponseDto> responseList = documentService.getList(classId, directoryId);
+
+		return ResponseDTO.ok(
+				"Get document list successful",
+				responseList
+		);
 	}
 
 	@GetMapping("/{documentId}/file")
@@ -126,6 +174,22 @@ public class DocumentController {
 		ingestService.ingestMultiple(ingestRequestList);
 
 		return ResponseDTO.ok("Đã tiếp nhận yêu cầu");
+	}
+
+	@DeleteMapping
+	public ResponseDTO<Void> delete(
+			@PathVariable Long classId,
+			@PathVariable Long directoryId,
+			@RequestBody DeleteDocumentRequestDto request
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
+		documentService.delete(clientUserId, classId, directoryId, request);
+
+		return ResponseDTO.ok(
+				"Delete document(s) successful"
+		);
 	}
 
 //	@PostMapping(

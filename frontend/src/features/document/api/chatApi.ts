@@ -1,22 +1,26 @@
 import { apiClient } from "@services/api-client";
-import type { ResponseDTO } from "@shared/types";
-import type { RagAnswerResponseDto } from "@/features/document/types"; // Điều chỉnh path phù hợp
+import type { FileItem } from "@/features/document/types";
+
+export interface RagAnswerResponseDto {
+  answer: string;
+  // Bổ sung thêm các trường khác nếu DTO backend có trả về (sources, metadata, ...)
+}
+
+export interface RagAskRequestDto {
+  documentId: number | string;
+  question: string;
+}
 
 export const chatApi = {
-  /**
-   * Gửi tài liệu và câu hỏi lên AI sử dụng RAG
-   */
   askQuestion: async (
     question: string,
-    file: File,
-  ): Promise<ResponseDTO<RagAnswerResponseDto>> => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("question", question);
+    file: FileItem | string | number,
+  ): Promise<RagAnswerResponseDto> => {
+    const documentId = typeof file === "object" ? file.id : file;
 
-    return apiClient.post<ResponseDTO<RagAnswerResponseDto>>(
-      "/rag/ask",
-      formData,
-    );
+    return apiClient.post<RagAnswerResponseDto>("/rag/ask", {
+      documentId,
+      question,
+    });
   },
 };

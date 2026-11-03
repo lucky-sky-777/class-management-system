@@ -1,14 +1,13 @@
 package com.mezon.classmanagement.backend.domain_document.component.embedding.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.genai.Client;
-import com.google.genai.types.EmbedContentResponse;
 import com.mezon.classmanagement.backend.common.constant.GeminiConstant;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.env.GeminiEnv;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.common.util.GeminiPromptBuilder;
+import com.mezon.classmanagement.backend.domain_document.component.api.key.service.GeminiApiKeyService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.request.media.GeminiBatchMediaEmbeddingRequest;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.request.media.GeminiMediaEmbeddingRequest;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.dto.request.text.GeminiBatchTextEmbeddingRequest;
@@ -20,6 +19,7 @@ import com.mezon.classmanagement.backend.domain_document.component.vector.entity
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,8 +34,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@Service
 @RequiredArgsConstructor
+@Service
 public class EmbeddingService {
 
 	ObjectMapper objectMapper;
@@ -285,16 +285,11 @@ public class EmbeddingService {
 		return apiKeys.get(index);
 	}
 
-	private void status429() {
-		throw new GlobalException(
-				GlobalException.Type.TOO_MANY_REQUEST,
-				"Too many request"
-		);
-	}
+	GeminiApiKeyService geminiApiKeyService;
 
 	private BaseVector send(String json) throws Exception {
-		String key = nextApiKey();
-		System.out.println(key);
+		String key = geminiApiKeyService.nextApiKey();
+		//System.out.println(key);
 
 		HttpRequest request = buildRequest(
 				geminiEnv.apiUrl,
@@ -308,16 +303,19 @@ public class EmbeddingService {
 			EmbeddingResponse embedResponse = objectMapper.readValue(response.body(), EmbeddingResponse.class);
 			return new BaseVector(convertListToArray(embedResponse.embedding().values()));
 		}
-		if (response.statusCode() == 429) {
-			status429();
+		if (response.statusCode() == HttpStatus.TOO_MANY_REQUESTS.value()) {
+			geminiApiKeyService.rateLimit(key);
+		}
+		if (response.statusCode() == HttpStatus.FORBIDDEN.value()) {
+			return send(json);
 		}
 
 		throw new RuntimeException(response.body());
 	}
 
 	private List<BaseVector> sendBatch(String json) throws Exception {
-		String key = nextApiKey();
-		System.out.println(key);
+		String key = geminiApiKeyService.nextApiKey();
+		//System.out.println(key);
 
 		HttpRequest request = buildRequest(
 				geminiEnv.batchApiUrl,
@@ -335,8 +333,11 @@ public class EmbeddingService {
 			}
 			return vectorList;
 		}
-		if (response.statusCode() == 429) {
-			status429();
+		if (response.statusCode() == HttpStatus.TOO_MANY_REQUESTS.value()) {
+			geminiApiKeyService.rateLimit(key);
+		}
+		if (response.statusCode() == HttpStatus.FORBIDDEN.value()) {
+			return sendBatch(json);
 		}
 
 		throw new RuntimeException(response.body());
@@ -356,6 +357,39 @@ public class EmbeddingService {
 
 	private HttpResponse<String> getResponse(HttpRequest request) throws Exception {
 		return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+	}
+
+	public void ping() {
+		for (String key : geminiApiKeyService.getKeyList()) {
+			try {
+				GeminiTextEmbeddingRequest request = new GeminiTextEmbeddingRequest(
+						GeminiConstant.Model.GEMINI_EMBEDDING_2.getName(),
+						new GeminiTextEmbeddingRequest.Content(
+								List.of(
+										new GeminiTextEmbeddingRequest.Part(
+												"test"
+										)
+								)
+						),
+						1536
+				);
+
+				String jsonBody = objectMapper.writeValueAsString(request);
+
+				HttpRequest httpRequest = buildRequest(
+						geminiEnv.apiUrl,
+						key,
+						jsonBody
+				);
+
+				HttpResponse<String> response = getResponse(httpRequest);
+
+				System.out.println(response.statusCode() + " (" + HttpStatus.valueOf(response.statusCode()).name() + "): " + key);
+				if (response.statusCode() != 200) {
+					System.out.println(response.body());
+				}
+			} catch (Exception e) {}
+		}
 	}
 
 }

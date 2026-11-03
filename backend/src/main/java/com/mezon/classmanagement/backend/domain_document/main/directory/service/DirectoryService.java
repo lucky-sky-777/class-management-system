@@ -67,14 +67,9 @@ public class DirectoryService {
 	) {
 		String slug = SlugGenerator.generate(request.getName());
 
-		lockSlug(slug);
+		lockClassIdSlug(classId, slug);
 
-		if (existsBySlug(slug)) {
-			throw new GlobalException(
-					GlobalException.Type.INVALID_REQUEST,
-					"Directory already exists"
-			);
-		}
+		throwIfExistsByClassIdAndSlug(classId, slug);
 
 		Directory newDirectory = directoryMapper.toDirectory(request);
 
@@ -101,6 +96,11 @@ public class DirectoryService {
 		directoryRepository.lockSlug(slug);
 	}
 
+	@Transactional
+	public void lockClassIdSlug(Long classId, String slug) {
+		directoryRepository.lockClassIdAndSlug(classId, slug);
+	}
+
 	@Transactional(readOnly = true)
 	public List<DirectoryResponseDto> getList(Long classId) {
 		return getByClassId(classId);
@@ -109,6 +109,33 @@ public class DirectoryService {
 	@Transactional(readOnly = true)
 	public boolean existsById(Long id) {
 		return directoryRepository.existsById(id);
+	}
+
+	@Transactional(readOnly = true)
+	public boolean existsByClassIdAndId(Long classId, Long id) {
+		return directoryRepository.existsByClazz_IdAndId(classId, id);
+	}
+
+	@Transactional
+	public void throwIfNotExistsByClassIdAndId(Long classId, Long id) {
+		if (!existsByClassIdAndId(classId, id)) {
+			throw new GlobalException(
+					GlobalException.Type.NOT_EXISTS,
+					"Directory not exists in class"
+			);
+		}
+	}
+
+	@Transactional
+	public Directory findByClassIdAndIdOrThrow(Long classId, Long id) {
+		return directoryRepository
+				.findByClazz_IdAndId(classId, id)
+				.orElseThrow(() ->
+						new GlobalException(
+								GlobalException.Type.NOT_EXISTS,
+								"Directory not exists"
+						)
+				);
 	}
 
 	@Transactional(readOnly = true)
@@ -141,6 +168,21 @@ public class DirectoryService {
 	@Transactional(readOnly = true)
 	public boolean existsBySlug(String slug) {
 		return directoryRepository.existsBySlug(slug);
+	}
+
+	@Transactional(readOnly = true)
+	public boolean existsByClassIdAndSlug(Long classId, String slug) {
+		return directoryRepository.existsByClazz_IdAndSlug(classId, slug);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfExistsByClassIdAndSlug(Long classId, String slug) {
+		if (existsByClassIdAndSlug(classId, slug)) {
+			throw new GlobalException(
+					GlobalException.Type.NOT_EXISTS,
+					"Directory already exists"
+			);
+		}
 	}
 
 	@Transactional

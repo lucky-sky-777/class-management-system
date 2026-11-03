@@ -17,31 +17,36 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
   onDelete,
   onEdit,
 }) => {
+  const fileName = file.name || (file as any).fileName || "Tài liệu không tên";
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(file.name);
+  const [editName, setEditName] = useState(fileName);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Tự động focus và bôi đen tên file khi bấm nút Sửa
+  // Chỉ focus và chọn vùng chữ khi người dùng kích hoạt chỉnh sửa
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      // Tùy chọn nâng cao: Chỉ bôi đen phần tên, chừa lại phần mở rộng (.pdf, .docx)
-      const dotIndex = file.name.lastIndexOf(".");
+      const dotIndex = editName.lastIndexOf(".");
       if (dotIndex > 0) {
         inputRef.current.setSelectionRange(0, dotIndex);
       } else {
         inputRef.current.select();
       }
     }
-  }, [isEditing, file.name]);
+  }, [isEditing]);
+
+  const handleStartEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditName(fileName); // Cập nhật tên mới nhất ngay trong event handler
+    setIsEditing(true);
+  };
 
   const handleSave = () => {
-    if (editName.trim() && editName.trim() !== file.name) {
-      if (onEdit) {
-        onEdit(file.id, editName.trim());
-      }
+    const trimmed = editName.trim();
+    if (trimmed && trimmed !== fileName) {
+      onEdit?.(file.id, trimmed);
     } else {
-      setEditName(file.name);
+      setEditName(fileName);
     }
     setIsEditing(false);
   };
@@ -49,7 +54,7 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSave();
     else if (e.key === "Escape") {
-      setEditName(file.name);
+      setEditName(fileName);
       setIsEditing(false);
     }
   };
@@ -57,22 +62,22 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
   return (
     <div
       onClick={() => !isEditing && onClick()}
-      className={`bg-[var(--bg-surface)] border ${isEditing ? "border-[#00B4D8] shadow-md" : "border-[var(--rule)]"} rounded-xl p-4 flex flex-col gap-3 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 w-full group relative`}
+      className={`bg-[var(--bg-surface)] border ${
+        isEditing ? "border-[#00B4D8] shadow-md" : "border-[var(--rule)]"
+      } rounded-xl p-4 flex flex-col gap-3 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 w-full group relative`}
     >
       <div className="flex justify-between items-start">
-        <DocumentIcon extension={file.fileExtension} size={32} />
+        <DocumentIcon
+          extension={file.fileExtension || (file as any).fileType || ""}
+          size={32}
+        />
 
-        {/* CHỈ RENDER NHÓM NÚT NẾU CÓ TRUYỀN onEdit HOẶC onDelete */}
         {!isEditing && (onEdit || onDelete) && (
           <div className="flex items-center gap-1 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-            
-            {/* Chỉ hiện nút sửa nếu có hàm onEdit */}
             {onEdit && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsEditing(true);
-                }}
+                type="button"
+                onClick={handleStartEdit}
                 className="p-1.5 text-[var(--ink-3)] hover:text-[#00B4D8] hover:bg-[#E5F9FD] rounded-md transition-colors active:scale-95"
                 title="Đổi tên"
               >
@@ -80,12 +85,16 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
               </button>
             )}
 
-            {/* Chỉ hiện nút xóa nếu có hàm onDelete */}
             {onDelete && (
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (window.confirm(`Bạn có chắc chắn muốn xóa file "${file.name}" không?`)) {
+                  if (
+                    window.confirm(
+                      `Bạn có chắc chắn muốn xóa file "${fileName}" không?`,
+                    )
+                  ) {
                     onDelete(file.id);
                   }
                 }}
@@ -95,13 +104,11 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
                 <Trash2 size={16} />
               </button>
             )}
-            
           </div>
         )}
       </div>
 
       <div>
-        {/* Inline Edit Input */}
         {isEditing ? (
           <input
             ref={inputRef}
@@ -115,19 +122,22 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
         ) : (
           <h4
             className="font-bold text-sm text-[var(--ink-1)] truncate"
-            title={file.name}
+            title={fileName}
           >
-            {file.name}
+            {fileName}
           </h4>
         )}
 
-        {/* Thông tin phụ của File */}
         <div className="flex items-center gap-2 mt-1">
-          <p className="text-[11px] text-[var(--ink-3)]">{file.size}</p>
-          <span className="text-[11px] text-[var(--rule)]">•</span>
-          <p className="text-[11px] text-[var(--ink-3)] truncate">
-            {file.uploader}
-          </p>
+          <p className="text-[11px] text-[var(--ink-3)]">{file.size || ""}</p>
+          {file.uploader && (
+            <>
+              <span className="text-[11px] text-[var(--rule)]">•</span>
+              <p className="text-[11px] text-[var(--ink-3)] truncate">
+                {file.uploader}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

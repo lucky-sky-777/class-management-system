@@ -1,16 +1,19 @@
 package com.mezon.classmanagement.backend.domain_document.main.document.service;
 
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
+import com.mezon.classmanagement.backend.config.EmbeddingConfig;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
 import com.mezon.classmanagement.backend.domain_document.main.directory_document.service.DirectoryDocumentService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.DeleteDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
@@ -21,6 +24,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,9 +33,13 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+@SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service
@@ -59,11 +67,56 @@ public class DocumentService {
 	DirectoryService directoryService;
 	EmbeddingService embeddingService;
 	DocumentRepository documentRepository;
+	DirectoryDocumentService directoryDocumentService;
 	DocumentMapper documentMapper;
 	S3Service s3Service;
 
+	@Transactional(readOnly = true)
+	public boolean isPublicAndExists(Long id) {
+		return documentRepository.isPublic(id);
+	}
+
 	@Transactional
-	public InputStream openStream(Long classId, Long directoryId, Document document) {
+	public boolean isPrivateAndExists(Long id) {
+		return documentRepository.isPublic(id);
+	}
+
+	@Transactional
+	public boolean isPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
+		return documentRepository.isPublicOrInAnyClassJoinedByUser(documentId, userId);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfNotIsPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
+		if (!isPublicOrInAnyClassJoinedByUser(documentId, userId)) {
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Đây là tài liệu riêng tư hoặc không tồn tại"
+			);
+		}
+	}
+
+	@Transactional
+	public boolean existsInAnyClassJoinedByUser(Long documentId, Long userId) {
+		return documentRepository.existsInAnyClassJoinedByUser(documentId, userId);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfNotIsPublicAndExists(Long id) {
+		if (!isPublicAndExists(id)) {
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Đây là tài liệu riêng tư hoặc không tồn tại"
+			);
+		}
+	}
+
+	@Transactional
+	public InputStream openStream(
+			Long classId,
+			Long directoryId,
+			Document document
+	) {
 		Directory directory = directoryService.findByIdOrThrow(directoryId);
 
 		return s3Service.getFile(
@@ -133,27 +186,83 @@ public class DocumentService {
 	}
 
 	@Transactional
-	public void updateInternal(Long id, InternalUpdateDocumentRequestDto request) {
+	public void delete(
+			Long clientUserId,
+			Long classId,
+			Long directoryId,
+			DeleteDocumentRequestDto request
+	) {
+		Directory directory = directoryService.findByClassIdAndIdOrThrow(classId, directoryId);
+
+		Set<Long> documentIdListByCreatorAndClassAndDirectory = new HashSet<>(
+				documentRepository.getDocumentIdListByCreatorAndClassAndDirectory(
+						clientUserId,
+						classId,
+						directoryId
+				)
+		);
+		if (!documentIdListByCreatorAndClassAndDirectory.containsAll(request.getDocumentIdList())) {
+			List<Long> invalidDocumentIdList = new ArrayList<>(request.getDocumentIdList());
+			invalidDocumentIdList.removeAll(documentIdListByCreatorAndClassAndDirectory);
+
+			int index = 0;
+
+			StringBuilder sb = new StringBuilder();
+			sb.append("[");
+			for (Long id : invalidDocumentIdList) {
+				if (index++ == 0) {
+					sb.append(id);
+				} else {
+					sb.append(", ").append(id);
+				}
+			}
+			sb.append("]");
+
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Bạn không có quyền xóa các file với các ID sau: " + sb
+			);
+		}
+
+		List<Document> documentList = documentRepository.findAllById(request.getDocumentIdList());
+
+		for (Document document : documentList) {
+			s3Service.deleteClassFile(
+					classId,
+					directory.getSlug(),
+					document.getKey() + "." + document.getFileExtension()
+			);
+		}
+
+		documentRepository.deleteAllByIdInBatch(request.getDocumentIdList());
+	}
+
+	@Transactional
+	public void updateInternal(
+			Long id,
+			InternalUpdateDocumentRequestDto request
+	) {
 		Document currentDocument = findByIdOrThrow(id);
 
 		documentMapper.updateDocumentFromRequestDto(request, currentDocument);
+
 		try {
-			if (currentDocument.getDescription() != null && !currentDocument.getDescription().isBlank()) {
-				currentDocument.setEmbedding(
-						new Vector1536(
-								embeddingService.embedSingleDocumentText(
-										currentDocument.getTitle(),
-										currentDocument.getDescription()
-								).getValues()
-						)
-				);
-			}
-		} catch (Exception e) {}
+			currentDocument.setEmbedding(
+					request.getEmbedding()
+			);
+		} catch (Exception e) {
+			throw new GlobalException(GlobalException.Type.INTERNAL_SERVER_ERROR, e.getMessage());
+		}
 	}
 
 	@Transactional
 	public Document save(Document document) {
-		return documentRepository.save(document);
+		return documentRepository.saveAndFlush(document);
+	}
+
+	@Transactional
+	public void delete(Document document) {
+		documentRepository.delete(document);
 	}
 
 	@Transactional(readOnly = true)
@@ -166,9 +275,53 @@ public class DocumentService {
 		);
 	}
 
+	@Transactional
+	public DocumentEmbeddingList getEmbeddingList() {
+		List<Document> documentList = getAllByUploaded();
+
+		if (documentList.isEmpty()) {
+			throw new IllegalStateException("Không có tài liệu để huấn luyện");
+		}
+
+		List<Long> idList = new ArrayList<>();
+		List<float[]> embeddingList = new ArrayList<>();
+
+		for (Document document : documentList) {
+			if (document.getEmbedding() == null || document.getEmbedding().getValues() == null) {
+				throw new IllegalStateException(
+						"Tài liệu chưa có embedding: " + document.getId()
+				);
+			}
+
+			float[] embedding = document.getEmbedding().getValues();
+
+			if (embedding.length != EmbeddingConfig.EMBEDDING_DIMENSION) {
+				throw new IllegalStateException(
+						"Embedding không đúng 1536 chiều, documentId: "
+								+ document.getId()
+				);
+			}
+
+			idList.add(document.getId());
+			embeddingList.add(embedding);
+		}
+
+		return new DocumentEmbeddingList(idList, embeddingList);
+	}
+
 	@Transactional(readOnly = true)
-	public List<Document> getAll() {
-		return documentRepository.findAll();
+	public List<Document> getAllByUploaded() {
+		return documentRepository.findAllByStatus(Document.Status.UPLOADED);
+	}
+
+	@Transactional
+	public List<DocumentResponseDto> getList(
+			Long classId,
+			Long directoryId
+	) {
+		List<Document> documentList = documentRepository.findByDirectoryId(directoryId);
+
+		return documentMapper.toDocumentResponseDtoList(documentList);
 	}
 
 	@Transactional(readOnly = true)
@@ -178,6 +331,44 @@ public class DocumentService {
 						GlobalException.Type.NOT_EXISTS,
 						"Document not exists"
 				)
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public boolean existsById(Long id) {
+		return documentRepository.existsById(id);
+	}
+
+	@Transactional(readOnly = true)
+	public void throwIfNotExistsById(Long id) {
+		if (!existsById(id)) {
+			throw new GlobalException(
+					GlobalException.Type.NOT_EXISTS,
+					"Document not exists"
+			);
+		}
+	}
+
+	@Transactional
+	public List<DocumentResponseDto> findTopPublicDocumentInClusterIndexByModelId(
+			Integer clusterIndex,
+			Long modelId,
+			int limit
+	) {
+		return documentMapper.toDocumentResponseDtoList(
+				documentRepository.findAllInClusterIndexByModelIdAndPublicClass(
+						clusterIndex, modelId, PageRequest.of(0, limit))
+		);
+	}
+
+	@Transactional
+	public List<DocumentResponseDto> findTopPublicDocumentInClusterList(
+			List<Long> clusterIdList,
+			int limit
+	) {
+		return documentMapper.toDocumentResponseDtoList(
+				documentRepository.findAllByClusterIdInAndPublicClass(
+						clusterIdList, PageRequest.of(0, limit))
 		);
 	}
 

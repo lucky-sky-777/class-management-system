@@ -10,10 +10,8 @@ import com.mezon.classmanagement.backend.domain_document.component.chunk.strateg
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl.ChunkByParagraphWithoutOverlapStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.service.DocumentChunkService;
-import com.mezon.classmanagement.backend.domain_document.component.document_metadata.service.DocumentMetadataService;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
-import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.IngestRequest;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.RabbitIngestRequest;
@@ -26,6 +24,8 @@ import com.mezon.classmanagement.backend.domain_document.main.document.dto.reque
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
+import com.mezon.classmanagement.backend.domain_document.component.document_metadata.service.DocumentMetadataService;
+import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.rabbitmq.FileProducer;
 import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
@@ -33,22 +33,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -66,96 +59,139 @@ public class IngestService {
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
 	ChunkByParagraphWithOverlapStrategy chunkByParagraphWithOverlapStrategy;
 	FileProducer fileProducer;
-	TagService tagService;
 
 	DocumentMetadataService documentMetadataService;
-
-
-
-	private static final Logger log = LoggerFactory.getLogger(IngestService.class);
-
+	TagService tagService;
+	Logger log = LoggerFactory.getLogger(IngestService.class);
 
 	Queue<IngestRequest> ingestRequestQueue = new ArrayDeque<>();
 
-	@Transactional
+	public record PreparedData(
+			IngestRequest ingestRequest,
+			Path tempPath,
+			Metadata metadata,
+			Map<String, Object> metadataMap
+	) {
+	}
+
 	public void ingestMultiple(List<IngestRequest> ingestRequestList) {
-		for (IngestRequest curr : ingestRequestList) {
-			ingestSingle(
-					curr.creatorUserId(),
-					curr.classId(),
-					curr.directoryId(),
-					curr.multipartFile()
+		List<String> failedFileList = new ArrayList<>();
+		List<PreparedData> dataList = new ArrayList<>();
+
+		Iterator<IngestRequest> ingestRequestIterator = ingestRequestList.iterator();
+		while (ingestRequestIterator.hasNext()) {
+			IngestRequest request = ingestRequestIterator.next();
+			MultipartFile multipartFile = request.multipartFile();
+
+			Path tempPath;
+			try {
+				tempPath = Files.createTempFile("document-", ".tmp");
+				multipartFile.transferTo(tempPath);
+
+				dataList.add(
+						new PreparedData(
+								request,
+								tempPath,
+								new Metadata()
+										.put("fileName", multipartFile.getOriginalFilename())
+										.put("fileExtension", FileUtils.getExtension(multipartFile))
+										.put("fileMimeType", FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
+										.put("fileSize", multipartFile.getSize()),
+								documentMetadataService.extract(multipartFile)
+						)
+				);
+			} catch (Exception e) {
+				System.out.println(
+						"Không thể tạo file tạm: "
+								+ request.multipartFile().getOriginalFilename()
+				);
+				System.out.println(e.getMessage());
+
+				failedFileList.add(request.multipartFile().getOriginalFilename());
+				ingestRequestIterator.remove();
+			}
+		}
+
+		ingestAsync(dataList);
+	}
+
+	@Async("documentExecutor")
+	protected void ingestAsync(List<PreparedData> preparedDataList) {
+		for (PreparedData data : preparedDataList) {
+			IngestRequest request = data.ingestRequest();
+
+			ingestAsync(
+					request.classId(),
+					request.directoryId(),
+					request.creatorUserId(),
+					data.tempPath(),
+					data.metadata(),
+					data.metadataMap()
 			);
 		}
 	}
 
+	@Deprecated(forRemoval = true)
 	@Transactional
 	public void ingestSingle(
 			Long creatorUserId,
 			Long classId,
-			Long directoryId,
-			MultipartFile multipartFile
+			Long directoryId
 	) {
-		Directory directory = directoryService.findByIdOrThrow(directoryId);
 
-		// 1. Tạo file tạm trên server
-		Path tempFile;
-		try {
-			tempFile = Files.createTempFile("document-", ".tmp");
-			multipartFile.transferTo(tempFile);
-		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR,
-					e.getMessage()
-			);
-		}
 
-		// 2. Trích xuất metadata
-		Metadata metadata;
-		try {
-			metadata = new Metadata()
-					.put("fileName", multipartFile.getOriginalFilename())
-					.put("fileExtension", FileUtils.getExtension(multipartFile))
-					.put("fileMimeType", FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
-					.put("fileSize", multipartFile.getSize());
-		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR,
-					e.getMessage()
-			);
-		}
 
-		// 3. Tạo Document trên database
-		Document document = documentService.create(
-				creatorUserId, directoryId, metadata
-		);
-
-		try {
-			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
-			documentMetadataService.saveMetadata(document.getId(), metadataMap);
-		} catch (Exception e) {
-			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
-		}
+//		try {
+//			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
+//			documentMetadataService.saveMetadata(document.getId(), metadataMap);
+//		} catch (Exception e) {
+//			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
+//		}
 
 		// 4. Tiếp theo: xử lý bất đồng bộ
-		ingestAsync(
-				classId,
-				directory,
-				document,
-				tempFile,
-				metadata
-		);
+//		ingestAsync(
+//				classId,
+//				directory,
+//				document,
+//				tempFile.toString(),
+//				metadata
+//		);
 
 	}
 
 	@Async("documentExecutor")
 	protected void ingestAsync(
 			Long classId,
-			Directory directory,
-			Document document,
+			Long directoryId,
+			Long creatorUserId,
 			Path tempFile,
-			Metadata metadata
+			Metadata metadata,
+			Map<String, Object> metadataMap
+
 	) {
+		// 1. Tìm thư mục
+		Directory directory = directoryService.findByIdOrThrow(directoryId);
+
+		// 2. Tạo document ở database
+		Document document;
+		try {
+			document = documentService.create(
+					creatorUserId, directoryId, metadata
+			);
+		} catch (Exception e) {
+			throw new GlobalException(
+					GlobalException.Type.INTERNAL_SERVER_ERROR,
+					e.getMessage()
+			);
+		}
+
+		try {
+			documentMetadataService.saveMetadata(document.getId(), metadataMap);
+		} catch (Exception e) {
+			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
+		}
+
+		// 3. Tải file lên cloud
 		try (InputStream inputStream = Files.newInputStream(tempFile)) {
 			String uploadedFilePath = s3Service.uploadFileToClass(
 					classId,
@@ -174,89 +210,171 @@ public class IngestService {
 					)
 			);
 		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR,
-					e.getMessage()
-			);
+			tryDeleteDocument(document.getId());
 		}
 	}
 
-	@Transactional
 	public void ingestFromRabbit(
 			RabbitIngestRequest request
 	) {
 		System.out.println(
-				"Start ingest: " + request.filePathInS3()
+				"Start ingest: " + request.originalFileName()
 		);
 
+		// 1. Lấy file từ cloud
 		try (InputStream inputStream = s3Service.getFile(request.filePathInS3())) {
+
+			// 2. Tạo danh sách chunk
 			DocumentSource documentSource = new InputStreamDocumentSource(inputStream);
 
-			List<String> chunkList = chunkService
-					.getChunkList(
-							chunkByParagraphWithOverlapStrategy,
-							documentSource
-					);
-
+			List<String> chunkList;
 			try {
-				tagService.autoTag(request.documentId(), chunkList);
+				chunkList = chunkService
+						.getChunkList(
+								chunkByParagraphWithOverlapStrategy,
+								documentSource
+						);
 			} catch (Exception e) {
-				log.warn("Auto-tag failed (khong chan ingest), documentId={}", request.documentId(), e);
+				tryDeleteDocument(request.documentId());
+				return;
 			}
 
-			List<DocumentChunk> documentChunkList = new ArrayList<>();
-			List<BaseVector> embeddingList = embeddingService
-					.embedMultipleDocumentText(
-					request.originalFileName(),
-							new ChunkFormatterPipeline(
-									List.of(
-											new GeminiChunkFormatter()
-									)
-							).formatList(
-									chunkList,
-									new Metadata().put("fileName", request.originalFileName())
-							)
-					);
-			for (short i = 0; i < chunkList.size(); i++) {
-				documentChunkList.add(
-						DocumentChunk
-								.builder()
-								.document(Document.create(request.documentId()))
-								.index(i)
-								.content(chunkList.get(i))
-								.embedding(
-										new Vector1536(
-												embeddingList.get(i).getValues()
+				try {
+						tagService.autoTag(request.documentId(), chunkList);
+				} catch (Exception e) {
+					log.warn("Auto-tag failed (khong chan ingest), documentId={}",
+							request.documentId(), e);
+				}
+
+				// 3. Tạo danh sách vector từ danh sách chunk
+			List<BaseVector> embeddingList;
+			try {
+				embeddingList = embeddingService
+						.embedMultipleDocumentText(
+								request.originalFileName(),
+								new ChunkFormatterPipeline(
+										List.of(
+												new GeminiChunkFormatter()
 										)
+								).formatList(
+										chunkList,
+										new Metadata().put("fileName", request.originalFileName())
 								)
-								.build()
-				);
+						);
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
 			}
 
-			documentChunkService.insertBatch(documentChunkList);
+			// 5. Tạo và lưu danh sách DocumentChunk vào database
+			List<DocumentChunk> documentChunkList;
+			try {
+				documentChunkList = new ArrayList<>();
+				for (short i = 0; i < chunkList.size(); i++) {
+					documentChunkList.add(
+							DocumentChunk
+									.builder()
+									.document(Document.create(request.documentId()))
+									.index(i)
+									.content(chunkList.get(i))
+									.embedding(
+											new Vector1536(
+													embeddingList.get(i).getValues()
+											)
+									)
+									.build()
+					);
+				}
+				documentChunkService.insertBatch(documentChunkList);
+			} catch (Exception out) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
 
-			documentService.updateInternal(
-					request.documentId(),
-					new InternalUpdateDocumentRequestDto(
-							Document.Status.UPLOADED
-					)
-			);
+			// 6. Lấy tối đa 2 chunk đầu tiên từ danh sách chunk
+			// và tạo vector đại diện cho tài liệu từ 2 chunk đó
+			String documentHeader;
+			try {
+				if (chunkList.size() >= 2) {
+					documentHeader = chunkList
+							.get(0) + " " + chunkList.get(1);
+				} else {
+					documentHeader = chunkList.getFirst();
+				}
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
 
+			Vector1536 embedding;
+			try {
+				embedding = new Vector1536(
+						embeddingService
+								.embedSingleDocumentText(
+										request.originalFileName(),
+										documentHeader
+								)
+								.getValues());
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
 
-			System.out.println("Ingest completed");
+			// 7. Đánh dấu document là đã upload
+			try {
+				documentService.updateInternal(
+						request.documentId(),
+						new InternalUpdateDocumentRequestDto(
+								Document.Status.UPLOADED,
+								embedding
+						)
+				);
+			} catch (Exception e) {
+				tryDeleteDocument(request.documentId());
+				return;
+			}
+
+			System.out.println("Ingest completed: " + request.originalFileName());
 		} catch (Exception e) {
+			try {
+				documentService.updateInternal(
+						request.documentId(),
+						new InternalUpdateDocumentRequestDto(
+								Document.Status.ERROR,
+								null
+						)
+				);
+			} catch (Exception e1) {
+				e.addSuppressed(e1);
+				return;
+			}
+
 			throw new GlobalException(
 					GlobalException.Type.INTERNAL_SERVER_ERROR,
 					e.getMessage() + e.getLocalizedMessage()
 			);
 		}
 
+	}
+
+	public void tryDeleteDocument(Long documentId) {
 		try {
-			s3Service.deleteTempFile(FileUtils.getName(request.filePathInS3()));
-		} catch (Exception e) {
-			throw new GlobalException(
-					GlobalException.Type.INTERNAL_SERVER_ERROR
-			);
+			documentService.delete(Document.create(documentId));
+		} catch (Exception out) {
+			try {
+				documentService.updateInternal(
+						documentId,
+						new InternalUpdateDocumentRequestDto(
+								Document.Status.ERROR,
+								null
+						)
+				);
+			} catch (Exception e) {
+				throw new GlobalException(
+						GlobalException.Type.INTERNAL_SERVER_ERROR,
+						e.getMessage()
+				);
+			}
 		}
 	}
 

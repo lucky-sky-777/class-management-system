@@ -1,5 +1,7 @@
 package com.mezon.classmanagement.backend.domain_document.main.c_means.entity;
 
+import com.mezon.classmanagement.backend.config.EmbeddingConfig;
+import com.mezon.classmanagement.backend.domain_document.main.c_means.config.CMeansConfig;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -73,24 +75,28 @@ public class RecommendationModel {
 
 	@PrePersist
 	public void prePersist() {
+		if (embeddingModel == null) {
+			embeddingModel = EmbeddingConfig.EMBEDDING_MODEL;
+		}
+
 		if (embeddingDimension == null) {
-			embeddingDimension = 1536;
+			embeddingDimension = EmbeddingConfig.EMBEDDING_DIMENSION;
 		}
 
 		if (fuzziness == null) {
-			fuzziness = 2.0;
+			fuzziness = CMeansConfig.FUZZINESS;
 		}
 
 		if (minIterations == null) {
-			minIterations = 5;
+			minIterations = CMeansConfig.MIN_ITERATIONS;
 		}
 
 		if (maxIterations == null) {
-			maxIterations = 100;
+			maxIterations = CMeansConfig.MAX_ITERATIONS;
 		}
 
 		if (convergenceDelta == null) {
-			convergenceDelta = 1e-6;
+			convergenceDelta = CMeansConfig.DELTA;
 		}
 
 		if (status == null) {

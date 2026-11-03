@@ -22,5 +22,6 @@ import lombok.experimental.FieldDefaults;
 public class InternalUpdateDocumentRequestDto {
 
 	Document.Status status;
+	Vector1536 embedding;
 
 }

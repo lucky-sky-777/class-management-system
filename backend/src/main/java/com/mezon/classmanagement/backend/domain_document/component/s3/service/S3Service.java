@@ -147,6 +147,18 @@ public class S3Service {
 		deleteFile(S3Config.Bucket.ROOT, S3Config.Directory.UPLOAD_TEMP, fileName);
 	}
 
+	public void deleteClassFile(Long classId, String directorySlug, String fileName) {
+		deleteFile(
+				S3Config.Bucket.ROOT,
+				FileUtils.buildPath(
+						S3Config.Directory.UPLOAD_CLASS,
+						String.valueOf(classId),
+						directorySlug
+				),
+				fileName
+		);
+	}
+
 	public void deleteFile(
 			String bucketName,
 			String directoryName,

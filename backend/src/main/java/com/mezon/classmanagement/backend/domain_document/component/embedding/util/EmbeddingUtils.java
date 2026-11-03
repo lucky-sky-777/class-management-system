@@ -2,12 +2,44 @@ package com.mezon.classmanagement.backend.domain_document.component.embedding.ut
 
 import com.google.common.util.concurrent.AtomicDouble;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.DistanceFromUserToClusterCenter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
 @SuppressWarnings(value = {WarningConstant.UNUSED, WarningConstant.SPELL_CHECKING_INSPECTION})
 public class EmbeddingUtils {
+
+	public static float[] toFloatArray(double[] vector) {
+		float[] result = new float[vector.length];
+
+		for (int i = 0; i < vector.length; i++) {
+			result[i] = (float) vector[i];
+		}
+
+		return result;
+	}
+
+	public static double[] toDoubleArray(float[] vector) {
+		double[] result = new double[vector.length];
+
+		for (int i = 0; i < vector.length; i++) {
+			result[i] = vector[i];
+		}
+
+		return result;
+	}
+
+	public static List<double[]> toDoubleList(List<float[]> embeddings) {
+		List<double[]> result = new ArrayList<>(embeddings.size());
+
+		for (float[] embedding : embeddings) {
+			result.add(toDoubleArray(embedding));
+		}
+
+		return result;
+	}
 
 	public static float cosinePercent(float cosine) {
 		return cosine * 100.0f;
@@ -264,6 +296,64 @@ public class EmbeddingUtils {
 			sum += diff * diff;
 		}
 		return Math.sqrt(sum);
+	}
+
+	/**
+	 * d(a, b) = sqrt(sigma(1, n) * pow(a_i - b_i))
+	 * @param a vector a
+	 * @param b vector b
+	 */
+	public static float euclideanDistance(float[] a, float[] b) {
+		if (a.length != b.length) {
+			throw new IllegalArgumentException("Vectors must have the same dimension");
+		}
+
+		double sum = 0.0;
+
+		for (int i = 0; i < a.length; i++) {
+			double diff = ((double) a[i]) - ((double) b[i]);
+			sum += diff * diff;
+		}
+
+		return (float) Math.sqrt(sum);
+	}
+
+	/**
+	 *
+	 * @param distances
+	 * @param k
+	 * @param m
+	 * @return
+	 */
+	public static float membership(List<DistanceFromUserToClusterCenter> distances, int k, double m) {
+		float d_k = -1.0f;
+		boolean foundK = false;
+
+		// Bước 1: Tìm d_k và kiểm tra trường hợp đặc biệt (distance == 0)
+		for (DistanceFromUserToClusterCenter d : distances) {
+			if (d.clusterIndex() == k) {
+				d_k = d.distance();
+				foundK = true;
+			}
+
+			// Nếu có bất kỳ cụm nào có khoảng cách = 0
+			if (d.distance() == 0.0f) {
+				return d.clusterIndex() == k ? 1.0f : 0.0f;
+			}
+		}
+
+		if (!foundK) {
+			throw new IllegalArgumentException("Không tìm thấy clusterIndex = " + k + " trong danh sách.");
+		}
+
+		// Bước 2: Tính tổng sum khi tất cả khoảng cách đều > 0
+		double sum = 0.0;
+		for (DistanceFromUserToClusterCenter d : distances) {
+			double ratio = (double) d_k / (double) d.distance();
+			sum += Math.pow(ratio, 2.0 / (m - 1.0));
+		}
+
+		return (float) (1.0 / sum);
 	}
 
 }
