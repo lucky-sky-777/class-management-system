@@ -33,6 +33,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -49,6 +52,7 @@ public class TagService {
 	/**
 	 * Code mới viết từ đây
 	 */
+	private static final Logger log = LoggerFactory.getLogger(TagService.class);
 
 	TagRepository  tagRepository;
 	DocumentTagRepository documentTagRepository;
@@ -63,6 +67,9 @@ public class TagService {
 		if (slug.isEmpty()) {
 			throw new GlobalException(GlobalException.Type.INVALID_REQUEST, "Invalid tag name");
 		}
+
+		// khoa truoc khi check-and-insert -> chong race condition
+		tagRepository.lockSlug(slug);
 
 		if(tagRepository.existsBySlug(slug)) {
 			throw new GlobalException(GlobalException.Type.ALREADY_EXISTS, "Tag already exists");
@@ -188,7 +195,19 @@ public class TagService {
 				.orElse(null);
 
 		if (document == null) {
-			System.out.println("Skip auto-tag. Document not found: " + documentId);
+			log.warn("Skip auto-tag. Document not found: {}", documentId);
+			return;
+		}
+
+		// chi tu dong tag khi CHUA co tag -> khong ghi de tag thu cong cua nguoi dung
+		DocumentTag existingTag = documentTagRepository
+				.findByDocument_Id(documentId)
+				.orElse(null);
+
+		if (existingTag != null
+				&& existingTag.getTagIds() != null
+				&& existingTag.getTagIds().length > 0) {
+			log.info("Skip auto-tag. Tags already set, documentId={}", documentId);
 			return;
 		}
 
@@ -294,7 +313,7 @@ public class TagService {
 			while (tokenStream.incrementToken()) {
 				String term = charTermAttr.toString().trim();
 
-				if (term.length() > 2 && !term.chars().allMatch(Character::isDigit)) {
+				if (term.length() >= 2 && term.chars().anyMatch(Character::isLetter)) {
 					termFrequencyMap.merge(term, 1, Integer::sum);
 				}
 
