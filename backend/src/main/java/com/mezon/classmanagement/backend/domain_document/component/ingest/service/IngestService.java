@@ -24,8 +24,6 @@ import com.mezon.classmanagement.backend.domain_document.main.document.dto.reque
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
-import com.mezon.classmanagement.backend.domain_document.component.document_metadata.service.DocumentMetadataService;
-import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.rabbitmq.FileProducer;
 import dev.langchain4j.data.document.Metadata;
 import lombok.AccessLevel;
@@ -33,15 +31,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
 
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -59,18 +59,19 @@ public class IngestService {
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
 	ChunkByParagraphWithOverlapStrategy chunkByParagraphWithOverlapStrategy;
 	FileProducer fileProducer;
+//	TagService tagService;
 
-	DocumentMetadataService documentMetadataService;
-	TagService tagService;
-	Logger log = LoggerFactory.getLogger(IngestService.class);
+//	DocumentMetadataService documentMetadataService;
+
+
+//	private static final Logger log = LoggerFactory.getLogger(IngestService.class);
 
 	Queue<IngestRequest> ingestRequestQueue = new ArrayDeque<>();
 
 	public record PreparedData(
 			IngestRequest ingestRequest,
 			Path tempPath,
-			Metadata metadata,
-			Map<String, Object> metadataMap
+			Metadata metadata
 	) {
 	}
 
@@ -96,8 +97,7 @@ public class IngestService {
 										.put("fileName", multipartFile.getOriginalFilename())
 										.put("fileExtension", FileUtils.getExtension(multipartFile))
 										.put("fileMimeType", FileUtils.detectMimeTypeFromMultipartFile(multipartFile))
-										.put("fileSize", multipartFile.getSize()),
-								documentMetadataService.extract(multipartFile)
+										.put("fileSize", multipartFile.getSize())
 						)
 				);
 			} catch (Exception e) {
@@ -125,8 +125,7 @@ public class IngestService {
 					request.directoryId(),
 					request.creatorUserId(),
 					data.tempPath(),
-					data.metadata(),
-					data.metadataMap()
+					data.metadata()
 			);
 		}
 	}
@@ -140,13 +139,13 @@ public class IngestService {
 	) {
 
 
-
 //		try {
 //			Map<String, Object> metadataMap = documentMetadataService.extract(multipartFile);
 //			documentMetadataService.saveMetadata(document.getId(), metadataMap);
 //		} catch (Exception e) {
 //			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
 //		}
+
 
 		// 4. Tiếp theo: xử lý bất đồng bộ
 //		ingestAsync(
@@ -165,9 +164,7 @@ public class IngestService {
 			Long directoryId,
 			Long creatorUserId,
 			Path tempFile,
-			Metadata metadata,
-			Map<String, Object> metadataMap
-
+			Metadata metadata
 	) {
 		// 1. Tìm thư mục
 		Directory directory = directoryService.findByIdOrThrow(directoryId);
@@ -183,12 +180,6 @@ public class IngestService {
 					GlobalException.Type.INTERNAL_SERVER_ERROR,
 					e.getMessage()
 			);
-		}
-
-		try {
-			documentMetadataService.saveMetadata(document.getId(), metadataMap);
-		} catch (Exception e) {
-			log.warn("Extract metadata failed, documentId={}", document.getId(), e);
 		}
 
 		// 3. Tải file lên cloud
@@ -226,7 +217,6 @@ public class IngestService {
 
 			// 2. Tạo danh sách chunk
 			DocumentSource documentSource = new InputStreamDocumentSource(inputStream);
-
 			List<String> chunkList;
 			try {
 				chunkList = chunkService
@@ -239,14 +229,7 @@ public class IngestService {
 				return;
 			}
 
-				try {
-						tagService.autoTag(request.documentId(), chunkList);
-				} catch (Exception e) {
-					log.warn("Auto-tag failed (khong chan ingest), documentId={}",
-							request.documentId(), e);
-				}
-
-				// 3. Tạo danh sách vector từ danh sách chunk
+			// 3. Tạo danh sách vector từ danh sách chunk
 			List<BaseVector> embeddingList;
 			try {
 				embeddingList = embeddingService
