@@ -56,6 +56,10 @@ public class DocumentTag {
 	@Column(name = "tag_ids", columnDefinition = "bigint[]", nullable = true)
 	Long[] tagIds;
 
+	@JdbcTypeCode(value = SqlTypes.ARRAY)
+	@Column(name = "internal_tags", columnDefinition = "text[]", nullable = true)
+	String[] internalTags;
+
 	@Column(name = "updated_at", nullable = true)
 	Instant updatedAt;
 
