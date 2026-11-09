@@ -10,49 +10,66 @@ interface DocumentPreviewProps {
   directoryId?: string | number;
   onOpenFullScreen: () => void;
   onToggleLike?: (id: string | number) => void;
+  isLiking?: boolean;
 }
 
 export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
   file,
-  directoryId = 0,
+  directoryId: propDirectoryId,
   onOpenFullScreen,
   onToggleLike,
+  isLiking = false,
 }) => {
   const { classId } = useParams();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Ưu tiên directoryId gắn trong file, sau đó fallback về prop
+  const targetDirectoryId = file.directoryId ?? propDirectoryId;
+
   useEffect(() => {
-    let activeUrl: string | null = null;
+    let url: string | null = null;
     let isCancelled = false;
 
-    if (!classId) return;
+    if (
+      !file?.id ||
+      !classId ||
+      targetDirectoryId === undefined ||
+      targetDirectoryId === null
+    ) {
+      return;
+    }
+
+    setIsLoading(true);
+    setBlobUrl(null);
+    setError(null);
 
     classDocumentsAPI
-      .getFileBlob(classId, directoryId, file.id)
-      .then((blob) => {
+      .getFileBlob(classId, targetDirectoryId, file.id)
+      .then(async (blob) => {
         if (isCancelled) return;
-        activeUrl = URL.createObjectURL(blob);
-        setBlobUrl(activeUrl);
-        setError(null);
+
+        if (blob.type.includes("json")) {
+          throw new Error("Lỗi tải file");
+        }
+
+        url = URL.createObjectURL(blob);
+        setBlobUrl(url);
         setIsLoading(false);
       })
       .catch((err) => {
         if (isCancelled) return;
-        console.error("Lỗi tải bản xem trước file:", err);
-        setError("Không thể tải bản xem trước của tài liệu này.");
-        setBlobUrl(null);
+        console.error("Lỗi:", err);
+        setError("Không thể tải tài liệu.");
         setIsLoading(false);
       });
 
     return () => {
       isCancelled = true;
-      if (activeUrl) {
-        URL.revokeObjectURL(activeUrl);
-      }
+      if (url) URL.revokeObjectURL(url);
     };
-  }, [classId, directoryId, file.id]);
+  }, [classId, file?.id, targetDirectoryId]);
 
   const ext = file.fileExtension?.toLowerCase().replace(".", "");
 
@@ -63,7 +80,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
         <div>
           <h2 className="text-xl font-bold text-[var(--ink-1)]">{file.name}</h2>
           <p className="text-sm text-[var(--ink-3)] mt-1 flex items-center gap-2">
-            <span>{file.uploader}</span>
+            <span>{file.uploader || "Đang tải..."}</span>
             {file.uploadDate && (
               <>
                 <span>•</span>
@@ -77,8 +94,12 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
         <div className="flex items-center gap-3">
           {onToggleLike && (
             <button
+              type="button"
+              disabled={isLiking}
               onClick={() => onToggleLike(file.id)}
               className={`p-2 rounded-full transition-all active:scale-95 border ${
+                isLiking ? "opacity-60 cursor-not-allowed" : ""
+              } ${
                 file.isLiked
                   ? "bg-red-50 border-red-100 text-red-500 shadow-sm"
                   : "bg-white border-[var(--rule)] text-[var(--ink-3)] hover:text-red-500 hover:bg-red-50 hover:border-red-100 shadow-sm"
@@ -111,6 +132,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
           <div className="w-full h-full flex flex-col">
             <div className="absolute top-4 right-4 z-10">
               <button
+                type="button"
                 onClick={onOpenFullScreen}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-black/70 hover:bg-black text-white rounded-lg text-xs font-medium shadow backdrop-blur transition-all"
               >
@@ -131,6 +153,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
               className="max-h-[520px] max-w-full object-contain rounded-lg"
             />
             <button
+              type="button"
               onClick={onOpenFullScreen}
               className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-black/70 hover:bg-black text-white rounded-lg text-xs font-medium shadow backdrop-blur"
             >
@@ -140,7 +163,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
         ) : (
           <div className="text-center flex flex-col items-center p-6">
             <div className="w-16 h-20 bg-blue-500 rounded-lg flex items-center justify-center mb-4 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-6 h-6 bg-blue-600 rounded-bl-lg"></div>
+              <div className="absolute top-0 right-0 w-6 h-6 bg-blue-600 rounded-bl-lg" />
               <FileText size={32} color="white" />
             </div>
             <p className="text-[var(--ink-2)] text-sm font-medium mb-1">

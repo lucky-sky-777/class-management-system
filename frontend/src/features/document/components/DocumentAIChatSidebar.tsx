@@ -1,18 +1,20 @@
 // src/features/document/components/DocumentAIChatSidebar.tsx
 import React from "react";
-import { X, Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import { X, Send, User, Sparkles, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useDocumentAIChat } from "../hooks/useDocumentAIChat";
-import type { FileItem } from "@/features/document/types";
+import { useNavigate } from "react-router-dom";
+import { useAIChat } from "@/features/document/hooks/useAIChat";
+import type { FileItem, DocumentSourceDto } from "@/features/document/types";
 
 interface DocumentAIChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   file: FileItem | null;
+  classId?: string | number;
+  onSelectDocument?: (documentId: number) => void;
 }
 
-// Helper tách 'node' khỏi props để không truyền vào thẻ DOM và triệt tiêu lỗi ESLint no-unused-vars
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const cleanProps = <T extends Record<string, any>>(props: T) => {
   const { node, ...rest } = props;
@@ -20,11 +22,44 @@ const cleanProps = <T extends Record<string, any>>(props: T) => {
   return rest;
 };
 
-// 1. Component con chứa toàn bộ logic chat và state của hook
+// Chuyển đổi chuỗi [Nguồn: fileName] thành Markdown link mang protocol "doc://{id}"
+const injectSourceLinks = (text: string, sources?: DocumentSourceDto[]) => {
+  if (!text) return "";
+  if (!sources || sources.length === 0) {
+    return text.replace(/(\[(?:Nguồn|nguồn):\s*[^\]]+\])/gi, " *$1* ");
+  }
+
+  let formattedText = text;
+  sources.forEach((src) => {
+    const escapedFileName = src.fileName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(
+      `\\[(?:Nguồn|nguồn):\\s*${escapedFileName}\\]`,
+      "gi",
+    );
+    formattedText = formattedText.replace(
+      regex,
+      `[[Nguồn: ${src.fileName}]](doc://${src.id})`,
+    );
+  });
+
+  return formattedText;
+};
+
 const DocumentAIChatContent: React.FC<{
   file: FileItem | null;
+  classId?: string | number;
+  onSelectDocument?: (documentId: number) => void;
   onClose: () => void;
-}> = ({ file, onClose }) => {
+}> = ({ file, classId, onSelectDocument, onClose }) => {
+  const navigate = useNavigate();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chatContext: any = file
+    ? { type: "document", file, classId }
+    : classId
+      ? { type: "classroom", classId, className: "Lớp học" }
+      : { type: "global" };
+
   const {
     input,
     setInput,
@@ -33,185 +68,243 @@ const DocumentAIChatContent: React.FC<{
     messagesEndRef,
     handleSend,
     handleKeyDown,
-  } = useDocumentAIChat(file);
+  } = useAIChat(chatContext);
+
+  const handleOpenSource = (docId: number) => {
+    if (onSelectDocument) {
+      onSelectDocument(docId);
+      return;
+    }
+    if (classId) {
+      navigate(`/class/${classId}/documents?fileId=${docId}`);
+    } else {
+      window.open(`/documents/${docId}`, "_blank");
+    }
+  };
 
   return (
     <>
-      {/* Header của Chat */}
-      <div className="h-[60px] shrink-0 border-b border-[#222] flex items-center justify-between px-4 bg-[#111]">
-        <div className="flex items-center gap-2 text-white font-semibold min-w-0">
-          <Sparkles size={20} className="text-purple-500 shrink-0" />
+      {/* Header */}
+      <div className="h-[64px] shrink-0 flex items-center justify-between px-6 bg-[var(--bg-surface)] border-b border-[var(--rule)]">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-[var(--primary-fill)] flex items-center justify-center shrink-0">
+            <Sparkles size={18} className="text-[var(--primary)]" />
+          </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-semibold text-white">Trợ lý AI</span>
-            {file?.name && (
-              <span className="text-[11px] text-gray-400 truncate max-w-[240px]">
-                {file.name}
-              </span>
-            )}
+            <span className="text-[15px] font-medium text-[var(--ink-1)] tracking-tight">
+              Trợ lý AI
+            </span>
+            <span className="text-[12px] text-[var(--ink-2)] truncate max-w-[250px]">
+              {file?.name ? file.name : "Hỗ trợ nhóm học"}
+            </span>
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="text-gray-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
+          className="text-[var(--ink-3)] hover:text-[var(--ink-1)] p-2 rounded-full hover:bg-[var(--bg-surface-2)] transition-colors"
         >
           <X size={20} />
         </button>
       </div>
 
-      {/* Khu vực hiển thị tin nhắn */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-8 bg-[var(--bg-surface)] no-scrollbar">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex gap-3 ${
-              msg.sender === "user" ? "flex-row-reverse" : "flex-row"
-            }`}
+            className={`flex gap-4 ${msg.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
           >
+            {/* Avatar */}
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                msg.sender === "user" ? "bg-blue-600" : "bg-purple-600"
+              className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-[var(--shadow-sm)] ${
+                msg.sender === "user"
+                  ? "bg-[var(--bg-surface-2)]"
+                  : "bg-gradient-to-tr from-[var(--primary)] to-[var(--violet)]"
               }`}
             >
               {msg.sender === "user" ? (
-                <User size={16} className="text-white" />
+                <User size={18} className="text-[var(--ink-2)]" />
               ) : (
-                <Bot size={16} className="text-white" />
+                <Sparkles size={18} className="text-white" />
               )}
             </div>
 
-            {/* Bubble tin nhắn: Chữ Bot được set text-[#E4E4E7] nền #222 tương phản rõ nét */}
+            {/* Khối tin nhắn */}
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+              className={`max-w-[90%] px-1 py-1.5 text-[15px] leading-relaxed ${
                 msg.sender === "user"
-                  ? "bg-[#2D68FE] text-white rounded-tr-sm whitespace-pre-wrap"
-                  : "bg-[#222] text-[#E4E4E7] rounded-tl-sm border border-[#333]/50 overflow-hidden"
+                  ? "bg-[var(--bg-surface-2)] text-[var(--ink-1)] rounded-[24px] rounded-tr-[4px] px-5 py-3.5 whitespace-pre-wrap shadow-[var(--shadow-xs)]"
+                  : "bg-transparent text-[var(--ink-1)]"
               }`}
             >
               {msg.sender === "user" ? (
                 msg.text
               ) : (
-                <div className="markdown-content space-y-2 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 text-[#E4E4E7]">
+                <div className="markdown-content space-y-3 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 w-full overflow-hidden">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      // Headings
+                      a: (props) => {
+                        const href = props.href || "";
+                        if (href.startsWith("doc://")) {
+                          const docId = Number(href.replace("doc://", ""));
+                          return (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleOpenSource(docId);
+                              }}
+                              title="Nhấn để mở tài liệu này"
+                              className="inline-flex items-center gap-1.5 text-[12px] italic font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] underline underline-offset-4 hover:bg-[var(--primary-fill)] px-1.5 py-0.5 rounded-[var(--r-xs)] transition-colors cursor-pointer select-none mx-1 my-1"
+                            >
+                              <span>{props.children}</span>
+                              <ExternalLink
+                                size={12}
+                                className="inline opacity-80"
+                              />
+                            </button>
+                          );
+                        }
+                        return (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[var(--primary)] underline underline-offset-2 hover:text-[var(--primary-hover)] break-words transition-colors"
+                            {...cleanProps(props)}
+                          >
+                            {props.children}
+                          </a>
+                        );
+                      },
+                      em: (props) => {
+                        const content = String(props.children ?? "");
+                        const isSource =
+                          content.includes("Nguồn:") ||
+                          content.includes("nguồn:");
+                        if (isSource) {
+                          return (
+                            <span
+                              className="text-[12px] italic font-medium text-[var(--ink-3)] inline-block px-1 opacity-80 select-none mx-1"
+                              {...cleanProps(props)}
+                            >
+                              {props.children}
+                            </span>
+                          );
+                        }
+                        return (
+                          <em
+                            className="text-[var(--ink-2)] italic"
+                            {...cleanProps(props)}
+                          >
+                            {props.children}
+                          </em>
+                        );
+                      },
                       h1: (props) => (
                         <h1
-                          className="text-base font-bold text-white mt-3 mb-1"
+                          className="text-lg font-bold text-[var(--ink-1)] mt-4 mb-2"
                           {...cleanProps(props)}
                         />
                       ),
                       h2: (props) => (
                         <h2
-                          className="text-sm font-bold text-white mt-2.5 mb-1"
+                          className="text-base font-bold text-[var(--ink-1)] mt-4 mb-2"
                           {...cleanProps(props)}
                         />
                       ),
                       h3: (props) => (
                         <h3
-                          className="text-xs font-semibold text-purple-400 mt-2 mb-1 uppercase tracking-wider"
+                          className="text-[15px] font-semibold text-[var(--primary)] mt-3 mb-2"
                           {...cleanProps(props)}
                         />
                       ),
-
-                      // Paragraph & Lists: Màu sáng rõ rệt text-gray-100
                       p: (props) => (
                         <p
-                          className="leading-relaxed mb-2 last:mb-0 text-gray-100"
+                          className="leading-7 mb-3 last:mb-0 text-[var(--ink-2)] break-words"
                           {...cleanProps(props)}
                         />
                       ),
                       ul: (props) => (
                         <ul
-                          className="list-disc pl-5 space-y-1 mb-2 text-gray-100"
+                          className="list-disc pl-6 space-y-1.5 mb-3 text-[var(--ink-2)] marker:text-[var(--ink-3)]"
                           {...cleanProps(props)}
                         />
                       ),
                       ol: (props) => (
                         <ol
-                          className="list-decimal pl-5 space-y-1 mb-2 text-gray-100"
+                          className="list-decimal pl-6 space-y-1.5 mb-3 text-[var(--ink-2)] marker:text-[var(--ink-3)]"
                           {...cleanProps(props)}
                         />
                       ),
                       li: (props) => (
                         <li
-                          className="pl-0.5 leading-normal text-gray-100"
+                          className="pl-1 leading-relaxed break-words"
                           {...cleanProps(props)}
                         />
                       ),
-
-                      // Emphasis
                       strong: (props) => (
                         <strong
-                          className="font-semibold text-white"
+                          className="font-semibold text-[var(--ink-1)]"
                           {...cleanProps(props)}
                         />
                       ),
-                      em: (props) => (
-                        <em
-                          className="text-gray-300 italic"
-                          {...cleanProps(props)}
-                        />
-                      ),
-
-                      // Code & Inline Code
                       code: (props) => {
                         const { className, children, ...restProps } =
                           cleanProps(props);
                         const isBlock = /language-/.test(className || "");
                         return isBlock ? (
-                          <pre className="bg-[#161616] border border-[#333] rounded-lg p-3 my-2 overflow-x-auto text-xs text-gray-200 font-mono">
+                          <pre className="bg-[var(--bg-surface-2)] border border-[var(--rule)] rounded-[var(--r-md)] p-4 my-3 overflow-x-auto text-[13px] text-[var(--ink-1)] font-mono shadow-[var(--shadow-xs)] pb-5 w-full">
                             <code className={className} {...restProps}>
                               {children}
                             </code>
                           </pre>
                         ) : (
                           <code
-                            className="bg-[#181818] text-purple-300 border border-[#333] rounded px-1.5 py-0.5 text-xs font-mono"
+                            className="bg-[var(--bg-surface-2)] text-[var(--primary)] border border-[var(--rule)] rounded-[var(--r-xs)] px-1.5 py-0.5 text-[13px] font-mono break-all"
                             {...restProps}
                           >
                             {children}
                           </code>
                         );
                       },
-
-                      // Table
                       table: (props) => (
-                        <div className="overflow-x-auto my-2 rounded-lg border border-[#333]">
+                        <div className="overflow-x-auto my-4 rounded-[var(--r-md)] border border-[var(--rule-md)] pb-3 w-full">
                           <table
-                            className="w-full text-left text-xs border-collapse"
+                            className="w-full text-left text-sm border-collapse bg-[var(--bg-surface)] min-w-[300px]"
                             {...cleanProps(props)}
                           />
                         </div>
                       ),
                       thead: (props) => (
                         <thead
-                          className="bg-[#181818] border-b border-[#333] text-gray-100 font-medium"
+                          className="bg-[var(--bg-surface-2)] border-b border-[var(--rule-md)] text-[var(--ink-1)] font-medium"
                           {...cleanProps(props)}
                         />
                       ),
                       th: (props) => (
                         <th
-                          className="px-3 py-2 border-r border-[#333] last:border-none"
+                          className="px-4 py-3 border-r border-[var(--rule)] last:border-none"
                           {...cleanProps(props)}
                         />
                       ),
                       td: (props) => (
                         <td
-                          className="px-3 py-2 border-t border-r border-[#333] last:border-none text-gray-200"
+                          className="px-4 py-3 border-t border-r border-[var(--rule)] last:border-none text-[var(--ink-2)]"
                           {...cleanProps(props)}
                         />
                       ),
                       hr: (props) => (
                         <hr
-                          className="border-[#333] my-3"
+                          className="border-[var(--rule-md)] my-6"
                           {...cleanProps(props)}
                         />
                       ),
                     }}
                   >
-                    {msg.text}
+                    {injectSourceLinks(msg.text, msg.sources)}
                   </ReactMarkdown>
                 </div>
               )}
@@ -219,16 +312,19 @@ const DocumentAIChatContent: React.FC<{
           </div>
         ))}
 
-        {/* Hiệu ứng loading: "Đang suy nghĩ..." */}
         {isLoading && (
-          <div className="flex gap-3 flex-row items-center">
-            <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-              <Bot size={16} className="text-white" />
+          <div className="flex gap-4 items-center animate-in fade-in duration-300">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[var(--primary)] to-[var(--violet)] flex items-center justify-center shrink-0 shadow-[var(--shadow-sm)]">
+              <Sparkles size={18} className="text-white animate-pulse" />
             </div>
-            <div className="bg-[#222] border border-[#333]/50 rounded-2xl rounded-tl-sm px-4 py-2.5 flex items-center gap-2">
-              <Loader2 size={15} className="text-purple-400 animate-spin" />
-              <span className="text-xs text-gray-300 font-medium animate-pulse tracking-wide">
-                Đang suy nghĩ...
+            <div className="flex items-center gap-3 bg-transparent text-[var(--ink-2)] px-1 py-2">
+              <span className="text-[14px] italic tracking-wide animate-pulse">
+                Đang suy nghĩ
+              </span>
+              <span className="flex space-x-1 items-center h-4 translate-y-[2px]">
+                <span className="h-1.5 w-1.5 bg-[var(--primary)] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="h-1.5 w-1.5 bg-[var(--violet)] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="h-1.5 w-1.5 bg-[var(--primary)] rounded-full animate-bounce"></span>
               </span>
             </div>
           </div>
@@ -236,29 +332,36 @@ const DocumentAIChatContent: React.FC<{
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Footer: Ô nhập chat */}
-      <div className="p-4 border-t border-[#222] bg-[#111]">
-        <div className="relative flex items-end bg-[#222] rounded-xl border border-[#333] focus-within:border-purple-500 overflow-hidden transition-colors">
+      {/* Input Area */}
+      <div className="p-4 sm:p-5 bg-[var(--bg-surface)] border-t border-[var(--rule)]">
+        <div className="relative flex flex-col bg-[var(--bg-surface-2)] rounded-[var(--r-xl)] border border-[var(--rule-md)] focus-within:border-[var(--primary)] focus-within:bg-[var(--bg-surface)] focus-within:shadow-[var(--shadow-sm)] overflow-hidden transition-all">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Hỏi AI về tài liệu này..."
-            className="w-full bg-transparent text-white text-sm px-4 py-3 max-h-32 outline-none resize-none overflow-y-auto placeholder:text-gray-500"
+            placeholder={
+              file?.name
+                ? "Hỏi điều gì đó về tài liệu này..."
+                : "Đặt câu hỏi cho AI..."
+            }
+            className="w-full bg-transparent text-[var(--ink-1)] text-[15px] px-5 py-4 pb-14 max-h-40 outline-none resize-none overflow-y-auto no-scrollbar placeholder:text-[var(--ink-3)] leading-relaxed"
             rows={1}
           />
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="p-3 text-purple-500 hover:text-purple-400 disabled:text-gray-600 disabled:cursor-not-allowed transition-colors shrink-0"
-          >
-            <Send size={20} />
-          </button>
+          <div className="absolute bottom-2.5 right-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading}
+              className="p-2.5 rounded-full bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] disabled:bg-[var(--bg-surface-3)] disabled:text-[var(--ink-4)] disabled:cursor-not-allowed transition-colors shadow-sm"
+            >
+              <Send size={18} className="translate-x-[1px] translate-y-[1px]" />
+            </button>
+          </div>
         </div>
-        <div className="text-center mt-2">
-          <span className="text-[10px] text-gray-500">
-            AI có thể mắc lỗi. Hãy kiểm tra lại các thông tin quan trọng.
+        <div className="text-center mt-3 mb-1">
+          <span className="text-[11px] text-[var(--ink-3)] font-medium">
+            Trợ lý AI có thể cung cấp thông tin không chính xác. Hãy kiểm chứng
+            lại.
           </span>
         </div>
       </div>
@@ -266,33 +369,36 @@ const DocumentAIChatContent: React.FC<{
   );
 };
 
-// 2. Component cha điều khiển hiển thị Drawer & gán key reset
 export const DocumentAIChatSidebar: React.FC<DocumentAIChatSidebarProps> = ({
   isOpen,
   onClose,
   file,
+  classId,
+  onSelectDocument,
 }) => {
   return (
     <>
-      {/* Backdrop mờ trên mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-[101] lg:hidden"
+          className="fixed inset-0 bg-[var(--bg-overlay)] backdrop-blur-sm z-[101] lg:hidden transition-opacity"
           onClick={onClose}
         />
       )}
 
-      {/* Container Drawer */}
       <div
-        className={`fixed top-[60px] right-0 bottom-0 w-full sm:w-[420px] bg-[#0A0A0A] border-l border-[#222] z-[102] flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed top-[60px] right-0 bottom-0 w-[100%] lg:w-[480px] bg-[var(--bg-surface)] border-l border-[var(--rule)] z-[102] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-[var(--shadow-lg)] ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <DocumentAIChatContent
-          key={file?.id ?? "empty"}
-          file={file}
-          onClose={onClose}
-        />
+        {isOpen && (
+          <DocumentAIChatContent
+            key={file?.id ?? "empty"}
+            file={file}
+            classId={classId}
+            onSelectDocument={onSelectDocument}
+            onClose={onClose}
+          />
+        )}
       </div>
     </>
   );

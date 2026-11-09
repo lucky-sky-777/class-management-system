@@ -11,6 +11,7 @@ export const useDocumentDetail = (
     initialFile ?? null,
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isTogglingLike, setIsTogglingLike] = useState<boolean>(false);
 
   // Đồng bộ nhanh khi fileId thay đổi
   const [prevId, setPrevId] = useState(fileId);
@@ -27,9 +28,11 @@ export const useDocumentDetail = (
 
     const loadDetail = async () => {
       try {
-        const fullData = await classDocumentsAPI.getFileDetail(fileId);
+        const fullData = await classDocumentsAPI.getFileDetail(
+          fileId,
+          initialFile,
+        );
         if (isMounted) {
-          // Gộp dữ liệu: giữ lại các thông tin của file ban đầu nếu backend metadata chưa có
           setFileDetail((prev) => ({
             ...(prev || {}),
             ...fullData,
@@ -57,19 +60,58 @@ export const useDocumentDetail = (
     };
   }, [fileId]);
 
-  const handleToggleLike = useCallback(() => {
-    setFileDetail((prev) =>
-      prev
-        ? {
-            ...prev,
-            isLiked: !prev.isLiked,
-            likes: prev.isLiked
-              ? Math.max(0, (prev.likes || 1) - 1)
-              : (prev.likes || 0) + 1,
-          }
-        : null,
-    );
-  }, []);
+  // Xử lý gọi API Toggle Like / Bookmark kết hợp Optimistic Update
+  const handleToggleLike = useCallback(
+    async (targetId?: string | number) => {
+      const activeId = targetId ?? fileDetail?.id ?? fileId;
+      if (!activeId || isTogglingLike || !fileDetail) return;
 
-  return { fileDetail, isLoading, handleToggleLike };
+      // 1. Lưu lại snapshot trước khi update để rollback khi lỗi
+      const prevIsLiked = fileDetail.isLiked ?? false;
+      const prevLikes = fileDetail.likes ?? 0;
+
+      // 2. Cập nhật UI tức thì (Optimistic UI)
+      const nextIsLiked = !prevIsLiked;
+      setFileDetail((prev) =>
+        prev
+          ? {
+              ...prev,
+              isLiked: nextIsLiked,
+              likes: nextIsLiked
+                ? (prev.likes ?? 0) + 1
+                : Math.max(0, (prev.likes ?? 1) - 1),
+            }
+          : null,
+      );
+
+      // 3. Gửi request lên server
+      setIsTogglingLike(true);
+      try {
+        await classDocumentsAPI.toggleBookmark(activeId);
+      } catch (err) {
+        console.error("Lỗi khi gọi API bookmark/like:", err);
+        // Rollback nếu request thất bại
+        setFileDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                isLiked: prevIsLiked,
+                likes: prevLikes,
+              }
+            : null,
+        );
+      } finally {
+        setIsTogglingLike(false);
+      }
+    },
+    [fileDetail, fileId, isTogglingLike],
+  );
+
+  return {
+    fileDetail,
+    setFileDetail,
+    isLoading,
+    isTogglingLike,
+    handleToggleLike,
+  };
 };

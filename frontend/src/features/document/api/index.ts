@@ -57,7 +57,7 @@ export const classDocumentsAPI = {
   },
 
   createFolder: async (
-      classId: string | number,
+    classId: string | number,
     data: CreateDirectoryRequestDto,
   ): Promise<ResponseDTO<FolderItem>> => {
     return apiClient.post<ResponseDTO<FolderItem>>(
@@ -67,20 +67,25 @@ export const classDocumentsAPI = {
   },
 
   renameFolder: async (
-      classId: string | number,
+    classId: string | number,
     directoryId: number | string,
     newName: string,
   ): Promise<ResponseDTO<void>> => {
-    return apiClient.patch<ResponseDTO<void>>(`/classes/${classId}/directories/${directoryId}`, {
-      name: newName,
-    });
+    return apiClient.patch<ResponseDTO<void>>(
+      `/classes/${classId}/directories/${directoryId}`,
+      {
+        name: newName,
+      },
+    );
   },
 
   deleteFolder: async (
-      classId: string | number,
+    classId: string | number,
     directoryId: number | string,
   ): Promise<ResponseDTO<void>> => {
-    return apiClient.delete<ResponseDTO<void>>(`/classes/${classId}/directories/${directoryId}`);
+    return apiClient.delete<ResponseDTO<void>>(
+      `/classes/${classId}/directories/${directoryId}`,
+    );
   },
 
   // --- DOCUMENT ---
@@ -240,5 +245,16 @@ export const classDocumentsAPI = {
         tags: ["Slide", "Thuyết trình"],
       },
     ];
+  },
+
+  //api action
+  // like
+  toggleBookmark: async (
+    documentId: string | number,
+  ): Promise<ResponseDTO<void>> => {
+    return apiClient.post<ResponseDTO<void>>(
+      `document-bookmarks/documents/${documentId}`,
+      {},
+    );
   },
 };

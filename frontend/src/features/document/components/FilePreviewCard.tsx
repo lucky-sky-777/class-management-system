@@ -22,7 +22,6 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
   const [editName, setEditName] = useState(fileName);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Chỉ focus và chọn vùng chữ khi người dùng kích hoạt chỉnh sửa
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -37,7 +36,7 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
 
   const handleStartEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setEditName(fileName); // Cập nhật tên mới nhất ngay trong event handler
+    setEditName(fileName);
     setIsEditing(true);
   };
 
@@ -63,14 +62,19 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
     <div
       onClick={() => !isEditing && onClick()}
       className={`bg-[var(--bg-surface)] border ${
-        isEditing ? "border-[#00B4D8] shadow-md" : "border-[var(--rule)]"
-      } rounded-xl p-4 flex flex-col gap-3 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 w-full group relative`}
+        isEditing
+          ? "border-[var(--primary)] shadow-[var(--shadow-md)]"
+          : "border-[var(--rule)] shadow-[var(--shadow-xs)]"
+      } rounded-[var(--r-xl)] p-4 flex flex-col gap-3 hover:shadow-[var(--shadow-md)] hover:border-[var(--rule-md)] cursor-pointer transition-all duration-200 hover:-translate-y-0.5 w-full group relative`}
     >
       <div className="flex justify-between items-start">
-        <DocumentIcon
-          extension={file.fileExtension || (file as any).fileType || ""}
-          size={32}
-        />
+        {/* XỬ LÝ CHÓI MẮT: Giảm độ sáng 15% và bão hòa màu xuống ở Dark Mode */}
+        <div className="dark:brightness-[0.85] dark:saturate-[0.9] transition-all duration-200">
+          <DocumentIcon
+            extension={file.fileExtension || (file as any).fileType || ""}
+            size={32}
+          />
+        </div>
 
         {!isEditing && (onEdit || onDelete) && (
           <div className="flex items-center gap-1 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
@@ -78,7 +82,7 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
               <button
                 type="button"
                 onClick={handleStartEdit}
-                className="p-1.5 text-[var(--ink-3)] hover:text-[#00B4D8] hover:bg-[#E5F9FD] rounded-md transition-colors active:scale-95"
+                className="p-1.5 text-[var(--ink-3)] hover:text-[var(--primary)] hover:bg-[var(--primary-fill)] rounded-[var(--r-sm)] transition-colors active:scale-95"
                 title="Đổi tên"
               >
                 <Edit2 size={16} />
@@ -98,7 +102,7 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
                     onDelete(file.id);
                   }
                 }}
-                className="p-1.5 text-[var(--ink-3)] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors active:scale-95"
+                className="p-1.5 text-[var(--ink-3)] hover:text-[var(--red)] hover:bg-[var(--red-fill)] rounded-[var(--r-sm)] transition-colors active:scale-95"
                 title="Xóa file"
               >
                 <Trash2 size={16} />
@@ -117,7 +121,7 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
             onBlur={handleSave}
             onKeyDown={handleKeyDown}
             onClick={(e) => e.stopPropagation()}
-            className="w-full text-sm font-bold text-[var(--ink-1)] border border-[#00B4D8] rounded px-1 py-0.5 outline-none focus:ring-2 focus:ring-blue-100 transition-shadow bg-white"
+            className="w-full text-sm font-bold text-[var(--ink-1)] border border-[var(--primary)] rounded-[var(--r-sm)] px-1.5 py-0.5 outline-none focus:ring-2 focus:ring-[var(--primary-border)] transition-shadow bg-[var(--bg-surface-2)]"
           />
         ) : (
           <h4
@@ -132,7 +136,7 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
           <p className="text-[11px] text-[var(--ink-3)]">{file.size || ""}</p>
           {file.uploader && (
             <>
-              <span className="text-[11px] text-[var(--rule)]">•</span>
+              <span className="text-[11px] text-[var(--rule-lg)]">•</span>
               <p className="text-[11px] text-[var(--ink-3)] truncate">
                 {file.uploader}
               </p>
