@@ -156,4 +156,32 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     """)
 	List<Document> findAllInClusterIndexByModelIdAndPublicClass(Integer clusterIndex, Long modelId, Pageable pageable);
 
+	@Query(value = """
+    SELECT d.*
+    FROM documents d
+    WHERE EXISTS (
+        SELECT 1
+        FROM directory_documents dd
+        JOIN directories dir ON dir.id = dd.directory_id
+        JOIN classes c ON c.id = dir.class_id
+        WHERE dd.document_id = d.id
+            AND (
+                c.privacy = 'PUBLIC'
+                OR EXISTS (
+                    SELECT 1
+                    FROM class_users cu
+                    WHERE cu.class_id = c.id
+                        AND cu.user_id = :userId
+                )
+            )
+    )
+    ORDER BY d.embedding <=> CAST(:embedding AS vector)
+    LIMIT :limit
+    """, nativeQuery = true)
+	List<Document> findAllByEmbeddingCompare(
+			@Param("userId") Long userId,
+			@Param("embedding") float[] embedding,
+			@Param("limit") int limit
+	);
+
 }

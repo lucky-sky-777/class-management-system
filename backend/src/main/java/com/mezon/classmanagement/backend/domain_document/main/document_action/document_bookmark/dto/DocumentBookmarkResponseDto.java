@@ -1,4 +1,4 @@
-package com.mezon.classmanagement.backend.domain_document.main.document_bookmark.dto;
+package com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

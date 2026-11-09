@@ -5,6 +5,8 @@ import com.mezon.classmanagement.backend.domain_document.component.document_chun
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.repository.DocumentChunkRepository;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.BaseVector;
+import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
+import com.mezon.classmanagement.backend.domain_document.main.document.repository.DocumentRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

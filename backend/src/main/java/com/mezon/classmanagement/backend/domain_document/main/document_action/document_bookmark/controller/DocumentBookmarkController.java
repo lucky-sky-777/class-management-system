@@ -1,10 +1,10 @@
-package com.mezon.classmanagement.backend.domain_document.main.document_bookmark.controller;
+package com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.controller;
 
 import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.dto.DocumentBookmarkResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.service.DocumentBookmarkService;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.dto.DocumentBookmarkResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.service.DocumentBookmarkService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -40,6 +40,18 @@ public class DocumentBookmarkController {
 		return ResponseDTO.ok("Successful");
 	}
 
+	@GetMapping("/{documentId}")
+	public ResponseDTO<List<DocumentBookmarkResponseDto>> getListByDocument(
+			@PathVariable Long documentId
+	) {
+		List<DocumentBookmarkResponseDto> response = documentBookmarkService.getListByDocument(documentId);
+
+		return ResponseDTO.ok(
+				"Get document bookmark list by document successful",
+				response
+		);
+	}
+
 	@GetMapping("/users/current")
 	public ResponseDTO<List<DocumentBookmarkResponseDto>> getListByCurrentUser() {
 		Authentication authentication = authService.getAuthentication();
@@ -49,18 +61,6 @@ public class DocumentBookmarkController {
 
 		return ResponseDTO.ok(
 				"Get document bookmark list by current user successful",
-				response
-		);
-	}
-
-	@GetMapping("/{documentId}")
-	public ResponseDTO<List<DocumentBookmarkResponseDto>> getListByDocument(
-			@PathVariable Long documentId
-	) {
-		List<DocumentBookmarkResponseDto> response = documentBookmarkService.getListByDocument(documentId);
-
-		return ResponseDTO.ok(
-				"Get document bookmark list by document successful",
 				response
 		);
 	}

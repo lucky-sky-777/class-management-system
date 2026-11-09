@@ -1,10 +1,8 @@
-package com.mezon.classmanagement.backend.domain_document.main.document_bookmark.mapper;
+package com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.mapper;
 
 import com.mezon.classmanagement.backend.config.MapStructConfig;
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.dto.DocumentBookmarkResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.entity.DocumentBookmark;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.dto.DocumentBookmarkResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.entity.DocumentBookmark;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;

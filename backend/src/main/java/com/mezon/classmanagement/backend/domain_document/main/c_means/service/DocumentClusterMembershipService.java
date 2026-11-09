@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.beans.Transient;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,6 +88,11 @@ public class DocumentClusterMembershipService {
 		if (!membershipBatch.isEmpty()) {
 			documentClusterMembershipRepository.saveAll(membershipBatch);
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public List<DocumentClusterMembership> findAllByModelAndDocumentJoinFetchCluster(Long modelId, Long documentId) {
+		return documentClusterMembershipRepository.findAllByModel_IdAndDocument_IdJoinFetchCluster(modelId, documentId);
 	}
 
 	@Transactional(readOnly = true)

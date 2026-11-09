@@ -96,6 +96,13 @@ public class DocumentService {
 		}
 	}
 
+	@Transactional(readOnly = true)
+	public List<DocumentResponseDto> findAllByEmbeddingCompare(Long userId, float[] embedding, int limit) {
+		return documentMapper.toDocumentResponseDtoList(
+				documentRepository.findAllByEmbeddingCompare(userId, embedding, limit)
+		);
+	}
+
 	@Transactional
 	public boolean existsInAnyClassJoinedByUser(Long documentId, Long userId) {
 		return documentRepository.existsInAnyClassJoinedByUser(documentId, userId);

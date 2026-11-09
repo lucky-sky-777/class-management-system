@@ -279,12 +279,45 @@ public class EmbeddingUtils {
 			norm += v * v;
 		}
 		norm = Math.sqrt(norm);
+		return (norm > 1e-12) ? divide(vector, norm) : new double[vector.length];
+	}
+
+	public static double[] multiply(
+			float[] vector,
+			double value
+	) {
 		double[] result = new double[vector.length];
-		if (norm > 1e-12) {
-			for (int i = 0; i < vector.length; i++) {
-				result[i] = vector[i] / norm;
-			}
+
+		for (int i = 0; i < vector.length; i++) {
+			result[i] = ((double) vector[i]) * value;
 		}
+
+		return result;
+	}
+
+	public static double[] multiply(
+			double[] vector,
+			double value
+	) {
+		double[] result = new double[vector.length];
+
+		for (int i = 0; i < vector.length; i++) {
+			result[i] = vector[i] * value;
+		}
+
+		return result;
+	}
+
+	public static double[] divide(
+			double[] vector,
+			double value
+	) {
+		double[] result = new double[vector.length];
+
+		for (int i = 0; i < vector.length; i++) {
+			result[i] = vector[i] / value;
+		}
+
 		return result;
 	}
 

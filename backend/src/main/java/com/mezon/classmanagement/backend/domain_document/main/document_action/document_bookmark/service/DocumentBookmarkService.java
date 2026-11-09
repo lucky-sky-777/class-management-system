@@ -1,12 +1,12 @@
-package com.mezon.classmanagement.backend.domain_document.main.document_bookmark.service;
+package com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.service;
 
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.dto.DocumentBookmarkResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.entity.DocumentBookmark;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.mapper.DocumentBookmarkMapper;
-import com.mezon.classmanagement.backend.domain_document.main.document_bookmark.repository.DocumentBookmarkRepository;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.dto.DocumentBookmarkResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.entity.DocumentBookmark;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.mapper.DocumentBookmarkMapper;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_bookmark.repository.DocumentBookmarkRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -60,20 +60,18 @@ public class DocumentBookmarkService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<DocumentBookmark> getRawListByUser(Long clientUserId) {
+		return documentBookmarkRepository
+				.findAllByCreator_IdOrderByCreatedAtDesc(clientUserId);
+	}
+
+	@Transactional(readOnly = true)
 	public List<DocumentBookmarkResponseDto> getListByDocument(Long documentId) {
 		return documentBookmarkMapper
 				.toDocumentBookmarkResponseDtoList(
 						documentBookmarkRepository
 								.findAllByDocument_IdAndClassIsPublic(documentId)
 				);
-	}
-
-	@Transactional(readOnly = true)
-	public boolean existsByDocumentAndCreator(
-			Long documentId,
-			Long creatorUserId
-	) {
-		return documentBookmarkRepository.existsByDocument_IdAndCreator_Id(documentId, creatorUserId);
 	}
 
 	@Transactional
@@ -87,7 +85,7 @@ public class DocumentBookmarkService {
 						creatorUserId
 				)
 				.orElseGet(() -> null
-//						DocumentBookmark.builder()
+//						DocumentDownload.builder()
 //								.document(Document.create(documentId))
 //								.creator(User.create(creatorUserId))
 //								.build()

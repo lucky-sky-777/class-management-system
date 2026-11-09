@@ -2,6 +2,7 @@ package com.mezon.classmanagement.backend.c_means;
 
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
+import com.mezon.classmanagement.backend.domain_document.component.user_vector.UserVectorService;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.FcmTrainingResult;
@@ -44,6 +45,13 @@ public class CMeansTest {
 	RecommendationClusterRepository recommendationClusterRepository;
 	DocumentClusterMembershipRepository documentClusterMembershipRepository;
 	RecommendationService recommendationService;
+
+	UserVectorService userVectorService;
+
+	@Test
+	public void testUserVector() {
+		userVectorService.test(5L);
+	}
 
 	private static final int SAVE_BATCH_SIZE = 1000;
 

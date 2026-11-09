@@ -3,6 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.main.recommendation.se
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.domain.auth.service.UserService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
+import com.mezon.classmanagement.backend.domain_document.component.user_vector.UserVectorService;
 import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationCluster;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationModel;
@@ -13,14 +14,21 @@ import com.mezon.classmanagement.backend.domain_document.main.document.dto.respo
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.DistanceFromUserToClusterCenter;
 import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.MembershipOfUserWithCluster;
+import com.mezon.classmanagement.backend.domain_document.main.search.service.SearchService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings(value = {WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -33,6 +41,119 @@ public class RecommendationService {
 	RecommendationClusterService recommendationClusterService;
 	RecommendationModelService recommendationModelService;
 	DocumentClusterMembershipService documentClusterMembershipService;
+	UserVectorService userVectorService;
+	SearchService searchService;
+
+	public void evaluate(List<DocumentResponseDto> candidateList) {
+
+	}
+
+	/**
+	 * Lấy danh sách tài liệu ứng viên
+	 *
+	 * @param userId ID người dùng cần lấy danh sách
+	 * @return Danh sách các tài liệu tìm được
+	 */
+	public List<DocumentResponseDto> getCandidate(Long userId) {
+		// 1. Lấy mô hình gợi ý mới nhất
+		RecommendationModel latestModel = recommendationModelService
+				.findLatestReadyModelOrThrow();
+
+		List<DocumentResponseDto> candidateSource1 = getCandidateSource1(userId, latestModel.getId());
+		List<DocumentResponseDto> candidateSource2 = getCandidateSource2(userId);
+
+		// Hợp nhất các danh sách, loại bỏ các tài liệu trùng
+		List<DocumentResponseDto> candidateList = merge(candidateSource1, candidateSource2);
+
+
+		return candidateList;
+	}
+
+	@SafeVarargs
+	public final List<DocumentResponseDto> merge(List<DocumentResponseDto>... src) {
+		return new ArrayList<>(
+				Stream.of(src)
+						.flatMap(List::stream)
+						.collect(
+								Collectors.toMap(
+										DocumentResponseDto::getId,
+										Function.identity(),
+										(a, b) -> a,
+										LinkedHashMap::new
+								))
+						.values()
+		);
+	}
+
+	public List<DocumentResponseDto> getCandidateSource1(
+			Long userId,
+			Long modelId
+	) {
+		List<DocumentResponseDto> result = new ArrayList<>();
+
+		// 1. Lấy danh sách mức độ quan tâm của người dùng với mỗi cụm
+		Optional<List<UserVectorService.ClusterPreference>> optionalClusterPreferenceList =
+				userVectorService.calculateClusterPreference(
+						userVectorService.getClusterInteractionList(
+								userId,
+								modelId
+						),
+						0.1,
+						Instant.now()
+				);
+
+		Consumer<List<UserVectorService.ClusterPreference>> c = clusterPreferenceList -> {
+			// 2. Lấy Top-2 cụm được người dùng quan tâm nhất.
+			List<UserVectorService.ClusterPreference> top2Cluster = userVectorService.getTopClusterPreferenceList(
+					clusterPreferenceList,
+					2
+			);
+
+			// 3. Với mỗi cụm, lấy Top-2 tài liệu có membership cao nhất.
+			for (UserVectorService.ClusterPreference cluster : top2Cluster) {
+				result.addAll(
+						documentService
+								.findTopPublicDocumentInClusterIndexByModelId(
+										cluster.clusterIndex(),
+										modelId,
+										2
+								)
+				);
+			}
+		};
+
+		optionalClusterPreferenceList.ifPresent(c);
+
+		return result;
+	}
+
+	public List<DocumentResponseDto> getCandidateSource2(Long userId) {
+		List<DocumentResponseDto> result = new ArrayList<>();
+
+		List<UserVectorService.LongTermDocumentInteraction> longTermDocumentInteractionList =
+				userVectorService.getLongTermDocumentInteractionList(
+						userId
+				);
+
+		Optional<UserVectorService.LongTermPreference> longTermPreference =
+				userVectorService.calculateLongTermPreference(
+						longTermDocumentInteractionList,
+						0.1,
+						Instant.now()
+				);
+
+		Consumer<UserVectorService.LongTermPreference> longTermPreferenceConsumer = longTermPreference1 -> result.addAll(
+				documentService.findAllByEmbeddingCompare(
+						userId,
+						EmbeddingUtils.toFloatArray(longTermPreference1.preference()),
+						2
+				)
+		);
+
+		longTermPreference.ifPresent(longTermPreferenceConsumer);
+
+		return result;
+	}
 
 	public List<DocumentResponseDto> get2(Vector1536 x_u) {
 		RecommendationModel latestModel = recommendationModelService
@@ -182,7 +303,7 @@ public class RecommendationService {
 	 *
 	 * @param d_uList Danh sách khoảng cách từ embedding của User
 	 *                <p>đến từng tâm cụm
-	 * @param m fuzziness
+	 * @param m       fuzziness
 	 * @return
 	 */
 	private List<MembershipOfUserWithCluster> getMicro_ukList(
