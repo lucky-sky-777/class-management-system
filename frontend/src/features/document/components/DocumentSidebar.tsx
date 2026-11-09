@@ -11,6 +11,7 @@ import type { FileItem } from "@/features/document/types";
 
 interface DocumentSidebarProps {
   file: FileItem;
+  classId?: string | number;
   onDownload: () => void;
   onToggleLike: () => void;
   onEdit?: () => void;

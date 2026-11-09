@@ -25,14 +25,87 @@ export const useClassDocuments = (classId: string | number | undefined) => {
   // Lưu classId đã fetch gần nhất thay vì dùng boolean cờ chết
   const lastClassIdRef = useRef<string | number | undefined>(undefined);
 
+  // LOGIC: Ánh xạ từ DTO của Backend sang FileItem giao diện
+  const mapDtoToFileItem = useCallback(
+    (dto: any, fallbackDirId?: string | number): FileItem => {
+      const fullName =
+        dto.title ||
+        dto.file_name ||
+        dto.fileName ||
+        dto.name ||
+        "Tài liệu không tên";
+
+      const rawMime = dto.mime_type || dto.mimeType || dto.metadata?.mime_type;
+      const resolvedExt = (
+        dto.file_extension ||
+        dto.fileExtension ||
+        getExtension(fullName, rawMime)
+      )
+        .replace(".", "")
+        .toLowerCase();
+
+      const rawSize =
+        dto.file_size ?? dto.size ?? dto.fileSize ?? dto.metadata?.file_size;
+      const formattedSize =
+        rawSize !== undefined && rawSize !== null ? formatBytes(rawSize) : "--";
+
+      const createdDate = dto.created_at || dto.createdAt;
+
+      let parsedTags: string[] = [];
+      if (Array.isArray(dto.tags)) {
+        parsedTags = dto.tags.map((t: any) =>
+          typeof t === "string" ? t : t.name,
+        );
+      } else if (typeof dto.tags === "string" && dto.tags.trim()) {
+        parsedTags = dto.tags.split(",").map((t: string) => t.trim());
+      }
+
+      // TRÍCH XUẤT DIRECTORY ID PHÒNG THỦ
+      const extractedDirectoryId =
+        dto.directoryId ??
+        dto.directory_id ??
+        dto.folderId ??
+        dto.folder_id ??
+        dto.rawMetadata?.directory_id ??
+        fallbackDirId;
+
+      return {
+        id: dto.id,
+        name: fullName,
+        size: formattedSize,
+        directoryId: extractedDirectoryId, // <-- Gán trực tiếp directoryId vào FileItem
+        folderId: extractedDirectoryId,
+        uploader:
+          dto.creator_name ||
+          dto.creatorName ||
+          dto.uploader ||
+          `User ${dto.creator_user_id || ""}`.trim() ||
+          "Bạn đăng",
+        uploadDate: createdDate || "Vừa xong",
+        fileExtension: resolvedExt,
+        isLiked: Boolean(dto.is_liked || dto.isLiked),
+        description: dto.description || "",
+        downloads:
+          dto.downloads ?? dto.download_count ?? dto.downloadCount ?? 0,
+        likes: dto.likes ?? dto.like_count ?? dto.likesCount ?? 0,
+        tags: parsedTags,
+        rawMetadata: dto.metadata || {
+          file_name: fullName,
+          file_size: rawSize,
+          mime_type: rawMime,
+          directory_id: extractedDirectoryId,
+        },
+      };
+    },
+    [],
+  );
+
   const fetchRootData = useCallback(async () => {
     if (!classId) return;
 
-    // Nếu đã fetch xong cho chính classId này rồi thì không fetch lại
     if (lastClassIdRef.current === classId) return;
 
     setIsLoading(true);
-    // Reset toàn bộ state dữ liệu của lớp cũ
     setCurrentFolder(null);
     setFolderFiles([]);
     setFolders([]);
@@ -45,79 +118,25 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       ]);
 
       setFolders(foldersRes.data || []);
-      setRecentFiles(filesRes || []);
 
-      // Đánh dấu đã fetch thành công cho classId hiện tại
+      // Chuẩn hóa danh sách recentFiles
+      const rawRecent = Array.isArray(filesRes)
+        ? filesRes
+        : filesRes?.data || [];
+      const mappedRecent = rawRecent.map((f: any) => mapDtoToFileItem(f));
+      setRecentFiles(mappedRecent);
+
       lastClassIdRef.current = classId;
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu trang gốc:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [classId]);
+  }, [classId, mapDtoToFileItem]);
 
   useEffect(() => {
     fetchRootData();
   }, [fetchRootData]);
-
-  // LOGIC: Ánh xạ từ DTO của Backend sang FileItem giao diện
-  const mapDtoToFileItem = (dto: any): FileItem => {
-    const fullName =
-      dto.title ||
-      dto.file_name ||
-      dto.fileName ||
-      dto.name ||
-      "Tài liệu không tên";
-
-    const rawMime = dto.mime_type || dto.mimeType || dto.metadata?.mime_type;
-    const resolvedExt = (
-      dto.file_extension ||
-      dto.fileExtension ||
-      getExtension(fullName, rawMime)
-    )
-      .replace(".", "")
-      .toLowerCase();
-
-    const rawSize =
-      dto.file_size ?? dto.size ?? dto.fileSize ?? dto.metadata?.file_size;
-    const formattedSize =
-      rawSize !== undefined && rawSize !== null ? formatBytes(rawSize) : "--";
-
-    const createdDate = dto.created_at || dto.createdAt;
-
-    let parsedTags: string[] = [];
-    if (Array.isArray(dto.tags)) {
-      parsedTags = dto.tags.map((t: any) =>
-        typeof t === "string" ? t : t.name,
-      );
-    } else if (typeof dto.tags === "string" && dto.tags.trim()) {
-      parsedTags = dto.tags.split(",").map((t: string) => t.trim());
-    }
-
-    return {
-      id: dto.id,
-      name: fullName,
-      size: formattedSize,
-      uploader:
-        dto.creator_name ||
-        dto.creatorName ||
-        dto.uploader ||
-        `User ${dto.creator_user_id || ""}`.trim() ||
-        "Bạn đăng",
-      uploadDate: createdDate || "Vừa xong",
-      fileExtension: resolvedExt,
-      isLiked: Boolean(dto.is_liked || dto.isLiked),
-      description: dto.description || "",
-      downloads: dto.downloads ?? dto.download_count ?? dto.downloadCount ?? 0,
-      likes: dto.likes ?? dto.like_count ?? dto.likesCount ?? 0,
-      tags: parsedTags,
-      rawMetadata: dto.metadata || {
-        file_name: fullName,
-        file_size: rawSize,
-        mime_type: rawMime,
-      },
-    };
-  };
 
   // Mở thư mục
   const handleOpenFolder = async (folder: FolderItem) => {
@@ -131,7 +150,10 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         folder.id,
       );
       const rawList = res.data || [];
-      const documents = rawList.map(mapDtoToFileItem);
+      // Truyền folder.id vào làm fallbackDirId
+      const documents = rawList.map((doc: any) =>
+        mapDtoToFileItem(doc, folder.id),
+      );
       setFolderFiles(documents);
     } catch (error) {
       console.error("Lỗi khi tải danh sách tài liệu trong thư mục:", error);
@@ -211,7 +233,9 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         classId,
         folderId,
       );
-      setFolderFiles((res.data || []).map(mapDtoToFileItem));
+      setFolderFiles(
+        (res.data || []).map((doc: any) => mapDtoToFileItem(doc, folderId)),
+      );
     } catch (error) {
       console.error("Lỗi khi tải lên tài liệu:", error);
       throw error;
@@ -225,7 +249,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     directoryId?: string | number,
   ) => {
     if (!classId) return;
-    const targetDirId = directoryId ?? currentFolder?.id;
+    const targetDirId = directoryId ?? file.directoryId ?? currentFolder?.id;
     if (!targetDirId) {
       console.error("Thiếu directoryId để tải file");
       return;
