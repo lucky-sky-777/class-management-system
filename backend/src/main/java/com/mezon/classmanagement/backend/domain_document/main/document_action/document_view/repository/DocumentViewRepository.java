@@ -28,7 +28,7 @@ public interface DocumentViewRepository extends JpaRepository<DocumentView, Long
 	WHERE dv.creator.id = :creatorUserId
 	ORDER BY dv.createdAt DESC
 	""")
-	List<DocumentView> findAllByCreator_IdOrderByCreatedAtDesc(Long creatorId);
+	List<DocumentView> findAllByCreator_IdOrderByCreatedAtDesc(Long creatorUserId);
 
 	@Query("""
     SELECT dv

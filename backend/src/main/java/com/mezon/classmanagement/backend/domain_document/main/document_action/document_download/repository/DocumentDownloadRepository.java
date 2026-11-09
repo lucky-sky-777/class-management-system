@@ -28,7 +28,7 @@ public interface DocumentDownloadRepository extends JpaRepository<DocumentDownlo
 	WHERE dd.creator.id = :creatorUserId
 	ORDER BY dd.createdAt DESC
 	""")
-	List<DocumentDownload> findAllByCreator_IdOrderByCreatedAtDesc(Long creatorId);
+	List<DocumentDownload> findAllByCreator_IdOrderByCreatedAtDesc(Long creatorUserId);
 
 	@Query("""
     SELECT d

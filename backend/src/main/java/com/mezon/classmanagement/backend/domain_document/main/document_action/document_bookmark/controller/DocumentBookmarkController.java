@@ -28,7 +28,7 @@ public class DocumentBookmarkController {
 	AuthService authService;
 	JwtService jwtService;
 
-	@PostMapping("/{documentId}")
+	@PostMapping("/documents/{documentId}")
 	public ResponseDTO<Void> saveOrUnsave(
 			@PathVariable Long documentId
 	) {
@@ -40,7 +40,7 @@ public class DocumentBookmarkController {
 		return ResponseDTO.ok("Successful");
 	}
 
-	@GetMapping("/{documentId}")
+	@GetMapping("/documents/{documentId}")
 	public ResponseDTO<List<DocumentBookmarkResponseDto>> getListByDocument(
 			@PathVariable Long documentId
 	) {

@@ -28,7 +28,7 @@ public interface DocumentBookmarkRepository extends JpaRepository<DocumentBookma
 	WHERE db.creator.id = :creatorUserId
 	ORDER BY db.createdAt DESC
 	""")
-	List<DocumentBookmark> findAllByCreator_IdOrderByCreatedAtDesc(Long creatorId);
+	List<DocumentBookmark> findAllByCreator_IdOrderByCreatedAtDesc(Long creatorUserId);
 
 	@Query("""
     SELECT db
