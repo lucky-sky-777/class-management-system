@@ -17,31 +17,35 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
   onDelete,
   onEdit,
 }) => {
+  const fileName = file.name || (file as any).fileName || "Tài liệu không tên";
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(file.name);
+  const [editName, setEditName] = useState(fileName);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Tự động focus và bôi đen tên file khi bấm nút Sửa
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      // Tùy chọn nâng cao: Chỉ bôi đen phần tên, chừa lại phần mở rộng (.pdf, .docx)
-      const dotIndex = file.name.lastIndexOf(".");
+      const dotIndex = editName.lastIndexOf(".");
       if (dotIndex > 0) {
         inputRef.current.setSelectionRange(0, dotIndex);
       } else {
         inputRef.current.select();
       }
     }
-  }, [isEditing, file.name]);
+  }, [isEditing]);
+
+  const handleStartEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditName(fileName);
+    setIsEditing(true);
+  };
 
   const handleSave = () => {
-    if (editName.trim() && editName.trim() !== file.name) {
-      if (onEdit) {
-        onEdit(file.id, editName.trim());
-      }
+    const trimmed = editName.trim();
+    if (trimmed && trimmed !== fileName) {
+      onEdit?.(file.id, trimmed);
     } else {
-      setEditName(file.name);
+      setEditName(fileName);
     }
     setIsEditing(false);
   };
@@ -49,7 +53,7 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSave();
     else if (e.key === "Escape") {
-      setEditName(file.name);
+      setEditName(fileName);
       setIsEditing(false);
     }
   };
@@ -57,51 +61,58 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
   return (
     <div
       onClick={() => !isEditing && onClick()}
-      className={`bg-[var(--bg-surface)] border ${isEditing ? "border-[#00B4D8] shadow-md" : "border-[var(--rule)]"} rounded-xl p-4 flex flex-col gap-3 hover:shadow-md cursor-pointer transition-all hover:-translate-y-0.5 w-full group relative`}
+      className={`bg-[var(--bg-surface)] border ${
+        isEditing
+          ? "border-[var(--primary)] shadow-[var(--shadow-md)]"
+          : "border-[var(--rule)] shadow-[var(--shadow-xs)]"
+      } rounded-[var(--r-xl)] p-4 flex flex-col gap-3 hover:shadow-[var(--shadow-md)] hover:border-[var(--rule-md)] cursor-pointer transition-all duration-200 hover:-translate-y-0.5 w-full group relative`}
     >
       <div className="flex justify-between items-start">
-        <DocumentIcon extension={file.fileExtension} size={32} />
+        {/* XỬ LÝ CHÓI MẮT: Giảm độ sáng 15% và bão hòa màu xuống ở Dark Mode */}
+        <div className="dark:brightness-[0.85] dark:saturate-[0.9] transition-all duration-200">
+          <DocumentIcon
+            extension={file.fileExtension || (file as any).fileType || ""}
+            size={32}
+          />
+        </div>
 
-        {/* CHỈ RENDER NHÓM NÚT NẾU CÓ TRUYỀN onEdit HOẶC onDelete */}
         {!isEditing && (onEdit || onDelete) && (
           <div className="flex items-center gap-1 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-            
-            {/* Chỉ hiện nút sửa nếu có hàm onEdit */}
             {onEdit && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsEditing(true);
-                }}
-                className="p-1.5 text-[var(--ink-3)] hover:text-[#00B4D8] hover:bg-[#E5F9FD] rounded-md transition-colors active:scale-95"
+                type="button"
+                onClick={handleStartEdit}
+                className="p-1.5 text-[var(--ink-3)] hover:text-[var(--primary)] hover:bg-[var(--primary-fill)] rounded-[var(--r-sm)] transition-colors active:scale-95"
                 title="Đổi tên"
               >
                 <Edit2 size={16} />
               </button>
             )}
 
-            {/* Chỉ hiện nút xóa nếu có hàm onDelete */}
             {onDelete && (
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (window.confirm(`Bạn có chắc chắn muốn xóa file "${file.name}" không?`)) {
+                  if (
+                    window.confirm(
+                      `Bạn có chắc chắn muốn xóa file "${fileName}" không?`,
+                    )
+                  ) {
                     onDelete(file.id);
                   }
                 }}
-                className="p-1.5 text-[var(--ink-3)] hover:text-red-500 hover:bg-red-50 rounded-md transition-colors active:scale-95"
+                className="p-1.5 text-[var(--ink-3)] hover:text-[var(--red)] hover:bg-[var(--red-fill)] rounded-[var(--r-sm)] transition-colors active:scale-95"
                 title="Xóa file"
               >
                 <Trash2 size={16} />
               </button>
             )}
-            
           </div>
         )}
       </div>
 
       <div>
-        {/* Inline Edit Input */}
         {isEditing ? (
           <input
             ref={inputRef}
@@ -110,24 +121,27 @@ export const FilePreviewCard: React.FC<FilePreviewCardProps> = ({
             onBlur={handleSave}
             onKeyDown={handleKeyDown}
             onClick={(e) => e.stopPropagation()}
-            className="w-full text-sm font-bold text-[var(--ink-1)] border border-[#00B4D8] rounded px-1 py-0.5 outline-none focus:ring-2 focus:ring-blue-100 transition-shadow bg-white"
+            className="w-full text-sm font-bold text-[var(--ink-1)] border border-[var(--primary)] rounded-[var(--r-sm)] px-1.5 py-0.5 outline-none focus:ring-2 focus:ring-[var(--primary-border)] transition-shadow bg-[var(--bg-surface-2)]"
           />
         ) : (
           <h4
             className="font-bold text-sm text-[var(--ink-1)] truncate"
-            title={file.name}
+            title={fileName}
           >
-            {file.name}
+            {fileName}
           </h4>
         )}
 
-        {/* Thông tin phụ của File */}
         <div className="flex items-center gap-2 mt-1">
-          <p className="text-[11px] text-[var(--ink-3)]">{file.size}</p>
-          <span className="text-[11px] text-[var(--rule)]">•</span>
-          <p className="text-[11px] text-[var(--ink-3)] truncate">
-            {file.uploader}
-          </p>
+          <p className="text-[11px] text-[var(--ink-3)]">{file.size || ""}</p>
+          {file.uploader && (
+            <>
+              <span className="text-[11px] text-[var(--rule-lg)]">•</span>
+              <p className="text-[11px] text-[var(--ink-3)] truncate">
+                {file.uploader}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

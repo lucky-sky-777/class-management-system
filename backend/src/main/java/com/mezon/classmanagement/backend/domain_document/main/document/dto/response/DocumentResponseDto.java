@@ -38,11 +38,11 @@ public class DocumentResponseDto {
 	@JsonProperty(value = "id")
 	Long id;
 
-	@SuppressWarnings({"all"})
-	// bỏ qua cái này nha
-	// để tạm dùng nội bộ thôi
-	// do chưa có cách xử lý
-	String key;
+//	@SuppressWarnings({"all"})
+//	// bỏ qua cái này nha
+//	// để tạm dùng nội bộ thôi
+//	// do chưa có cách xử lý
+//	String key;
 
 	@JsonProperty(value = "title")
 	String title;
@@ -54,7 +54,7 @@ public class DocumentResponseDto {
 	String fileName;
 
 	@JsonProperty(value = "creator_user_id")
-	String creatorUserId;
+	Long creatorUserId;
 
 	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")

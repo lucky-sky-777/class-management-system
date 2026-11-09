@@ -1,44 +1,80 @@
 package com.mezon.classmanagement.backend.domain_document.main.rag.service;
 
-import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
-import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.ChunkStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
-import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.MultipartFileDocumentSource;
+import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
+import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
+import com.mezon.classmanagement.backend.domain_document.main.rag.dto.reponse.DocumentSourceDto;
 import com.mezon.classmanagement.backend.domain_document.main.rag.dto.reponse.RagAnswerResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.search.service.SearchService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-@Service
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
+@Service
+@Transactional(readOnly = true)
 public class RagService {
 
-    private final GeminiRagService geminiRagService;
-    private final ChunkService chunkService;
-    private final ChunkStrategy chunkByParagraphWithoutOverlapStrategy;
+    GeminiRagService geminiRagService;
+    SearchService searchService;
+    int limit = 3;
 
-    public RagAnswerResponseDto askQuestionOnDocument(MultipartFile file, String question) throws Exception {
-        // 1. Chuyển đổi file tải lên thành DocumentSource
-        DocumentSource documentSource = new MultipartFileDocumentSource(file);
+    public RagAnswerResponseDto askInDocument(Long documentId, String question) throws Exception {
+        List<DocumentChunk> chunks = searchService.searchDocument(documentId, question, limit);
+        return processChunksAndCallGemini(chunks, question);
+    }
 
-        // 2. Cắt văn bản thành các chunks
-        List<String> chunkList = chunkService.getChunkList(
-                chunkByParagraphWithoutOverlapStrategy,
-                documentSource
-        );
+    public RagAnswerResponseDto askInClass(Long classId, String question) throws Exception {
+        List<DocumentChunk> chunks = searchService.searchClass(classId, question, limit);
+        return processChunksAndCallGemini(chunks, question);
+    }
 
-        // TODO: Tương lai sẽ thay bằng query tìm kiếm Vector Cosine Similarity
-        List<String> contextChunks = chunkList.size() > 15 ? chunkList.subList(0, 15) : chunkList;
+    public RagAnswerResponseDto askGlobal(String question) throws Exception {
+        List<DocumentChunk> chunks = searchService.searchAll(question, limit);
+        return processChunksAndCallGemini(chunks, question);
+    }
 
-        // 3. Gọi Gemini sinh câu trả lời
-        String answer = geminiRagService.askGeminiRag(question, contextChunks);
+    private RagAnswerResponseDto processChunksAndCallGemini(List<DocumentChunk> chunks, String question) throws Exception {
+        if (chunks == null || chunks.isEmpty()) {
+            return RagAnswerResponseDto.builder()
+                    .question(question)
+                    .answer("Tài liệu hiện tại không đề cập đến thông tin này hoặc đang trong quá trình xử lý.")
+                    .sources(List.of())
+                    .build();
+        }
 
-        // 4. Đóng gói trả về DTO
+        // 1. Trích xuất danh sách nguồn tài liệu độc lập (Lọc trùng an toàn theo ID của Document)
+        List<DocumentSourceDto> sources = chunks.stream()
+                .map(DocumentChunk::getDocument)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(
+                        Document::getId,
+                        doc -> DocumentSourceDto.builder()
+                                .id(doc.getId())
+                                .fileName(doc.getFileName())
+                                .build(),
+                        (existing, replacement) -> existing, // Giữ lại bản ghi đầu tiên nếu trùng ID
+                        LinkedHashMap::new                   // Giữ nguyên thứ tự ưu tiên độ liên quan
+                ))
+                .values()
+                .stream()
+                .toList();
+
+        // 2. Truyền thẳng List<DocumentChunk> vào GeminiRagService
+        String answer = geminiRagService.askGeminiRag(question, chunks);
+
+        // 3. Trả về kết quả hoàn chỉnh kèm sources cho Frontend
         return RagAnswerResponseDto.builder()
                 .question(question)
                 .answer(answer)
+                .sources(sources)
                 .build();
     }
 }

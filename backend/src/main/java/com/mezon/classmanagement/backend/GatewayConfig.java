@@ -1,9 +1,25 @@
 package com.mezon.classmanagement.backend;
 
+import jakarta.servlet.MultipartConfigElement;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class GatewayConfig {
+
+	@Bean
+	ApplicationRunner checkMultipartConfig(MultipartConfigElement config) {
+		return args -> {
+			System.out.println("Max file size: "
+					+ config.getMaxFileSize() / 1024 / 1024 + " MB");
+
+			System.out.println("Max request size: "
+					+ config.getMaxRequestSize() / 1024 / 1024 + " MB");
+		};
+	}
 
 //	private static final String DOCUMENT_SERVER = "http://localhost:9090";
 //

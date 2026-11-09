@@ -74,6 +74,8 @@ dependencies {
 
     implementation("com.google.genai:google-genai:1.76.0")
 
+    implementation("io.github.elki-project:elki:0.8.0")
+
     //implementation("org.hibernate.orm:hibernate-vector:7.4.7.Final")
 
     //implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")

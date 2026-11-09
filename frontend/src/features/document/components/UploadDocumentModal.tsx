@@ -1,21 +1,40 @@
 // src/features/classDocuments/components/UploadDocumentModal.tsx
 import React, { useState, useRef } from "react";
-import { X, CloudUpload, Trash2, File as FileIcon } from "lucide-react";
+import {
+  X,
+  CloudUpload,
+  Trash2,
+  File as FileIcon,
+  Loader2,
+} from "lucide-react";
 import type { FolderItem } from "@features/document/types";
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   folders: FolderItem[];
+  defaultFolderId?: string | number;
+  onUpload?: (
+    folderId: string,
+    files: File[],
+    description: string,
+  ) => Promise<void>;
 }
 
 export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
   isOpen,
   onClose,
   folders = [],
+  defaultFolderId,
+  onUpload,
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<string>("");
+  const [selectedFolder, setSelectedFolder] = useState<string>(
+    defaultFolderId ? String(defaultFolderId) : "",
+  );
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -36,9 +55,36 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
   const totalSizeMB =
     selectedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024);
 
+  // Hàm xử lý upload khi click nút
+  const handleSubmit = async () => {
+    if (selectedFiles.length === 0) {
+      alert("Vui lòng chọn ít nhất một tệp để tải lên.");
+      return;
+    }
+    if (!selectedFolder) {
+      alert("Vui lòng chọn thư mục chứa tài liệu.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      if (onUpload) {
+        await onUpload(selectedFolder, selectedFiles, description);
+      }
+      // Reset form và đóng modal
+      setSelectedFiles([]);
+      setDescription("");
+      setTags("");
+      onClose();
+    } catch {
+      alert("Có lỗi xảy ra khi tải lên tài liệu. Vui lòng thử lại.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      {/*Dạng Bottom Sheet (bo góc trên) cho Mobile, trượt từ dưới lên */}
       <div className="bg-white w-full sm:max-w-[600px] rounded-t-3xl sm:rounded-2xl shadow-xl flex flex-col max-h-[95dvh] sm:max-h-[90vh] animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
         <div className="w-full flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
@@ -51,15 +97,16 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="text-[var(--ink-3)] hover:text-[var(--ink-1)] transition-colors p-1 rounded-full hover:bg-gray-100"
+            disabled={isSubmitting}
+            className="text-[var(--ink-3)] hover:text-[var(--ink-1)] transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
           >
             <X size={24} />
           </button>
         </div>
 
-        {/* Body có thể cuộn */}
+        {/* Body */}
         <div className="p-4 sm:p-6 overflow-y-auto flex flex-col gap-5 sm:gap-6 custom-scrollbar">
-          {/* Vùng tải tệp: Thu gọn padding trên Mobile */}
+          {/* Vùng tải tệp */}
           <div
             className="border-2 border-dashed border-[#00B4D8] bg-[#E5F9FD] rounded-xl sm:rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[#D4F4FA] transition-colors active:scale-[0.98]"
             onClick={() => fileInputRef.current?.click()}
@@ -108,6 +155,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
 
                   <button
                     onClick={() => removeFile(index)}
+                    disabled={isSubmitting}
                     className="text-gray-400 hover:text-red-500 transition-colors p-2.5 shrink-0"
                   >
                     <Trash2 size={18} />
@@ -121,15 +169,14 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
           <div className="flex flex-col gap-4">
             <div>
               <label className="block text-[13px] sm:text-sm font-semibold text-[var(--ink-2)] mb-1.5">
-                Chọn thư mục
+                Chọn thư mục <span className="text-red-500">*</span>
               </label>
-              {/* Tăng padding (py-3) trên Mobile để dễ bấm */}
               <select
                 value={selectedFolder}
                 onChange={(e) => setSelectedFolder(e.target.value)}
                 className="w-full px-3 py-3 sm:py-2.5 text-sm border border-[var(--rule)] rounded-lg focus:outline-none focus:border-[#00B4D8] bg-white text-[var(--ink-1)] active:border-[#00B4D8]"
               >
-                <option value="">Thư mục mới</option>
+                <option value="">-- Chọn thư mục --</option>
                 {folders?.map((folder) => (
                   <option key={folder.id} value={folder.id}>
                     {folder.name}
@@ -144,6 +191,8 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
               </label>
               <input
                 type="text"
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
                 placeholder="VD: NCKH, QNU, KTPM..."
                 className="w-full px-3 py-3 sm:py-2.5 text-sm border border-[var(--rule)] rounded-lg focus:outline-none focus:border-[#00B4D8] text-[var(--ink-1)]"
               />
@@ -155,6 +204,8 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
               </label>
               <textarea
                 rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="Nhập mô tả cho tài liệu..."
                 className="w-full px-3 py-3 sm:py-2.5 text-sm border border-[var(--rule)] rounded-lg focus:outline-none focus:border-[#00B4D8] text-[var(--ink-1)] resize-none"
               ></textarea>
@@ -182,12 +233,20 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
           <div className="flex gap-3 w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-none px-6 py-3 sm:py-2.5 text-sm font-semibold text-[var(--ink-2)] border border-[var(--rule)] rounded-xl sm:rounded-lg hover:bg-gray-100 transition-colors bg-white active:scale-[0.98]"
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-none px-6 py-3 sm:py-2.5 text-sm font-semibold text-[var(--ink-2)] border border-[var(--rule)] rounded-xl sm:rounded-lg hover:bg-gray-100 transition-colors bg-white active:scale-[0.98] disabled:opacity-50"
             >
               Hủy
             </button>
-            <button className="flex-1 sm:flex-none px-6 py-3 sm:py-2.5 text-sm font-semibold text-white bg-[#00B4D8] rounded-xl sm:rounded-lg hover:bg-[#0096C7] transition-colors active:scale-[0.98]">
-              Tải lên
+            <button
+              onClick={handleSubmit}
+              disabled={
+                isSubmitting || selectedFiles.length === 0 || !selectedFolder
+              }
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 text-sm font-semibold text-white bg-[#00B4D8] rounded-xl sm:rounded-lg hover:bg-[#0096C7] transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+              {isSubmitting ? "Đang tải lên..." : "Tải lên"}
             </button>
           </div>
         </div>

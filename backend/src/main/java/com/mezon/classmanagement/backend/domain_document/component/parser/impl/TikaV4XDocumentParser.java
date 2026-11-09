@@ -55,6 +55,30 @@ public class TikaV4XDocumentParser implements CustomDocumentParser {
 		}
 	}
 
+	public Document parseWithMetadata(InputStream inputStream) {
+		try (TikaInputStream tikaInputStream = TikaInputStream.get(inputStream)) {
+			Parser parser = new AutoDetectParser();
+			ContentHandler handler = new BodyContentHandler(-1);
+			ParseContext context = new ParseContext();
+			Metadata tikaMetadata = new Metadata();
+
+			parser.parse(tikaInputStream, handler, tikaMetadata, context);
+			String text = TextUtils.clean(handler.toString());
+
+			if (text == null || text.trim().isEmpty()) {
+				throw new BlankDocumentException();
+			}
+
+			return Document.from(text, convert(tikaMetadata));
+		} catch (BlankDocumentException e) {
+			throw e;
+		} catch (ZeroByteFileException e) {
+			throw new BlankDocumentException();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 //	@Override
 //	public String extractToFile(
 //			InputStream inputStream,

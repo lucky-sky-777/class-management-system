@@ -7,7 +7,8 @@ import java.lang.annotation.*;
 
 @Target({
 		ElementType.FIELD,
-		ElementType.PARAMETER
+		ElementType.PARAMETER,
+		ElementType.TYPE_USE
 })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = ValidFileValidator.class)
