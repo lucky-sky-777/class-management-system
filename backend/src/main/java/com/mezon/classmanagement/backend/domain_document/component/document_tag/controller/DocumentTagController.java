@@ -21,7 +21,7 @@ public class DocumentTagController {
 
 	TagService tagService;
 
-	@GetMapping(
+	@PostMapping(
 			path = "/extract",
 			consumes = MediaType.MULTIPART_FORM_DATA_VALUE
 	)

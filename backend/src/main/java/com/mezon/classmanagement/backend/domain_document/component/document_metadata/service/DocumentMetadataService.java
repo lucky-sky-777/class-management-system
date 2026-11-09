@@ -138,18 +138,6 @@ public class DocumentMetadataService {
         saveMetadata(document.getId(), merged);
     }
 
-    @Transactional
-    public void deleteMetadata(Long documentId) {
-        DocumentMetadata documentMetadata = documentMetadataRepository
-                .findByDocument_Id(documentId)
-                .orElseThrow(() -> new GlobalException(
-                        GlobalException.Type.NOT_EXISTS,
-                        "Metadata not found"
-                ));
-
-        documentMetadataRepository.delete(documentMetadata);
-    }
-
     public Map<String, Object> extract(MultipartFile multipartFile) {
         Map<String, Object> metadataMap = new HashMap<>();
 
