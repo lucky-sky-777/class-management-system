@@ -1,5 +1,8 @@
 package com.mezon.classmanagement.backend.domain_document.main.document.repository;
 
+import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
+import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -76,18 +79,100 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 	""", nativeQuery = true)
 	List<Document> getAll();
 
-	@Query(value = """
-    SELECT d.*
-    FROM documents d
-    WHERE d.id IN (
-        SELECT dd.document_id
-        FROM directory_documents dd
-        WHERE dd.directory_id = :directoryId
+	@Query("""
+    SELECT new com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto(
+        d.id,
+        d.title,
+        d.description,
+        d.fileName,
+        COUNT(DISTINCT dv.id),
+        COUNT(DISTINCT dl.id),
+        COUNT(DISTINCT db2.id),
+        CASE
+            WHEN db.id IS NOT NULL THEN true
+            ELSE false
+        END,
+        d.creator.id,
+        d.creator.displayName,
+        d.creator.avatarUrl,
+        d.createdAt,
+        d.status
     )
-    order by d.created_at desc
-    """, nativeQuery = true)
-	List<Document> findByDirectoryId(
+    FROM Document d
+    LEFT JOIN DocumentBookmark db
+        ON db.document.id = d.id
+        AND db.creator.id = :clientUserId
+    LEFT JOIN DocumentView dv
+        ON dv.document.id = d.id
+    LEFT JOIN DocumentDownload dl
+        ON dl.document.id = d.id
+    LEFT JOIN DocumentBookmark db2
+        ON db2.document.id = d.id
+    WHERE EXISTS (
+        SELECT dd.id
+        FROM DirectoryDocument dd
+        WHERE dd.document.id = d.id
+            AND dd.directory.id = :directoryId
+    )
+    GROUP BY
+        d.id,
+        d.title,
+        d.description,
+        d.fileName,
+        db.id,
+        d.creator.id,
+        d.createdAt,
+        d.status
+    ORDER BY d.createdAt DESC
+    """)
+	List<DocumentResponseDto> findByDirectoryId(
+			@Param("clientUserId") Long clientUserId,
 			@Param("directoryId") Long directoryId
+	);
+
+	@Query("""
+    SELECT new com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto(
+        d.id,
+        d.title,
+        d.description,
+        d.fileName,
+        COUNT(DISTINCT dv.id),
+        COUNT(DISTINCT dl.id),
+        COUNT(DISTINCT db2.id),
+        CASE
+            WHEN db.id IS NOT NULL THEN true
+            ELSE false
+        END,
+        d.creator.id,
+        d.creator.displayName,
+        d.creator.avatarUrl,
+        d.createdAt,
+        d.status
+    )
+    FROM Document d
+    LEFT JOIN DocumentBookmark db
+        ON db.document.id = d.id
+        AND db.creator.id = :clientUserId
+    LEFT JOIN DocumentDownload dv
+        ON dv.document.id = d.id
+    LEFT JOIN DocumentDownload dl
+        ON dl.document.id = d.id
+    LEFT JOIN DocumentBookmark db2
+        ON db2.document.id = d.id
+    WHERE d.id = :documentId
+    GROUP BY
+        d.id,
+        d.title,
+        d.description,
+        d.fileName,
+        db.id,
+        d.creator.id,
+        d.createdAt,
+        d.status
+    """)
+	Optional<DocumentResponseDto> getById(
+			@Param("documentId") Long documentId,
+			@Param("clientUserId") Long clientUserId
 	);
 
 	@Query("""
@@ -182,6 +267,26 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 			@Param("userId") Long userId,
 			@Param("embedding") float[] embedding,
 			@Param("limit") int limit
+	);
+
+	@Query("""
+    SELECT dir
+    FROM DirectoryDocument dd
+    JOIN dd.directory dir
+    WHERE dd.document.id = :documentId
+    """)
+	Optional<Directory> findDirectoryByDocumentId(
+			@Param("documentId") Long documentId
+	);
+
+	@Query("""
+    SELECT dir.clazz
+    FROM DirectoryDocument dd
+    JOIN dd.directory dir
+    WHERE dd.document.id = :documentId
+    """)
+	Optional<Class> findClassByDocumentId(
+			@Param("documentId") Long documentId
 	);
 
 }

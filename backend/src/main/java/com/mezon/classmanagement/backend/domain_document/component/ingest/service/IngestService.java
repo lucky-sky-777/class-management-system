@@ -115,7 +115,7 @@ public class IngestService {
 		ingestAsync(dataList);
 	}
 
-	@Async("documentExecutor")
+	@Async("documentListExecutor")
 	protected void ingestAsync(List<PreparedData> preparedDataList) {
 		for (PreparedData data : preparedDataList) {
 			IngestRequest request = data.ingestRequest();

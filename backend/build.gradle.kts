@@ -58,6 +58,8 @@ dependencies {
     implementation("software.amazon.awssdk:s3:2.55.6")
     implementation("com.google.guava:guava:33.7.2-jre")
 
+    implementation("org.springframework.ai:spring-ai-model")
+
     implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     //implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc")

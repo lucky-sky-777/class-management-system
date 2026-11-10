@@ -6,6 +6,7 @@ import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.config.EmbeddingConfig;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
+import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
@@ -71,24 +72,19 @@ public class DocumentService {
 	DocumentMapper documentMapper;
 	S3Service s3Service;
 
-	@Transactional(readOnly = true)
-	public boolean isPublicAndExists(Long id) {
-		return documentRepository.isPublic(id);
-	}
-
 	@Transactional
-	public boolean isPrivateAndExists(Long id) {
-		return documentRepository.isPublic(id);
-	}
-
-	@Transactional
-	public boolean isPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
+	public boolean isPublicOrInAnyClassJoinedByUser(Long userId, Long documentId) {
 		return documentRepository.isPublicOrInAnyClassJoinedByUser(documentId, userId);
 	}
 
 	@Transactional(readOnly = true)
+	public boolean isPrivate(Long userId, Long documentId) {
+		return !isPublicOrInAnyClassJoinedByUser(userId, documentId);
+	}
+
+	@Transactional(readOnly = true)
 	public void throwIfNotIsPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
-		if (!isPublicOrInAnyClassJoinedByUser(documentId, userId)) {
+		if (isPrivate(documentId, userId)) {
 			throw new GlobalException(
 					GlobalException.Type.PERMISSION_DENIED,
 					"Đây là tài liệu riêng tư hoặc không tồn tại"
@@ -104,36 +100,52 @@ public class DocumentService {
 	}
 
 	@Transactional
-	public boolean existsInAnyClassJoinedByUser(Long documentId, Long userId) {
-		return documentRepository.existsInAnyClassJoinedByUser(documentId, userId);
-	}
-
-	@Transactional(readOnly = true)
-	public void throwIfNotIsPublicAndExists(Long id) {
-		if (!isPublicAndExists(id)) {
-			throw new GlobalException(
-					GlobalException.Type.PERMISSION_DENIED,
-					"Đây là tài liệu riêng tư hoặc không tồn tại"
-			);
-		}
-	}
-
-	@Transactional
 	public InputStream openStream(
-			Long classId,
-			Long directoryId,
+			Long clientUserId,
 			Document document
 	) {
-		Directory directory = directoryService.findByIdOrThrow(directoryId);
+		if (isPrivate(clientUserId, document.getId())) {
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Permission denied"
+			);
+		}
+
+		Class clazz = findClassByDocumentIdOrThrow(document.getId());
+		Directory directory = findDirectoryByDocumentIdOrThrow(document.getId());
 
 		return s3Service.getFile(
 				FileUtils.buildPath(
 						S3Config.Directory.UPLOAD_CLASS,
-						String.valueOf(classId),
+						String.valueOf(clazz.getId()),
 						directory.getSlug(),
 						document.getKey() + "." + document.getFileExtension()
 				)
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public Directory findDirectoryByDocumentIdOrThrow(Long documentId) {
+		return documentRepository
+				.findDirectoryByDocumentId(documentId)
+				.orElseThrow(() ->
+						new GlobalException(
+								GlobalException.Type.NOT_EXISTS,
+								"Directory not exists"
+						)
+				);
+	}
+
+	@Transactional(readOnly = true)
+	public Class findClassByDocumentIdOrThrow(Long documentId) {
+		return documentRepository
+				.findClassByDocumentId(documentId)
+				.orElseThrow(() ->
+						new GlobalException(
+								GlobalException.Type.NOT_EXISTS,
+								"Class not exists"
+						)
+				);
 	}
 
 	@Transactional
@@ -162,34 +174,6 @@ public class DocumentService {
 		);
 
 		return responseDocument;
-	}
-
-	@Transactional
-	public DocumentResponseDto create(
-			Long creatorUserId,
-			Long directoryId,
-			CreateDocumentRequestDto requestDto,
-			MultipartFile multipartFile
-	) {
-		directoryService.throwIfNotExistsById(directoryId);
-
-		Document newDocument = documentMapper.toDocument(requestDto);
-
-		newDocument.setKey(UUID.randomUUID().toString());
-		newDocument.setFileName(multipartFile.getOriginalFilename());
-		newDocument.setFileExtension(FileUtils.getExtension(multipartFile));
-		newDocument.setCreator(User.create(creatorUserId));
-		newDocument.setStatus(Document.Status.UPLOADING);
-
-		Document responseDocument = save(newDocument);
-
-		applicationEventPublisher.publishEvent(
-				new DocumentCreatedEvent(
-						directoryId, responseDocument.getId()
-				)
-		);
-
-		return documentMapper.toDocumentResponseDto(responseDocument);
 	}
 
 	@Transactional
@@ -322,18 +306,43 @@ public class DocumentService {
 	}
 
 	@Transactional
+	public DocumentResponseDto get(
+			Long clientUserId,
+			Long documentId
+	) {
+		if (isPrivate(clientUserId, documentId)) {
+			throw new GlobalException(
+					GlobalException.Type.PERMISSION_DENIED,
+					"Permission denied"
+			);
+		}
+
+		return findByIdOrThrow(clientUserId, documentId);
+	}
+
+	@Transactional
 	public List<DocumentResponseDto> getList(
-			Long classId,
+			Long clientUserId,
 			Long directoryId
 	) {
-		List<Document> documentList = documentRepository.findByDirectoryId(directoryId);
+		List<DocumentResponseDto> documentList = documentRepository.findByDirectoryId(clientUserId, directoryId);
 
-		return documentMapper.toDocumentResponseDtoList(documentList);
+		return documentList;
 	}
 
 	@Transactional(readOnly = true)
 	public Document findByIdOrThrow(Long id) {
 		return documentRepository.findById(id).orElseThrow(() ->
+				new GlobalException(
+						GlobalException.Type.NOT_EXISTS,
+						"Document not exists"
+				)
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public DocumentResponseDto findByIdOrThrow(Long clientUserId, Long id) {
+		return documentRepository.getById(id, clientUserId).orElseThrow(() ->
 				new GlobalException(
 						GlobalException.Type.NOT_EXISTS,
 						"Document not exists"

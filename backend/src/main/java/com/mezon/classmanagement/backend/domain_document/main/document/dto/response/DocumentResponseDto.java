@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.mezon.classmanagement.backend.common.annotation.DTO;
 import com.mezon.classmanagement.backend.common.constant.DateTimeConstant;
+import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +22,13 @@ import java.time.Instant;
 		"title",
 		"description",
 		"file_name",
+		"view_count",
+		"download_count",
+		"bookmark_count",
+		"is_bookmarked",
 		"creator_user_id",
+		"creator_display_name",
+		"creator_avatar_url",
 		"created_at",
 		"status"
 })
@@ -38,12 +45,6 @@ public class DocumentResponseDto {
 	@JsonProperty(value = "id")
 	Long id;
 
-//	@SuppressWarnings({"all"})
-//	// bỏ qua cái này nha
-//	// để tạm dùng nội bộ thôi
-//	// do chưa có cách xử lý
-//	String key;
-
 	@JsonProperty(value = "title")
 	String title;
 
@@ -53,14 +54,32 @@ public class DocumentResponseDto {
 	@JsonProperty(value = "file_name")
 	String fileName;
 
+	@JsonProperty(value = "view_count")
+	Long viewCount;
+
+	@JsonProperty(value = "download_count")
+	Long downloadCount;
+
+	@JsonProperty(value = "bookmark_count")
+	Long bookmarkCount;
+
+	@JsonProperty(value = "is_bookmarked")
+	Boolean isBookmarked;
+
 	@JsonProperty(value = "creator_user_id")
 	Long creatorUserId;
+
+	@JsonProperty(value = "creator_display_name")
+	String creatorDisplayName;
+
+	@JsonProperty(value = "creator_avatar_url")
+	String creatorAvatarUrl;
 
 	@JsonFormat(pattern = DateTimeConstant.PATTERN_FULL_DATETIME, timezone = DateTimeConstant.TIMEZONE)
 	@JsonProperty(value = "created_at")
 	Instant createdAt;
 
 	@JsonProperty(value = "status")
-	String status;
+	Document.Status status;
 
 }

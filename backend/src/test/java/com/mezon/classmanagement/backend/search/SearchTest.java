@@ -24,13 +24,14 @@ public class SearchTest {
 	SearchService searchService;
 
 	private void search(String query, float[] queryEmbedding) {
-		List<DocumentChunk> documentChunkList = searchService.searchAll(queryEmbedding, 5);
+		List<DocumentChunk> documentChunkList = searchService.searchDocument(89L, queryEmbedding, 5);
 
 		System.out.println("nội dung tìm kiếm: " + query);
 
 		System.out.println("kết quả tìm kiếm:");
 		for (int i = 0; i < documentChunkList.size(); i++) {
 			System.out.println("===== " + (i + 1) + " =====\n");
+			System.out.println("Source: " + documentChunkList.get(i).getDocument().getFileName());
 			System.out.println(
 					"Độ tương đồng: " + EmbeddingUtils.cosine(
 							queryEmbedding,

@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain_document.component.document_chunk.repository;
 
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,6 +42,7 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 			@Param("limit") int limit
 	);
 
+	@EntityGraph(attributePaths = {"document"})
 	@Query(value = """
 	SELECT *
 	FROM document_chunks dc
