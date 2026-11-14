@@ -1,4 +1,3 @@
-// src/features/document/hooks/useDocumentDetail.ts
 import { useState, useEffect, useCallback } from "react";
 import { classDocumentsAPI } from "@/features/document/api";
 import type { FileItem } from "@/features/document/types";
@@ -13,7 +12,6 @@ export const useDocumentDetail = (
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isTogglingLike, setIsTogglingLike] = useState<boolean>(false);
 
-  // Đồng bộ nhanh khi fileId thay đổi
   const [prevId, setPrevId] = useState(fileId);
   if (fileId !== prevId) {
     setPrevId(fileId);
@@ -60,17 +58,15 @@ export const useDocumentDetail = (
     };
   }, [fileId]);
 
-  // Xử lý gọi API Toggle Like / Bookmark kết hợp Optimistic Update
+  // Toggle Bookmark / Like (Optimistic Update)
   const handleToggleLike = useCallback(
     async (targetId?: string | number) => {
       const activeId = targetId ?? fileDetail?.id ?? fileId;
       if (!activeId || isTogglingLike || !fileDetail) return;
 
-      // 1. Lưu lại snapshot trước khi update để rollback khi lỗi
       const prevIsLiked = fileDetail.isLiked ?? false;
       const prevLikes = fileDetail.likes ?? 0;
 
-      // 2. Cập nhật UI tức thì (Optimistic UI)
       const nextIsLiked = !prevIsLiked;
       setFileDetail((prev) =>
         prev
@@ -84,13 +80,12 @@ export const useDocumentDetail = (
           : null,
       );
 
-      // 3. Gửi request lên server
       setIsTogglingLike(true);
       try {
         await classDocumentsAPI.toggleBookmark(activeId);
       } catch (err) {
         console.error("Lỗi khi gọi API bookmark/like:", err);
-        // Rollback nếu request thất bại
+        // Rollback state nếu gọi thất bại
         setFileDetail((prev) =>
           prev
             ? {

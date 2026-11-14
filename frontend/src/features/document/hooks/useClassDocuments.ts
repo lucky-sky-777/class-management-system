@@ -1,98 +1,78 @@
-// src/features/classDocuments/hooks/useClassDocuments.ts
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   classDocumentsAPI,
   formatBytes,
   getExtension,
 } from "@/features/document/api";
-import type { FolderItem, FileItem } from "@/features/document/types";
+import type {
+  FolderItem,
+  FileItem,
+  DocumentResponseDto,
+} from "@/features/document/types";
 
 export const useClassDocuments = (classId: string | number | undefined) => {
   const [folders, setFolders] = useState<FolderItem[]>([]);
   const [recentFiles, setRecentFiles] = useState<FileItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // STATE QUẢN LÝ THƯ MỤC HIỆN TẠI
+  // Thư mục hiện tại
   const [currentFolder, setCurrentFolder] = useState<FolderItem | null>(null);
   const [folderFiles, setFolderFiles] = useState<FileItem[]>([]);
   const [isFolderLoading, setIsFolderLoading] = useState(false);
 
-  // STATE XEM TRƯỚC TÀI LIỆU (PREVIEW BLOB)
+  // Preview file stream blob
   const [viewingFile, setViewingFile] = useState<FileItem | null>(null);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
-  // Lưu classId đã fetch gần nhất thay vì dùng boolean cờ chết
   const lastClassIdRef = useRef<string | number | undefined>(undefined);
 
-  // LOGIC: Ánh xạ từ DTO của Backend sang FileItem giao diện
+  // Ánh xạ từ DTO Backend sang FileItem UI
   const mapDtoToFileItem = useCallback(
-    (dto: any, fallbackDirId?: string | number): FileItem => {
-      const fullName =
-        dto.title ||
-        dto.file_name ||
-        dto.fileName ||
-        dto.name ||
-        "Tài liệu không tên";
+    (
+      dto: DocumentResponseDto | any,
+      fallbackDirId?: string | number,
+    ): FileItem => {
+      const fileName = dto.file_name || dto.fileName || dto.name || "";
+      const displayTitle = dto.title || fileName || "Tài liệu không tên";
 
-      const rawMime = dto.mime_type || dto.mimeType || dto.metadata?.mime_type;
-      const resolvedExt = (
-        dto.file_extension ||
-        dto.fileExtension ||
-        getExtension(fullName, rawMime)
-      )
+      const rawExt = dto.file_extension || dto.fileExtension;
+      const resolvedExt = (rawExt || getExtension(fileName || displayTitle))
         .replace(".", "")
         .toLowerCase();
 
-      const rawSize =
-        dto.file_size ?? dto.size ?? dto.fileSize ?? dto.metadata?.file_size;
+      const rawSize = dto.file_size ?? dto.size;
       const formattedSize =
         rawSize !== undefined && rawSize !== null ? formatBytes(rawSize) : "--";
-
-      const createdDate = dto.created_at || dto.createdAt;
 
       let parsedTags: string[] = [];
       if (Array.isArray(dto.tags)) {
         parsedTags = dto.tags.map((t: any) =>
           typeof t === "string" ? t : t.name,
         );
-      } else if (typeof dto.tags === "string" && dto.tags.trim()) {
-        parsedTags = dto.tags.split(",").map((t: string) => t.trim());
       }
 
-      // TRÍCH XUẤT DIRECTORY ID PHÒNG THỦ
       const extractedDirectoryId =
-        dto.directoryId ??
-        dto.directory_id ??
-        dto.folderId ??
-        dto.folder_id ??
-        dto.rawMetadata?.directory_id ??
-        fallbackDirId;
+        dto.directoryId ?? dto.directory_id ?? fallbackDirId;
 
       return {
         id: dto.id,
-        name: fullName,
+        name: displayTitle,
         size: formattedSize,
-        directoryId: extractedDirectoryId, // <-- Gán trực tiếp directoryId vào FileItem
-        folderId: extractedDirectoryId,
-        uploader:
-          dto.creator_name ||
-          dto.creatorName ||
-          dto.uploader ||
-          `User ${dto.creator_user_id || ""}`.trim() ||
-          "Bạn đăng",
-        uploadDate: createdDate || "Vừa xong",
+        directoryId: extractedDirectoryId,
+        uploader: dto.creator_display_name || dto.uploader || "Người dùng",
+        uploaderAvatar: dto.creator_avatar_url,
+        uploadDate: dto.created_at || dto.createdAt || "Vừa xong",
         fileExtension: resolvedExt,
-        isLiked: Boolean(dto.is_liked || dto.isLiked),
+        views: Number(dto.view_count ?? 0),
+        downloads: Number(dto.download_count ?? 0),
+        likes: Number(dto.bookmark_count ?? dto.likes ?? 0),
+        isLiked: Boolean(dto.is_bookmarked ?? dto.isLiked),
         description: dto.description || "",
-        downloads:
-          dto.downloads ?? dto.download_count ?? dto.downloadCount ?? 0,
-        likes: dto.likes ?? dto.like_count ?? dto.likesCount ?? 0,
         tags: parsedTags,
-        rawMetadata: dto.metadata || {
-          file_name: fullName,
+        rawMetadata: {
+          file_name: fileName,
           file_size: rawSize,
-          mime_type: rawMime,
           directory_id: extractedDirectoryId,
         },
       };
@@ -102,7 +82,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
 
   const fetchRootData = useCallback(async () => {
     if (!classId) return;
-
     if (lastClassIdRef.current === classId) return;
 
     setIsLoading(true);
@@ -119,12 +98,10 @@ export const useClassDocuments = (classId: string | number | undefined) => {
 
       setFolders(foldersRes.data || []);
 
-      // Chuẩn hóa danh sách recentFiles
       const rawRecent = Array.isArray(filesRes)
         ? filesRes
-        : filesRes?.data || [];
-      const mappedRecent = rawRecent.map((f: any) => mapDtoToFileItem(f));
-      setRecentFiles(mappedRecent);
+        : (filesRes as any)?.data || [];
+      setRecentFiles(rawRecent.map((f: any) => mapDtoToFileItem(f)));
 
       lastClassIdRef.current = classId;
     } catch (error) {
@@ -150,7 +127,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         folder.id,
       );
       const rawList = res.data || [];
-      // Truyền folder.id vào làm fallbackDirId
       const documents = rawList.map((doc: any) =>
         mapDtoToFileItem(doc, folder.id),
       );
@@ -177,7 +153,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         itemCount: 0,
       };
 
-      setFolders((prevFolders) => [...(prevFolders || []), newFolder]);
+      setFolders((prev) => [...(prev || []), newFolder]);
     } catch (error) {
       console.error("Lỗi khi tạo thư mục:", error);
     }
@@ -187,13 +163,9 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     if (!classId) return;
     try {
       await classDocumentsAPI.renameFolder(classId, id, newName);
-
-      setFolders((prevFolders) =>
-        prevFolders.map((folder) =>
-          folder.id === id ? { ...folder, name: newName } : folder,
-        ),
+      setFolders((prev) =>
+        prev.map((f) => (f.id === id ? { ...f, name: newName } : f)),
       );
-
       if (currentFolder?.id === id) {
         setCurrentFolder((prev) => (prev ? { ...prev, name: newName } : null));
       }
@@ -206,11 +178,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     if (!classId) return;
     try {
       await classDocumentsAPI.deleteFolder(classId, id);
-
-      setFolders((prevFolders) =>
-        prevFolders.filter((folder) => folder.id !== id),
-      );
-
+      setFolders((prev) => prev.filter((f) => f.id !== id));
       if (currentFolder?.id === id) {
         handleGoToRoot();
       }
@@ -229,6 +197,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       setIsLoading(true);
       await classDocumentsAPI.uploadDocuments(classId, folderId, files);
 
+      // Refresh danh sách file trong thư mục
       const res = await classDocumentsAPI.getDocumentsByDirectory(
         classId,
         folderId,
@@ -244,16 +213,9 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     }
   };
 
-  const handleViewFile = async (
-    file: FileItem,
-    directoryId?: string | number,
-  ) => {
-    if (!classId) return;
-    const targetDirId = directoryId ?? file.directoryId ?? currentFolder?.id;
-    if (!targetDirId) {
-      console.error("Thiếu directoryId để tải file");
-      return;
-    }
+  // Preview file
+  const handleViewFile = async (file: FileItem) => {
+    if (!file?.id) return;
 
     try {
       setIsPreviewLoading(true);
@@ -264,11 +226,8 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         setPreviewBlobUrl(null);
       }
 
-      const blob = await classDocumentsAPI.getFileBlob(
-        classId,
-        targetDirId,
-        file.id,
-      );
+      // Backend route trực tiếp: GET /{documentId}/file
+      const blob = await classDocumentsAPI.getFileBlob(file.id);
       const url = URL.createObjectURL(blob);
       setPreviewBlobUrl(url);
     } catch (error) {
@@ -304,13 +263,23 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     }
   };
 
-  const handleDeleteFile = async (id: string | number) => {
+  const handleDeleteFile = async (
+    id: string | number,
+    folderId?: string | number,
+  ) => {
+    const targetDirId = folderId ?? currentFolder?.id;
+    if (!classId || !targetDirId) {
+      console.error("Thiếu classId hoặc directoryId để thực hiện xóa");
+      return;
+    }
+
     try {
-      await classDocumentsAPI.deleteFile(id);
+      // Backend: DELETE /classes/{classId}/directories/{directoryId}/documents
+      await classDocumentsAPI.deleteDocuments(classId, targetDirId, {
+        documentIds: [Number(id)],
+      });
 
-      const filterFiles = (prevFiles: FileItem[]) =>
-        prevFiles.filter((file) => file.id !== id);
-
+      const filterFiles = (prev: FileItem[]) => prev.filter((f) => f.id !== id);
       setRecentFiles(filterFiles);
       setFolderFiles(filterFiles);
     } catch (error) {
