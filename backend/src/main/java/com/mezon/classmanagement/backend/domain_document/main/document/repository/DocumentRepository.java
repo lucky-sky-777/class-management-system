@@ -121,6 +121,8 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         d.fileName,
         db.id,
         d.creator.id,
+        d.creator.displayName,
+        d.creator.avatarUrl,
         d.createdAt,
         d.status
     ORDER BY d.createdAt DESC
@@ -167,6 +169,8 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         d.fileName,
         db.id,
         d.creator.id,
+        d.creator.displayName,
+        d.creator.avatarUrl,
         d.createdAt,
         d.status
     """)

@@ -84,7 +84,7 @@ public class DocumentService {
 
 	@Transactional(readOnly = true)
 	public void throwIfNotIsPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
-		if (isPrivate(documentId, userId)) {
+		if (isPrivate(userId, documentId)) {
 			throw new GlobalException(
 					GlobalException.Type.PERMISSION_DENIED,
 					"Đây là tài liệu riêng tư hoặc không tồn tại"
