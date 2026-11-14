@@ -52,7 +52,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
     const currentDirId = file.directoryId ?? directoryId ?? 0;
 
     classDocumentsAPI
-      .getFileBlob(classId, currentDirId, file.id)
+      .getFileBlob(file.id)
       .then(async (blob) => {
         if (isCancelled) return;
 

@@ -128,9 +128,7 @@ export const DocumentPage = () => {
     if (!classId || !activeFile) return;
     try {
       const blob = await classDocumentsAPI.getFileBlob(
-        classId,
-        currentFolder?.id ?? 0,
-        activeFile.id,
+          activeFile.id
       );
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

@@ -225,7 +225,7 @@ public class DocumentController {
 	 * @param documentId ID tài liệu muốn đọc
 	 * @return {@code Blob}
 	 */
-	@GetMapping("/{documentId}/file")
+	@GetMapping("/documents/{documentId}/file")
 	public ResponseEntity<StreamingResponseBody> readFile(
 			@PathVariable Long documentId
 	) {

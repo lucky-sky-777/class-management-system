@@ -122,7 +122,7 @@ export const classDocumentsAPI = {
 
   // ĐÃ SỬA: Khớp @GetMapping("/{documentId}/file")
   getFileBlob: async (documentId: string | number): Promise<Blob> => {
-    return apiClient.get(`/${documentId}/file`, {
+    return apiClient.get(`/documents/${documentId}/file`, {
       axiosConfig: {
         responseType: "blob",
       },
