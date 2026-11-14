@@ -42,7 +42,6 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 			@Param("limit") int limit
 	);
 
-	@EntityGraph(attributePaths = {"document"})
 	@Query(value = """
 	SELECT *
 	FROM document_chunks dc
