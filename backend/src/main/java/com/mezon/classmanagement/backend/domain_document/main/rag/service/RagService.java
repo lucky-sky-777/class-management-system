@@ -24,7 +24,7 @@ public class RagService {
 
     GeminiRagService geminiRagService;
     SearchService searchService;
-    int limit = 3;
+    int limit = 1;
 
     public RagAnswerResponseDto askInDocument(Long documentId, String question) throws Exception {
         List<DocumentChunk> chunks = searchService.searchDocument(documentId, question, limit);

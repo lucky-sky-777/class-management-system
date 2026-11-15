@@ -62,17 +62,16 @@ public class CMeansTest {
 
 	@Test
 	public void tesRCM() throws Exception {
-		String text1 = "lập trình java";
-		String text2 = "cá chìa vôi mắt đơn";
+		List<DocumentResponseDto> r1 = recommendationService.getCandidateSource1(5L);
+		List<DocumentResponseDto> r2 = recommendationService.getCandidateSource2(5L);
 
-		Vector1536 x_u = new Vector1536(
-				embeddingService
-				.embedSingleQueryText(text2).getValues()
-		);
+		System.out.println("src 1");
+		r1.forEach(item -> {
+			System.out.println(item.getFileName());
+		});
 
-		List<DocumentResponseDto> r = recommendationService.get2(x_u);
-
-		r.forEach(item -> {
+		System.out.println("src 2");
+		r2.forEach(item -> {
 			System.out.println(item.getFileName());
 		});
 	}

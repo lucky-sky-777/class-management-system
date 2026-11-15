@@ -33,7 +33,7 @@ public class RecommendationController {
 		Authentication authentication = authService.getAuthentication();
 		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
 
-		List<DocumentResponseDto> response = recommendationService.getCandidate(clientUserId);
+		List<DocumentResponseDto> response = recommendationService.getCandidateSource2(clientUserId);
 
 		return ResponseDTO.ok(
 				"Get recommendation list successful",
