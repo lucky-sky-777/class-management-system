@@ -1,6 +1,6 @@
 package com.mezon.classmanagement.backend.domain_document.main.c_means.entity;
 
-import com.mezon.classmanagement.backend.config.EmbeddingConfig;
+import com.mezon.classmanagement.backend.domain_document.main.ai_model.config.gemini.GeminiConfig;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.config.CMeansConfig;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -76,11 +76,11 @@ public class RecommendationModel {
 	@PrePersist
 	public void prePersist() {
 		if (embeddingModel == null) {
-			embeddingModel = EmbeddingConfig.EMBEDDING_MODEL;
+			embeddingModel = GeminiConfig.Embedding.MODEL;
 		}
 
 		if (embeddingDimension == null) {
-			embeddingDimension = EmbeddingConfig.EMBEDDING_DIMENSION;
+			embeddingDimension = GeminiConfig.Embedding.DIMENSION;
 		}
 
 		if (fuzziness == null) {

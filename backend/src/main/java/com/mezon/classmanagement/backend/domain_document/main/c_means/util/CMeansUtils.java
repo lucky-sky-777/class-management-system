@@ -1,9 +1,8 @@
 package com.mezon.classmanagement.backend.domain_document.main.c_means.util;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
-import com.mezon.classmanagement.backend.config.EmbeddingConfig;
+import com.mezon.classmanagement.backend.domain_document.main.ai_model.config.gemini.GeminiConfig;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.FcmTrainingResult;
-import com.mezon.classmanagement.backend.domain_document.main.c_means.service.FuzzyCMeansService;
 
 import java.util.List;
 
@@ -177,7 +176,7 @@ public final class CMeansUtils {
 	}
 
 	public static void validateCenter(double[] center, int clusterIndex) {
-		if (center.length != EmbeddingConfig.EMBEDDING_DIMENSION) {
+		if (center.length != GeminiConfig.Embedding.DIMENSION) {
 			throw new IllegalStateException(
 					"Tâm cụm không đúng 1536 chiều: " + clusterIndex
 			);

@@ -3,7 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.main.document.service;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
-import com.mezon.classmanagement.backend.config.EmbeddingConfig;
+import com.mezon.classmanagement.backend.domain_document.main.ai_model.config.gemini.GeminiConfig;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
@@ -13,7 +13,6 @@ import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.Docume
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
 import com.mezon.classmanagement.backend.domain_document.main.directory_document.service.DirectoryDocumentService;
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.CreateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.DeleteDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
@@ -31,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -286,7 +284,7 @@ public class DocumentService {
 
 			float[] embedding = document.getEmbedding().getValues();
 
-			if (embedding.length != EmbeddingConfig.EMBEDDING_DIMENSION) {
+			if (embedding.length != GeminiConfig.Embedding.DIMENSION) {
 				throw new IllegalStateException(
 						"Embedding không đúng 1536 chiều, documentId: "
 								+ document.getId()

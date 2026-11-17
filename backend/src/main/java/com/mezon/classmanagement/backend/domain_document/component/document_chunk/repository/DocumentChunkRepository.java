@@ -43,10 +43,10 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 	);
 
 	@Query(value = """
-	SELECT *
+	SELECT *, dc.embedding <=> CAST(:embedding AS vector) AS distance
 	FROM document_chunks dc
 	WHERE dc.document_id = :documentId
-	ORDER BY dc.embedding <=> CAST(:embedding AS vector) ASC
+	ORDER BY distance ASC
 	LIMIT :limit
 	""", nativeQuery = true
 	)

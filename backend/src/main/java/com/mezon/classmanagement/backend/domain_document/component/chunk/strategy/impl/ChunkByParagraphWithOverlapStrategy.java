@@ -1,11 +1,10 @@
 package com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl;
 
 import com.mezon.classmanagement.backend.domain_document.component.chunk.builder.ChunkListBuilder;
-import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.ChunkStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
-import com.mezon.classmanagement.backend.domain_document.component.split.service.SplitService;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.DocumentSplitterService;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.document_splitter.impl.DocumentSplitterByParagraphWithOverlapStrategy;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,8 +19,9 @@ public class ChunkByParagraphWithOverlapStrategy implements ChunkStrategy {
 
 	public static final String NAME = "chunkByParagraphWithOverlapStrategy";
 
-	SplitService splitService;
-	SplitByParagraphStrategy splitByParagraphStrategy;
+	DocumentSplitterService documentSplitterService;
+	DocumentSplitterByParagraphWithOverlapStrategy
+			documentSplitterByParagraphWithOverlapStrategy;
 
 	@Override
 	public String getName() {
@@ -30,9 +30,12 @@ public class ChunkByParagraphWithOverlapStrategy implements ChunkStrategy {
 
 	@Override
 	public List<String> getChunkList(DocumentSource documentSource) throws Exception {
-		return splitService.getChunkList(
-				splitByParagraphStrategy,
-				documentSource
+		return ChunkListBuilder.getChunkList(
+				documentSource.toDocument(),
+				documentSplitterService
+						.getSplitter(
+								documentSplitterByParagraphWithOverlapStrategy
+						)
 		);
 	}
 

@@ -2,16 +2,20 @@ package com.mezon.classmanagement.backend.domain_document.component.split.strate
 
 import com.mezon.classmanagement.backend.config.SplitConfig;
 import com.mezon.classmanagement.backend.domain_document.component.split.strategy.document_splitter.DocumentSplitterStrategy;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.document_splitter.custom.VnCoreNLPDocumentBySentenceSplitter;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentByParagraphSplitter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import vn.pipeline.VnCoreNLP;
 
+@RequiredArgsConstructor
 @Component(value = DocumentSplitterByParagraphWithoutOverlapStrategy.NAME)
 public class DocumentSplitterByParagraphWithoutOverlapStrategy implements DocumentSplitterStrategy {
 
-	public static final String NAME = "documentSplitterByParagraphWithoutOverlapStrategy";
+	private final VnCoreNLP vnCoreNLP;
 
+	public static final String NAME = "documentSplitterByParagraphWithoutOverlapStrategy";
 
 	@Override
 	public String getName() {
@@ -22,7 +26,14 @@ public class DocumentSplitterByParagraphWithoutOverlapStrategy implements Docume
 	public DocumentSplitter getSplitter() {
 		return new DocumentByParagraphSplitter(
 				SplitConfig.MAX_SEGMENT_SIZE,
-				0
+				0,
+				SplitConfig.OPEN_AI_TOKEN_COUNT_ESTIMATOR,
+				new VnCoreNLPDocumentBySentenceSplitter(
+						SplitConfig.MAX_SEGMENT_SIZE,
+						SplitConfig.MAX_OVERLAP_SIZE,
+						SplitConfig.OPEN_AI_TOKEN_COUNT_ESTIMATOR,
+						vnCoreNLP
+				)
 		);
 	}
 

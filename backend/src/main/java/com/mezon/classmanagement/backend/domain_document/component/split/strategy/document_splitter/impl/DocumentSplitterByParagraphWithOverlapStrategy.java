@@ -27,11 +27,11 @@ public class DocumentSplitterByParagraphWithOverlapStrategy implements DocumentS
 		return new DocumentByParagraphSplitter(
 				SplitConfig.MAX_SEGMENT_SIZE,
 				SplitConfig.MAX_OVERLAP_SIZE,
-				SplitConfig.TOKEN_COUNT_ESTIMATOR,
+				SplitConfig.OPEN_AI_TOKEN_COUNT_ESTIMATOR,
 				new VnCoreNLPDocumentBySentenceSplitter(
 						SplitConfig.MAX_SEGMENT_SIZE,
 						SplitConfig.MAX_OVERLAP_SIZE,
-						SplitConfig.TOKEN_COUNT_ESTIMATOR,
+						SplitConfig.OPEN_AI_TOKEN_COUNT_ESTIMATOR,
 						vnCoreNLP
 				)
 		);
