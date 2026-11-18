@@ -1,20 +1,12 @@
 package com.mezon.classmanagement.backend.domain_document.main.recommendation.service;
 
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
-import com.mezon.classmanagement.backend.domain.auth.service.UserService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.util.EmbeddingUtils;
 import com.mezon.classmanagement.backend.domain_document.component.user_vector.UserVectorService;
-import com.mezon.classmanagement.backend.domain_document.component.vector.entity.impl.Vector1536;
-import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationCluster;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationModel;
-import com.mezon.classmanagement.backend.domain_document.main.c_means.service.DocumentClusterMembershipService;
-import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationClusterService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
-import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.DistanceFromUserToClusterCenter;
-import com.mezon.classmanagement.backend.domain_document.main.recommendation.dto.MembershipOfUserWithCluster;
-import com.mezon.classmanagement.backend.domain_document.main.search.service.SearchService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -36,13 +28,9 @@ import java.util.stream.Stream;
 @Service
 public class RecommendationService {
 
-	UserService userService;
 	DocumentService documentService;
-	RecommendationClusterService recommendationClusterService;
 	RecommendationModelService recommendationModelService;
-	DocumentClusterMembershipService documentClusterMembershipService;
 	UserVectorService userVectorService;
-	SearchService searchService;
 
 	public void evaluate(List<DocumentResponseDto> candidateList) {
 
@@ -82,6 +70,9 @@ public class RecommendationService {
 		);
 	}
 
+	/**
+	 * Lấy danh sách ứng viên dựa vào cụm
+	 */
 	public List<DocumentResponseDto> getCandidateSource1(
 			Long userId
 	) {
@@ -127,6 +118,9 @@ public class RecommendationService {
 		return result;
 	}
 
+	/**
+	 * Lấy danh sách ứng viên dựa vào lịch sử tương tác
+	 */
 	public List<DocumentResponseDto> getCandidateSource2(Long userId) {
 		List<DocumentResponseDto> result = new ArrayList<>();
 

@@ -3,6 +3,7 @@ package com.mezon.classmanagement.backend.domain_document.main.document.reposito
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDtoProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -246,8 +247,29 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 	List<Document> findAllInClusterIndexByModelIdAndPublicClass(Integer clusterIndex, Long modelId, Pageable pageable);
 
 	@Query(value = """
-    SELECT d.*
+    SELECT
+    	d.id AS id,
+        d.title AS title,
+        d.description AS description,
+        d.file_name AS fileName,
+        COUNT (DISTINCT dv.id) AS viewCount,
+        COUNT (DISTINCT dd.id) AS downloadCount,
+        COUNT (DISTINCT db_all.id) AS bookmarkCount,
+    	CASE
+        	WHEN db_user.id IS NOT NULL THEN true
+        	ELSE false
+        END,
+        u.id AS creatorUserId,
+        u.display_name AS creatorDisplayName,
+        u.avatar_url AS creatorAvatarUrl,
+        d.created_at AS createdAt,
+        d.status AS status
     FROM documents d
+    JOIN users u ON d.creator_user_id = u.id
+    JOIN document_views dv on d.id = dv.document_id
+    JOIN document_downloads dd on d.id = dd.document_id
+    JOIN document_bookmarks db_all on d.id = db_all.document_id
+    LEFT JOIN document_bookmarks db_user ON d.id = db_user.document_id AND :userId = db_user.creator_user_id
     WHERE EXISTS (
         SELECT 1
         FROM directory_documents dd
@@ -264,10 +286,21 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
                 )
             )
     )
+    GROUP BY
+        d.id,
+        d.title,
+        d.description,
+        d.file_name,
+        u.id,
+        u.display_name,
+        u.avatar_url,
+        d.created_at,
+        d.status,
+        d.embedding
     ORDER BY d.embedding <=> CAST(:embedding AS vector)
     LIMIT :limit
     """, nativeQuery = true)
-	List<Document> findAllByEmbeddingCompare(
+	List<DocumentResponseDtoProjection> findAllByEmbeddingCompare(
 			@Param("userId") Long userId,
 			@Param("embedding") float[] embedding,
 			@Param("limit") int limit
