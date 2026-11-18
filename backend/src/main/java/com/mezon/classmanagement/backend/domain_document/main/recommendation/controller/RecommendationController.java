@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.common.dto.ResponseDTO;
 import com.mezon.classmanagement.backend.domain.auth.service.AuthService;
 import com.mezon.classmanagement.backend.domain.auth.service.JwtService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.RecommendationProjection;
 import com.mezon.classmanagement.backend.domain_document.main.recommendation.service.RecommendationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,11 @@ public class RecommendationController {
 	JwtService jwtService;
 
 	@GetMapping
-	public ResponseDTO<List<DocumentResponseDto>> getDocumentRecommendationList() {
+	public ResponseDTO<List<RecommendationProjection>> getDocumentRecommendationList() {
 		Authentication authentication = authService.getAuthentication();
 		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
 
-		List<DocumentResponseDto> response = recommendationService.getCandidate(clientUserId);
+		List<RecommendationProjection> response = recommendationService.getCandidateSource2(clientUserId);
 
 		return ResponseDTO.ok(
 				"Get recommendation list successful",

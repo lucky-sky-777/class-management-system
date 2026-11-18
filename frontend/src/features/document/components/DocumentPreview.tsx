@@ -46,7 +46,7 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({
     setError(null);
 
     classDocumentsAPI
-      .getFileBlob(classId, targetDirectoryId, file.id)
+      .getFileBlob(file.id)
       .then(async (blob) => {
         if (isCancelled) return;
 

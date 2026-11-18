@@ -51,12 +51,14 @@ dependencies {
     implementation("dev.langchain4j:langchain4j-open-ai:1.21.0")
     //implementation("dev.langchain4j:langchain4j-easy-rag:1.17.1-beta27")
     implementation("dev.langchain4j:langchain4j-google-ai-gemini:1.21.0")
-    //implementation("dev.langchain4j:langchain4j-google-genai:1.17.1-beta27")
+    //implementation("dev.langchain4j:langchain4j-google-genai:1.21.0")
     //implementation("dev.langchain4j:langchain4j-document-parser-apache-tika:1.21.0-beta31")
 
     implementation("io.minio:minio:9.0.3")
     implementation("software.amazon.awssdk:s3:2.55.6")
     implementation("com.google.guava:guava:33.7.2-jre")
+
+    implementation("org.springframework.ai:spring-ai-model")
 
     implementation("org.springframework.security:spring-security-crypto")
     implementation("org.springframework.boot:spring-boot-starter-amqp")

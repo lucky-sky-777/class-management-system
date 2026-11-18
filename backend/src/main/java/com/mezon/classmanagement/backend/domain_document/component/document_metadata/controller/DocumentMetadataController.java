@@ -62,18 +62,6 @@ public class DocumentMetadataController {
         );
     }
 
-    @DeleteMapping("/{documentId}/metadata")
-    public ResponseDTO<Void> deleteMetadata(
-            @PathVariable
-            Long documentId
-    ) {
-        documentMetadataService.deleteMetadata(documentId);
-
-        return ResponseDTO.ok(
-                "Delete metadata successful",
-                null
-        );
-    }
 
 
 

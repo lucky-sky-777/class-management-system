@@ -11,7 +11,7 @@ export const chatApi = {
   // 1. POST /api/rag: Global
   askGlobal: async (question: string): Promise<RagAnswerResponseDto> => {
     const body: RagAskRequestDto = { question };
-    return apiClient.post<RagAnswerResponseDto>("/rag", body);
+    return apiClient.post<RagAnswerResponseDto>("/rag/global", body);
   },
 
   // 2. POST /api/rag/class/{classId}: Classroom
@@ -20,7 +20,7 @@ export const chatApi = {
     question: string,
   ): Promise<RagAnswerResponseDto> => {
     const body: RagAskRequestDto = { question };
-    return apiClient.post<RagAnswerResponseDto>(`rag/class/${classId}`, body);
+    return apiClient.post<RagAnswerResponseDto>(`/rag/classes/${classId}`, body);
   },
 
   // 3. POST /api/rag/class/{classId}/document/{documentId}: Document
@@ -31,7 +31,7 @@ export const chatApi = {
   ): Promise<RagAnswerResponseDto> => {
     const body: RagAskRequestDto = { question };
     return apiClient.post<RagAnswerResponseDto>(
-      `rag/class/${classId}/document/${documentId}`,
+      `/rag/classes/${classId}/documents/${documentId}`,
       body,
     );
   },

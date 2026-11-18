@@ -10,11 +10,13 @@ export interface FolderItem {
 export interface FileItem {
   id: string | number;
   name: string;
-  size: string; // VD: "71.4 MB"
-  uploader: string; // VD: "Bạn đăng"
-  fileExtension: string; // Dùng để render màu và icon (pdf, docx, pptx...)
+  size: string; // VD: "71.4 MB" hoặc "--"
+  uploader: string;
+  uploaderAvatar?: string;
+  fileExtension: string; // pdf, docx, pptx...
   directoryId?: string | number;
   uploadDate?: string;
+  views?: number;
   downloads?: number;
   likes?: number;
   description?: string;
@@ -39,7 +41,7 @@ export type ChatContext =
     }
   | {
       type: "document";
-      classId?: string | number | undefined;
+      classId?: string | number;
       file: FileItem;
     };
 
@@ -58,24 +60,30 @@ export interface CreateDirectoryRequestDto {
   name: string;
 }
 
-// DTO gửi lên cho Spring Boot khi upload tài liệu (@RequestPart("request"))
 export interface CreateDocumentRequestDto {
   title?: string;
   description?: string;
 }
 
-// DTO nhận về sau khi upload tài liệu thành công
+export interface DeleteDocumentRequestDto {
+  documentIds?: (number | string)[];
+  [key: string]: any;
+}
+
 export interface DocumentResponseDto {
   id: number;
-  title: string;
-  fileName: string;
-  fileExtension?: string;
+  title?: string;
   description?: string;
-  key?: string;
-  status?: "UPLOADING" | "UPLOADED" | "ERROR";
-  createdAt?: string;
-  fileUrl?: string;
-  size?: number | string;
+  file_name: string;
+  view_count?: number;
+  download_count?: number;
+  bookmark_count?: number;
+  is_bookmarked?: boolean;
+  creator_user_id?: number;
+  creator_display_name?: string;
+  creator_avatar_url?: string;
+  created_at?: string;
+  status?: "UPLOADING" | "UPLOADED" | "ERROR" | string;
   [key: string]: unknown;
 }
 
@@ -107,15 +115,14 @@ export interface DocumentBookmarkResponseDto {
   isBookmarked: boolean;
   likesCount?: number;
 }
+
 // ==========================================
 // Requests & Responses: RAG & Chat AI
 // ==========================================
-// DTO gửi lên API RAG khi hỏi đáp theo một tài liệu cụ thể
 export interface RagAskRequestDto {
   question: string;
 }
 
-// DTO gửi lên khi hỏi đáp mở rộng theo ngữ cảnh (Global / Lớp / Tài liệu)
 export interface AskContextualQuestionRequestDto {
   question: string;
   scope: "GLOBAL" | "CLASSROOM" | "DOCUMENT";
@@ -123,16 +130,12 @@ export interface AskContextualQuestionRequestDto {
   classId?: string | number;
 }
 
-// DTO kết quả AI trả lời từ RAG Backend
 export interface RagAnswerResponseDto {
   question?: string;
   answer: string;
   sources?: DocumentSourceDto[];
 }
 
-// ==========================================
-// Chuẩn API Response Chung
-// ==========================================
 export interface ApiResponse<T> {
   code?: number;
   message: string;

@@ -1,12 +1,10 @@
 package com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.impl;
 
-import com.mezon.classmanagement.backend.common.misc.Nameable;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.builder.ChunkListBuilder;
-import com.mezon.classmanagement.backend.domain_document.component.chunk.service.ChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.strategy.ChunkStrategy;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
-import com.mezon.classmanagement.backend.domain_document.component.split.service.SplitService;
-import com.mezon.classmanagement.backend.domain_document.component.split.strategy.impl.paragraph.SplitByParagraphWithoutOverlapStrategy;
+import com.mezon.classmanagement.backend.domain_document.component.split.DocumentSplitterService;
+import com.mezon.classmanagement.backend.domain_document.component.split.strategy.document_splitter.impl.DocumentSplitterByParagraphWithoutOverlapStrategy;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,8 +19,9 @@ public class ChunkByParagraphWithoutOverlapStrategy implements ChunkStrategy {
 
 	public static final String NAME = "chunkByParagraphWithoutOverlapStrategy";
 
-	SplitService splitService;
-	SplitByParagraphWithoutOverlapStrategy splitByParagraphWithoutOverlapStrategy;
+	DocumentSplitterService documentSplitterService;
+	DocumentSplitterByParagraphWithoutOverlapStrategy
+			documentSplitterByParagraphWithoutOverlapStrategy;
 
 	@Override
 	public String getName() {
@@ -31,9 +30,12 @@ public class ChunkByParagraphWithoutOverlapStrategy implements ChunkStrategy {
 
 	@Override
 	public List<String> getChunkList(DocumentSource documentSource) throws Exception {
-		return splitService.getChunkList(
-				splitByParagraphWithoutOverlapStrategy,
-				documentSource
+		return ChunkListBuilder.getChunkList(
+				documentSource.toDocument(),
+				documentSplitterService
+						.getSplitter(
+								documentSplitterByParagraphWithoutOverlapStrategy
+						)
 		);
 	}
 

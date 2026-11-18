@@ -13,6 +13,8 @@ import com.mezon.classmanagement.backend.domain_document.main.document.dto.reque
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_download.service.DocumentDownloadService;
+import com.mezon.classmanagement.backend.domain_document.main.document_action.document_view.service.DocumentViewService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -40,7 +42,7 @@ import java.util.List;
 @SuppressWarnings({WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
-@RequestMapping("/api/classes/{classId}/directories/{directoryId}/documents")
+@RequestMapping("/api")
 @RestController
 public class DocumentController {
 
@@ -48,13 +50,16 @@ public class DocumentController {
 	JwtService jwtService;
 
 	DocumentService documentService;
+	DocumentViewService documentViewService;
+	DocumentDownloadService documentDownloadService;
 	IngestService ingestService;
 
 	private void ensureFileCountPerRequest(List<MultipartFile> multipartFileList) {
-		if (multipartFileList.size() > 2000) {
+		int lim = 2000;
+		if (multipartFileList.size() > lim) {
 			throw new GlobalException(
 					GlobalException.Type.INVALID_REQUEST,
-					"Chỉ nhận tối đa 100 file mỗi yêu cầu"
+					"Chỉ nhận tối đa " + lim + " file mỗi yêu cầu"
 			);
 		}
 	}
@@ -72,17 +77,58 @@ public class DocumentController {
 		}
 	}
 
-	@GetMapping("/{documentId}/download")
-	public ResponseEntity<StreamingResponseBody> download(
+	/**
+	 * Đăng tài liệu
+	 *
+	 * @param classId           ID lớp
+	 * @param directoryId       ID thư mục
+	 * @param multipartFileList Danh sách tài liệu muốn đăng
+	 * @return {@code List<DTO>}
+	 */
+	@PostMapping(
+			path = "/classes/{classId}/directories/{directoryId}/documents",
+			consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+	)
+	public ResponseDTO<List<DocumentResponseDto>> upload(
 			@PathVariable Long classId,
 			@PathVariable Long directoryId,
+			@RequestPart("files")
+			List<@ValidFile MultipartFile> multipartFileList
+	) {
+		ensureFileCountPerRequest(multipartFileList);
+		ensureFileSizePerRequest(multipartFileList);
+
+		Authentication authentication = authService.getAuthentication();
+		Long creatorUserId = jwtService.extractUserIdFromAuthentication(authentication);
+		List<IngestRequest> ingestRequestList = new ArrayList<>();
+		for (MultipartFile multipartFile : multipartFileList) {
+			ingestRequestList.add(
+					new IngestRequest(creatorUserId, classId, directoryId, multipartFile)
+			);
+		}
+		ingestService.ingestMultiple(ingestRequestList);
+
+		return ResponseDTO.ok("Đã tiếp nhận yêu cầu");
+	}
+
+	/**
+	 * Tải tài liệu
+	 *
+	 * @param documentId ID tài liệu muốn tải
+	 * @return {@code Blob}
+	 */
+	@GetMapping("/documents/{documentId}/download")
+	public ResponseEntity<StreamingResponseBody> download(
 			@PathVariable Long documentId
 	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
 		Document document = documentService.findByIdOrThrow(documentId);
 
 		StreamingResponseBody body = outputStream -> {
 			try (InputStream inputStream =
-						 documentService.openStream(classId, directoryId, document)) {
+						 documentService.openStream(clientUserId, document)) {
 				inputStream.transferTo(outputStream);
 			}
 		};
@@ -95,6 +141,8 @@ public class DocumentController {
 						)
 						.build();
 
+		documentDownloadService.create(clientUserId, documentId);
+
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_OCTET_STREAM)
 				.header(
@@ -104,12 +152,76 @@ public class DocumentController {
 				.body(body);
 	}
 
-	@GetMapping
+	/**
+	 * Xóa tài liệu
+	 *
+	 * @param classId     ID lớp
+	 * @param directoryId ID thư mục
+	 * @param request     {@code DTO}
+	 * @return {@code Void}
+	 */
+	@DeleteMapping("/classes/{classId}/directories/{directoryId}/documents")
+	public ResponseDTO<Void> delete(
+			@PathVariable Long classId,
+			@PathVariable Long directoryId,
+			@RequestBody DeleteDocumentRequestDto request
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
+		documentService.delete(clientUserId, classId, directoryId, request);
+
+		return ResponseDTO.ok(
+				"Delete document(s) successful"
+		);
+	}
+
+	/**
+	 * Lấy thông tin một tài liệu
+	 *
+	 * @param documentId - ID tài liệu muốn lấy thông tin
+	 * @return {@code DTO}
+	 */
+	@GetMapping("/documents/{documentId}")
+	public ResponseDTO<DocumentResponseDto> get(
+			@PathVariable Long documentId
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
+		DocumentResponseDto response = documentService.get(clientUserId, documentId);
+
+		documentViewService.create(clientUserId, documentId);
+
+		return ResponseDTO.ok(
+				"Get document successful",
+				response
+		);
+	}
+
+	/**
+	 * Lấy thông tin một danh sách tài liệu
+	 *
+	 * @param classId     ID lớp
+	 * @param directoryId ID thư mục
+	 * @return {@code List<DTO>}
+	 */
+	@GetMapping("/classes/{classId}/directories/{directoryId}")
 	public ResponseDTO<List<DocumentResponseDto>> getList(
 			@PathVariable Long classId,
 			@PathVariable Long directoryId
 	) {
-		List<DocumentResponseDto> responseList = documentService.getList(classId, directoryId);
+		return getList_Refactor(directoryId);
+	}
+
+	@GetMapping("/directories/{directoryId}")
+	public ResponseDTO<List<DocumentResponseDto>> getList_Refactor(
+			@PathVariable Long directoryId
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
+		List<DocumentResponseDto> responseList = documentService.getList(clientUserId, directoryId);
 
 		return ResponseDTO.ok(
 				"Get document list successful",
@@ -117,17 +229,24 @@ public class DocumentController {
 		);
 	}
 
-	@GetMapping("/{documentId}/file")
+	/**
+	 * Đọc một tài liệu
+	 *
+	 * @param documentId ID tài liệu muốn đọc
+	 * @return {@code Blob}
+	 */
+	@GetMapping("/documents/{documentId}/file")
 	public ResponseEntity<StreamingResponseBody> readFile(
-			@PathVariable Long classId,
-			@PathVariable Long directoryId,
 			@PathVariable Long documentId
 	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
 		Document document = documentService.findByIdOrThrow(documentId);
 
 		StreamingResponseBody body = outputStream -> {
 			try (InputStream inputStream =
-						 documentService.openStream(classId, directoryId, document)) {
+						 documentService.openStream(clientUserId, document)) {
 				inputStream.transferTo(outputStream);
 			}
 		};
@@ -151,70 +270,5 @@ public class DocumentController {
 				//.contentLength(file.size())
 				.body(body);
 	}
-
-	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseDTO<List<DocumentResponseDto>> upload(
-			@PathVariable Long classId,
-			@PathVariable Long directoryId,
-
-			@RequestPart("files")
-			List<@ValidFile MultipartFile> multipartFileList
-	) {
-		ensureFileCountPerRequest(multipartFileList);
-		ensureFileSizePerRequest(multipartFileList);
-
-		Authentication authentication = authService.getAuthentication();
-		Long creatorUserId = jwtService.extractUserIdFromAuthentication(authentication);
-		List<IngestRequest> ingestRequestList = new ArrayList<>();
-		for (MultipartFile multipartFile : multipartFileList) {
-			ingestRequestList.add(
-					new IngestRequest(creatorUserId, classId, directoryId, multipartFile)
-			);
-		}
-		ingestService.ingestMultiple(ingestRequestList);
-
-		return ResponseDTO.ok("Đã tiếp nhận yêu cầu");
-	}
-
-	@DeleteMapping
-	public ResponseDTO<Void> delete(
-			@PathVariable Long classId,
-			@PathVariable Long directoryId,
-			@RequestBody DeleteDocumentRequestDto request
-	) {
-		Authentication authentication = authService.getAuthentication();
-		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
-
-		documentService.delete(clientUserId, classId, directoryId, request);
-
-		return ResponseDTO.ok(
-				"Delete document(s) successful"
-		);
-	}
-
-//	@PostMapping(
-//			consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-//	)
-//	public ResponseDTO<DocumentResponseDto> upload(
-//			@PathVariable
-//			Long classId,
-//
-//			@PathVariable
-//			Long directoryId,
-//
-////			@RequestPart("request")
-////			CreateDocumentRequestDto request,
-//
-//			@ValidFile
-//			@RequestPart("file")
-//			MultipartFile multipartFile
-//	) {
-//		Authentication authentication = authService.getAuthentication();
-//		Long creatorUserId = jwtService.extractUserIdFromAuthentication(authentication);
-//
-//		ingestService.ingestSingle(creatorUserId, classId, directoryId, multipartFile);
-//
-//		return ResponseDTO.ok("uploading");
-//	}
 
 }

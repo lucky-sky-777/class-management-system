@@ -48,6 +48,12 @@ export const getExtension = (fileName?: string, mimeType?: string): string => {
   return "file";
 };
 
+export interface DeleteDocumentRequestDto {
+  documentIds?: (number | string)[];
+  // Khai báo thêm các trường khác nếu DTO bên Java có quy định
+  [key: string]: any;
+}
+
 export const classDocumentsAPI = {
   // --- DIRECTORY ---
   getFolders: async (
@@ -89,20 +95,20 @@ export const classDocumentsAPI = {
   },
 
   // --- DOCUMENT ---
+
+  // ĐÃ SỬA: Bỏ /documents ở cuối để khớp @GetMapping("/classes/{classId}/directories/{directoryId}")
   getDocumentsByDirectory: async (
     classId: string | number,
     directoryId: string | number,
   ): Promise<ResponseDTO<DocumentResponseDto[]>> => {
-    return apiClient.get(
-      `/classes/${classId}/directories/${directoryId}/documents`,
-    );
+    return apiClient.get(`/classes/${classId}/directories/${directoryId}`);
   },
 
   uploadDocuments: async (
     classId: string | number,
     directoryId: string | number,
     files: File[],
-  ): Promise<ResponseDTO<string>> => {
+  ): Promise<ResponseDTO<any>> => {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append("files", file);
@@ -114,17 +120,41 @@ export const classDocumentsAPI = {
     );
   },
 
-  getFileBlob: async (
+  // ĐÃ SỬA: Khớp @GetMapping("/{documentId}/file")
+  getFileBlob: async (documentId: string | number): Promise<Blob> => {
+    return apiClient.get(`/documents/${documentId}/file`, {
+      axiosConfig: {
+        responseType: "blob",
+      },
+    });
+  },
+
+  // THÊM MỚI: Khớp @GetMapping("/documents/{documentId}/download")
+  downloadFile: async (documentId: string | number): Promise<Blob> => {
+    return apiClient.get(`/documents/${documentId}/download`, {
+      axiosConfig: {
+        responseType: "blob",
+      },
+    });
+  },
+
+  // THÊM MỚI: Khớp @GetMapping("/documents/{documentId}")
+  getDocumentDetail: async (
+    documentId: string | number,
+  ): Promise<ResponseDTO<DocumentResponseDto>> => {
+    return apiClient.get(`/documents/${documentId}`);
+  },
+
+  // ĐÃ SỬA: Khớp @DeleteMapping("/classes/{classId}/directories/{directoryId}/documents")
+  deleteDocuments: async (
     classId: string | number,
     directoryId: string | number,
-    documentId: string | number,
-  ): Promise<Blob> => {
-    return apiClient.get(
-      `/classes/${classId}/directories/${directoryId}/documents/${documentId}/file`,
+    data: DeleteDocumentRequestDto,
+  ): Promise<ResponseDTO<void>> => {
+    return apiClient.delete(
+      `/classes/${classId}/directories/${directoryId}/documents`,
       {
-        axiosConfig: {
-          responseType: "blob",
-        },
+        data,
       },
     );
   },
@@ -146,17 +176,20 @@ export const classDocumentsAPI = {
     fileId: string | number,
     baseFile?: Partial<FileItem> | null,
   ): Promise<FileItem> => {
-    const [metaRes, tagRes] = await Promise.allSettled([
+    const [detailRes, metaRes, tagRes] = await Promise.allSettled([
+      classDocumentsAPI.getDocumentDetail(fileId),
       classDocumentsAPI.getDocumentMetadata(fileId),
       classDocumentsAPI.getDocumentTags(fileId),
     ]);
 
-    // Trích xuất metadata cần thiết: file_size, mime_type
+    // Lấy dữ liệu từ GET /documents/{documentId} (các field trả về dạng snake_case theo @JsonProperty)
+    const detailData: any =
+      detailRes.status === "fulfilled" ? detailRes.value?.data : null;
+
     const metaPayload: any =
       metaRes.status === "fulfilled" ? metaRes.value?.data : null;
     const metadataObj = metaPayload?.metadata || metaPayload;
 
-    // Trích xuất danh sách tags
     const tagPayload: any =
       tagRes.status === "fulfilled" ? tagRes.value?.data : null;
     const rawTags = Array.isArray(tagPayload)
@@ -166,16 +199,19 @@ export const classDocumentsAPI = {
       ? rawTags.map((t: any) => (typeof t === "string" ? t : t.name))
       : [];
 
-    const resolvedName = baseFile?.name || metadataObj?.file_name || "Tài liệu";
+    const resolvedName =
+      detailData?.title ||
+      detailData?.file_name ||
+      baseFile?.name ||
+      metadataObj?.file_name ||
+      "Tài liệu";
 
-    // Tính dung lượng: ưu tiên từ metadata backend -> file ban đầu
     const resolvedSize = metadataObj?.file_size
       ? formatBytes(metadataObj.file_size)
       : baseFile?.size || "--";
 
-    // Tính đuôi file: kết hợp tên và mime_type
     const resolvedExtension = getExtension(
-      resolvedName,
+      detailData?.file_name || resolvedName,
       metadataObj?.mime_type || baseFile?.fileExtension,
     );
 
@@ -184,24 +220,20 @@ export const classDocumentsAPI = {
       name: resolvedName,
       size: resolvedSize,
       fileExtension: resolvedExtension,
-      // Lấy toàn bộ thông tin thực tế từ file đã click
-      uploader: baseFile?.uploader || "Người dùng",
-      uploadDate: baseFile?.uploadDate || "--",
-      downloads: baseFile?.downloads ?? 0,
-      likes: baseFile?.likes ?? 0,
-      description: baseFile?.description || "",
-      isLiked: baseFile?.isLiked ?? false,
+      uploader:
+        detailData?.creator_display_name || baseFile?.uploader || "Người dùng",
+      uploadDate: detailData?.created_at || baseFile?.uploadDate || "--",
+      downloads: detailData?.download_count ?? baseFile?.downloads ?? 0,
+      likes: detailData?.bookmark_count ?? baseFile?.likes ?? 0,
+      description: detailData?.description || baseFile?.description || "",
+      isLiked: detailData?.is_bookmarked ?? baseFile?.isLiked ?? false,
       fileUrl: baseFile?.fileUrl,
-      // Gộp tags (ưu tiên tags mới từ API)
       tags: tagList.length > 0 ? tagList : baseFile?.tags || [],
     };
   },
 
+  // Giữ nguyên mock do Backend DocumentController chưa có endpoint đổi tên document
   renameFile: async (id: string | number, newName: string): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-  },
-
-  deleteFile: async (id: string | number): Promise<void> => {
     await new Promise((resolve) => setTimeout(resolve, 300));
   },
 
@@ -247,8 +279,7 @@ export const classDocumentsAPI = {
     ];
   },
 
-  //api action
-  // like
+  // Bookmark / Like
   toggleBookmark: async (
     documentId: string | number,
   ): Promise<ResponseDTO<void>> => {

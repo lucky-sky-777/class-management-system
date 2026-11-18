@@ -1,6 +1,7 @@
 package com.mezon.classmanagement.backend.domain_document.component.document_chunk.repository;
 
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.entity.DocumentChunk;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -42,10 +43,10 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 	);
 
 	@Query(value = """
-	SELECT *
+	SELECT *, dc.embedding <=> CAST(:embedding AS vector) AS distance
 	FROM document_chunks dc
 	WHERE dc.document_id = :documentId
-	ORDER BY dc.embedding <=> CAST(:embedding AS vector) ASC
+	ORDER BY distance ASC
 	LIMIT :limit
 	""", nativeQuery = true
 	)

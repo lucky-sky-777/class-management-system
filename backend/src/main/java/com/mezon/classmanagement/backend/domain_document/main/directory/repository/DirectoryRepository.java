@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.domain_document.main.directory.dto.Dire
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

@@ -16,8 +16,10 @@ import { CreateFolderModal } from "@features/document/components/CreateFolderMod
 
 interface DocumentToolbarProps {
   currentFolder: FolderItem | null;
+  currentFileName?: string | null;
   folders: FolderItem[];
   onGoToRoot: () => void;
+  onBackToFolder?: () => void;
   onSearch: (term: string) => void;
   onCreateFolder: (name: string) => void;
   onUploadDocument?: (
@@ -33,8 +35,10 @@ interface DocumentToolbarProps {
 
 export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
   currentFolder,
+  currentFileName,
   folders,
   onGoToRoot,
+  onBackToFolder,
   onSearch,
   onCreateFolder,
   onUploadDocument,
@@ -46,24 +50,78 @@ export const DocumentToolbar: React.FC<DocumentToolbarProps> = ({
   const [isUpLoadModalOpen, setIsUpLoadModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
 
+  // Helper rút gọn tên dài nhưng vẫn giữ lại phần đuôi file (.pdf, .docx...)
+  const formatBreadcrumbName = (name: string, maxLength = 28): string => {
+    if (!name || name.length <= maxLength) return name;
+
+    const dotIndex = name.lastIndexOf(".");
+    // Nếu có đuôi file hợp lệ (ví dụ .pdf, .docx)
+    if (dotIndex > 0 && name.length - dotIndex <= 6) {
+      const ext = name.slice(dotIndex); // VD: ".pdf"
+      const baseName = name.slice(0, dotIndex);
+      const keepStart = Math.max(8, maxLength - ext.length - 5);
+      return `${baseName.slice(0, keepStart)}...${baseName.slice(-3)}${ext}`;
+    }
+
+    // Nếu là tên thư mục (không có đuôi file)
+    return `${name.slice(0, maxLength - 3)}...`;
+  };
+
   return (
     <>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-[18px] font-bold text-[var(--ink-1)] shrink-0">
-          <Folder className="text-[var(--sky)]" fill="currentColor" size={24} />
+        {/* Breadcrumbs - Luôn nằm thẳng 1 hàng, tự co giãn theo màn hình */}
+        <div className="flex items-center gap-1.5 sm:gap-2 text-[16px] sm:text-[18px] font-bold text-[var(--ink-1)] min-w-0 flex-1">
+          <Folder
+            className="text-[var(--sky)] shrink-0"
+            fill="currentColor"
+            size={22}
+          />
           <span
             onClick={onGoToRoot}
-            className={`cursor-pointer hover:underline transition-colors ${!currentFolder ? "text-[var(--primary)]" : "text-[var(--ink-3)] hover:text-[var(--ink-1)]"}`}
+            className={`cursor-pointer hover:underline transition-colors shrink-0 ${
+              !currentFolder && !currentFileName
+                ? "text-[var(--primary)]"
+                : "text-[var(--ink-3)] hover:text-[var(--ink-1)]"
+            }`}
           >
             Gốc
           </span>
 
           {currentFolder && (
             <>
-              <ChevronRight size={20} className="text-[var(--ink-3)]" />
-              <span className="text-[var(--ink-1)] truncate max-w-[150px] sm:max-w-none">
-                {currentFolder.name}
+              <ChevronRight
+                size={18}
+                className="text-[var(--ink-3)] shrink-0"
+              />
+              <span
+                onClick={currentFileName ? onBackToFolder : undefined}
+                className={`truncate transition-colors ${
+                  currentFileName
+                    ? "max-w-[100px] sm:max-w-[160px] cursor-pointer text-[var(--ink-3)] hover:text-[var(--ink-1)] hover:underline"
+                    : "max-w-[180px] sm:max-w-[300px] text-[var(--primary)]"
+                }`}
+                title={currentFolder.name}
+              >
+                {formatBreadcrumbName(
+                  currentFolder.name,
+                  currentFileName ? 18 : 30,
+                )}
+              </span>
+            </>
+          )}
+
+          {currentFileName && (
+            <>
+              <ChevronRight
+                size={18}
+                className="text-[var(--ink-3)] shrink-0"
+              />
+              <span
+                className="text-[var(--primary)] truncate min-w-0"
+                title={currentFileName}
+              >
+                {formatBreadcrumbName(currentFileName, 32)}
               </span>
             </>
           )}

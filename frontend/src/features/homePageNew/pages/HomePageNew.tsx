@@ -1,13 +1,18 @@
 // src/features/homePageNew/pages/HomePageNew.tsx
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Loader2, Sparkles } from "lucide-react";
 import { useDocumentSearch } from "@features/homePageNew/hook/useDocumentSearch";
 import { HeroSearch } from "@features/homePageNew/components/HeroSearch";
 import { RecentSearches } from "@features/homePageNew/components/RecentSearches";
 import { DocumentCard } from "@features/homePageNew/components/DocumentCard";
-import { DocumentAIChatSidebar } from "@/features/document/components/DocumentAIChatSidebar"; // Nhớ import Sidebar vào
+import { DocumentAIChatSidebar } from "@/features/document/components/DocumentAIChatSidebar";
+import { DocumentViewerModal } from "@/features/document/components/DocumentViewerModal";
 
 export const HomePageNew = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const fileIdFromUrl = searchParams.get("fileId");
+
   const {
     recentSearches,
     recommendedDocs,
@@ -19,13 +24,41 @@ export const HomePageNew = () => {
     handleSearch,
   } = useDocumentSearch();
 
-  // State quản lý việc mở khung chat AI toàn hệ thống
   const [isGlobalAIOpen, setIsGlobalAIOpen] = useState(false);
 
-  const handleViewDocument = (id: string | number) => {
-    console.log("Chuyển đến trang chi tiết tài liệu ID:", id);
-    // Tích hợp logic navigate của bạn ở đây
+  // Chỉ cần lưu duy nhất ID của tài liệu đang xem
+  const [viewingDocId, setViewingDocId] = useState<string | number | null>(
+    null,
+  );
+
+  // Tự động mở modal khi tab mới được mở kèm param ?fileId=...
+  useEffect(() => {
+    if (fileIdFromUrl) {
+      setViewingDocId(fileIdFromUrl);
+    }
+  }, [fileIdFromUrl]);
+
+  // Đóng modal và xóa ?fileId khỏi URL
+  const handleCloseViewer = () => {
+    setViewingDocId(null);
+    if (fileIdFromUrl) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.delete("fileId");
+          return next;
+        },
+        { replace: true },
+      );
+    }
   };
+
+  // Lấy dữ liệu card hiện có (nếu mở từ danh sách) để Modal hiển thị ngay tên trong lúc tải
+  const activeCardDoc = viewingDocId
+    ? [...recommendedDocs, ...searchResults].find(
+        (d) => String(d.id) === String(viewingDocId),
+      )
+    : null;
 
   if (isInitialLoading) {
     return (
@@ -39,7 +72,6 @@ export const HomePageNew = () => {
   }
 
   return (
-    // Wrapper ngoài cùng giữ nền, Wrapper bên trong chịu trách nhiệm đẩy content sang trái 480px
     <div className="min-h-screen bg-[var(--bg-surface-2)] overflow-x-hidden font-sans">
       <div
         className={`transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] py-16 px-4 sm:px-6 ${
@@ -47,10 +79,8 @@ export const HomePageNew = () => {
         }`}
       >
         <div className="max-w-5xl mx-auto space-y-14">
-          {/* Component Nhập liệu */}
           <HeroSearch onSearch={handleSearch} currentQuery={searchQuery} />
 
-          {/* Component Lịch sử */}
           {!isSearching && (
             <RecentSearches
               searches={recentSearches}
@@ -58,10 +88,8 @@ export const HomePageNew = () => {
             />
           )}
 
-          {/* Khối Hiển thị Dữ liệu */}
           <div className="max-w-[900px] mx-auto">
             {isSearching ? (
-              // TRẠNG THÁI TÌM KIẾM
               <>
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold text-[var(--ink-2)]">
@@ -89,36 +117,41 @@ export const HomePageNew = () => {
                       <DocumentCard
                         key={doc.id}
                         document={doc}
-                        onClick={handleViewDocument}
+                        onClick={(id) => setViewingDocId(id)}
                       />
                     ))}
                   </div>
                 )}
               </>
             ) : (
-              // TRẠNG THÁI GỢI Ý MẶC ĐỊNH
               <>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-[11px] font-semibold text-[var(--ink-3)] uppercase tracking-wider">
                     Gợi ý phù hợp dành cho bạn
                   </h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {recommendedDocs.map((doc) => (
-                    <DocumentCard
-                      key={doc.id}
-                      document={doc}
-                      onClick={handleViewDocument}
-                    />
-                  ))}
-                </div>
+                {recommendedDocs.length === 0 ? (
+                  <div className="text-center py-10 text-[var(--ink-3)] text-sm">
+                    Chưa có tài liệu gợi ý nào dành cho bạn lúc này.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {recommendedDocs.map((doc) => (
+                      <DocumentCard
+                        key={doc.id}
+                        document={doc}
+                        onClick={(id) => setViewingDocId(id)}
+                      />
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </div>
         </div>
       </div>
 
-      {/* Nút bấm AI Floating Style Colab (Icon tròn đơn giản nằm giữa phía dưới) */}
+      {/* Nút bấm AI Floating */}
       {!isGlobalAIOpen && (
         <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <button
@@ -135,12 +168,26 @@ export const HomePageNew = () => {
       <DocumentAIChatSidebar
         isOpen={isGlobalAIOpen}
         onClose={() => setIsGlobalAIOpen(false)}
-        file={null} // Không truyền file
-        // Không truyền classId -> Tự động kích hoạt type "global"
-        onSelectDocument={(docId) => {
-          setIsGlobalAIOpen(false);
-          handleViewDocument(docId); // Dẫn người dùng đến trang xem tài liệu nếu click nguồn
-        }}
+        file={null}
+      />
+
+      {/* Modal Xem Tài Liệu Độc Lập */}
+      <DocumentViewerModal
+        isOpen={!!viewingDocId}
+        onClose={handleCloseViewer}
+        documentId={viewingDocId}
+        initialFile={
+          activeCardDoc
+            ? {
+                id: activeCardDoc.id,
+                name: activeCardDoc.title,
+                uploader: activeCardDoc.author,
+                uploadDate: activeCardDoc.date,
+                fileExtension: activeCardDoc.fileExtension,
+                downloads: Number(activeCardDoc.downloads) || 0,
+              }
+            : null
+        }
       />
     </div>
   );

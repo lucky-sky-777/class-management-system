@@ -1,5 +1,6 @@
 package com.mezon.classmanagement.backend.domain_document.component.chunk.service;
 
+import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
 import com.mezon.classmanagement.backend.domain_document.component.chunk.builder.ChunkListBuilder;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings(value = {WarningConstant.SPELL_CHECKING_INSPECTION})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 @Service

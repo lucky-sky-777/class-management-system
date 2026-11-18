@@ -188,8 +188,12 @@ public class TagService {
 		return create(name).getId();
 	}
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void autoTag(Long documentId, List<String> chunkList) throws Exception {
+	public List<Tag> getAllTags() {
+		return tagRepository.findAll();
+	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void autoTag(Long documentId, List<String> chunkList) throws Exception {
 		Document document = documentRepository
 				.findById(documentId)
 				.orElse(null);
@@ -199,23 +203,23 @@ public class TagService {
 			return;
 		}
 
-		// chi tu dong tag khi CHUA co tag -> khong ghi de tag thu cong cua nguoi dung
-		DocumentTag existingTag = documentTagRepository
+		// lay top tu khoan tu noi dung file
+		List<String> tagsName = extractTagsWithVnCoreNLP(chunkList, 20);
+
+		// ghi vao internal_tags — KHONG dong vao tag_ids cua user
+		DocumentTag documentTag = documentTagRepository
 				.findByDocument_Id(documentId)
 				.orElse(null);
 
-		if (existingTag != null
-				&& existingTag.getTagIds() != null
-				&& existingTag.getTagIds().length > 0) {
-			log.info("Skip auto-tag. Tags already set, documentId={}", documentId);
-			return;
+		if (documentTag == null) {
+			documentTag = DocumentTag.builder()
+					.document(document)
+					.build();
 		}
 
-		List<String> tagsName = extractTagsWithVnCoreNLP(chunkList, 20);
-
-		Long[] tags = findOrCreateIds(tagsName);
-
-		replaceTags(document.getId(), tags);
+		documentTag.setInternalTags(tagsName.toArray(new String[0]));
+		documentTag.setUpdatedAt(Instant.now());
+		documentTagRepository.save(documentTag);
 	}
 
 	/**

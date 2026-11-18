@@ -12,6 +12,7 @@ import com.mezon.classmanagement.backend.domain_document.component.document_chun
 import com.mezon.classmanagement.backend.domain_document.component.document_chunk.service.DocumentChunkService;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.DocumentSource;
 import com.mezon.classmanagement.backend.domain_document.component.document_source.impl.InputStreamDocumentSource;
+import com.mezon.classmanagement.backend.domain_document.component.document_tag.tag.service.TagService;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.IngestRequest;
 import com.mezon.classmanagement.backend.domain_document.component.ingest.dto.RabbitIngestRequest;
@@ -59,7 +60,7 @@ public class IngestService {
 	ChunkByParagraphWithoutOverlapStrategy chunkByParagraphWithoutOverlapStrategy;
 	ChunkByParagraphWithOverlapStrategy chunkByParagraphWithOverlapStrategy;
 	FileProducer fileProducer;
-//	TagService tagService;
+	TagService tagService;
 
 //	DocumentMetadataService documentMetadataService;
 
@@ -115,7 +116,7 @@ public class IngestService {
 		ingestAsync(dataList);
 	}
 
-	@Async("documentExecutor")
+	@Async("documentListExecutor")
 	protected void ingestAsync(List<PreparedData> preparedDataList) {
 		for (PreparedData data : preparedDataList) {
 			IngestRequest request = data.ingestRequest();
@@ -302,6 +303,8 @@ public class IngestService {
 				tryDeleteDocument(request.documentId());
 				return;
 			}
+
+			tagService.autoTag(request.documentId(), chunkList);
 
 			// 7. Đánh dấu document là đã upload
 			try {
