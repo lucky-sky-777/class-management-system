@@ -3,7 +3,6 @@ import React from "react";
 import { X, Send, User, Sparkles, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useNavigate } from "react-router-dom";
 import { useAIChat } from "@/features/document/hooks/useAIChat";
 import type { FileItem, DocumentSourceDto } from "@/features/document/types";
 
@@ -12,7 +11,13 @@ interface DocumentAIChatSidebarProps {
   onClose: () => void;
   file: FileItem | null;
   classId?: string | number;
-  onSelectDocument?: (documentId: number) => void;
+}
+
+interface ExtendedSourceDto extends DocumentSourceDto {
+  title?: string;
+  file_name?: string;
+  documentId?: number;
+  document_id?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,25 +27,91 @@ const cleanProps = <T extends Record<string, any>>(props: T) => {
   return rest;
 };
 
-// Chuyển đổi chuỗi [Nguồn: fileName] thành Markdown link mang protocol "doc://{id}"
-const injectSourceLinks = (text: string, sources?: DocumentSourceDto[]) => {
+// Lấy ID chuẩn của tài liệu nguồn
+const getSourceDocId = (
+  src: ExtendedSourceDto,
+): number | string | undefined => {
+  return src.id ?? src.documentId ?? src.document_id;
+};
+
+// Chuẩn hóa chuỗi về dạng chữ thường, không dấu, chỉ giữ chữ và số để so khớp chính xác dù lệch dấu/gạch dưới
+const normalizeForMatch = (str: string): string => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .replace(/\.[a-z0-9]{1,6}$/i, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+};
+
+// Chuyển đổi trích dẫn nguồn trong câu trả lời sang Markdown link dạng #doc-{id}
+const injectSourceLinks = (text: string, sources?: ExtendedSourceDto[]) => {
   if (!text) return "";
   if (!sources || sources.length === 0) {
-    return text.replace(/(\[(?:Nguồn|nguồn):\s*[^\]]+\])/gi, " *$1* ");
+    return text.replace(
+      /(?:^|\n|\s)(\[?(?:Nguồn|nguồn):\s*[^\n\]]+\]?)/gi,
+      " *$1* ",
+    );
   }
 
+  const normalizedSources = sources
+    .map((src) => {
+      const docId = getSourceDocId(src);
+      const rawNames = [src.title, src.fileName, src.file_name].filter(
+        Boolean,
+      ) as string[];
+      const keys = rawNames.map(normalizeForMatch).filter(Boolean);
+      return { docId, keys };
+    })
+    .filter((item) => item.docId && item.keys.length > 0);
+
   let formattedText = text;
-  sources.forEach((src) => {
-    const escapedFileName = src.fileName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(
-      `\\[(?:Nguồn|nguồn):\\s*${escapedFileName}\\]`,
-      "gi",
-    );
-    formattedText = formattedText.replace(
-      regex,
-      `[[Nguồn: ${src.fileName}]](doc://${src.id})`,
-    );
-  });
+
+  // 1. Bắt dạng có ngoặc: [Nguồn: ...] hoặc (Nguồn: ...)
+  formattedText = formattedText.replace(
+    /(?:\[|\()((?:Nguồn|nguồn|Tài liệu|tài liệu):\s*([^\]\)]+))(?:\]|\))(?!\()/gi,
+    (fullMatch, innerLabel, rawCitedName) => {
+      const citedKey = normalizeForMatch(rawCitedName);
+      if (!citedKey) return fullMatch;
+
+      const matchedSrc =
+        normalizedSources.find((s) =>
+          s.keys.some(
+            (k) =>
+              k === citedKey || k.includes(citedKey) || citedKey.includes(k),
+          ),
+        ) || (normalizedSources.length === 1 ? normalizedSources[0] : null);
+
+      if (matchedSrc?.docId) {
+        return `[${innerLabel.trim()}](#doc-${matchedSrc.docId})`;
+      }
+      return fullMatch;
+    },
+  );
+
+  // 2. Bắt dạng đứng trần trên dòng: "Nguồn: ..."
+  formattedText = formattedText.replace(
+    /(^|\n)((?:Nguồn|nguồn|Tài liệu|tài liệu):\s*([^\n\[]+))(?=\n|$)/gi,
+    (fullMatch, prefix, innerLabel, rawCitedName) => {
+      const citedKey = normalizeForMatch(rawCitedName);
+      if (!citedKey) return fullMatch;
+
+      const matchedSrc =
+        normalizedSources.find((s) =>
+          s.keys.some(
+            (k) =>
+              k === citedKey || k.includes(citedKey) || citedKey.includes(k),
+          ),
+        ) || (normalizedSources.length === 1 ? normalizedSources[0] : null);
+
+      if (matchedSrc?.docId) {
+        return `${prefix}[${innerLabel.trim()}](#doc-${matchedSrc.docId})`;
+      }
+      return fullMatch;
+    },
+  );
 
   return formattedText;
 };
@@ -48,11 +119,8 @@ const injectSourceLinks = (text: string, sources?: DocumentSourceDto[]) => {
 const DocumentAIChatContent: React.FC<{
   file: FileItem | null;
   classId?: string | number;
-  onSelectDocument?: (documentId: number) => void;
   onClose: () => void;
-}> = ({ file, classId, onSelectDocument, onClose }) => {
-  const navigate = useNavigate();
-
+}> = ({ file, classId, onClose }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chatContext: any = file
     ? { type: "document", file, classId }
@@ -70,16 +138,8 @@ const DocumentAIChatContent: React.FC<{
     handleKeyDown,
   } = useAIChat(chatContext);
 
-  const handleOpenSource = (docId: number) => {
-    if (onSelectDocument) {
-      onSelectDocument(docId);
-      return;
-    }
-    if (classId) {
-      navigate(`/class/${classId}/documents?fileId=${docId}`);
-    } else {
-      window.open(`/documents/${docId}`, "_blank");
-    }
+  const handleOpenSource = (docId: number | string) => {
+    window.open(`/documents/${docId}`, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -95,7 +155,7 @@ const DocumentAIChatContent: React.FC<{
               Trợ lý AI
             </span>
             <span className="text-[12px] text-[var(--ink-2)] truncate max-w-[250px]">
-              {file?.name ? file.name : "Hỗ trợ nhóm học"}
+              {(file as any)?.title || file?.name || "Hỗ trợ nhóm học"}
             </span>
           </div>
         </div>
@@ -147,22 +207,27 @@ const DocumentAIChatContent: React.FC<{
                     components={{
                       a: (props) => {
                         const href = props.href || "";
-                        if (href.startsWith("doc://")) {
-                          const docId = Number(href.replace("doc://", ""));
+                        const docMatch = href.match(
+                          /^(?:#doc-|doc:\/\/|\/documents\/)(\d+)/,
+                        );
+
+                        if (docMatch) {
+                          const docId = Number(docMatch[1]);
                           return (
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.preventDefault();
+                                e.stopPropagation();
                                 handleOpenSource(docId);
                               }}
                               title="Nhấn để mở tài liệu này"
-                              className="inline-flex items-center gap-1.5 text-[12px] italic font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] underline underline-offset-4 hover:bg-[var(--primary-fill)] px-1.5 py-0.5 rounded-[var(--r-xs)] transition-colors cursor-pointer select-none mx-1 my-1"
+                              className="inline-flex items-center gap-1.5 text-[12px] italic font-medium text-[var(--primary)] hover:text-[var(--primary-hover)] underline underline-offset-4 hover:bg-[var(--primary-fill)] px-1.5 py-0.5 rounded-[var(--r-xs)] transition-colors cursor-pointer select-none mx-1 my-0.5"
                             >
                               <span>{props.children}</span>
                               <ExternalLink
                                 size={12}
-                                className="inline opacity-80"
+                                className="inline opacity-80 shrink-0"
                               />
                             </button>
                           );
@@ -374,7 +439,6 @@ export const DocumentAIChatSidebar: React.FC<DocumentAIChatSidebarProps> = ({
   onClose,
   file,
   classId,
-  onSelectDocument,
 }) => {
   return (
     <>
@@ -395,7 +459,6 @@ export const DocumentAIChatSidebar: React.FC<DocumentAIChatSidebarProps> = ({
             key={file?.id ?? "empty"}
             file={file}
             classId={classId}
-            onSelectDocument={onSelectDocument}
             onClose={onClose}
           />
         )}

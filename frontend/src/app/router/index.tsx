@@ -17,6 +17,7 @@ import { HomePageNew } from "@features/homePageNew/pages/HomePageNew";
 import { DocumentPage } from "@features/document/pages/DocumentPage";
 import { ProfilePage } from "@features/profile/pages/ProfilePage";
 import { FavoritePage } from "@features/favorite/pages/FavoritePage";
+import { DocumentViewerRoute } from "@features/document/components/DocumentViewerRoute";
 /**
  * Global application router configuration using React Router
  */
@@ -52,6 +53,19 @@ export const router = createBrowserRouter([
     ),
     handle: {
       title: "Đang chuyển hướng",
+    },
+  },
+  {
+    path: "/documents/:documentId",
+    element: (
+      <ProtectedRoute>
+        <EmptyLayout>
+          <DocumentViewerRoute />
+        </EmptyLayout>
+      </ProtectedRoute>
+    ),
+    handle: {
+      title: "Xem tài liệu",
     },
   },
   {
