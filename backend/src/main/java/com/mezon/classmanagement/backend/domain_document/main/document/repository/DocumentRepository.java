@@ -4,6 +4,7 @@ import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDtoProjection;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.RecommendationProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -263,7 +264,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         u.display_name AS creatorDisplayName,
         u.avatar_url AS creatorAvatarUrl,
         d.created_at AS createdAt,
-        d.status AS status
+        d.status AS status,
+        d.embedding <=> CAST(:embedding AS vector) AS cosineDistance,
+        (1 - (d.embedding <=> CAST(:embedding AS vector))) AS cosineSimilarity
     FROM documents d
     JOIN users u ON d.creator_user_id = u.id
     LEFT JOIN document_views dv on d.id = dv.document_id
@@ -297,11 +300,12 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         u.avatar_url,
         d.created_at,
         d.status,
-        d.embedding
-    ORDER BY d.embedding <=> CAST(:embedding AS vector)
+        cosineDistance,
+        cosineSimilarity
+    ORDER BY cosineDistance ASC
     LIMIT :limit
     """, nativeQuery = true)
-	List<DocumentResponseDtoProjection> findAllByEmbeddingCompare(
+	List<RecommendationProjection> findAllByEmbeddingCompare(
 			@Param("userId") Long userId,
 			@Param("embedding") float[] embedding,
 			@Param("limit") int limit

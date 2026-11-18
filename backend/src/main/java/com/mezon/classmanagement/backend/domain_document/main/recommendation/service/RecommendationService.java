@@ -6,6 +6,7 @@ import com.mezon.classmanagement.backend.domain_document.component.user_vector.U
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationModel;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.RecommendationProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -36,23 +37,23 @@ public class RecommendationService {
 
 	}
 
-	/**
-	 * Lấy danh sách tài liệu ứng viên
-	 *
-	 * @param userId ID người dùng cần lấy danh sách
-	 * @return Danh sách các tài liệu tìm được
-	 */
-	public List<DocumentResponseDto> getCandidate(Long userId) {
-		// 1. Lấy mô hình gợi ý mới nhất
-
-		List<DocumentResponseDto> candidateSource1 = getCandidateSource1(userId);
-		List<DocumentResponseDto> candidateSource2 = getCandidateSource2(userId);
-
-		// Hợp nhất các danh sách, loại bỏ các tài liệu trùng
-		List<DocumentResponseDto> candidateList = merge(candidateSource1, candidateSource2);
-
-		return candidateList;
-	}
+//	/**
+//	 * Lấy danh sách tài liệu ứng viên
+//	 *
+//	 * @param userId ID người dùng cần lấy danh sách
+//	 * @return Danh sách các tài liệu tìm được
+//	 */
+//	public List<DocumentResponseDto> getCandidate(Long userId) {
+//		// 1. Lấy mô hình gợi ý mới nhất
+//
+//		List<DocumentResponseDto> candidateSource1 = getCandidateSource1(userId);
+//		List<DocumentResponseDto> candidateSource2 = getCandidateSource2(userId);
+//
+//		// Hợp nhất các danh sách, loại bỏ các tài liệu trùng
+//		List<DocumentResponseDto> candidateList = merge(candidateSource1, candidateSource2);
+//
+//		return candidateList;
+//	}
 
 	@SafeVarargs
 	public final List<DocumentResponseDto> merge(List<DocumentResponseDto>... src) {
@@ -121,8 +122,8 @@ public class RecommendationService {
 	/**
 	 * Lấy danh sách ứng viên dựa vào lịch sử tương tác
 	 */
-	public List<DocumentResponseDto> getCandidateSource2(Long userId) {
-		List<DocumentResponseDto> result = new ArrayList<>();
+	public List<RecommendationProjection> getCandidateSource2(Long userId) {
+		List<RecommendationProjection> result = new ArrayList<>();
 
 		List<UserVectorService.LongTermDocumentInteraction> longTermDocumentInteractionList =
 				userVectorService.getLongTermDocumentInteractionList(

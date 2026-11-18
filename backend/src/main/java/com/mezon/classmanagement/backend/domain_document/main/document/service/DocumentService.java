@@ -17,6 +17,7 @@ import com.mezon.classmanagement.backend.domain_document.main.document.dto.reque
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDtoProjection;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.RecommendationProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
 import com.mezon.classmanagement.backend.domain_document.main.document.repository.DocumentRepository;
@@ -101,32 +102,13 @@ public class DocumentService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<DocumentResponseDto> findAllByEmbeddingCompare(
+	public List<RecommendationProjection> findAllByEmbeddingCompare(
 			Long userId,
 			float[] embedding,
 			int limit
 	) {
-		List<DocumentResponseDtoProjection> dtoProjectionList =
-				documentRepository.findAllByEmbeddingCompare(userId, embedding, limit);
-		return dtoProjectionList.stream()
-				.map(item ->
-						new DocumentResponseDto(
-								item.getId(),
-								item.getTitle(),
-								item.getDescription(),
-								item.getFileName(),
-								item.getViewCount(),
-								item.getDownloadCount(),
-								item.getBookmarkCount(),
-								item.getIsBookmarked(),
-								item.getCreatorUserId(),
-								item.getCreatorDisplayName(),
-								item.getCreatorAvatarUrl(),
-								item.getCreatedAt(),
-								item.getStatus()
-						)
-				)
-				.toList();
+		return documentRepository
+				.findAllByEmbeddingCompare(userId, embedding, limit);
 	}
 
 	@Transactional

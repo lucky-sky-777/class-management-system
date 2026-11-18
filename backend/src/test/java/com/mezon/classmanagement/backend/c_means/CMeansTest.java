@@ -60,21 +60,21 @@ public class CMeansTest {
 		embeddingService.ping();
 	}
 
-	@Test
-	public void tesRCM() throws Exception {
-		List<DocumentResponseDto> r1 = recommendationService.getCandidateSource1(5L);
-		List<DocumentResponseDto> r2 = recommendationService.getCandidateSource2(5L);
-
-		System.out.println("src 1");
-		r1.forEach(item -> {
-			System.out.println(item.getFileName());
-		});
-
-		System.out.println("src 2");
-		r2.forEach(item -> {
-			System.out.println(item.getFileName());
-		});
-	}
+//	@Test
+//	public void tesRCM() throws Exception {
+//		List<DocumentResponseDto> r1 = recommendationService.getCandidateSource1(5L);
+//		List<DocumentResponseDto> r2 = recommendationService.getCandidateSource2(5L);
+//
+//		System.out.println("src 1");
+//		r1.forEach(item -> {
+//			System.out.println(item.getFileName());
+//		});
+//
+//		System.out.println("src 2");
+//		r2.forEach(item -> {
+//			System.out.println(item.getFileName());
+//		});
+//	}
 
 	@Test
 	public void testTrain() {
