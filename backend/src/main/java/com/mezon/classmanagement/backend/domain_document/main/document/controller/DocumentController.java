@@ -211,7 +211,17 @@ public class DocumentController {
 			@PathVariable Long classId,
 			@PathVariable Long directoryId
 	) {
-		List<DocumentResponseDto> responseList = documentService.getList(classId, directoryId);
+		return getList_Refactor(directoryId);
+	}
+
+	@GetMapping("/directories/{directoryId}")
+	public ResponseDTO<List<DocumentResponseDto>> getList_Refactor(
+			@PathVariable Long directoryId
+	) {
+		Authentication authentication = authService.getAuthentication();
+		Long clientUserId = jwtService.extractUserIdFromAuthentication(authentication);
+
+		List<DocumentResponseDto> responseList = documentService.getList(clientUserId, directoryId);
 
 		return ResponseDTO.ok(
 				"Get document list successful",

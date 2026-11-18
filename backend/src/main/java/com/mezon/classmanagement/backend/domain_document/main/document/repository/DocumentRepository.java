@@ -157,7 +157,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     LEFT JOIN DocumentBookmark db
         ON db.document.id = d.id
         AND db.creator.id = :clientUserId
-    LEFT JOIN DocumentDownload dv
+    LEFT JOIN DocumentView dv
         ON dv.document.id = d.id
     LEFT JOIN DocumentDownload dl
         ON dl.document.id = d.id
