@@ -1,3 +1,4 @@
+// src/features/document/hooks/useClassDocuments.ts
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   classDocumentsAPI,
@@ -20,10 +21,9 @@ export const useClassDocuments = (classId: string | number | undefined) => {
   const [folderFiles, setFolderFiles] = useState<FileItem[]>([]);
   const [isFolderLoading, setIsFolderLoading] = useState(false);
 
-  // Preview file stream blob
-  const [viewingFile, setViewingFile] = useState<FileItem | null>(null);
-  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
-  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  // Lưu tập ID các tài liệu đã được người dùng yêu thích để đồng bộ xuyên suốt (kể cả khi F5)
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+  const bookmarkedIdsRef = useRef<Set<string>>(new Set());
 
   const lastClassIdRef = useRef<string | number | undefined>(undefined);
 
@@ -32,6 +32,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     (
       dto: DocumentResponseDto | any,
       fallbackDirId?: string | number,
+      overrideBookmarkedSet?: Set<string>,
     ): FileItem => {
       const fileName = dto.file_name || dto.fileName || dto.name || "";
       const displayTitle = dto.title || fileName || "Tài liệu không tên";
@@ -55,6 +56,14 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       const extractedDirectoryId =
         dto.directoryId ?? dto.directory_id ?? fallbackDirId;
 
+      const activeSet = overrideBookmarkedSet ?? bookmarkedIdsRef.current;
+      const isItemLiked = Boolean(
+        dto.is_bookmarked ??
+        dto.isLiked ??
+        dto.isBookmarked ??
+        activeSet.has(String(dto.id)),
+      );
+
       return {
         id: dto.id,
         name: displayTitle,
@@ -67,7 +76,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
         views: Number(dto.view_count ?? 0),
         downloads: Number(dto.download_count ?? 0),
         likes: Number(dto.bookmark_count ?? dto.likes ?? 0),
-        isLiked: Boolean(dto.is_bookmarked ?? dto.isLiked),
+        isLiked: isItemLiked,
         description: dto.description || "",
         tags: parsedTags,
         rawMetadata: {
@@ -80,6 +89,32 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     [],
   );
 
+  // Hàm phụ trợ lấy danh sách ID đã bookmark từ Backend (tương thích linh hoạt tên hàm API)
+  const fetchUserBookmarkedIds = async (): Promise<Set<string>> => {
+    try {
+      const apiAny = classDocumentsAPI as any;
+      const fetchFn =
+        apiAny.getBookmarkedDocuments ||
+        apiAny.getBookmarks ||
+        apiAny.getFavorites ||
+        apiAny.getMyBookmarks;
+
+      if (typeof fetchFn !== "function") return new Set();
+
+      const res = await fetchFn();
+      const list = Array.isArray(res) ? res : res?.data || [];
+      return new Set(
+        list
+          .map((item: any) =>
+            String(item.id ?? item.document_id ?? item.documentId),
+          )
+          .filter(Boolean),
+      );
+    } catch {
+      return new Set();
+    }
+  };
+
   const fetchRootData = useCallback(async () => {
     if (!classId) return;
     if (lastClassIdRef.current === classId) return;
@@ -91,17 +126,24 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     setRecentFiles([]);
 
     try {
-      const [foldersRes, filesRes] = await Promise.all([
+      const [foldersRes, filesRes, fetchedBookmarks] = await Promise.all([
         classDocumentsAPI.getFolders(classId),
         classDocumentsAPI.getRecentFiles(),
+        fetchUserBookmarkedIds(),
       ]);
 
+      bookmarkedIdsRef.current = fetchedBookmarks;
+      setBookmarkedIds(fetchedBookmarks);
       setFolders(foldersRes.data || []);
 
       const rawRecent = Array.isArray(filesRes)
         ? filesRes
         : (filesRes as any)?.data || [];
-      setRecentFiles(rawRecent.map((f: any) => mapDtoToFileItem(f)));
+      setRecentFiles(
+        rawRecent.map((f: any) =>
+          mapDtoToFileItem(f, undefined, fetchedBookmarks),
+        ),
+      );
 
       lastClassIdRef.current = classId;
     } catch (error) {
@@ -136,6 +178,59 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       setFolderFiles([]);
     } finally {
       setIsFolderLoading(false);
+    }
+  };
+
+  // Đồng bộ trạng thái Tim (Yêu thích) cho cả card trong thư mục và màn hình chi tiết
+  const handleToggleFileLike = async (
+    id: string | number,
+    explicitNextState?: boolean,
+  ) => {
+    const strId = String(id);
+    const currentFile = [...folderFiles, ...recentFiles].find(
+      (f) => String(f.id) === strId,
+    );
+    const nextLiked =
+      explicitNextState !== undefined
+        ? explicitNextState
+        : !(currentFile?.isLiked ?? bookmarkedIdsRef.current.has(strId));
+
+    // 1. Cập nhật ngay UI (Optimistic Update)
+    const nextSet = new Set(bookmarkedIdsRef.current);
+    if (nextLiked) nextSet.add(strId);
+    else nextSet.delete(strId);
+
+    bookmarkedIdsRef.current = nextSet;
+    setBookmarkedIds(nextSet);
+
+    const applyLike = (list: FileItem[]) =>
+      list.map((f) =>
+        String(f.id) === strId ? { ...f, isLiked: nextLiked } : f,
+      );
+    setFolderFiles(applyLike);
+    setRecentFiles(applyLike);
+
+    // 2. Gọi API Backend nếu người dùng bấm trực tiếp từ Card
+    if (explicitNextState === undefined) {
+      try {
+        await classDocumentsAPI.toggleBookmark(id);
+      } catch (error) {
+        // Hoàn tác nếu API thất bại
+        const revertSet = new Set(bookmarkedIdsRef.current);
+        if (!nextLiked) revertSet.add(strId);
+        else revertSet.delete(strId);
+
+        bookmarkedIdsRef.current = revertSet;
+        setBookmarkedIds(revertSet);
+
+        const revertLike = (list: FileItem[]) =>
+          list.map((f) =>
+            String(f.id) === strId ? { ...f, isLiked: !nextLiked } : f,
+          );
+        setFolderFiles(revertLike);
+        setRecentFiles(revertLike);
+        console.error("Lỗi yêu thích tài liệu:", error);
+      }
     }
   };
 
@@ -197,7 +292,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
       setIsLoading(true);
       await classDocumentsAPI.uploadDocuments(classId, folderId, files);
 
-      // Refresh danh sách file trong thư mục
       const res = await classDocumentsAPI.getDocumentsByDirectory(
         classId,
         folderId,
@@ -211,40 +305,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Preview file
-  const handleViewFile = async (file: FileItem) => {
-    if (!file?.id) return;
-
-    try {
-      setIsPreviewLoading(true);
-      setViewingFile(file);
-
-      if (previewBlobUrl) {
-        URL.revokeObjectURL(previewBlobUrl);
-        setPreviewBlobUrl(null);
-      }
-
-      // Backend route trực tiếp: GET /{documentId}/file
-      const blob = await classDocumentsAPI.getFileBlob(file.id);
-      const url = URL.createObjectURL(blob);
-      setPreviewBlobUrl(url);
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu stream file:", error);
-      setViewingFile(null);
-      setPreviewBlobUrl(null);
-    } finally {
-      setIsPreviewLoading(false);
-    }
-  };
-
-  const handleCloseViewer = () => {
-    if (previewBlobUrl) {
-      URL.revokeObjectURL(previewBlobUrl);
-    }
-    setViewingFile(null);
-    setPreviewBlobUrl(null);
   };
 
   const handleRenameFile = async (id: string | number, newName: string) => {
@@ -274,7 +334,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     }
 
     try {
-      // Backend: DELETE /classes/{classId}/directories/{directoryId}/documents
       await classDocumentsAPI.deleteDocuments(classId, targetDirId, {
         documentIds: [Number(id)],
       });
@@ -303,11 +362,7 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     currentFolder,
     folderFiles,
     isFolderLoading,
-    viewingFile,
-    previewBlobUrl,
-    isPreviewLoading,
-    handleViewFile,
-    handleCloseViewer,
+    bookmarkedIds,
     handleOpenFolder,
     handleGoToRoot,
     handleCreateFolder,
@@ -317,5 +372,6 @@ export const useClassDocuments = (classId: string | number | undefined) => {
     handleDeleteFile,
     handleRenameFile,
     handleUploadDocument,
+    handleToggleFileLike,
   };
 };

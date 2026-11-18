@@ -176,10 +176,15 @@ export const classDocumentsAPI = {
     fileId: string | number,
     baseFile?: Partial<FileItem> | null,
   ): Promise<FileItem> => {
-    const [metaRes, tagRes] = await Promise.allSettled([
+    const [detailRes, metaRes, tagRes] = await Promise.allSettled([
+      classDocumentsAPI.getDocumentDetail(fileId),
       classDocumentsAPI.getDocumentMetadata(fileId),
       classDocumentsAPI.getDocumentTags(fileId),
     ]);
+
+    // Lấy dữ liệu từ GET /documents/{documentId} (các field trả về dạng snake_case theo @JsonProperty)
+    const detailData: any =
+      detailRes.status === "fulfilled" ? detailRes.value?.data : null;
 
     const metaPayload: any =
       metaRes.status === "fulfilled" ? metaRes.value?.data : null;
@@ -194,14 +199,19 @@ export const classDocumentsAPI = {
       ? rawTags.map((t: any) => (typeof t === "string" ? t : t.name))
       : [];
 
-    const resolvedName = baseFile?.name || metadataObj?.file_name || "Tài liệu";
+    const resolvedName =
+      detailData?.title ||
+      detailData?.file_name ||
+      baseFile?.name ||
+      metadataObj?.file_name ||
+      "Tài liệu";
 
     const resolvedSize = metadataObj?.file_size
       ? formatBytes(metadataObj.file_size)
       : baseFile?.size || "--";
 
     const resolvedExtension = getExtension(
-      resolvedName,
+      detailData?.file_name || resolvedName,
       metadataObj?.mime_type || baseFile?.fileExtension,
     );
 
@@ -210,12 +220,13 @@ export const classDocumentsAPI = {
       name: resolvedName,
       size: resolvedSize,
       fileExtension: resolvedExtension,
-      uploader: baseFile?.uploader || "Người dùng",
-      uploadDate: baseFile?.uploadDate || "--",
-      downloads: baseFile?.downloads ?? 0,
-      likes: baseFile?.likes ?? 0,
-      description: baseFile?.description || "",
-      isLiked: baseFile?.isLiked ?? false,
+      uploader:
+        detailData?.creator_display_name || baseFile?.uploader || "Người dùng",
+      uploadDate: detailData?.created_at || baseFile?.uploadDate || "--",
+      downloads: detailData?.download_count ?? baseFile?.downloads ?? 0,
+      likes: detailData?.bookmark_count ?? baseFile?.likes ?? 0,
+      description: detailData?.description || baseFile?.description || "",
+      isLiked: detailData?.is_bookmarked ?? baseFile?.isLiked ?? false,
       fileUrl: baseFile?.fileUrl,
       tags: tagList.length > 0 ? tagList : baseFile?.tags || [],
     };
