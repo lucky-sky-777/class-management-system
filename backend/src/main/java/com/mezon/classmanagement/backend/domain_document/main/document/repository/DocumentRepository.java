@@ -266,9 +266,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         d.status AS status
     FROM documents d
     JOIN users u ON d.creator_user_id = u.id
-    JOIN document_views dv on d.id = dv.document_id
-    JOIN document_downloads dd on d.id = dd.document_id
-    JOIN document_bookmarks db_all on d.id = db_all.document_id
+    LEFT JOIN document_views dv on d.id = dv.document_id
+    LEFT JOIN document_downloads dd on d.id = dd.document_id
+    LEFT JOIN document_bookmarks db_all on d.id = db_all.document_id
     LEFT JOIN document_bookmarks db_user ON d.id = db_user.document_id AND :userId = db_user.creator_user_id
     WHERE EXISTS (
         SELECT 1
@@ -291,6 +291,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
         d.title,
         d.description,
         d.file_name,
+        db_user.id,
         u.id,
         u.display_name,
         u.avatar_url,

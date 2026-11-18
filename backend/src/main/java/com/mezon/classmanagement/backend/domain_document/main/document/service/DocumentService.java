@@ -3,12 +3,12 @@ package com.mezon.classmanagement.backend.domain_document.main.document.service;
 import com.mezon.classmanagement.backend.common.constant.WarningConstant;
 import com.mezon.classmanagement.backend.common.exeption.entity.GlobalException;
 import com.mezon.classmanagement.backend.common.util.FileUtils;
-import com.mezon.classmanagement.backend.domain_document.main.ai_model.config.gemini.GeminiConfig;
 import com.mezon.classmanagement.backend.config.s3.S3Config;
 import com.mezon.classmanagement.backend.domain.auth.entity.User;
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.component.embedding.service.EmbeddingService;
 import com.mezon.classmanagement.backend.domain_document.component.s3.service.S3Service;
+import com.mezon.classmanagement.backend.domain_document.main.ai_model.config.gemini.GeminiConfig;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.dto.DocumentEmbeddingList;
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.directory.service.DirectoryService;
@@ -16,6 +16,7 @@ import com.mezon.classmanagement.backend.domain_document.main.directory_document
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.DeleteDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.request.InternalUpdateDocumentRequestDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
+import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDtoProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import com.mezon.classmanagement.backend.domain_document.main.document.mapper.DocumentMapper;
 import com.mezon.classmanagement.backend.domain_document.main.document.repository.DocumentRepository;
@@ -71,17 +72,26 @@ public class DocumentService {
 	S3Service s3Service;
 
 	@Transactional
-	public boolean isPublicOrInAnyClassJoinedByUser(Long userId, Long documentId) {
+	public boolean isPublicOrInAnyClassJoinedByUser(
+			Long userId,
+			Long documentId
+	) {
 		return documentRepository.isPublicOrInAnyClassJoinedByUser(documentId, userId);
 	}
 
 	@Transactional(readOnly = true)
-	public boolean isPrivate(Long userId, Long documentId) {
+	public boolean isPrivate(
+			Long userId,
+			Long documentId
+	) {
 		return !isPublicOrInAnyClassJoinedByUser(userId, documentId);
 	}
 
 	@Transactional(readOnly = true)
-	public void throwIfNotIsPublicOrInAnyClassJoinedByUser(Long documentId, Long userId) {
+	public void throwIfNotIsPublicOrInAnyClassJoinedByUser(
+			Long documentId,
+			Long userId
+	) {
 		if (isPrivate(userId, documentId)) {
 			throw new GlobalException(
 					GlobalException.Type.PERMISSION_DENIED,
@@ -91,10 +101,32 @@ public class DocumentService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<DocumentResponseDto> findAllByEmbeddingCompare(Long userId, float[] embedding, int limit) {
-		return documentMapper.toDocumentResponseDtoList(
-				documentRepository.findAllByEmbeddingCompare(userId, embedding, limit)
-		);
+	public List<DocumentResponseDto> findAllByEmbeddingCompare(
+			Long userId,
+			float[] embedding,
+			int limit
+	) {
+		List<DocumentResponseDtoProjection> dtoProjectionList =
+				documentRepository.findAllByEmbeddingCompare(userId, embedding, limit);
+		return dtoProjectionList.stream()
+				.map(item ->
+						new DocumentResponseDto(
+								item.getId(),
+								item.getTitle(),
+								item.getDescription(),
+								item.getFileName(),
+								item.getViewCount(),
+								item.getDownloadCount(),
+								item.getBookmarkCount(),
+								item.getIsBookmarked(),
+								item.getCreatorUserId(),
+								item.getCreatorDisplayName(),
+								item.getCreatorAvatarUrl(),
+								item.getCreatedAt(),
+								item.getStatus()
+						)
+				)
+				.toList();
 	}
 
 	@Transactional
@@ -339,7 +371,10 @@ public class DocumentService {
 	}
 
 	@Transactional(readOnly = true)
-	public DocumentResponseDto findByIdOrThrow(Long clientUserId, Long id) {
+	public DocumentResponseDto findByIdOrThrow(
+			Long clientUserId,
+			Long id
+	) {
 		return documentRepository.getById(id, clientUserId).orElseThrow(() ->
 				new GlobalException(
 						GlobalException.Type.NOT_EXISTS,
