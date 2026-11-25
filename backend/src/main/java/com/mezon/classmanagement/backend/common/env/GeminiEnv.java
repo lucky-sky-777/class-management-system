@@ -20,4 +20,6 @@ public class GeminiEnv {
 	@Value("${gemini.batch-embedding-url}")
 	public String batchApiUrl;
 
+	@Value("${gemini.api-hyde-key}")
+	public  String apiHydeKey;
 }

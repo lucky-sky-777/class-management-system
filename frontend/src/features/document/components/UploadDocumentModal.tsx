@@ -127,7 +127,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
               className="hidden"
               ref={fileInputRef}
               onChange={handleFileChange}
-              accept=".doc,.docx,.pdf,.pptx,.png,.jpg,.jpeg,.webp"
+              accept=".doc,.docx,.pdf,.pptx,.png,.jpg,.jpeg,.webp,.txt"
             />
           </div>
 
@@ -226,7 +226,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
               </span>
             </p>
             <p className="text-red-500 mt-1 sm:mt-0.5">
-              *Hỗ trợ: doc, docx, pdf, pptx, png, jpg, webp
+              *Hỗ trợ: doc, docx, pdf, pptx, txt, png, jpg, webp
             </p>
           </div>
 

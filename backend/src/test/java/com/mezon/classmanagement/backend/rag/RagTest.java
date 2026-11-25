@@ -188,7 +188,7 @@ public class RagTest {
 			System.out.println();
 		}
 
-		RagAnswerResponseDto response = ragService.askGlobal(query);
+		RagAnswerResponseDto response = ragService.askGlobal(query, true);
 
 		System.out.println(response.getAnswer());
 	}

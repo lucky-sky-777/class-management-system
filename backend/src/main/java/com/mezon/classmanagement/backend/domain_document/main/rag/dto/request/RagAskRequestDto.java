@@ -16,4 +16,6 @@ public class RagAskRequestDto {
     @NotBlank(message = "Câu hỏi không được để trống")
     @JsonProperty("question")
     String question;
+
+    private boolean useHyde = false;
 }

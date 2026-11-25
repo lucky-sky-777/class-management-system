@@ -24,26 +24,35 @@ public class RagService {
 
 	GeminiRagService geminiRagService;
 	SearchService searchService;
-	int limit = 2;
+	HydeService hydeService;
+	int limit = 4;
 
 	public RagAnswerResponseDto askInDocument(
 			Long documentId,
-			String question
+			String question,
+			boolean useHyde
 	) throws Exception {
-		List<DocumentChunk> chunks = searchService.searchDocument(documentId, question, limit);
+		String searchQuery = useHyde ? hydeService.generateHypotheticalDocument(question) : question;
+		List<DocumentChunk> chunks = searchService.searchDocument(documentId, searchQuery, limit);
 		return processChunksAndCallGemini(chunks, question);
 	}
 
 	public RagAnswerResponseDto askInClass(
 			Long classId,
-			String question
+			String question,
+			boolean useHyde
 	) throws Exception {
-		List<DocumentChunk> chunks = searchService.searchClass(classId, question, limit);
+		String searchQuery = useHyde ? hydeService.generateHypotheticalDocument(question) : question;
+		List<DocumentChunk> chunks = searchService.searchClass(classId, searchQuery, limit);
 		return processChunksAndCallGemini(chunks, question);
 	}
 
-	public RagAnswerResponseDto askGlobal(String question) throws Exception {
-		List<DocumentChunk> chunks = searchService.searchAll(question, limit);
+	public RagAnswerResponseDto askGlobal(
+			String question,
+			boolean useHyde
+	) throws Exception {
+		String searchQuery = useHyde ? hydeService.generateHypotheticalDocument(question) : question;
+		List<DocumentChunk> chunks = searchService.searchAll(searchQuery, limit);
 		return processChunksAndCallGemini(chunks, question);
 	}
 

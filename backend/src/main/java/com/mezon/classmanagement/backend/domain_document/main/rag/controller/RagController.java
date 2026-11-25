@@ -33,7 +33,7 @@ public class RagController {
 			@Valid @RequestBody RagAskRequestDto request
 	) {
 		try {
-			RagAnswerResponseDto response = ragService.askGlobal(request.getQuestion());
+			RagAnswerResponseDto response = ragService.askGlobal(request.getQuestion(), request.isUseHyde());
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -50,7 +50,7 @@ public class RagController {
 			@Valid @RequestBody RagAskRequestDto request
 	) {
 		try {
-			RagAnswerResponseDto response = ragService.askInClass(classId, request.getQuestion());
+			RagAnswerResponseDto response = ragService.askInClass(classId, request.getQuestion(), request.isUseHyde());
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
@@ -68,7 +68,7 @@ public class RagController {
 			@Valid @RequestBody RagAskRequestDto request
 	) {
 		try {
-			RagAnswerResponseDto response = ragService.askInDocument(documentId, request.getQuestion());
+			RagAnswerResponseDto response = ragService.askInDocument(documentId, request.getQuestion(), request.isUseHyde());
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			return ResponseEntity.internalServerError().build();
