@@ -3,7 +3,6 @@ package com.mezon.classmanagement.backend.domain_document.main.document.reposito
 import com.mezon.classmanagement.backend.domain.clazz.entity.Class;
 import com.mezon.classmanagement.backend.domain_document.main.directory.entity.Directory;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDtoProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.RecommendationProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("SqlRedundantOrderingDirection")
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
 	@Query("""
@@ -246,6 +246,63 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     order by dcm.membership desc
     """)
 	List<Document> findAllInClusterIndexByModelIdAndPublicClass(Integer clusterIndex, Long modelId, Pageable pageable);
+
+	@Query(value = """
+    SELECT
+        d.id AS id,
+        d.title AS title,
+        d.description AS description,
+        d.file_name AS fileName,
+        COUNT (DISTINCT dv.id) AS viewCount,
+        COUNT (DISTINCT dd.id) AS downloadCount,
+        COUNT (DISTINCT db_all.id) AS bookmarkCount,
+    	CASE
+        	WHEN db_user.id IS NOT NULL THEN true
+        	ELSE false
+        END,
+        u.id AS creatorUserId,
+        u.display_name AS creatorDisplayName,
+        u.avatar_url AS creatorAvatarUrl,
+        d.created_at AS createdAt,
+        d.status AS status,
+        dcm.membership AS membership
+    FROM document_cluster_memberships dcm
+    JOIN recommendation_clusters rc ON rc.id = dcm.cluster_id
+    JOIN documents d ON d.id = dcm.document_id
+    JOIN users u ON d.creator_user_id = u.id
+    LEFT JOIN document_views dv on d.id = dv.document_id
+    LEFT JOIN document_downloads dd on d.id = dd.document_id
+    LEFT JOIN document_bookmarks db_all on d.id = db_all.document_id
+    LEFT JOIN document_bookmarks db_user ON d.id = db_user.document_id AND :userId = db_user.creator_user_id
+    WHERE rc.model_id = :modelId
+        AND rc.cluster_index = :clusterIndex
+        AND EXISTS (
+            SELECT 1
+            FROM directory_documents dd
+            JOIN directories dir ON dir.id = dd.directory_id
+            JOIN classes c ON c.id = dir.class_id
+            WHERE dd.document_id = d.id
+                AND c.privacy = 'PUBLIC'
+        )
+    GROUP BY
+        d.id,
+        d.title,
+        d.description,
+        d.file_name,
+        db_user.id,
+        u.id,
+        u.display_name,
+        u.avatar_url,
+        d.created_at,
+        d.status,
+        dcm.membership
+    ORDER BY dcm.membership DESC
+    """, nativeQuery = true)
+	List<RecommendationProjection> findAllInClusterIndexByModelIdAndPublicClass_native(
+			@Param("clusterIndex") Integer clusterIndex,
+			@Param("modelId") Long modelId,
+			Pageable pageable
+	);
 
 	@Query(value = """
     SELECT

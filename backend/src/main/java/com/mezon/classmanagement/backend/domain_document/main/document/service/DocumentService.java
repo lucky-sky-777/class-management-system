@@ -381,26 +381,23 @@ public class DocumentService {
 	}
 
 	@Transactional
-	public List<DocumentResponseDto> findTopPublicDocumentInClusterIndexByModelId(
+	public List<RecommendationProjection> findTopPublicDocumentInClusterIndexByModelId(
 			Integer clusterIndex,
 			Long modelId,
 			int limit
 	) {
-		return documentMapper.toDocumentResponseDtoList(
-				documentRepository.findAllInClusterIndexByModelIdAndPublicClass(
-						clusterIndex, modelId, PageRequest.of(0, limit))
-		);
+		return documentRepository.findAllInClusterIndexByModelIdAndPublicClass_native(clusterIndex, modelId, PageRequest.of(0, limit));
 	}
 
-	@Transactional
-	public List<DocumentResponseDto> findTopPublicDocumentInClusterList(
-			List<Long> clusterIdList,
-			int limit
-	) {
-		return documentMapper.toDocumentResponseDtoList(
-				documentRepository.findAllByClusterIdInAndPublicClass(
-						clusterIdList, PageRequest.of(0, limit))
-		);
-	}
+//	@Transactional
+//	public List<DocumentResponseDto> findTopPublicDocumentInClusterList(
+//			List<Long> clusterIdList,
+//			int limit
+//	) {
+//		return documentMapper.toDocumentResponseDtoList(
+//				documentRepository.findAllByClusterIdInAndPublicClass(
+//						clusterIdList, PageRequest.of(0, limit))
+//		);
+//	}
 
 }

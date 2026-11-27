@@ -5,6 +5,7 @@ import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.Doc
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationCluster;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.repository.DocumentClusterMembershipRepository;
 import com.mezon.classmanagement.backend.domain_document.main.document.entity.Document;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.projection.DocumentClusterMembershipProjection;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -91,7 +92,10 @@ public class DocumentClusterMembershipService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<DocumentClusterMembership> findAllByModelAndDocumentJoinFetchCluster(Long modelId, Long documentId) {
+	public List<DocumentClusterMembership> findAllByModelAndDocumentJoinFetchCluster(
+			Long modelId,
+			Long documentId
+	) {
 		return documentClusterMembershipRepository.findAllByModel_IdAndDocument_IdJoinFetchCluster(modelId, documentId);
 	}
 
@@ -107,6 +111,18 @@ public class DocumentClusterMembershipService {
 				.findByClusterAndClassNotPrivate(
 						clusterId,
 						PageRequest.of(0, 10)
+				);
+	}
+
+	@Transactional(readOnly = true)
+	public List<DocumentClusterMembershipProjection> getMembershipOfDocumentWithEachCluster(
+			Long latestModelId,
+			Long documentId
+	) {
+		return documentClusterMembershipRepository
+				.getDocumentClusterMembership(
+						latestModelId,
+						documentId
 				);
 	}
 

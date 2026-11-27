@@ -5,9 +5,11 @@ import com.mezon.classmanagement.backend.domain_document.component.embedding.uti
 import com.mezon.classmanagement.backend.domain_document.component.user_vector.UserVectorService;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.entity.RecommendationModel;
 import com.mezon.classmanagement.backend.domain_document.main.c_means.service.RecommendationModelService;
-import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.DocumentResponseDto;
 import com.mezon.classmanagement.backend.domain_document.main.document.dto.response.RecommendationProjection;
 import com.mezon.classmanagement.backend.domain_document.main.document.service.DocumentService;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.calculator.PreferenceCalculator;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.calculator.dto.ClusterPreference;
+import com.mezon.classmanagement.backend.domain_document.main.recommendation.repository.RecommendationRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,37 +34,33 @@ public class RecommendationService {
 	DocumentService documentService;
 	RecommendationModelService recommendationModelService;
 	UserVectorService userVectorService;
+	RecommendationRepository recommendationRepository;
 
-	public void evaluate(List<DocumentResponseDto> candidateList) {
+	PreferenceCalculator preferenceCalculator;
 
+	/**
+	 * Lấy danh sách tài liệu ứng viên
+	 *
+	 * @param userId ID người dùng cần lấy danh sách
+	 * @return Danh sách các tài liệu tìm được
+	 */
+	public List<RecommendationProjection> getCandidate(Long userId) {
+
+		List<RecommendationProjection> candidateSource1 = getCandidateSource1(userId);
+		List<RecommendationProjection> candidateSource2 = getCandidateSource2(userId);
+
+		// Hợp nhất các danh sách, loại bỏ các tài liệu trùng
+		return merge(candidateSource1, candidateSource2);
 	}
 
-//	/**
-//	 * Lấy danh sách tài liệu ứng viên
-//	 *
-//	 * @param userId ID người dùng cần lấy danh sách
-//	 * @return Danh sách các tài liệu tìm được
-//	 */
-//	public List<DocumentResponseDto> getCandidate(Long userId) {
-//		// 1. Lấy mô hình gợi ý mới nhất
-//
-//		List<DocumentResponseDto> candidateSource1 = getCandidateSource1(userId);
-//		List<DocumentResponseDto> candidateSource2 = getCandidateSource2(userId);
-//
-//		// Hợp nhất các danh sách, loại bỏ các tài liệu trùng
-//		List<DocumentResponseDto> candidateList = merge(candidateSource1, candidateSource2);
-//
-//		return candidateList;
-//	}
-
 	@SafeVarargs
-	public final List<DocumentResponseDto> merge(List<DocumentResponseDto>... src) {
+	public final List<RecommendationProjection> merge(List<RecommendationProjection>... src) {
 		return new ArrayList<>(
 				Stream.of(src)
 						.flatMap(List::stream)
 						.collect(
 								Collectors.toMap(
-										DocumentResponseDto::getId,
+										RecommendationProjection::getId,
 										Function.identity(),
 										(a, b) -> a,
 										LinkedHashMap::new
@@ -74,35 +72,28 @@ public class RecommendationService {
 	/**
 	 * Lấy danh sách ứng viên dựa vào cụm
 	 */
-	public List<DocumentResponseDto> getCandidateSource1(
+	public List<RecommendationProjection> getCandidateSource1(
 			Long userId
 	) {
 		RecommendationModel latestModel = recommendationModelService
 				.findLatestReadyModelOrThrow();
 		System.out.println("model id: " + latestModel.getId());
 
-		List<DocumentResponseDto> result = new ArrayList<>();
+		List<RecommendationProjection> result = new ArrayList<>();
 
 		// 1. Lấy danh sách mức độ quan tâm của người dùng với mỗi cụm
-		Optional<List<UserVectorService.ClusterPreference>> optionalClusterPreferenceList =
-				userVectorService.calculateClusterPreference(
-						userVectorService.getClusterInteractionList(
-								userId,
-								latestModel.getId()
-						),
-						0.1,
-						Instant.now()
-				);
+		Optional<List<ClusterPreference>> optionalClusterPreferenceList =
+				userVectorService.getPreferencePerCluster(userId, latestModel.getId());
 
-		Consumer<List<UserVectorService.ClusterPreference>> c = clusterPreferenceList -> {
+		Consumer<List<ClusterPreference>> c = clusterPreferenceList -> {
 			// 2. Lấy Top-2 cụm được người dùng quan tâm nhất.
-			List<UserVectorService.ClusterPreference> top2Cluster = userVectorService.getTopClusterPreferenceList(
+			List<ClusterPreference> top2Cluster = userVectorService.getTopClusterPreferenceList(
 					clusterPreferenceList,
 					2
 			);
 
 			// 3. Với mỗi cụm, lấy Top-2 tài liệu có membership cao nhất.
-			for (UserVectorService.ClusterPreference cluster : top2Cluster) {
+			for (ClusterPreference cluster : top2Cluster) {
 				result.addAll(
 						documentService
 								.findTopPublicDocumentInClusterIndexByModelId(
@@ -131,7 +122,7 @@ public class RecommendationService {
 				);
 
 		Optional<UserVectorService.LongTermPreference> longTermPreference =
-				userVectorService.calculateLongTermPreference(
+				preferenceCalculator.calculateUserPreferenceWithOverall(
 						longTermDocumentInteractionList,
 						0.1,
 						Instant.now()
@@ -141,7 +132,7 @@ public class RecommendationService {
 				documentService.findAllByEmbeddingCompare(
 						userId,
 						EmbeddingUtils.toFloatArray(longTermPreference1.preference()),
-						5
+						20
 				)
 		);
 
