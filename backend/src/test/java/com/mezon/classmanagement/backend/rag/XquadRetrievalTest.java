@@ -34,10 +34,10 @@ public class XquadRetrievalTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static final long VI_DOCUMENT_ID = 1040L;
-    private static final long EN_DOCUMENT_ID = 1039L;
+//    private static final long VI_DOCUMENT_ID = 1040L;
+//    private static final long EN_DOCUMENT_ID = 1039L;
 
-    // Giảm xuống 100 câu để tiết kiệm quota API
+    // Chạy thử 5 câu để tiết kiệm quota API
     private static final int QUESTION_LIMIT = 50;
     private static final int TOP_K = 10;
 
@@ -48,32 +48,54 @@ public class XquadRetrievalTest {
     // ============================
     // 1. TEST TIẾNG VIỆT (SO SÁNH)
     // ============================
+//    @Test
+//    public void testVietnameseComparison() throws Exception {
+//        runTest("vi", VI_DOCUMENT_ID, false); // Chạy Baseline trước
+//        runTest("vi", VI_DOCUMENT_ID, true);  // Chạy HyDE sau
+//    }
+//
+//    // ============================
+//    // 2. TEST TIẾNG ANH (SO SÁNH)
+//    // ============================
+//    @Test
+//    public void testEnglishComparison() throws Exception {
+//        runTest("en", EN_DOCUMENT_ID, false);
+//        runTest("en", EN_DOCUMENT_ID, true);
+//    }
+//
+//    // ============================
+//    // 3. CHẠY RIÊNG TỪNG CHẾ ĐỘ (NẾU MUỐN CHẠY LẺ)
+//    // ============================
+//    @Test
+//    public void testVietnameseHydeOnly() throws Exception {
+//        runTest("vi", VI_DOCUMENT_ID, true);
+//    }
+//
+//    @Test
+//    public void testEnglishHydeOnly() throws Exception {
+//        runTest("en", EN_DOCUMENT_ID, true);
+//    }
+
     @Test
     public void testVietnameseComparison() throws Exception {
-        runTest("vi", VI_DOCUMENT_ID, false); // Chạy Baseline trước
-        runTest("vi", VI_DOCUMENT_ID, true);  // Chạy HyDE sau
+        runTest("vi", false);
+        runTest("vi", true);
     }
 
-    // ============================
-    // 2. TEST TIẾNG ANH (SO SÁNH)
-    // ============================
     @Test
     public void testEnglishComparison() throws Exception {
-        runTest("en", EN_DOCUMENT_ID, false);
-        runTest("en", EN_DOCUMENT_ID, true);
+        runTest("en", false);
+        runTest("en", true);
     }
 
-    // ============================
-    // 3. CHẠY RIÊNG TỪNG CHẾ ĐỘ (NẾU MUỐN CHẠY LẺ)
-    // ============================
     @Test
     public void testVietnameseHydeOnly() throws Exception {
-        runTest("vi", VI_DOCUMENT_ID, true);
+        runTest("vi", true);
     }
 
     @Test
     public void testEnglishHydeOnly() throws Exception {
-        runTest("en", EN_DOCUMENT_ID, true);
+        runTest("en", true);
     }
 
     // --- Các hàm helper và cơ chế chấm điểm v2 ---
@@ -156,11 +178,11 @@ public class XquadRetrievalTest {
     // ============================
     // CHẠY KIỂM THỬ CHÍNH
     // ============================
-    private void runTest(String language, long documentId, boolean useHyde) throws Exception {
+    private void runTest(String language, boolean useHyde) throws Exception {
         List<JsonNode> questions = selectQuestions(language);
         String mode = useHyde ? "hyde" : "baseline";
 
-        Path resultDir = getDatasetPath().resolve("results_v2");
+        Path resultDir = getDatasetPath().resolve("results_global");
         Files.createDirectories(resultDir);
 
         Path logFile = resultDir.resolve("retrieval_" + language + "_" + mode + ".log");
@@ -176,7 +198,7 @@ public class XquadRetrievalTest {
         writeLog(logFile, "START: " + LocalDateTime.now());
         writeLog(logFile, "Mode: " + mode.toUpperCase());
         writeLog(logFile, "Language: " + language);
-        writeLog(logFile, "Document ID: " + documentId);
+        writeLog(logFile, "Search Scope: GLOBAL");
         writeLog(logFile, "Total questions: " + questions.size());
 
         int successCount = 0;
@@ -210,9 +232,28 @@ public class XquadRetrievalTest {
 
                 if (useHyde) {
                     long hydeStart = System.nanoTime();
-                    textToEmbed = hydeService.generateHypotheticalDocument(originalQuery);
-                    hydeMs = (System.nanoTime() - hydeStart) / 1_000_000.0;
-                    log.append("HyDE Generated Doc: ").append(textToEmbed).append("\n");
+
+                    String hydeDoc = hydeService
+                            .generateHypotheticalDocument(originalQuery);
+
+                    hydeMs = (System.nanoTime() - hydeStart)
+                            / 1_000_000.0;
+
+                    // Kết hợp câu hỏi gốc và tài liệu HyDE
+                    textToEmbed = originalQuery;
+
+                    if (hydeDoc != null
+                            && !hydeDoc.isBlank()
+                            && !hydeDoc.trim().equals(originalQuery.trim())) {
+
+                        textToEmbed = originalQuery + "\n\n" + hydeDoc;
+                    }
+
+                    log.append("HyDE Generated Doc: ")
+                            .append(hydeDoc).append("\n");
+
+                    log.append("Combined Query: ")
+                            .append(textToEmbed).append("\n");
                 }
 
                 // 1. Tạo embedding
@@ -222,13 +263,13 @@ public class XquadRetrievalTest {
                         .getValues();
                 double embeddingMs = (System.nanoTime() - embeddingStart) / 1_000_000.0;
 
-                // 2. Truy xuất Top K chunk
                 long retrievalStart = System.nanoTime();
-                List<DocumentChunk> chunks = documentChunkRepository.searchInOneDocument(
-                        documentId,
-                        queryEmbedding,
-                        TOP_K
-                );
+                // 2. Truy xuất Top K chunk
+                List<DocumentChunk> chunks =
+                        documentChunkRepository.searchInAllSystemDocument(
+                                queryEmbedding,
+                                TOP_K
+                        );
                 double retrievalMs = (System.nanoTime() - retrievalStart) / 1_000_000.0;
 
                 // 3. Kiểm tra thứ hạng
@@ -315,7 +356,7 @@ public class XquadRetrievalTest {
                 ================================
                 SUMMARY [%s - %s]
                 ================================
-                Document ID: %d
+                Search Scope: GLOBAL
                 Total questions: %d | Success: %d | Errors: %d
                 Hit@1:  %.4f
                 Hit@5:  %.4f
@@ -328,11 +369,11 @@ public class XquadRetrievalTest {
                 Finished: %s
                 """,
                 language.toUpperCase(), mode.toUpperCase(),
-                documentId, questions.size(), successCount, errorCount,
-                successCount == 0 ? 0 : (double) totalHit1 / successCount,
-                successCount == 0 ? 0 : (double) totalHit5 / successCount,
-                successCount == 0 ? 0 : (double) totalHit10 / successCount,
-                successCount == 0 ? 0 : totalMRR / successCount,
+                questions.size(), successCount, errorCount,
+                successCount == 0 ? 0.0 : (double) totalHit1 / successCount,
+                successCount == 0 ? 0.0 : (double) totalHit5 / successCount,
+                successCount == 0 ? 0.0 : (double) totalHit10 / successCount,
+                successCount == 0 ? 0.0 : totalMRR / successCount,
                 avgHydeMs, p95Retrieval, avgTotal, p95Total, LocalDateTime.now()
         );
 
